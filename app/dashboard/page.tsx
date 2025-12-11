@@ -124,6 +124,48 @@ export default function DashboardPage() {
         <StatCard title="Avg Order Value" value={fmt(stats.totalRevenue / stats.totalOrders)} />
       </div>
 
+{/* 🟡 TASKS REQUIRING ATTENTION */}
+<div className="bg-white p-4 rounded shadow mb-6">
+  <h2 className="text-lg font-semibold mb-3" style={{ color: "#b80d0d" }}>
+    Tasks Requiring Attention
+  </h2>
+
+  <ul className="space-y-2">
+
+    {/* Unread Leads */}
+    <li className="flex justify-between border-b pb-1">
+      <span>Unread Leads</span>
+      <span className="font-bold text-gray-700">3</span>
+    </li>
+
+    {/* Missing Measurements */}
+    <li className="flex justify-between border-b pb-1">
+      <span>Orders Missing Measurements</span>
+      <span className="font-bold text-gray-700">1</span>
+    </li>
+
+    {/* Pending Partner Payouts */}
+    <li className="flex justify-between border-b pb-1">
+      <span>Pending Partner Payouts</span>
+      <span className="font-bold text-gray-700">2</span>
+    </li>
+
+    {/* Invoices Needing Approval */}
+    <li className="flex justify-between border-b pb-1">
+      <span>Invoices Needing Approval</span>
+      <span className="font-bold text-gray-700">1</span>
+    </li>
+
+    {/* Leads older than 48 hours */}
+    <li className="flex justify-between">
+      <span>Leads Older Than 48 Hours</span>
+      <span className="font-bold text-gray-700">4</span>
+    </li>
+
+  </ul>
+</div>
+
+
       {/* =================== RECENT LEADS + ORDERS =================== */}
       <div style={{ ...gridTwo, marginTop: 20 }}>
         <Panel title="Recent Leads">

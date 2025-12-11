@@ -1,9 +1,9 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-const BRAND_RED = "#B80D0D";
-const ADMIN_EMAILS = ["admin@doorplaceusa.com", "thomas@doorplaceusa.com"];
+const brandRed = "#b80d0d";
 
 // ================= TYPES =================
 type DashboardStats = {
@@ -25,9 +25,7 @@ type RecentItem = {
 
 // ================= PAGE =================
 export default function DashboardPage() {
-  const [email, setEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
   const [stats, setStats] = useState<DashboardStats>({
     totalLeads: 0,
     totalOrders: 0,
@@ -40,173 +38,113 @@ export default function DashboardPage() {
 
   const [recentLeads, setRecentLeads] = useState<RecentItem[]>([]);
   const [recentOrders, setRecentOrders] = useState<RecentItem[]>([]);
-  const [partnerPerformance, setPartnerPerformance] = useState<
-    { partner_id: string; revenue: number; orders: number }[]
-  >([]);
+  const [partnerPerformance, setPartnerPerformance] =
+    useState<{ partner_id: string; revenue: number; orders: number }[]>([]);
 
-  const isAdmin = email && ADMIN_EMAILS.includes(email);
+  const [sessionEmail, setSessionEmail] = useState<string>("");
 
   useEffect(() => {
-    getUser();
-    loadDashboard();
+    async function load() {
+      const { data } = await supabase.auth.getSession();
+      setSessionEmail(data.session?.user.email || "");
+
+      setStats({
+        totalLeads: 312,
+        totalOrders: 94,
+        totalRevenue: 48210,
+        pendingCommissions: 3760,
+        paidCommissions: 31800,
+        activePartners: 14,
+        conversionRate: 30.1,
+      });
+
+      setRecentLeads([
+        { id: "1", label: "John – Porch Swing", date: "2025-12-07" },
+        { id: "2", label: "Ashley – Dutch Door", date: "2025-12-06" },
+        { id: "3", label: "Mark – Barn Door", date: "2025-12-06" },
+      ]);
+
+      setRecentOrders([
+        { id: "1", label: "Twin Swing – Dallas", date: "2025-12-07", amount: 1895 },
+        { id: "2", label: "Crib Swing – Houston", date: "2025-12-06", amount: 1295 },
+        { id: "3", label: "Glass Door – Plano", date: "2025-12-05", amount: 3250 },
+      ]);
+
+      setPartnerPerformance([
+        { partner_id: "DP-101", revenue: 12400, orders: 9 },
+        { partner_id: "DP-203", revenue: 9800, orders: 6 },
+        { partner_id: "DP-122", revenue: 7400, orders: 5 },
+        { partner_id: "DP-311", revenue: 6210, orders: 4 },
+      ]);
+
+      setLoading(false);
+    }
+    load();
   }, []);
 
-  async function getUser() {
-    const { data } = await supabase.auth.getUser();
-    setEmail(data?.user?.email || null);
-  }
+  if (loading) return <div>Loading...</div>;
 
-  async function loadDashboard() {
-    setLoading(true);
-
-    // MOCK TEMP DATA
-    setStats({
-      totalLeads: 312,
-      totalOrders: 94,
-      totalRevenue: 48210,
-      pendingCommissions: 3760,
-      paidCommissions: 31800,
-      activePartners: 14,
-      conversionRate: 30.1,
-    });
-
-    setRecentLeads([
-      { id: "1", label: "John – Porch Swing", date: "2025-12-07" },
-      { id: "2", label: "Ashley – Dutch Door", date: "2025-12-06" },
-      { id: "3", label: "Mark – Barn Door", date: "2025-12-06" },
-    ]);
-
-    setRecentOrders([
-      { id: "1", label: "Twin Swing – Dallas", date: "2025-12-07", amount: 1895 },
-      { id: "2", label: "Crib Swing – Houston", date: "2025-12-06", amount: 1295 },
-      { id: "3", label: "Glass Door – Plano", date: "2025-12-05", amount: 3250 },
-    ]);
-
-    setPartnerPerformance([
-      { partner_id: "DP-101", revenue: 12400, orders: 9 },
-      { partner_id: "DP-203", revenue: 9800, orders: 6 },
-      { partner_id: "DP-122", revenue: 7400, orders: 5 },
-      { partner_id: "DP-311", revenue: 6210, orders: 4 },
-    ]);
-
-    setLoading(false);
-  }
+  const isAdmin =
+    sessionEmail === "admin@doorplaceusa.com" ||
+    sessionEmail === "thomas@doorplaceusa.com";
 
   return (
-    <div
-      style={{
-        maxWidth: "1200px",
-        margin: "0 auto",
-        paddingBottom: "40px",
-        overflowX: "hidden",
-      }}
-    >
-      {/* TOP BRAND HEADER */}
-      <div style={{ marginBottom: "22px" }}>
-        <h1 style={{ margin: 0, fontSize: "26px", fontWeight: 700 }}>
-          Trade Pilot
+    <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
+
+      {/* =================== HEADER =================== */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold" style={{ color: brandRed }}>
+          TradePilot
         </h1>
-        <div
-          style={{
-            color: BRAND_RED,
-            fontSize: "15px",
-            marginTop: "2px",
-            fontWeight: 600,
-          }}
-        >
+
+        <div className="text-sm font-medium" style={{ color: brandRed }}>
           Powered by Doorplace USA
         </div>
 
-        <h2
-          style={{
-            marginTop: "18px",
-            fontSize: "22px",
-            fontWeight: 700,
-          }}
-        >
+        <div className="mt-2 text-xl font-semibold border-b pb-1">
           Admin Dashboard
-        </h2>
+        </div>
       </div>
 
-      {/* FIRST ROW */}
+      {/* =================== SUMMARY CARDS =================== */}
       <div style={gridThree}>
-        <StatCard title="Total Leads" value={stats.totalLeads.toString()} />
-        <StatCard title="Total Orders" value={stats.totalOrders.toString()} />
-        <StatCard title="Active Partners" value={stats.activePartners.toString()} />
+        <StatCard title="Total Leads" value={stats.totalLeads} />
+        <StatCard title="Total Orders" value={stats.totalOrders} />
+        <StatCard title="Active Partners" value={stats.activePartners} />
       </div>
 
-      {/* SECOND ROW */}
-      <div style={{ ...gridThree, marginTop: "16px" }}>
+      <div style={{ ...gridThree, marginTop: 16 }}>
         <StatCard title="Conversion Rate" value={`${stats.conversionRate}%`} />
-
-        {isAdmin && (
-          <StatCard title="Total Revenue" value={fmtMoney(stats.totalRevenue)} />
-        )}
-
-        <StatCard
-          title="Pending Commissions"
-          value={fmtMoney(stats.pendingCommissions)}
-        />
+        {isAdmin && <StatCard title="Total Revenue" value={fmt(stats.totalRevenue)} />}
+        <StatCard title="Pending Commissions" value={fmt(stats.pendingCommissions)} />
       </div>
 
-      {/* THIRD ROW */}
-      <div style={{ ...gridTwo, marginTop: "20px" }}>
-        <StatCard title="Paid Commissions" value={fmtMoney(stats.paidCommissions)} />
-
-        <StatCard
-          title="Avg Order Value"
-          value={
-            stats.totalOrders > 0
-              ? fmtMoney(stats.totalRevenue / stats.totalOrders)
-              : "$0"
-          }
-        />
+      <div style={{ ...gridTwo, marginTop: 16 }}>
+        <StatCard title="Paid Commissions" value={fmt(stats.paidCommissions)} />
+        <StatCard title="Avg Order Value" value={fmt(stats.totalRevenue / stats.totalOrders)} />
       </div>
 
-      {/* VISUALS */}
-      <div style={{ ...gridTwo, marginTop: "20px" }}>
-        <div style={panelStyle}>
-          <h3 style={panelTitle}>Revenue Performance</h3>
-          <BarChart
-            values={[
-              stats.pendingCommissions,
-              stats.paidCommissions,
-              stats.totalRevenue,
-            ]}
-            labels={["Pending", "Paid", "Total"]}
-          />
-        </div>
-
-        <div style={panelStyle}>
-          <h3 style={panelTitle}>Lead → Order Conversion</h3>
-          <ProgressRing percent={stats.conversionRate} />
-        </div>
-      </div>
-
-      {/* RECENT LISTS */}
-      <div style={{ ...gridTwo, marginTop: "20px" }}>
-        <div style={panelStyle}>
-          <h3 style={panelTitle}>Recent Leads</h3>
+      {/* =================== RECENT LEADS + ORDERS =================== */}
+      <div style={{ ...gridTwo, marginTop: 20 }}>
+        <Panel title="Recent Leads">
           {recentLeads.map((l) => (
             <Row key={l.id} label={l.label} value={l.date} />
           ))}
-        </div>
+        </Panel>
 
-        <div style={panelStyle}>
-          <h3 style={panelTitle}>Recent Orders</h3>
+        <Panel title="Recent Orders">
           {recentOrders.map((o) => (
             <Row
               key={o.id}
               label={o.label}
-              value={`${o.date} — ${fmtMoney(o.amount || 0)}`}
+              value={`${o.date} — ${fmt(o.amount || 0)}`}
             />
           ))}
-        </div>
+        </Panel>
       </div>
 
-      {/* TOP PARTNERS */}
-      <div style={{ marginTop: "20px", ...panelStyle }}>
-        <h3 style={panelTitle}>Top Partner Performance</h3>
+      {/* =================== LEADERBOARD =================== */}
+      <Panel title="Top Partner Performance" style={{ marginTop: 20 }}>
         <table style={tableStyle}>
           <thead>
             <tr>
@@ -220,46 +158,58 @@ export default function DashboardPage() {
               <tr key={p.partner_id}>
                 <td style={thTd}>{p.partner_id}</td>
                 <td style={thTd}>{p.orders}</td>
-                <td style={thTd}>{fmtMoney(p.revenue)}</td>
+                <td style={thTd}>{fmt(p.revenue)}</td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
+      </Panel>
 
-      {/* SYSTEM HEALTH */}
-      <div style={{ marginTop: "20px", ...panelStyle }}>
-        <h3 style={panelTitle}>System Health</h3>
+      {/* =================== SYSTEM HEALTH =================== */}
+      <Panel title="System Health" style={{ marginTop: 20 }}>
         <Row label="API Status" value="✅ Online" />
         <Row label="Lead Sync" value="✅ Live" />
         <Row label="Commission Sync" value="✅ Live" />
         <Row label="Payout Engine" value="🟡 Simulated Mode" />
-      </div>
+      </Panel>
 
-      {/* FOOTER */}
-      <div
-        style={{
-          marginTop: "40px",
-          textAlign: "center",
-          color: "#444",
-          fontSize: "14px",
-          paddingBottom: "30px",
-        }}
-      >
-        Built by Doorplace USA
-      </div>
     </div>
   );
 }
 
-// ================= UI COMPONENTS =================
-function StatCard({ title, value }: { title: string; value: string }) {
+// =================== COMPONENTS ===================
+function StatCard({ title, value }: { title: string; value: any }) {
   return (
-    <div style={cardStyle}>
-      <div style={{ fontSize: "12px", color: "#666", marginBottom: "6px", textAlign: "center" }}>
-        {title}
-      </div>
-      <div style={{ fontSize: "20px", fontWeight: 700, textAlign: "center" }}>{value}</div>
+    <div
+      style={{
+        ...cardStyle,
+        height: 90,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        textAlign: "center",
+      }}
+    >
+      <div style={{ fontSize: 13, color: "#444" }}>{title}</div>
+      <div style={{ fontSize: 22, fontWeight: 700 }}>{value}</div>
+    </div>
+  );
+}
+
+function Panel({
+  title,
+  children,
+  style,
+}: {
+  title: string;
+  children: any;
+  style?: any;
+}) {
+  return (
+    <div style={{ ...panelStyle, ...style }}>
+      <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 10 }}>{title}</h3>
+      {children}
     </div>
   );
 }
@@ -268,10 +218,9 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div
       style={{
+        padding: "6px 0",
         display: "flex",
         justifyContent: "space-between",
-        padding: "6px 0",
-        fontSize: "14px",
         borderBottom: "1px solid #eee",
       }}
     >
@@ -281,94 +230,44 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function BarChart({ values, labels }: { values: number[]; labels: string[] }) {
-  const max = Math.max(...values);
-
-  return (
-    <div style={{ display: "flex", alignItems: "flex-end", height: "150px" }}>
-      {values.map((v, i) => (
-        <div key={i} style={{ flex: 1, textAlign: "center" }}>
-          <div
-            style={{
-              height: `${(v / max) * 120}px`,
-              background: BRAND_RED,
-              margin: "0 6px",
-              borderRadius: "6px 6px 0 0",
-            }}
-          />
-          <div style={{ fontSize: "12px", marginTop: "4px" }}>{labels[i]}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ProgressRing({ percent }: { percent: number }) {
-  return (
-    <div
-      style={{
-        width: "120px",
-        height: "120px",
-        borderRadius: "50%",
-        border: "10px solid #eee",
-        borderTop: `10px solid ${BRAND_RED}`,
-        transform: "rotate(" + percent * 3.6 + "deg)",
-        margin: "0 auto",
-      }}
-    />
-  );
-}
-
-// ================= STYLES =================
-function fmtMoney(value: number) {
-  return "$" + value.toLocaleString();
-}
-
-const cardStyle: React.CSSProperties = {
+// =================== STYLES ===================
+const cardStyle = {
   border: "1px solid #ddd",
-  borderRadius: "10px",
-  padding: "16px",
-  background: "white",
-  height: "95px",
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "center",
-};
-
-const panelStyle: React.CSSProperties = {
-  border: "1px solid #ddd",
-  borderRadius: "10px",
-  padding: "16px",
+  borderRadius: 10,
+  padding: 16,
   background: "white",
 };
 
-const panelTitle: React.CSSProperties = {
-  margin: 0,
-  marginBottom: "12px",
-  fontSize: "17px",
-  fontWeight: 700,
+const panelStyle = {
+  border: "1px solid #ddd",
+  borderRadius: 10,
+  padding: 16,
+  background: "white",
 };
 
-const gridThree: React.CSSProperties = {
+const gridThree = {
   display: "grid",
-  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-  gap: "12px",
+  gridTemplateColumns: "repeat(3, 1fr)",
+  gap: 12,
 };
 
-const gridTwo: React.CSSProperties = {
+const gridTwo = {
   display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: "12px",
+  gridTemplateColumns: "repeat(2, 1fr)",
+  gap: 12,
 };
 
-const tableStyle: React.CSSProperties = {
+const tableStyle = {
   width: "100%",
-  borderCollapse: "collapse",
-  marginTop: "8px",
+  borderCollapse: "collapse" as const,
 };
 
-const thTd: React.CSSProperties = {
-  border: "1px solid #ddd",
+const thTd = {
   padding: "8px 10px",
-  fontSize: "13px",
+  border: "1px solid #ddd",
+  textAlign: "left" as const,
 };
+
+function fmt(n: number) {
+  return "$" + n.toLocaleString();
+}

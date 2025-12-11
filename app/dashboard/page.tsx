@@ -2,6 +2,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+const BRAND_RED = "#B80D0D";
+const ADMIN_EMAILS = ["admin@doorplaceusa.com", "thomas@doorplaceusa.com"];
+
 // ================= TYPES =================
 type DashboardStats = {
   totalLeads: number;
@@ -22,7 +25,9 @@ type RecentItem = {
 
 // ================= PAGE =================
 export default function DashboardPage() {
+  const [email, setEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
   const [stats, setStats] = useState<DashboardStats>({
     totalLeads: 0,
     totalOrders: 0,
@@ -39,14 +44,22 @@ export default function DashboardPage() {
     { partner_id: string; revenue: number; orders: number }[]
   >([]);
 
+  const isAdmin = email && ADMIN_EMAILS.includes(email);
+
   useEffect(() => {
+    getUser();
     loadDashboard();
   }, []);
+
+  async function getUser() {
+    const { data } = await supabase.auth.getUser();
+    setEmail(data?.user?.email || null);
+  }
 
   async function loadDashboard() {
     setLoading(true);
 
-    // MOCK DATA (connect to real later)
+    // MOCK TEMP DATA
     setStats({
       totalLeads: 312,
       totalOrders: 94,
@@ -80,40 +93,80 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-      <h2>Executive Command Dashboard</h2>
-      <p style={{ marginBottom: "24px" }}>
-        Live intelligence across leads, partners, revenue, orders, and commissions.
-      </p>
+    <div
+      style={{
+        maxWidth: "1200px",
+        margin: "0 auto",
+        paddingBottom: "40px",
+        overflowX: "hidden",
+      }}
+    >
+      {/* TOP BRAND HEADER */}
+      <div style={{ marginBottom: "22px" }}>
+        <h1 style={{ margin: 0, fontSize: "26px", fontWeight: 700 }}>
+          Trade Pilot
+        </h1>
+        <div
+          style={{
+            color: BRAND_RED,
+            fontSize: "15px",
+            marginTop: "2px",
+            fontWeight: 600,
+          }}
+        >
+          Powered by Doorplace USA
+        </div>
 
-      {/* ============ FIRST TWO ROWS — 3 CARDS EACH ============ */}
+        <h2
+          style={{
+            marginTop: "18px",
+            fontSize: "22px",
+            fontWeight: 700,
+          }}
+        >
+          Admin Dashboard
+        </h2>
+      </div>
+
+      {/* FIRST ROW */}
       <div style={gridThree}>
         <StatCard title="Total Leads" value={stats.totalLeads.toString()} />
         <StatCard title="Total Orders" value={stats.totalOrders.toString()} />
         <StatCard title="Active Partners" value={stats.activePartners.toString()} />
       </div>
 
+      {/* SECOND ROW */}
       <div style={{ ...gridThree, marginTop: "16px" }}>
         <StatCard title="Conversion Rate" value={`${stats.conversionRate}%`} />
-        <StatCard title="Total Revenue" value={fmtMoney(stats.totalRevenue)} />
+
+        {isAdmin && (
+          <StatCard title="Total Revenue" value={fmtMoney(stats.totalRevenue)} />
+        )}
+
         <StatCard
           title="Pending Commissions"
           value={fmtMoney(stats.pendingCommissions)}
         />
       </div>
 
-      {/* ============ NEX T ROWS — 2 CARDS EACH ============ */}
+      {/* THIRD ROW */}
       <div style={{ ...gridTwo, marginTop: "20px" }}>
         <StatCard title="Paid Commissions" value={fmtMoney(stats.paidCommissions)} />
+
         <StatCard
           title="Avg Order Value"
-          value={fmtMoney(stats.totalRevenue / stats.totalOrders)}
+          value={
+            stats.totalOrders > 0
+              ? fmtMoney(stats.totalRevenue / stats.totalOrders)
+              : "$0"
+          }
         />
       </div>
 
+      {/* VISUALS */}
       <div style={{ ...gridTwo, marginTop: "20px" }}>
         <div style={panelStyle}>
-          <h3>Revenue Performance (Visual)</h3>
+          <h3 style={panelTitle}>Revenue Performance</h3>
           <BarChart
             values={[
               stats.pendingCommissions,
@@ -125,21 +178,22 @@ export default function DashboardPage() {
         </div>
 
         <div style={panelStyle}>
-          <h3>Lead → Order Conversion</h3>
+          <h3 style={panelTitle}>Lead → Order Conversion</h3>
           <ProgressRing percent={stats.conversionRate} />
         </div>
       </div>
 
+      {/* RECENT LISTS */}
       <div style={{ ...gridTwo, marginTop: "20px" }}>
         <div style={panelStyle}>
-          <h3>Recent Leads</h3>
+          <h3 style={panelTitle}>Recent Leads</h3>
           {recentLeads.map((l) => (
             <Row key={l.id} label={l.label} value={l.date} />
           ))}
         </div>
 
         <div style={panelStyle}>
-          <h3>Recent Orders</h3>
+          <h3 style={panelTitle}>Recent Orders</h3>
           {recentOrders.map((o) => (
             <Row
               key={o.id}
@@ -150,9 +204,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ============ LARGE 1-CARD ROWS ============ */}
+      {/* TOP PARTNERS */}
       <div style={{ marginTop: "20px", ...panelStyle }}>
-        <h3>Top Partner Performance</h3>
+        <h3 style={panelTitle}>Top Partner Performance</h3>
         <table style={tableStyle}>
           <thead>
             <tr>
@@ -173,12 +227,26 @@ export default function DashboardPage() {
         </table>
       </div>
 
+      {/* SYSTEM HEALTH */}
       <div style={{ marginTop: "20px", ...panelStyle }}>
-        <h3>System Health</h3>
+        <h3 style={panelTitle}>System Health</h3>
         <Row label="API Status" value="✅ Online" />
         <Row label="Lead Sync" value="✅ Live" />
         <Row label="Commission Sync" value="✅ Live" />
         <Row label="Payout Engine" value="🟡 Simulated Mode" />
+      </div>
+
+      {/* FOOTER */}
+      <div
+        style={{
+          marginTop: "40px",
+          textAlign: "center",
+          color: "#444",
+          fontSize: "14px",
+          paddingBottom: "30px",
+        }}
+      >
+        Built by Doorplace USA
       </div>
     </div>
   );
@@ -188,10 +256,10 @@ export default function DashboardPage() {
 function StatCard({ title, value }: { title: string; value: string }) {
   return (
     <div style={cardStyle}>
-      <div style={{ fontSize: "13px", color: "#666", marginBottom: "6px" }}>
+      <div style={{ fontSize: "12px", color: "#666", marginBottom: "6px", textAlign: "center" }}>
         {title}
       </div>
-      <div style={{ fontSize: "22px", fontWeight: 700 }}>{value}</div>
+      <div style={{ fontSize: "20px", fontWeight: 700, textAlign: "center" }}>{value}</div>
     </div>
   );
 }
@@ -213,23 +281,17 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function BarChart({
-  values,
-  labels,
-}: {
-  values: number[];
-  labels: string[];
-}) {
+function BarChart({ values, labels }: { values: number[]; labels: string[] }) {
   const max = Math.max(...values);
 
   return (
-    <div style={{ display: "flex", alignItems: "flex-end", height: "160px" }}>
+    <div style={{ display: "flex", alignItems: "flex-end", height: "150px" }}>
       {values.map((v, i) => (
         <div key={i} style={{ flex: 1, textAlign: "center" }}>
           <div
             style={{
-              height: `${(v / max) * 140}px`,
-              background: "#007bff",
+              height: `${(v / max) * 120}px`,
+              background: BRAND_RED,
               margin: "0 6px",
               borderRadius: "6px 6px 0 0",
             }}
@@ -245,11 +307,11 @@ function ProgressRing({ percent }: { percent: number }) {
   return (
     <div
       style={{
-        width: "140px",
-        height: "140px",
+        width: "120px",
+        height: "120px",
         borderRadius: "50%",
         border: "10px solid #eee",
-        borderTop: "10px solid #28a745",
+        borderTop: `10px solid ${BRAND_RED}`,
         transform: "rotate(" + percent * 3.6 + "deg)",
         margin: "0 auto",
       }}
@@ -267,6 +329,10 @@ const cardStyle: React.CSSProperties = {
   borderRadius: "10px",
   padding: "16px",
   background: "white",
+  height: "95px",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
 };
 
 const panelStyle: React.CSSProperties = {
@@ -274,6 +340,13 @@ const panelStyle: React.CSSProperties = {
   borderRadius: "10px",
   padding: "16px",
   background: "white",
+};
+
+const panelTitle: React.CSSProperties = {
+  margin: 0,
+  marginBottom: "12px",
+  fontSize: "17px",
+  fontWeight: 700,
 };
 
 const gridThree: React.CSSProperties = {

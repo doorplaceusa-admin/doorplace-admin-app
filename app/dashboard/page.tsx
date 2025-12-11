@@ -106,6 +106,56 @@ export default function DashboardPage() {
         </div>
       </div>
 
+{/* ===================== QUICK ACTIONS BAR ===================== */}
+<div style={{
+  display: "flex",
+  gap: "12px",
+  marginBottom: "20px"
+}}>
+  <button
+    style={{
+      background: "#b80d0d",
+      color: "white",
+      padding: "10px 16px",
+      borderRadius: "6px",
+      fontWeight: "600",
+      cursor: "pointer"
+    }}
+    onClick={() => window.location.href = "/dashboard/leads?create=new"}
+  >
+    + New Lead
+  </button>
+
+  <button
+    style={{
+      background: "#b80d0d",
+      color: "white",
+      padding: "10px 16px",
+      borderRadius: "6px",
+      fontWeight: "600",
+      cursor: "pointer"
+    }}
+    onClick={() => window.location.href = "/dashboard/orders?create=new"}
+  >
+    + New Order
+  </button>
+
+  <button
+    style={{
+      background: "#b80d0d",
+      color: "white",
+      padding: "10px 16px",
+      borderRadius: "6px",
+      fontWeight: "600",
+      cursor: "pointer"
+    }}
+    onClick={() => window.location.href = "/dashboard/partners?create=new"}
+  >
+    + Add Partner
+  </button>
+</div>
+
+
       {/* =================== SUMMARY CARDS =================== */}
       <div style={gridThree}>
         <StatCard title="Total Leads" value={stats.totalLeads} />

@@ -33,17 +33,27 @@ export default function RootLayout({
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl">
               ☰
             </button>
-            <span className="ml-4 font-bold text-blue-600">TradePilot</span>
+            <span
+              className="ml-4 font-bold"
+              style={{ color: "#b80d0d" }}
+            >
+              TradePilot
+            </span>
           </div>
 
           {/* ✅ SIDEBAR */}
           <div
             className={`fixed md:static top-0 left-0 h-full w-64 bg-white shadow-md p-6 flex flex-col z-40
-            ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} 
+            ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
             md:translate-x-0 transition-transform duration-300`}
           >
-            <h1 className="text-2xl font-bold mb-8 text-blue-600 hidden md:block">
-              TradePilot
+
+            {/* Sidebar Header */}
+            <h1
+              className="text-2xl font-bold mb-8 hidden md:block"
+              style={{ color: "#b80d0d" }}
+            >
+              Admin Menu
             </h1>
 
             <nav className="flex flex-col gap-4">

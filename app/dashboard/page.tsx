@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 // ================= TYPES =================
@@ -46,8 +46,8 @@ export default function DashboardPage() {
   async function loadDashboard() {
     setLoading(true);
 
-    // ✅ MOCKED DATA (SAFE MODE – WIRED TO REAL DATA LATER)
-    const mockStats: DashboardStats = {
+    // MOCK DATA (connect to real later)
+    setStats({
       totalLeads: 312,
       totalOrders: 94,
       totalRevenue: 48210,
@@ -55,31 +55,26 @@ export default function DashboardPage() {
       paidCommissions: 31800,
       activePartners: 14,
       conversionRate: 30.1,
-    };
+    });
 
-    const mockLeads = [
+    setRecentLeads([
       { id: "1", label: "John – Porch Swing", date: "2025-12-07" },
       { id: "2", label: "Ashley – Dutch Door", date: "2025-12-06" },
       { id: "3", label: "Mark – Barn Door", date: "2025-12-06" },
-    ];
+    ]);
 
-    const mockOrders = [
+    setRecentOrders([
       { id: "1", label: "Twin Swing – Dallas", date: "2025-12-07", amount: 1895 },
       { id: "2", label: "Crib Swing – Houston", date: "2025-12-06", amount: 1295 },
       { id: "3", label: "Glass Door – Plano", date: "2025-12-05", amount: 3250 },
-    ];
+    ]);
 
-    const mockPartners = [
+    setPartnerPerformance([
       { partner_id: "DP-101", revenue: 12400, orders: 9 },
       { partner_id: "DP-203", revenue: 9800, orders: 6 },
       { partner_id: "DP-122", revenue: 7400, orders: 5 },
       { partner_id: "DP-311", revenue: 6210, orders: 4 },
-    ];
-
-    setStats(mockStats);
-    setRecentLeads(mockLeads);
-    setRecentOrders(mockOrders);
-    setPartnerPerformance(mockPartners);
+    ]);
 
     setLoading(false);
   }
@@ -91,31 +86,32 @@ export default function DashboardPage() {
         Live intelligence across leads, partners, revenue, orders, and commissions.
       </p>
 
-      {/* ================= EXECUTIVE STATS ================= */}
-      <div style={gridFour}>
+      {/* ============ FIRST TWO ROWS — 3 CARDS EACH ============ */}
+      <div style={gridThree}>
         <StatCard title="Total Leads" value={stats.totalLeads.toString()} />
         <StatCard title="Total Orders" value={stats.totalOrders.toString()} />
         <StatCard title="Active Partners" value={stats.activePartners.toString()} />
-        <StatCard title="Conversion Rate" value={`${stats.conversionRate}%`} />
       </div>
 
-      <div style={{ ...gridFour, marginTop: "16px" }}>
+      <div style={{ ...gridThree, marginTop: "16px" }}>
+        <StatCard title="Conversion Rate" value={`${stats.conversionRate}%`} />
         <StatCard title="Total Revenue" value={fmtMoney(stats.totalRevenue)} />
         <StatCard
           title="Pending Commissions"
           value={fmtMoney(stats.pendingCommissions)}
         />
+      </div>
+
+      {/* ============ NEX T ROWS — 2 CARDS EACH ============ */}
+      <div style={{ ...gridTwo, marginTop: "20px" }}>
         <StatCard title="Paid Commissions" value={fmtMoney(stats.paidCommissions)} />
         <StatCard
           title="Avg Order Value"
-          value={fmtMoney(
-            stats.totalOrders ? stats.totalRevenue / stats.totalOrders : 0
-          )}
+          value={fmtMoney(stats.totalRevenue / stats.totalOrders)}
         />
       </div>
 
-      {/* ================= CHARTS ================= */}
-      <div style={{ ...gridTwo, marginTop: "28px" }}>
+      <div style={{ ...gridTwo, marginTop: "20px" }}>
         <div style={panelStyle}>
           <h3>Revenue Performance (Visual)</h3>
           <BarChart
@@ -134,8 +130,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ================= RECENT ACTIVITY ================= */}
-      <div style={{ ...gridTwo, marginTop: "28px" }}>
+      <div style={{ ...gridTwo, marginTop: "20px" }}>
         <div style={panelStyle}>
           <h3>Recent Leads</h3>
           {recentLeads.map((l) => (
@@ -155,8 +150,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ================= PARTNER PERFORMANCE ================= */}
-      <div style={{ marginTop: "28px", ...panelStyle }}>
+      {/* ============ LARGE 1-CARD ROWS ============ */}
+      <div style={{ marginTop: "20px", ...panelStyle }}>
         <h3>Top Partner Performance</h3>
         <table style={tableStyle}>
           <thead>
@@ -178,8 +173,7 @@ export default function DashboardPage() {
         </table>
       </div>
 
-      {/* ================= SYSTEM HEALTH ================= */}
-      <div style={{ marginTop: "28px", ...panelStyle }}>
+      <div style={{ marginTop: "20px", ...panelStyle }}>
         <h3>System Health</h3>
         <Row label="API Status" value="✅ Online" />
         <Row label="Lead Sync" value="✅ Live" />
@@ -256,7 +250,7 @@ function ProgressRing({ percent }: { percent: number }) {
         borderRadius: "50%",
         border: "10px solid #eee",
         borderTop: "10px solid #28a745",
-        transform: "rotate(" + (percent * 3.6) + "deg)",
+        transform: "rotate(" + percent * 3.6 + "deg)",
         margin: "0 auto",
       }}
     />
@@ -282,16 +276,16 @@ const panelStyle: React.CSSProperties = {
   background: "white",
 };
 
-const gridFour: React.CSSProperties = {
+const gridThree: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-  gap: "16px",
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gap: "12px",
 };
 
 const gridTwo: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: "20px",
+  gap: "12px",
 };
 
 const tableStyle: React.CSSProperties = {

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { createClientHelper } from "@/lib/supabaseClient";
+
 type UserRole = "admin" | "partner";
 type CommissionRow = {
   id: string;
@@ -44,6 +45,7 @@ export default function CommissionDashboardPage() {
   async function loadUserAndData() {
     setLoading(true);
     setErrorMessage(null);
+    const supabase = createClientHelper();
     const { data, error } = await supabase.auth.getUser();
     if (error || !data?.user) {
       setErrorMessage("Unable to load user. Please log in again.");
@@ -61,6 +63,7 @@ export default function CommissionDashboardPage() {
   }
   async function loadCommissions(role: UserRole, cId?: string, pId?: string) {
     setErrorMessage(null);
+    const supabase = createClientHelper();
     let query = supabase.from("commissions").select("*").order("created_at", {
       ascending: false,
     });
@@ -184,34 +187,6 @@ const lifetimeStats = useMemo(() => {
   };
 }, [commissions]); 
 
-  {/* ✅ LIFETIME TOTALS */}
-<div
-  style={{
-    display: "grid",
-    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-    gap: "16px",
-    marginBottom: "24px",
-  }}
->
-  <StatCard
-    title="Lifetime Orders"
-    value={lifetimeStats.totalOrders.toString()}
-  />
-  <StatCard
-    title="Lifetime Earned"
-    value={fmtMoney(lifetimeStats.totalEarned)}
-  />
-  <StatCard
-    title="Lifetime Pending"
-    value={fmtMoney(lifetimeStats.pending)}
-  />
-  <StatCard
-    title="Lifetime Paid"
-    value={fmtMoney(lifetimeStats.paid)}
-  />
-</div>
-
-
   // Top stat cards
   const topStats = useMemo(() => {
     const totalOrders = filteredCommissions.length;
@@ -261,6 +236,7 @@ const lifetimeStats = useMemo(() => {
       payout_date: editPayoutDate || null,
       admin_notes: editNotes || null,
     };
+    const supabase = createClientHelper();
     const { error } = await supabase
       .from("commissions")
       .update(updates)
@@ -279,6 +255,7 @@ const lifetimeStats = useMemo(() => {
     setEditing(null);
   }
   async function markAsPaid(row: CommissionRow) {
+    const supabase = createClientHelper();
   const { error } = await supabase
     .from("commissions")
     .update({

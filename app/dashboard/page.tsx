@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { createClientHelper } from "@/lib/supabaseClient";
+
 
 const brandRed = "#b80d0d";
 
@@ -45,6 +46,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function load() {
+      const supabase = createClientHelper();
       const { data } = await supabase.auth.getSession();
       setSessionEmail(data.session?.user.email || "");
 

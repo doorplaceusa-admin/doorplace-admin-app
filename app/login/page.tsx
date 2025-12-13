@@ -1,15 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { createClientHelper } from "@/lib/supabaseClient";
-
-
+import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = createClientHelper();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -17,13 +13,14 @@ export default function LoginPage() {
   const handleLogin = async () => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
 
     if (error) {
       setError(error.message);
     } else {
       router.push("/dashboard");
+      router.refresh();
     }
   };
 
@@ -50,7 +47,7 @@ export default function LoginPage() {
 
         <button
           onClick={handleLogin}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded"
+          className="w-full bg-blue-600 text-white p-2 rounded"
         >
           Log In
         </button>

@@ -1,81 +1,79 @@
 "use client";
 
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
-import { useState } from "react";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setLoggedIn(!!data.session);
+      setLoading(false);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setLoggedIn(!!session);
+        if (!session) router.push("/login");
+      }
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [router]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  };
+
+  if (loading) return null;
 
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div className="flex min-h-screen bg-gray-100">
+      <body className="bg-gray-100">
+        <div className="flex min-h-screen">
 
-          {/* ✅ MOBILE TOP BAR */}
-          <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white shadow flex items-center px-4 z-50">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-2xl">
-              ☰
-            </button>
-            <span
-              className="ml-4 font-bold"
-              style={{ color: "#b80d0d" }}
-            >
-              TradePilot
-            </span>
-          </div>
+          {/* SIDEBAR — ONLY IF LOGGED IN */}
+          {loggedIn && (
+            <aside className="w-64 bg-white shadow p-6 flex flex-col">
+              <h1 className="text-2xl font-bold mb-6 text-red-700">
+                Admin Menu
+              </h1>
 
-          {/* ✅ SIDEBAR */}
-          <div
-            className={`fixed md:static top-0 left-0 h-full w-64 bg-white shadow-md p-6 flex flex-col z-40
-            ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-            md:translate-x-0 transition-transform duration-300`}
-          >
+              <nav className="flex flex-col gap-3">
+                <Link href="/dashboard">Dashboard</Link>
+                <Link href="/dashboard/companies">Companies</Link>
+                <Link href="/dashboard/leads">Leads</Link>
+                <Link href="/dashboard/partners">Partners</Link>
+                <Link href="/dashboard/orders">Orders</Link>
+                <Link href="/dashboard/commissions">Commissions</Link>
+                <Link href="/dashboard/settings">Settings</Link>
+              </nav>
 
-            {/* Sidebar Header */}
-            <h1
-              className="text-2xl font-bold mb-8 hidden md:block"
-              style={{ color: "#b80d0d" }}
-            >
-              Admin Menu
-            </h1>
+              <button
+                onClick={handleLogout}
+                className="mt-auto bg-red-600 text-white py-2 rounded"
+              >
+                Log out
+              </button>
+            </aside>
+          )}
 
-            <nav className="flex flex-col gap-4">
-              <Link href="/dashboard">Dashboard</Link>
-              <Link href="/dashboard/companies">Companies</Link>
-              <Link href="/dashboard/leads">Leads</Link>
-              <Link href="/dashboard/partners">Partners</Link>
-              <Link href="/dashboard/orders">Orders</Link>
-              <Link href="/dashboard/commissions">Commissions</Link>
-              <Link href="/dashboard/settings">Settings</Link>
-            </nav>
-
-            <button className="mt-auto bg-red-500 text-white py-2 rounded">
-              Log out
-            </button>
-          </div>
-
-          {/* ✅ MAIN CONTENT */}
-          <div className="flex-1 pt-16 md:pt-0 p-6 overflow-auto">
-            {children}
-          </div>
-
+          {/* MAIN CONTENT */}
+          <main className="flex-1 p-6">{children}</main>
         </div>
       </body>
     </html>

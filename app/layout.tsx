@@ -15,16 +15,19 @@ export default function RootLayout({
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
-      setLoggedIn(!!data.session);
-      setLoading(false);
+    supabase.auth
+      .getSession()
+      .then(({ data }: { data: { session: Session | null } }) => {
+        setLoggedIn(!!data.session);
+        setLoading(false);
 
-      if (!data.session) {
-        router.replace("/login");
-      }
-    });
+        if (!data.session) {
+          router.replace("/login");
+        }
+      });
 
     const {
       data: { subscription },
@@ -55,26 +58,43 @@ export default function RootLayout({
       <body className="bg-gray-100">
         <div className="flex min-h-screen">
           {loggedIn && (
-            <aside className="w-64 bg-white shadow p-6 flex flex-col">
-              <h1 className="text-2xl font-bold mb-6 text-red-700">
-                Admin Menu
-              </h1>
+            <aside
+              className={`${
+                sidebarOpen ? "w-64" : "w-16"
+              } bg-white shadow p-4 flex flex-col transition-all duration-300`}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                {sidebarOpen && (
+                  <h1 className="text-xl font-bold text-red-700">
+                    Admin
+                  </h1>
+                )}
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="text-gray-600 hover:text-black"
+                >
+                  ☰
+                </button>
+              </div>
 
-              <nav className="flex flex-col gap-3">
-                <Link href="/dashboard">Dashboard</Link>
-                <Link href="/dashboard/companies">Companies</Link>
-                <Link href="/dashboard/leads">Leads</Link>
-                <Link href="/dashboard/partners">Partners</Link>
-                <Link href="/dashboard/orders">Orders</Link>
-                <Link href="/dashboard/commissions">Commissions</Link>
-                <Link href="/dashboard/settings">Settings</Link>
+              {/* Nav */}
+              <nav className="flex flex-col gap-3 text-sm">
+                <Link href="/dashboard">📊 {sidebarOpen && "Dashboard"}</Link>
+                <Link href="/dashboard/companies">🏢 {sidebarOpen && "Companies"}</Link>
+                <Link href="/dashboard/leads">📋 {sidebarOpen && "Leads"}</Link>
+                <Link href="/dashboard/partners">🤝 {sidebarOpen && "Partners"}</Link>
+                <Link href="/dashboard/orders">📦 {sidebarOpen && "Orders"}</Link>
+                <Link href="/dashboard/commissions">💰 {sidebarOpen && "Commissions"}</Link>
+                <Link href="/dashboard/settings">⚙️ {sidebarOpen && "Settings"}</Link>
               </nav>
 
+              {/* Logout */}
               <button
                 onClick={handleLogout}
-                className="mt-auto bg-red-600 text-white py-2 rounded"
+                className="mt-auto bg-red-600 text-white py-2 rounded text-sm"
               >
-                Log out
+                {sidebarOpen ? "Log out" : "⎋"}
               </button>
             </aside>
           )}

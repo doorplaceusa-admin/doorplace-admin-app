@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { createClientHelper } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
+
 
 type UserRole = "admin" | "partner";
 type CommissionRow = {

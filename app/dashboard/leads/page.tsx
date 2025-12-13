@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClientHelper } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
+
 
 
 export default function LeadsPage() {

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClientHelper } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
+
 
 
 const brandRed = "#b80d0d";

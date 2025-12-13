@@ -3,8 +3,9 @@
 import "./globals.css";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { createClientHelper } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import type { Session } from "@supabase/supabase-js";
 
 export default function RootLayout({
   children,
@@ -12,27 +13,28 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const supabase = createClientHelper(); // ✅ CORRECT
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
       setLoggedIn(!!data.session);
       setLoading(false);
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      (_event: string, session: Session | null) => {
         setLoggedIn(!!session);
         if (!session) router.push("/login");
       }
     );
 
     return () => {
-      listener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
-  }, [router, supabase]);
+  }, [router]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -46,8 +48,6 @@ export default function RootLayout({
     <html lang="en">
       <body className="bg-gray-100">
         <div className="flex min-h-screen">
-
-          {/* SIDEBAR — ONLY IF LOGGED IN */}
           {loggedIn && (
             <aside className="w-64 bg-white shadow p-6 flex flex-col">
               <h1 className="text-2xl font-bold mb-6 text-red-700">
@@ -73,7 +73,6 @@ export default function RootLayout({
             </aside>
           )}
 
-          {/* MAIN CONTENT */}
           <main className="flex-1 p-6">{children}</main>
         </div>
       </body>

@@ -6,3 +6,5 @@ export default function Page() {
     </div>
   );
 }
+
+<h1>SERVER TEST 123</h1>

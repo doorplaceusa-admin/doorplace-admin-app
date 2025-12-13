@@ -17,7 +17,6 @@ export default function DashboardLayout({
 
   useEffect(() => {
     async function checkSession() {
-      const supabase = createClientHelper();
       const { data } = await supabase.auth.getSession();
       if (!data.session) {
         router.push("/login");

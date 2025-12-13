@@ -27,7 +27,6 @@ export default function LeadsPage() {
   }, []);
 
   async function loadCompany() {
-    const supabase = createClientHelper();
     const { data: { user } } = await supabase.auth.getUser();
     if (user?.user_metadata?.company_id) {
       setCompanyId(user.user_metadata.company_id);
@@ -35,7 +34,6 @@ export default function LeadsPage() {
   }
 
   async function loadLeads() {
-    const supabase = createClientHelper();
     const { data, error } = await supabase
       .from("leads")
       .select("*")
@@ -49,7 +47,6 @@ export default function LeadsPage() {
       alert("Partner ID is required.");
       return;
     }
-    const supabase = createClientHelper();
 
     const payload = {
       customer_name: customerName,
@@ -79,7 +76,6 @@ export default function LeadsPage() {
 
   async function deleteLead(id: string) {
     if (!confirm("Delete this lead?")) return;
-    const supabase = createClientHelper();
     await supabase.from("leads").delete().eq("id", id);
     loadLeads();
   }

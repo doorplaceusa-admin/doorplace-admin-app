@@ -46,7 +46,6 @@ export default function CommissionDashboardPage() {
   async function loadUserAndData() {
     setLoading(true);
     setErrorMessage(null);
-    const supabase = createClientHelper();
     const { data, error } = await supabase.auth.getUser();
     if (error || !data?.user) {
       setErrorMessage("Unable to load user. Please log in again.");
@@ -64,7 +63,6 @@ export default function CommissionDashboardPage() {
   }
   async function loadCommissions(role: UserRole, cId?: string, pId?: string) {
     setErrorMessage(null);
-    const supabase = createClientHelper();
     let query = supabase.from("commissions").select("*").order("created_at", {
       ascending: false,
     });
@@ -237,7 +235,6 @@ const lifetimeStats = useMemo(() => {
       payout_date: editPayoutDate || null,
       admin_notes: editNotes || null,
     };
-    const supabase = createClientHelper();
     const { error } = await supabase
       .from("commissions")
       .update(updates)
@@ -256,7 +253,6 @@ const lifetimeStats = useMemo(() => {
     setEditing(null);
   }
   async function markAsPaid(row: CommissionRow) {
-    const supabase = createClientHelper();
   const { error } = await supabase
     .from("commissions")
     .update({

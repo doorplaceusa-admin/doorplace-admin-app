@@ -3,7 +3,6 @@ import { supabase } from "@/lib/supabaseClient";
 
 
 export async function POST(req: Request) {
-  const supabase = createClientHelper();
   const body = await req.json();
 
   const { commission_id } = body;

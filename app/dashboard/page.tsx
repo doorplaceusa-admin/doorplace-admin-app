@@ -47,7 +47,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function load() {
-      const supabase = createClientHelper();
       const { data } = await supabase.auth.getSession();
       setSessionEmail(data.session?.user.email || "");
 

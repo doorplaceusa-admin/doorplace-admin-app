@@ -14,7 +14,6 @@ type Company = {
 };
 
 export default function CompaniesPage() {
-  const supabase = createClientHelper();
 
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState<boolean>(true);

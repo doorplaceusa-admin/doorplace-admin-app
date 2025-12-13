@@ -20,6 +20,10 @@ export default function RootLayout({
     supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
       setLoggedIn(!!data.session);
       setLoading(false);
+
+      if (!data.session) {
+        router.replace("/login");
+      }
     });
 
     const {
@@ -27,7 +31,10 @@ export default function RootLayout({
     } = supabase.auth.onAuthStateChange(
       (_event: string, session: Session | null) => {
         setLoggedIn(!!session);
-        if (!session) router.push("/login");
+
+        if (!session) {
+          router.replace("/login");
+        }
       }
     );
 
@@ -38,8 +45,7 @@ export default function RootLayout({
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
+    router.replace("/login");
   };
 
   if (loading) return null;

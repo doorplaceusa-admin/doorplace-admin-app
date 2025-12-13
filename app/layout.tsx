@@ -3,7 +3,7 @@
 import "./globals.css";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { createClientHelper } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
 export default function RootLayout({
@@ -12,6 +12,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const supabase = createClientHelper(); // ✅ CORRECT
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
 
@@ -31,7 +32,7 @@ export default function RootLayout({
     return () => {
       listener.subscription.unsubscribe();
     };
-  }, [router]);
+  }, [router, supabase]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

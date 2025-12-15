@@ -4,6 +4,8 @@ import nodemailer from "nodemailer";
 
 // IMPORTANT: Nodemailer requires Node runtime
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 
 /**
  * Generate Doorplace USA Partner ID

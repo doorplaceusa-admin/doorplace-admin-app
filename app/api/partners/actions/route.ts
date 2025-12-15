@@ -90,15 +90,68 @@ export async function POST(req: Request) {
 
       const htmlBody = `
 <div style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; color: #000; line-height: 1.6;">
-  <h2 style="color:#b80d0d;">Welcome to Doorplace USA!</h2>
-  <p>Hello${name ? ` ${name}` : ""},</p>
-  <p><strong>Partner ID:</strong> ${partner.partner_id}</p>
+
+  <h2 style="color:#b80d0d; margin-bottom: 14px;">
+    Welcome to Doorplace USA!
+  </h2>
+
+  <p>Hello,</p>
+
   <p>
-    <strong>Tracking Link:</strong><br>
-    <a href="${partner.tracking_link}" target="_blank">${partner.tracking_link}</a>
+    You're officially set up as a <strong>Doorplace USA Partner</strong>.
   </p>
-  <p>Welcome aboard,<br><strong>Doorplace USA</strong></p>
-</div>`;
+
+  <p>
+    Below is your unique Partner ID and Tracking Link, which you’ll use to share
+    Doorplace USA swings with potential customers.
+  </p>
+
+  <p>
+    <strong>Partner ID:</strong><br>
+    <span style="background:#fff3a0; padding:6px 10px; display:inline-block; font-weight:bold;">
+      ${partner.partner_id}
+    </span>
+  </p>
+
+  <p>
+    <strong>Your Tracking Link:</strong><br>
+    <a href="${partner.tracking_link}" target="_blank">
+      ${partner.tracking_link}
+    </a>
+  </p>
+
+  <p>
+    You can begin sharing your tracking link anywhere —
+    Facebook Marketplace, social media, text messages,
+    or directly with customers.
+  </p>
+
+  <p>
+    When a customer submits the form through your link,
+    the lead is automatically tracked to your Partner ID
+    and routed to our team for follow-up and quoting.
+  </p>
+
+  <p>
+    Any lead or order that comes through your tracking link
+    will always remain associated with your Partner ID.
+  </p>
+
+  <p>
+    You can track all leads, orders, and commissions through
+    your Partner Dashboard at any time.
+  </p>
+
+  <br>
+
+  <p>
+    Welcome aboard,<br>
+    <strong>Doorplace USA</strong>
+  </p>
+
+</div>
+`;
+
 
       const info = await transporter.sendMail({
         from: SMTP_FROM,

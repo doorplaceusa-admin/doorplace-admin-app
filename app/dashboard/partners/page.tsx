@@ -129,7 +129,7 @@ export default function PartnersPage() {
 
   return (
     <div className="p-6 space-y-4 max-w-full overflow-x-hidden">
-      {/* HEADER */}
+      {/* HEADER (STAYS STICKY) */}
       <div className="sticky top-0 z-20 bg-white pb-4 border-b">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-red-700">Partners</h1>
@@ -164,17 +164,30 @@ export default function PartnersPage() {
       </div>
 
       {/* TABLE */}
-      <div className="bg-white border rounded-lg overflow-x-auto">
-        <table className="w-full text-sm table-fixed">
+      {/* ✅ FIXES:
+          - removed overflow-x-auto (no horizontal scroll on mobile)
+          - removed table-fixed + hard widths that were squeezing "Actions"
+          - made Action column compact + always readable on mobile
+      */}
+      <div className="bg-white border rounded-lg overflow-hidden">
+        <table className="w-full text-sm">
           <thead className="bg-gray-100 border-b">
             <tr>
-              <th className="px-3 py-3 text-left w-[30%]">Name</th>
-              <th className="px-3 py-3 text-left hidden md:table-cell w-[30%]">
+              <th className="px-3 py-3 text-left">Name</th>
+
+              <th className="px-3 py-3 text-left hidden md:table-cell">
                 Email
               </th>
-              <th className="px-3 py-3 text-left w-[15%]">Partner ID</th>
-              <th className="px-3 py-3 text-left w-[15%]">Status</th>
-              <th className="px-3 py-3 text-left w-[10%]">Actions</th>
+
+              <th className="px-3 py-3 text-left">Partner ID</th>
+
+              <th className="px-3 py-3 text-left">Status</th>
+
+              {/* ✅ make header shorter on mobile so it never gets cut */}
+              <th className="px-3 py-3 text-center">
+                <span className="md:hidden">Action</span>
+                <span className="hidden md:inline">Actions</span>
+              </th>
             </tr>
           </thead>
 
@@ -205,9 +218,10 @@ export default function PartnersPage() {
                   )}
                 </td>
 
-                <td className="px-3 py-3">
+                {/* ✅ Mobile-safe action control (no horizontal scroll needed) */}
+                <td className="px-3 py-3 text-center">
                   <select
-                    className="border rounded px-2 py-1 text-xs w-full"
+                    className="border rounded px-2 py-1 text-xs w-[92px] md:w-full"
                     onChange={(e) => {
                       const val = e.target.value;
                       e.target.value = "";
@@ -215,12 +229,9 @@ export default function PartnersPage() {
                       if (val === "edit") setEditPartner(p);
                       if (val === "regen")
                         runAction("regenerate_partner_id", p);
-                      if (val === "email")
-                        runAction("mark_email_sent", p);
-                      if (val === "shopify")
-                        runAction("sync_shopify_tags", p);
-                      if (val === "delete")
-                        runAction("delete_partner", p);
+                      if (val === "email") runAction("mark_email_sent", p);
+                      if (val === "shopify") runAction("sync_shopify_tags", p);
+                      if (val === "delete") runAction("delete_partner", p);
                     }}
                   >
                     <option value="">Select</option>
@@ -244,27 +255,46 @@ export default function PartnersPage() {
           <div className="bg-white p-6 rounded max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-3">Partner Profile</h2>
 
-            <p><b>Name:</b> {viewPartner.first_name} {viewPartner.last_name}</p>
-            <p><b>Email:</b> {viewPartner.email_address}</p>
-            <p><b>Phone:</b> {viewPartner.cell_phone_number}</p>
-            <p><b>Partner ID:</b> {viewPartner.partner_id}</p>
+            <p>
+              <b>Name:</b> {viewPartner.first_name} {viewPartner.last_name}
+            </p>
+            <p>
+              <b>Email:</b> {viewPartner.email_address}
+            </p>
+            <p>
+              <b>Phone:</b> {viewPartner.cell_phone_number}
+            </p>
+            <p>
+              <b>Partner ID:</b> {viewPartner.partner_id}
+            </p>
 
             <p className="break-all mt-2">
-              <b>Tracking Link:</b><br />
+              <b>Tracking Link:</b>
+              <br />
               {viewPartner.tracking_link ||
                 `https://doorplaceusa.com/pages/swing-partner-lead?partner_id=${viewPartner.partner_id}`}
             </p>
 
             <p className="mt-2">
-              <b>Address:</b><br />
-              {viewPartner.street_address}<br />
+              <b>Address:</b>
+              <br />
+              {viewPartner.street_address}
+              <br />
               {viewPartner.city}, {viewPartner.state} {viewPartner.zip_code}
             </p>
 
-            <p><b>Business Name:</b> {viewPartner.business_name}</p>
-            <p><b>Coverage Area:</b> {viewPartner.coverage_area}</p>
-            <p><b>Preferred Contact:</b> {viewPartner.preferred_contact_method}</p>
-            <p><b>Sales Experience:</b> {viewPartner.sales_experience}</p>
+            <p>
+              <b>Business Name:</b> {viewPartner.business_name}
+            </p>
+            <p>
+              <b>Coverage Area:</b> {viewPartner.coverage_area}
+            </p>
+            <p>
+              <b>Preferred Contact:</b> {viewPartner.preferred_contact_method}
+            </p>
+            <p>
+              <b>Sales Experience:</b> {viewPartner.sales_experience}
+            </p>
 
             <button
               className="mt-4 bg-black text-white px-4 py-2 rounded w-full"

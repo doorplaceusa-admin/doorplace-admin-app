@@ -10,6 +10,7 @@ type Partner = {
   email_address: string;
   cell_phone_number: string;
   partner_id: string;
+  onboarding_email_sent?: boolean;
   created_at: string;
 };
 
@@ -19,6 +20,8 @@ export default function PartnersPage() {
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "name">("newest");
+
+  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
 
   async function loadPartners() {
     setLoading(true);
@@ -60,13 +63,11 @@ export default function PartnersPage() {
     });
 
     const json = await res.json();
-
     if (!res.ok) {
       alert(json.error || "Action failed");
       return;
     }
 
-    alert("Action completed");
     loadPartners();
   }
 
@@ -99,7 +100,13 @@ export default function PartnersPage() {
     <div className="p-6 space-y-4">
       {/* HEADER */}
       <div className="sticky top-0 z-20 bg-white pb-4 border-b">
-        <h1 className="text-3xl font-bold text-red-700">Partners</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-red-700">Partners</h1>
+          <span className="text-sm font-semibold bg-gray-100 px-3 py-1 rounded">
+            Total: {filteredPartners.length}
+          </span>
+        </div>
+
         <p className="text-sm text-gray-500 mb-3">
           Doorplace USA — Partner Control Panel
         </p>
@@ -132,10 +139,9 @@ export default function PartnersPage() {
             <tr>
               <th className="px-4 py-3 text-left">Name</th>
               <th className="px-4 py-3 text-left">Email</th>
-              <th className="px-4 py-3 text-left hidden md:table-cell">
-                Phone
-              </th>
+              <th className="px-4 py-3 text-left hidden md:table-cell">Phone</th>
               <th className="px-4 py-3 text-left">Partner ID</th>
+              <th className="px-4 py-3 text-left">Status</th>
               <th className="px-4 py-3 text-left">Actions</th>
             </tr>
           </thead>
@@ -147,54 +153,62 @@ export default function PartnersPage() {
                   {p.first_name} {p.last_name}
                 </td>
 
-                <td className="px-4 py-3 break-all">
-                  {p.email_address}
-                </td>
+                <td className="px-4 py-3 break-all">{p.email_address}</td>
 
                 <td className="px-4 py-3 hidden md:table-cell">
-                  {p.cell_phone_number}
+                  {p.cell_phone_number || "—"}
                 </td>
 
-                <td className="px-4 py-3 font-mono text-xs">
-                  {p.partner_id}
+                <td className="px-4 py-3 font-mono text-xs">{p.partner_id}</td>
+
+                <td className="px-4 py-3">
+                  {p.onboarding_email_sent ? (
+                    <span className="text-green-700 text-xs font-semibold">
+                      Email Sent
+                    </span>
+                  ) : (
+                    <span className="text-yellow-700 text-xs font-semibold">
+                      Pending
+                    </span>
+                  )}
                 </td>
 
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-2">
                     <button
                       className="px-3 py-1 text-xs rounded bg-gray-200"
-                      onClick={() =>
-                        runAction("regenerate_partner_id", p)
-                      }
+                      onClick={() => runAction("regenerate_partner_id", p)}
                     >
-                      Regenerate ID
+                      Regenerate
                     </button>
 
                     <button
                       className="px-3 py-1 text-xs rounded bg-red-600 text-white"
-                      onClick={() =>
-                        runAction("mark_email_sent", p)
-                      }
+                      onClick={() => runAction("mark_email_sent", p)}
                     >
                       Send Email
                     </button>
 
                     <button
                       className="px-3 py-1 text-xs rounded bg-blue-600 text-white"
-                      onClick={() =>
-                        runAction("sync_shopify_tags", p)
-                      }
+                      onClick={() => runAction("sync_shopify_tags", p)}
                     >
                       Sync Shopify
                     </button>
 
                     <button
                       className="px-3 py-1 text-xs rounded bg-black text-white"
-                      onClick={() =>
-                        runAction("delete_partner", p)
-                      }
+                      onClick={() => runAction("delete_partner", p)}
                     >
                       Delete
+                    </button>
+
+                    {/* MOBILE VIEW DETAILS */}
+                    <button
+                      className="px-3 py-1 text-xs rounded bg-gray-100 md:hidden"
+                      onClick={() => setSelectedPartner(p)}
+                    >
+                      View
                     </button>
                   </div>
                 </td>
@@ -203,7 +217,7 @@ export default function PartnersPage() {
 
             {filteredPartners.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center py-6 text-gray-500">
+                <td colSpan={6} className="text-center py-6 text-gray-500">
                   No partners found
                 </td>
               </tr>
@@ -211,6 +225,35 @@ export default function PartnersPage() {
           </tbody>
         </table>
       </div>
+
+      {/* MOBILE MODAL */}
+      {selectedPartner && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold mb-2">
+              {selectedPartner.first_name} {selectedPartner.last_name}
+            </h2>
+
+            <p className="text-sm mb-1">
+              <strong>Email:</strong> {selectedPartner.email_address}
+            </p>
+            <p className="text-sm mb-1">
+              <strong>Phone:</strong>{" "}
+              {selectedPartner.cell_phone_number || "—"}
+            </p>
+            <p className="text-sm mb-1">
+              <strong>Partner ID:</strong> {selectedPartner.partner_id}
+            </p>
+
+            <button
+              className="mt-4 w-full bg-black text-white py-2 rounded"
+              onClick={() => setSelectedPartner(null)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

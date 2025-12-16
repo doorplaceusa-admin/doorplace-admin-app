@@ -19,6 +19,72 @@ function requireEnv(name: string) {
   if (!v) throw new Error(`Missing env var: ${name}`);
   return v;
 }
+async function syncShopifyPartnerTags(
+  email: string,
+  newPartnerID: string
+) {
+  const SHOPIFY_STORE = requireEnv("SHOPIFY_STORE");
+  const SHOPIFY_API_VERSION = requireEnv("SHOPIFY_API_VERSION");
+  const SHOPIFY_ACCESS_TOKEN = requireEnv("SHOPIFY_ACCESS_TOKEN");
+
+  const headers = {
+    "X-Shopify-Access-Token": SHOPIFY_ACCESS_TOKEN,
+    "Content-Type": "application/json",
+  };
+
+  // 1️⃣ Find customer by email
+  const searchRes = await fetch(
+    `https://${SHOPIFY_STORE}/admin/api/${SHOPIFY_API_VERSION}/customers/search.json?query=email:${encodeURIComponent(
+      email
+    )}`,
+    { headers }
+  );
+
+  const searchJson = await searchRes.json();
+  if (!searchJson.customers || searchJson.customers.length === 0) {
+    throw new Error("Shopify customer not found");
+  }
+
+  const customer = searchJson.customers[0];
+  const customerId = customer.id;
+
+  // 2️⃣ Clean tags — REMOVE ALL DP TAGS
+  const existingTags = customer.tags
+    ? customer.tags.split(",").map((t: string) => t.trim())
+    : [];
+
+  const cleanedTags = existingTags.filter(
+    (tag: string) => !tag.startsWith("DP")
+  );
+
+  // 3️⃣ Ensure required partner tags
+  if (!cleanedTags.includes("partner")) cleanedTags.push("partner");
+  if (!cleanedTags.includes("swing partner"))
+    cleanedTags.push("swing partner");
+
+  // 4️⃣ Add NEW Partner ID
+  cleanedTags.push(newPartnerID);
+
+  // 5️⃣ Update Shopify customer
+  const updateRes = await fetch(
+    `https://${SHOPIFY_STORE}/admin/api/${SHOPIFY_API_VERSION}/customers/${customerId}.json`,
+    {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({
+        customer: {
+          id: customerId,
+          tags: cleanedTags.join(", "),
+        },
+      }),
+    }
+  );
+
+  if (!updateRes.ok) {
+    const errText = await updateRes.text();
+    throw new Error(`Shopify update failed: ${errText}`);
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -183,84 +249,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: "partner_deleted" });
     }
 
-    /* ===============================
-       SYNC SHOPIFY TAGS (NEW)
-    =============================== */
-    if (action === "sync_shopify_tags") {
-      const SHOPIFY_STORE = requireEnv("SHOPIFY_STORE");
-      const SHOPIFY_TOKEN = requireEnv("SHOPIFY_ADMIN_TOKEN");
-      const API_VERSION = "2025-01";
-
-      const { data: partner, error } = await supabaseAdmin
-        .from("partners")
-        .select("email_address, partner_id")
-        .eq("partner_id", partner_id)
-        .single();
-
-      if (error || !partner) {
-        return NextResponse.json({ error: "Partner not found" }, { status: 404 });
-      }
-
-      const searchRes = await fetch(
-        `https://${SHOPIFY_STORE}/admin/api/${API_VERSION}/customers/search.json?query=email:${encodeURIComponent(
-          partner.email_address
-        )}`,
-        {
-          headers: {
-            "X-Shopify-Access-Token": SHOPIFY_TOKEN,
-          },
-        }
-      );
-
-      const searchJson = await searchRes.json();
-      const customer = searchJson.customers?.[0];
-      if (!customer) {
-        return NextResponse.json({ error: "Shopify customer not found" }, { status: 404 });
-      }
-
-      const existingTags = customer.tags
-        ? customer.tags.split(",").map((t: string) => t.trim())
-        : [];
-
-      const newTags = Array.from(
-        new Set([
-          ...existingTags,
-          "partner",
-          "swing partner",
-          partner.partner_id,
-          ...tags,
-        ])
-      );
-
-      await fetch(
-        `https://${SHOPIFY_STORE}/admin/api/${API_VERSION}/customers/${customer.id}.json`,
-        {
-          method: "PUT",
-          headers: {
-            "X-Shopify-Access-Token": SHOPIFY_TOKEN,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            customer: { id: customer.id, tags: newTags.join(", ") },
-          }),
-        }
-      );
-
-      return NextResponse.json({ status: "shopify_tags_synced", tags: newTags });
-    }
+    
 /* ===============================
-   SYNC SHOPIFY TAGS
+   SYNC SHOPIFY TAGS (CLEAN + SAFE)
 =============================== */
 if (action === "sync_shopify_tags") {
-  const { tags } = body;
-
-  if (!Array.isArray(tags)) {
-    return NextResponse.json(
-      { error: "tags must be an array" },
-      { status: 400 }
-    );
-  }
-
   // 1️⃣ Get partner data
   const { data: partner, error } = await supabaseAdmin
     .from("partners")
@@ -269,24 +262,28 @@ if (action === "sync_shopify_tags") {
     .single();
 
   if (error || !partner) {
-    return NextResponse.json({ error: "Partner not found" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Partner not found" },
+      { status: 404 }
+    );
   }
 
-  // 2️⃣ Shopify ENV
+  // 2️⃣ ENV
   const SHOPIFY_STORE = requireEnv("SHOPIFY_STORE");
-  const SHOPIFY_TOKEN = requireEnv("SHOPIFY_ADMIN_TOKEN");
-  const API_VERSION = "2025-01";
+  const SHOPIFY_ACCESS_TOKEN = requireEnv("SHOPIFY_ACCESS_TOKEN");
+  const SHOPIFY_API_VERSION = requireEnv("SHOPIFY_API_VERSION");
 
-  // 3️⃣ Find customer by email
+  const headers = {
+    "X-Shopify-Access-Token": SHOPIFY_ACCESS_TOKEN,
+    "Content-Type": "application/json",
+  };
+
+  // 3️⃣ Find Shopify customer by email
   const searchRes = await fetch(
-    `https://${SHOPIFY_STORE}/admin/api/${API_VERSION}/customers/search.json?query=email:${encodeURIComponent(
+    `https://${SHOPIFY_STORE}/admin/api/${SHOPIFY_API_VERSION}/customers/search.json?query=email:${encodeURIComponent(
       partner.email_address
     )}`,
-    {
-      headers: {
-        "X-Shopify-Access-Token": SHOPIFY_TOKEN,
-      },
-    }
+    { headers }
   );
 
   const searchJson = await searchRes.json();
@@ -299,35 +296,49 @@ if (action === "sync_shopify_tags") {
     );
   }
 
-  // 4️⃣ Merge tags
+  // 4️⃣ Strip ALL old DP* tags
   const existingTags = customer.tags
     ? customer.tags.split(",").map((t: string) => t.trim())
     : [];
 
-  const finalTags = Array.from(
-    new Set([...existingTags, ...tags, partner.partner_id])
+  const cleanedTags = existingTags.filter(
+    (tag: string) => !tag.startsWith("DP")
   );
 
-  // 5️⃣ Update Shopify
-  await fetch(
-    `https://${SHOPIFY_STORE}/admin/api/${API_VERSION}/customers/${customer.id}.json`,
+  // 5️⃣ Ensure base partner tags
+  if (!cleanedTags.includes("partner")) cleanedTags.push("partner");
+  if (!cleanedTags.includes("swing partner"))
+    cleanedTags.push("swing partner");
+
+  // 6️⃣ Add current Partner ID ONLY
+  cleanedTags.push(partner.partner_id);
+
+  // 7️⃣ Update Shopify customer
+  const updateRes = await fetch(
+    `https://${SHOPIFY_STORE}/admin/api/${SHOPIFY_API_VERSION}/customers/${customer.id}.json`,
     {
       method: "PUT",
-      headers: {
-        "X-Shopify-Access-Token": SHOPIFY_TOKEN,
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
         customer: {
           id: customer.id,
-          tags: finalTags.join(", "),
+          tags: cleanedTags.join(", "),
         },
       }),
     }
   );
 
-  return NextResponse.json({ status: "shopify_tags_synced" });
+  if (!updateRes.ok) {
+    const errText = await updateRes.text();
+    throw new Error(`Shopify update failed: ${errText}`);
+  }
+
+  return NextResponse.json({
+    status: "shopify_tags_synced",
+    tags: cleanedTags,
+  });
 }
+
 
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });

@@ -51,11 +51,9 @@ export default function OnboardingPage() {
         "Thank you for submitting your Partner Onboarding Form! Your information has been received. If you do not receive an email within 12–24 hours, please check your spam or junk folder or reach out to customer support."
       );
 
-      // Redirect to live Doorplace USA partner dashboard
       setTimeout(() => {
         window.location.href = "https://doorplaceusa.com/account";
       }, 1500);
-
     } catch (e) {
       setErr("Network error.");
     } finally {
@@ -66,15 +64,40 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl bg-white rounded-xl shadow border overflow-hidden">
-        <div className="px-6 py-5 border-b">
+
+        {/* HEADER */}
+        <div className="px-6 py-6 border-b">
           <h1 className="text-2xl font-bold text-[#b80d0d]">
-            Partner Onboarding
+            Independent Partner Onboarding
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Powered by Doorplace USA
+          <p className="text-sm text-gray-600 mt-2">
+            Welcome! Complete the steps below and submit the onboarding form to finalize your partner profile.
           </p>
         </div>
 
+        {/* INFO SECTION */}
+        <div className="px-6 py-5 space-y-5 border-b bg-gray-50">
+          <div>
+            <h2 className="font-semibold text-[#b80d0d] mb-2">Quick Checklist</h2>
+            <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
+              <li>Review the Partner Dashboard page</li>
+              <li>Update your contact information as needed</li>
+              <li>Understand commission payouts</li>
+              <li>Be familiar with custom swing options</li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 className="font-semibold text-[#b80d0d] mb-2">Important Notes</h2>
+            <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
+              <li>Commission payouts are processed 24–36 hours after your customer submits their deposit.</li>
+              <li>The Swing Resource Page is your main hub for scripts, guides, and marketing materials.</li>
+              <li>All customer swing orders must be submitted through the Swing Order Form.</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* FORM */}
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input label="First Name" value={form.first_name} onChange={(v) => setField("first_name", v)} />
           <Input label="Last Name" value={form.last_name} onChange={(v) => setField("last_name", v)} />

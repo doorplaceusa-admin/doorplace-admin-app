@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function OnboardingPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string>("");
   const [err, setErr] = useState<string>("");
@@ -50,11 +48,14 @@ export default function OnboardingPage() {
       }
 
       setMsg(
-        `✅ Submitted. Partner ID: ${data.partner_id || "(generated)"}`
+        "Thank you for submitting your Partner Onboarding Form! Your information has been received. If you do not receive an email within 12–24 hours, please check your spam or junk folder or reach out to customer support."
       );
 
-      // optional: send them to login after success
-      setTimeout(() => router.push("/login"), 1200);
+      // Redirect to live Doorplace USA partner dashboard
+      setTimeout(() => {
+        window.location.href = "https://doorplaceusa.com/account";
+      }, 1500);
+
     } catch (e) {
       setErr("Network error.");
     } finally {

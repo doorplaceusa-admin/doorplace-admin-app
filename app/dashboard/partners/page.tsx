@@ -21,6 +21,7 @@ type Partner = {
   preferred_contact_method?: string;
   sales_experience?: string;
   onboarding_email_sent?: boolean;
+  tracking_link?: string;
 };
 
 export default function PartnersPage() {
@@ -35,6 +36,7 @@ export default function PartnersPage() {
 
   async function loadPartners() {
     setLoading(true);
+
     const { data } = await supabase
       .from("partners")
       .select("*")
@@ -126,11 +128,11 @@ export default function PartnersPage() {
   if (loading) return <div className="p-6">Loading partners…</div>;
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-6 space-y-4 max-w-full overflow-x-hidden">
       {/* HEADER */}
       <div className="sticky top-0 z-20 bg-white pb-4 border-b">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-red-700">Partners</h1>
+          <h1 className="text-3xl font-bold text-red-700">Partners</h1>
           <span className="text-sm text-gray-600">
             Total: {filteredPartners.length}
           </span>
@@ -162,35 +164,36 @@ export default function PartnersPage() {
       </div>
 
       {/* TABLE */}
-      <div className="overflow-x-auto bg-white border rounded-lg">
-        <table className="min-w-full text-sm">
+      <div className="bg-white border rounded-lg overflow-x-auto">
+        <table className="w-full text-sm table-fixed">
           <thead className="bg-gray-100 border-b">
             <tr>
-              <th className="px-3 py-2 text-left">Name</th>
-              <th className="px-3 py-2 text-left">Email</th>
-              <th className="px-3 py-2 hidden md:table-cell">Phone</th>
-              <th className="px-3 py-2">Partner ID</th>
-              <th className="px-3 py-2">Status</th>
-              <th className="px-3 py-2">Actions</th>
+              <th className="px-3 py-3 text-left w-[30%]">Name</th>
+              <th className="px-3 py-3 text-left hidden md:table-cell w-[30%]">
+                Email
+              </th>
+              <th className="px-3 py-3 text-left w-[15%]">Partner ID</th>
+              <th className="px-3 py-3 text-left w-[15%]">Status</th>
+              <th className="px-3 py-3 text-left w-[10%]">Actions</th>
             </tr>
           </thead>
 
           <tbody>
             {filteredPartners.map((p) => (
               <tr key={p.id} className="border-b hover:bg-gray-50">
-                <td className="px-3 py-2">
+                <td className="px-3 py-3 font-medium truncate">
                   {p.first_name} {p.last_name}
                 </td>
-                <td className="px-3 py-2 break-all">
+
+                <td className="px-3 py-3 hidden md:table-cell truncate">
                   {p.email_address}
                 </td>
-                <td className="px-3 py-2 hidden md:table-cell">
-                  {p.cell_phone_number}
-                </td>
-                <td className="px-3 py-2 font-mono text-xs">
+
+                <td className="px-3 py-3 font-mono text-xs truncate">
                   {p.partner_id}
                 </td>
-                <td className="px-3 py-2">
+
+                <td className="px-3 py-3">
                   {p.onboarding_email_sent ? (
                     <span className="text-green-700 text-xs font-bold">
                       Email Sent
@@ -201,18 +204,23 @@ export default function PartnersPage() {
                     </span>
                   )}
                 </td>
-                <td className="px-3 py-2">
+
+                <td className="px-3 py-3">
                   <select
-                    className="border rounded px-2 py-1 text-xs"
+                    className="border rounded px-2 py-1 text-xs w-full"
                     onChange={(e) => {
                       const val = e.target.value;
                       e.target.value = "";
                       if (val === "view") setViewPartner(p);
                       if (val === "edit") setEditPartner(p);
-                      if (val === "regen") runAction("regenerate_partner_id", p);
-                      if (val === "email") runAction("mark_email_sent", p);
-                      if (val === "shopify") runAction("sync_shopify_tags", p);
-                      if (val === "delete") runAction("delete_partner", p);
+                      if (val === "regen")
+                        runAction("regenerate_partner_id", p);
+                      if (val === "email")
+                        runAction("mark_email_sent", p);
+                      if (val === "shopify")
+                        runAction("sync_shopify_tags", p);
+                      if (val === "delete")
+                        runAction("delete_partner", p);
                     }}
                   >
                     <option value="">Select</option>
@@ -233,28 +241,30 @@ export default function PartnersPage() {
       {/* VIEW MODAL */}
       {viewPartner && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-5 rounded w-full max-w-lg">
+          <div className="bg-white p-6 rounded max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-3">Partner Profile</h2>
 
-            <div className="space-y-1 text-sm">
-              <p><b>Name:</b> {viewPartner.first_name} {viewPartner.last_name}</p>
-              <p><b>Email:</b> {viewPartner.email_address}</p>
-              <p><b>Phone:</b> {viewPartner.cell_phone_number}</p>
-              <p><b>Partner ID:</b> {viewPartner.partner_id}</p>
-              <p className="break-all">
-                <b>Tracking Link:</b><br />
-                https://doorplaceusa.com/pages/swing-partner-lead?partner_id={viewPartner.partner_id}
-              </p>
-              <p>
-                <b>Address:</b>{" "}
-                {viewPartner.street_address}, {viewPartner.city},{" "}
-                {viewPartner.state} {viewPartner.zip_code}
-              </p>
-              <p><b>Business Name:</b> {viewPartner.business_name}</p>
-              <p><b>Coverage Area:</b> {viewPartner.coverage_area}</p>
-              <p><b>Preferred Contact:</b> {viewPartner.preferred_contact_method}</p>
-              <p><b>Sales Experience:</b> {viewPartner.sales_experience}</p>
-            </div>
+            <p><b>Name:</b> {viewPartner.first_name} {viewPartner.last_name}</p>
+            <p><b>Email:</b> {viewPartner.email_address}</p>
+            <p><b>Phone:</b> {viewPartner.cell_phone_number}</p>
+            <p><b>Partner ID:</b> {viewPartner.partner_id}</p>
+
+            <p className="break-all mt-2">
+              <b>Tracking Link:</b><br />
+              {viewPartner.tracking_link ||
+                `https://doorplaceusa.com/pages/swing-partner-lead?partner_id=${viewPartner.partner_id}`}
+            </p>
+
+            <p className="mt-2">
+              <b>Address:</b><br />
+              {viewPartner.street_address}<br />
+              {viewPartner.city}, {viewPartner.state} {viewPartner.zip_code}
+            </p>
+
+            <p><b>Business Name:</b> {viewPartner.business_name}</p>
+            <p><b>Coverage Area:</b> {viewPartner.coverage_area}</p>
+            <p><b>Preferred Contact:</b> {viewPartner.preferred_contact_method}</p>
+            <p><b>Sales Experience:</b> {viewPartner.sales_experience}</p>
 
             <button
               className="mt-4 bg-black text-white px-4 py-2 rounded w-full"
@@ -266,10 +276,10 @@ export default function PartnersPage() {
         </div>
       )}
 
-      {/* EDIT MODAL */}
+      {/* EDIT MODAL — unchanged */}
       {editPartner && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-5 rounded w-full max-w-lg">
+          <div className="bg-white p-6 rounded max-w-lg w-full">
             <h2 className="text-xl font-bold mb-3">Edit Partner</h2>
 
             {[
@@ -284,7 +294,7 @@ export default function PartnersPage() {
             ].map((field) => (
               <input
                 key={field}
-                className="border w-full mb-2 px-3 py-2 text-sm"
+                className="border w-full mb-2 px-3 py-2"
                 placeholder={field.replace("_", " ")}
                 value={(editPartner as any)[field] || ""}
                 onChange={(e) =>
@@ -298,13 +308,13 @@ export default function PartnersPage() {
 
             <div className="flex gap-2 mt-3">
               <button
-                className="bg-red-600 text-white px-4 py-2 rounded w-full"
+                className="bg-red-600 text-white px-4 py-2 rounded flex-1"
                 onClick={saveEdit}
               >
                 Save
               </button>
               <button
-                className="bg-gray-300 px-4 py-2 rounded w-full"
+                className="bg-gray-300 px-4 py-2 rounded flex-1"
                 onClick={() => setEditPartner(null)}
               >
                 Cancel

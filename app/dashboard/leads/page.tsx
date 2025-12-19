@@ -1,160 +1,300 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+/* ===============================
+   TYPES
+================================ */
+type Lead = {
+  id: string;
+  lead_id: string;
+  first_name: string;
+  last_name: string;
+  customer_email?: string;
+  customer_phone?: string;
+  street_address?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  project_type?: string;
+  size_needed?: string;
+  installation_needed?: string;
+  project_details?: string;
+  lead_status?: string;
+  partner_id?: string;
+  lead_source?: string;
+  photos?: string[];
+  created_at: string;
+};
+
+/* ===============================
+   PAGE
+================================ */
 export default function LeadsPage() {
-  const [leads, setLeads] = useState<any[]>([]);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [form, setForm] = useState({
-    first_name: "",
-    last_name: "",
-    email_address: "",
-    customer_phone: "",
-    looking_for: "",
-    lead_status: "new",
-    partner_id: "",
-  });
+  const [search, setSearch] = useState("");
+  const [viewLead, setViewLead] = useState<Lead | null>(null);
+  const [editLead, setEditLead] = useState<Lead | null>(null);
 
-  useEffect(() => {
-    loadLeads();
-  }, []);
-
+  /* ===============================
+     LOAD LEADS
+  ================================ */
   async function loadLeads() {
+    setLoading(true);
+
     const { data } = await supabase
       .from("leads")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (data) setLeads(data);
+    setLeads(data || []);
+    setLoading(false);
   }
 
-  function setField(k: string, v: string) {
-    setForm(p => ({ ...p, [k]: v }));
+  useEffect(() => {
+    loadLeads();
+  }, []);
+
+  /* ===============================
+     FILTER
+  ================================ */
+  const filteredLeads = useMemo(() => {
+    if (!search.trim()) return leads;
+
+    const q = search.toLowerCase();
+    return leads.filter((l) =>
+      `${l.first_name} ${l.last_name} ${l.customer_email} ${l.lead_id}`
+        .toLowerCase()
+        .includes(q)
+    );
+  }, [leads, search]);
+
+  /* ===============================
+     SAVE EDIT
+  ================================ */
+  async function saveEdit() {
+    if (!editLead) return;
+
+    await supabase
+      .from("leads")
+      .update({
+        first_name: editLead.first_name,
+        last_name: editLead.last_name,
+        customer_email: editLead.customer_email,
+        customer_phone: editLead.customer_phone,
+        street_address: editLead.street_address,
+        city: editLead.city,
+        state: editLead.state,
+        zip_code: editLead.zip_code,
+        lead_status: editLead.lead_status,
+        partner_id: editLead.partner_id,
+      })
+      .eq("id", editLead.id);
+
+    setEditLead(null);
+    loadLeads();
   }
 
-  async function addLead() {
-    const leadId = `LD${Date.now()}`;
+  /* ===============================
+     DELETE
+  ================================ */
+  async function deleteLead(lead: Lead) {
+    if (!confirm(`Delete lead ${lead.lead_id}?`)) return;
 
-    const { error } = await supabase.from("leads").insert([
-      {
-        lead_id: leadId,
-        first_name: form.first_name,
-        last_name: form.last_name,
-        email_address: form.email_address,
-        customer_phone: form.customer_phone,
-        looking_for: form.looking_for,
-        lead_status: form.lead_status,
-        partner_id: form.partner_id || null,
-        source: "admin",
-      },
-    ]);
-
-    if (!error) {
-      setForm({
-        first_name: "",
-        last_name: "",
-        email_address: "",
-        customer_phone: "",
-        looking_for: "",
-        lead_status: "new",
-        partner_id: "",
-      });
-      setShowAddForm(false);
-      loadLeads();
-    }
+    await supabase.from("leads").delete().eq("id", lead.id);
+    loadLeads();
   }
 
+  if (loading) return <div className="p-6">Loading leads…</div>;
+
+  /* ===============================
+     RENDER
+  ================================ */
   return (
-    <div style={{ maxWidth: 1100 }}>
-      <h2>Leads</h2>
+    <div className="h-[calc(100vh-64px)] overflow-y-auto px-6 pb-6 space-y-4">
+      {/* HEADER */}
+      <div className="sticky top-0 z-30 bg-white pb-4 border-b shadow-sm">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-red-700">Leads</h1>
+          <span className="text-sm text-gray-600">
+            Total: {filteredLeads.length}
+          </span>
+        </div>
 
-      {/* ADD LEAD TOGGLE */}
-      <button
-        style={btn}
-        onClick={() => setShowAddForm(p => !p)}
-      >
-        {showAddForm ? "Close Add Lead" : "Add Lead"}
-      </button>
+        <p className="text-sm text-gray-500 mb-3">
+          Doorplace USA — Lead Management
+        </p>
 
-      {/* ADD LEAD FORM */}
-      {showAddForm && (
-        <div style={box}>
-          <input style={input} placeholder="First Name" value={form.first_name} onChange={e => setField("first_name", e.target.value)} />
-          <input style={input} placeholder="Last Name" value={form.last_name} onChange={e => setField("last_name", e.target.value)} />
-          <input style={input} placeholder="Email" value={form.email_address} onChange={e => setField("email_address", e.target.value)} />
-          <input style={input} placeholder="Phone" value={form.customer_phone} onChange={e => setField("customer_phone", e.target.value)} />
-          <input style={input} placeholder="What is this lead for?" value={form.looking_for} onChange={e => setField("looking_for", e.target.value)} />
-          <input style={input} placeholder="Partner ID (optional)" value={form.partner_id} onChange={e => setField("partner_id", e.target.value)} />
+        <input
+          className="border rounded px-3 py-2 w-full md:max-w-sm"
+          placeholder="Search name, email, or Lead ID"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
 
-          <select style={input} value={form.lead_status} onChange={e => setField("lead_status", e.target.value)}>
-            <option value="new">New</option>
-            <option value="contacted">Contacted</option>
-            <option value="quote_sent">Quote Sent</option>
-            <option value="won">Won</option>
-            <option value="lost">Lost</option>
-          </select>
+      {/* TABLE */}
+      <div className="bg-white border rounded-lg overflow-x-auto">
+        <table className="w-full text-sm table-fixed">
+          <thead className="bg-gray-100 border-b">
+            <tr>
+              <th className="px-3 py-3 text-left w-[30%]">Name</th>
+              <th className="px-3 py-3 text-left hidden md:table-cell w-[30%]">
+                Email
+              </th>
+              <th className="px-3 py-3 text-left w-[15%]">Lead ID</th>
+              <th className="px-3 py-3 text-left w-[15%]">Status</th>
+              <th className="px-3 py-3 text-left w-[10%]">Actions</th>
+            </tr>
+          </thead>
 
-          <button style={btn} onClick={addLead}>Save Lead</button>
+          <tbody>
+            {filteredLeads.map((l) => (
+              <tr key={l.id} className="border-b hover:bg-gray-50">
+                <td className="px-3 py-3 font-medium truncate">
+                  {l.first_name} {l.last_name}
+                </td>
+
+                <td className="px-3 py-3 hidden md:table-cell truncate">
+                  {l.customer_email || "—"}
+                </td>
+
+                <td className="px-3 py-3 font-mono text-xs truncate">
+                  {l.lead_id}
+                </td>
+
+                <td className="px-3 py-3">
+                  <span className="inline-flex px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs font-semibold">
+                    {l.lead_status || "new"}
+                  </span>
+                </td>
+
+                <td className="px-3 py-3">
+                  <select
+                    className="border rounded px-2 py-1 text-xs w-full"
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      e.target.value = "";
+                      if (v === "view") setViewLead(l);
+                      if (v === "edit") setEditLead(l);
+                      if (v === "delete") deleteLead(l);
+                    }}
+                  >
+                    <option value="">Select</option>
+                    <option value="view">View</option>
+                    <option value="edit">Edit</option>
+                    <option value="delete">Delete</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* VIEW MODAL */}
+      {viewLead && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded max-w-xl w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-3">Lead Profile</h2>
+
+            <p><b>Lead ID:</b> {viewLead.lead_id}</p>
+            <p><b>Name:</b> {viewLead.first_name} {viewLead.last_name}</p>
+            <p><b>Email:</b> {viewLead.customer_email}</p>
+            <p><b>Phone:</b> {viewLead.customer_phone}</p>
+
+            <p className="mt-2">
+              <b>Address:</b><br />
+              {viewLead.street_address}<br />
+              {viewLead.city}, {viewLead.state} {viewLead.zip_code}
+            </p>
+
+            <p className="mt-2"><b>Project:</b> {viewLead.project_type}</p>
+            <p><b>Size:</b> {viewLead.size_needed}</p>
+            <p><b>Installation:</b> {viewLead.installation_needed}</p>
+            <p><b>Status:</b> {viewLead.lead_status}</p>
+            <p><b>Partner ID:</b> {viewLead.partner_id || "—"}</p>
+            <p><b>Source:</b> {viewLead.lead_source}</p>
+
+            {/* PHOTOS */}
+            <div className="mt-3">
+              <b>Photos:</b>
+              <div className="flex gap-2 flex-wrap mt-2">
+                {Array.isArray(viewLead.photos) && viewLead.photos.length > 0 ? (
+                  viewLead.photos.map((url, i) => (
+                    <img
+                      key={i}
+                      src={url}
+                      className="w-28 h-28 object-cover rounded border"
+                    />
+                  ))
+                ) : (
+                  <span className="text-gray-500 text-sm">
+                    No photos uploaded
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <button
+              className="mt-4 bg-black text-white px-4 py-2 rounded w-full"
+              onClick={() => setViewLead(null)}
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
 
-      {/* LEADS LIST */}
-      {leads.map(lead => {
-        const open = expandedId === lead.id;
+      {/* EDIT MODAL */}
+      {editLead && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded max-w-lg w-full">
+            <h2 className="text-xl font-bold mb-3">Edit Lead</h2>
 
-        return (
-          <div key={lead.id} style={box}>
-            <strong>Lead ID:</strong> {lead.lead_id}<br />
-            <strong>Name:</strong> {lead.first_name} {lead.last_name}<br />
-            <strong>Status:</strong> {lead.lead_status}<br />
+            {[
+              "first_name",
+              "last_name",
+              "customer_email",
+              "customer_phone",
+              "street_address",
+              "city",
+              "state",
+              "zip_code",
+              "partner_id",
+              "lead_status",
+            ].map((f) => (
+              <input
+                key={f}
+                className="border w-full mb-2 px-3 py-2"
+                placeholder={f.replace("_", " ")}
+                value={(editLead as any)[f] || ""}
+                onChange={(e) =>
+                  setEditLead({ ...editLead, [f]: e.target.value })
+                }
+              />
+            ))}
 
-            <button
-              style={{ ...btn, marginTop: 10 }}
-              onClick={() => setExpandedId(open ? null : lead.id)}
-            >
-              {open ? "Hide Details" : "View More"}
-            </button>
-
-            {open && (
-              <div style={{ marginTop: 12 }}>
-                <div><b>Email:</b> {lead.email_address || "—"}</div>
-                <div><b>Phone:</b> {lead.customer_phone || "—"}</div>
-                <div><b>Looking For:</b> {lead.looking_for || "—"}</div>
-                <div><b>Partner ID:</b> {lead.partner_id || "—"}</div>
-                <div><b>Source:</b> {lead.source}</div>
-                <div><b>Created:</b> {new Date(lead.created_at).toLocaleString()}</div>
-              </div>
-            )}
+            <div className="flex gap-2 mt-3">
+              <button
+                className="bg-red-700 text-white px-4 py-2 rounded flex-1"
+                onClick={saveEdit}
+              >
+                Save
+              </button>
+              <button
+                className="bg-gray-300 px-4 py-2 rounded flex-1"
+                onClick={() => setEditLead(null)}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-        );
-      })}
+        </div>
+      )}
     </div>
   );
 }
-
-const input = {
-  width: "100%",
-  padding: 10,
-  marginBottom: 10,
-  borderRadius: 6,
-  border: "1px solid #ccc",
-};
-
-const btn = {
-  background: "#007bff",
-  color: "#fff",
-  padding: "8px 14px",
-  borderRadius: 6,
-  cursor: "pointer",
-  border: "none",
-};
-
-const box = {
-  border: "1px solid #ccc",
-  padding: 16,
-  borderRadius: 8,
-  marginTop: 20,
-};

@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+/* ===============================
+   TYPES
+=============================== */
 type Partner = {
   id: string;
   first_name: string;
@@ -22,9 +25,31 @@ type Partner = {
   sales_experience?: string;
   onboarding_email_sent?: boolean;
   tracking_link?: string;
+  shopify_synced?: boolean;
 };
 
+type SystemSettings = {
+  id: string;
+  approval_mode: "manual" | "automatic";
+};
+
+/* ✅ Bulk repair response (what we expect back) */
+type BulkRepairResponse = {
+  success: boolean;
+  repaired?: number;
+  emailsSent?: number;
+  alreadyClean?: number;
+  skipped?: number;
+  dryRun?: boolean;
+  logs?: string[]; // optional
+  error?: string;
+};
+
+/* ===============================
+   PAGE
+=============================== */
 export default function PartnersPage() {
+  /* ---------- core state ---------- */
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,6 +59,51 @@ export default function PartnersPage() {
   const [viewPartner, setViewPartner] = useState<Partner | null>(null);
   const [editPartner, setEditPartner] = useState<Partner | null>(null);
 
+  /* ---------- GLOBAL APPROVAL MODE (FIXED: persists) ---------- */
+  const [systemSettings, setSystemSettings] =
+    useState<SystemSettings | null>(null);
+
+  /* ✅ BULK REPAIR UI STATE (ADDED) */
+  const [repairRunning, setRepairRunning] = useState(false);
+  const [repairDryRun, setRepairDryRun] = useState(false);
+  const [repairResult, setRepairResult] = useState<BulkRepairResponse | null>(
+    null
+  );
+  const [repairLogs, setRepairLogs] = useState<string[]>([]);
+
+  /* ===============================
+     LOAD SYSTEM SETTINGS (FIXED)
+  =============================== */
+  useEffect(() => {
+    supabase
+      .from("system_settings")
+      .select("id, approval_mode")
+      .single()
+      .then(({ data }) => {
+        if (data) setSystemSettings(data);
+      });
+  }, []);
+
+  async function toggleApprovalMode() {
+    if (!systemSettings) return;
+
+    const newMode =
+      systemSettings.approval_mode === "manual" ? "automatic" : "manual";
+
+    await supabase
+      .from("system_settings")
+      .update({ approval_mode: newMode })
+      .eq("id", systemSettings.id); // ✅ REQUIRED so it actually persists
+
+    setSystemSettings({
+      ...systemSettings,
+      approval_mode: newMode,
+    });
+  }
+
+  /* ===============================
+     LOAD PARTNERS
+  =============================== */
   async function loadPartners() {
     setLoading(true);
 
@@ -50,37 +120,47 @@ export default function PartnersPage() {
     loadPartners();
   }, [sort]);
 
-  async function runAction(
-    action:
-      | "regenerate_partner_id"
-      | "mark_email_sent"
-      | "delete_partner"
-      | "sync_shopify_tags",
-    partner: Partner
-  ) {
-    if (
-      !confirm(
-        `Run ${action.replaceAll("_", " ")} for ${partner.email_address}?`
-      )
-    )
-      return;
+  /* ===============================
+     ACTIONS
+=============================== */
+async function runAction(
+  action:
+    | "regenerate_partner_id"
+    | "approve_partner"
+    | "send_onboarding_email"
+    | "delete_partner"
+    | "sync_shopify_tags",
+  partner: Partner
+) {
+  if (
+    !confirm(`Run ${action.replaceAll("_", " ")} for ${partner.email_address}?`)
+  )
+    return;
 
-    const res = await fetch("/api/partners/actions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action,
-        partner_id: partner.partner_id,
-        email_address: partner.email_address,
-      }),
-    });
+  const res = await fetch("/api/partners/actions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action,
+      partner_id: partner.partner_id,
+      email_address: partner.email_address,
+    }),
+  });
 
-    const json = await res.json();
-    if (!res.ok) return alert(json.error || "Action failed");
-
-    loadPartners();
+  const json = await res.json();
+  if (!res.ok) {
+    alert(json.error || "Action failed");
+    return;
   }
 
+  await loadPartners();
+}
+
+
+
+  /* ===============================
+     SAVE EDIT
+  =============================== */
   async function saveEdit() {
     if (!editPartner) return;
 
@@ -102,6 +182,9 @@ export default function PartnersPage() {
     loadPartners();
   }
 
+  /* ===============================
+     FILTER + SORT
+  =============================== */
   const filteredPartners = useMemo(() => {
     let list = [...partners];
 
@@ -125,23 +208,129 @@ export default function PartnersPage() {
     return list;
   }, [partners, search, sort]);
 
-  if (loading) return <div className="p-6">Loading partners…</div>;
+  if (loading || !systemSettings)
+    return <div className="p-6">Loading partners…</div>;
 
+  /* ===============================
+     RENDER
+  =============================== */
   return (
-    <div className="p-6 space-y-4 max-w-full overflow-x-hidden">
-      {/* HEADER */}
-      <div className="sticky top-0 z-20 bg-white pb-4 border-b">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto px-6 pt-0 pb-6 space-y-4 max-w-full overflow-x-hidden">
+      {/* ==========================
+            HEADER (STICKY)
+      =========================== */}
+      <div className="sticky top-0 z-30 bg-white pb-4 border-b shadow-sm">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-red-700">Partners</h1>
+          <h1 className="text-3xl font-bold text-red-700 leading-tight">
+            Partners
+          </h1>
           <span className="text-sm text-gray-600">
             Total: {filteredPartners.length}
           </span>
         </div>
 
-        <p className="text-sm text-gray-500 mb-3">
+        <p className="text-sm text-gray-500 mb-2">
           Doorplace USA — Partner Control Panel
         </p>
 
+        {/* GLOBAL APPROVAL TOGGLE + BULK REPAIR */}
+        <div className="flex items-center gap-3 mb-3 flex-wrap">
+          <span className="text-sm font-medium">Approval Mode:</span>
+
+          <button
+            onClick={toggleApprovalMode}
+            className={`px-4 py-1 rounded text-sm font-bold ${
+              systemSettings.approval_mode === "automatic"
+                ? "bg-green-600 text-white"
+                : "bg-orange-500 text-white"
+            }`}
+          >
+            {systemSettings.approval_mode === "automatic"
+              ? "Automatic"
+              : "Manual"}
+          </button>
+
+          {/* ✅ DRY RUN TOGGLE (ADDED) */}
+          <label className="flex items-center gap-2 text-xs ml-2 select-none">
+            <input
+              type="checkbox"
+              checked={repairDryRun}
+              onChange={(e) => setRepairDryRun(e.target.checked)}
+            />
+            Dry Run
+          </label>
+
+          {/* BULK REPAIR BUTTON (UPGRADED: progress + results) */}
+          <button
+            onClick={async () => {
+              if (repairRunning) return;
+
+              setRepairResult(null);
+              setRepairLogs([]);
+
+              if (!confirm("Run bulk repair + sync for ALL partners?")) return;
+
+              try {
+                setRepairRunning(true);
+
+                const res = await fetch("/api/partners/bulk-repair", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ dryRun: repairDryRun }),
+                });
+
+                const json: BulkRepairResponse = await res.json();
+
+                if (!res.ok) {
+                  alert(json.error || "Bulk repair failed");
+                  return;
+                }
+
+                setRepairResult(json);
+                setRepairLogs(json.logs || []);
+
+                alert("Bulk repair + sync completed");
+                loadPartners();
+              } catch (e: any) {
+                alert(e?.message || "Bulk repair failed");
+              } finally {
+                setRepairRunning(false);
+              }
+            }}
+            className={`px-4 py-1 rounded text-sm font-bold ${
+              repairRunning ? "bg-gray-400 text-white" : "bg-black text-white"
+            }`}
+          >
+            {repairRunning ? "Running…" : "Repair / Sync All Partners"}
+          </button>
+        </div>
+
+        {/* ✅ RESULT SUMMARY UI (ADDED) */}
+        {repairResult?.success && (
+          <div className="bg-gray-100 border rounded p-3 text-xs space-y-1">
+            <div>
+              <b>Bulk Repair Results</b>
+              {typeof repairResult.dryRun === "boolean"
+                ? ` (Dry Run: ${repairResult.dryRun ? "YES" : "NO"})`
+                : ""}
+            </div>
+            <div>Repaired: {repairResult.repaired ?? 0}</div>
+            <div>Emails Sent: {repairResult.emailsSent ?? 0}</div>
+            <div>Already Clean: {repairResult.alreadyClean ?? 0}</div>
+            <div>Skipped: {repairResult.skipped ?? 0}</div>
+          </div>
+        )}
+
+        {/* ✅ LOGS UI (ADDED) */}
+        {repairLogs.length > 0 && (
+          <div className="mt-2 bg-black text-green-400 font-mono text-xs rounded p-3 max-h-48 overflow-y-auto">
+            {repairLogs.map((line, idx) => (
+              <div key={idx}>{line}</div>
+            ))}
+          </div>
+        )}
+
+        {/* SEARCH / SORT */}
         <div className="flex flex-col md:flex-row gap-2">
           <input
             type="text"
@@ -163,7 +352,9 @@ export default function PartnersPage() {
         </div>
       </div>
 
-      {/* TABLE */}
+      {/* ==========================
+            TABLE
+      =========================== */}
       <div className="bg-white border rounded-lg overflow-x-auto">
         <table className="w-full text-sm table-fixed">
           <thead className="bg-gray-100 border-b">
@@ -194,43 +385,69 @@ export default function PartnersPage() {
                 </td>
 
                 <td className="px-3 py-3">
-                  {p.onboarding_email_sent ? (
-                    <span className="text-green-700 text-xs font-bold">
-                      Email Sent
-                    </span>
-                  ) : (
-                    <span className="text-orange-600 text-xs font-bold">
-                      Pending
-                    </span>
-                  )}
-                </td>
+  {p.shopify_synced ? (
+  <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-semibold">
+    ● Approved
+  </span>
+) : (
+  <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-orange-100 text-orange-700 text-xs font-semibold">
+    ● Not Approved
+  </span>
+)}
+
+
+
+</td>
+
+
 
                 <td className="px-3 py-3">
+                 {/* APPROVE PARTNER (MANUAL ONLY, NO EMAIL AUTO) */}
+{systemSettings.approval_mode === "manual" &&
+  !p.onboarding_email_sent && (
+    <button
+      onClick={() => runAction("send_onboarding_email", p)}
+      className="mb-1 w-full bg-green-600 text-white text-xs font-bold px-2 py-1 rounded hover:bg-green-700"
+    >
+      Send Approval Email
+    </button>
+)}
+
+
+
                   <select
-                    className="border rounded px-2 py-1 text-xs w-full"
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      e.target.value = "";
-                      if (val === "view") setViewPartner(p);
-                      if (val === "edit") setEditPartner(p);
-                      if (val === "regen")
-                        runAction("regenerate_partner_id", p);
-                      if (val === "email")
-                        runAction("mark_email_sent", p);
-                      if (val === "shopify")
-                        runAction("sync_shopify_tags", p);
-                      if (val === "delete")
-                        runAction("delete_partner", p);
-                    }}
-                  >
-                    <option value="">Select</option>
-                    <option value="view">View</option>
-                    <option value="edit">Edit</option>
-                    <option value="regen">Regenerate ID</option>
-                    <option value="email">Send Email</option>
-                    <option value="shopify">Sync Shopify</option>
-                    <option value="delete">Delete</option>
-                  </select>
+  className="border rounded px-2 py-1 text-xs w-full"
+  onChange={(e) => {
+    const val = e.target.value;
+    e.target.value = "";
+
+    if (val === "view") setViewPartner(p);
+    if (val === "edit") setEditPartner(p);
+   if (val === "regen") runAction("regenerate_partner_id", p);
+if (val === "email") runAction("send_onboarding_email", p);
+if (val === "shopify") runAction("sync_shopify_tags", p);
+if (val === "delete") runAction("delete_partner", p);
+
+  }}
+>
+  <option value="">Select</option>
+  <option value="view">View</option>
+  <option value="edit">Edit</option>
+  <option value="regen">Regenerate ID</option>
+
+  <option
+    value="email"
+    disabled={p.onboarding_email_sent === true}
+  >
+    {p.onboarding_email_sent === true
+      ? "Email Already Sent"
+      : "Send Email"}
+  </option>
+
+  <option value="shopify">Sync Shopify</option>
+  <option value="delete">Delete</option>
+</select>
+
                 </td>
               </tr>
             ))}
@@ -238,33 +455,59 @@ export default function PartnersPage() {
         </table>
       </div>
 
-      {/* VIEW MODAL */}
+      {/* ==========================
+            VIEW MODAL
+      =========================== */}
       {viewPartner && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 rounded max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-3">Partner Profile</h2>
 
-            <p><b>Name:</b> {viewPartner.first_name} {viewPartner.last_name}</p>
-            <p><b>Email:</b> {viewPartner.email_address}</p>
-            <p><b>Phone:</b> {viewPartner.cell_phone_number}</p>
-            <p><b>Partner ID:</b> {viewPartner.partner_id}</p>
+            <p>
+              <b>Name:</b> {viewPartner.first_name} {viewPartner.last_name}
+            </p>
+            <p>
+              <b>Email:</b> {viewPartner.email_address}
+            </p>
+            <p>
+              <b>Phone:</b> {viewPartner.cell_phone_number}
+            </p>
+            <p>
+              <b>Partner ID:</b> {viewPartner.partner_id}
+            </p>
+
+            <p>
+              <b>Onboarded:</b>{" "}
+              {new Date(viewPartner.created_at).toLocaleString()}
+            </p>
 
             <p className="break-all mt-2">
-              <b>Tracking Link:</b><br />
+              <b>Tracking Link:</b>
+              <br />
               {viewPartner.tracking_link ||
                 `https://doorplaceusa.com/pages/swing-partner-lead?partner_id=${viewPartner.partner_id}`}
             </p>
 
             <p className="mt-2">
-              <b>Address:</b><br />
-              {viewPartner.street_address}<br />
+              <b>Address:</b>
+              <br />
+              {viewPartner.street_address}
+              <br />
               {viewPartner.city}, {viewPartner.state} {viewPartner.zip_code}
             </p>
 
-            <p><b>Business Name:</b> {viewPartner.business_name}</p>
-            <p><b>Coverage Area:</b> {viewPartner.coverage_area}</p>
-            <p><b>Preferred Contact:</b> {viewPartner.preferred_contact_method}</p>
-            <p><b>Sales Experience:</b> {viewPartner.sales_experience}</p>
+            <p>
+              <b>Business Name:</b> {viewPartner.business_name}
+            </p>
+            <p>
+              <b>Coverage Area:</b> {viewPartner.coverage_area}
+            </p>
+            <p>
+              <b>Preferred Contact:</b> {viewPartner.preferred_contact_method}
+            </p>
+            <p>
+              <b>Sales Experience:</b> {viewPartner.sales_experience}
+            </p>
 
             <button
               className="mt-4 bg-black text-white px-4 py-2 rounded w-full"
@@ -276,7 +519,9 @@ export default function PartnersPage() {
         </div>
       )}
 
-      {/* EDIT MODAL — unchanged */}
+      {/* ==========================
+            EDIT MODAL
+      =========================== */}
       {editPartner && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 rounded max-w-lg w-full">

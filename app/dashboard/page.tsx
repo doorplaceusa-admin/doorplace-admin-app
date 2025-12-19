@@ -196,31 +196,31 @@ setStats({
     {/* Unread Leads */}
     <li className="flex justify-between border-b pb-1">
       <span>Unread Leads</span>
-      <span className="font-bold text-gray-700">3</span>
+      <span className="font-bold text-gray-700">0</span>
     </li>
 
     {/* Missing Measurements */}
     <li className="flex justify-between border-b pb-1">
       <span>Orders Missing Measurements</span>
-      <span className="font-bold text-gray-700">1</span>
+      <span className="font-bold text-gray-700">0</span>
     </li>
 
     {/* Pending Partner Payouts */}
     <li className="flex justify-between border-b pb-1">
       <span>Pending Partner Payouts</span>
-      <span className="font-bold text-gray-700">2</span>
+      <span className="font-bold text-gray-700">0</span>
     </li>
 
     {/* Invoices Needing Approval */}
     <li className="flex justify-between border-b pb-1">
       <span>Invoices Needing Approval</span>
-      <span className="font-bold text-gray-700">1</span>
+      <span className="font-bold text-gray-700">0</span>
     </li>
 
     {/* Leads older than 48 hours */}
     <li className="flex justify-between">
       <span>Leads Older Than 48 Hours</span>
-      <span className="font-bold text-gray-700">4</span>
+      <span className="font-bold text-gray-700">0</span>
     </li>
 
   </ul>

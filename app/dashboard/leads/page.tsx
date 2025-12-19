@@ -3,166 +3,134 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-
-
 export default function LeadsPage() {
-  const [customerName, setCustomerName] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [leadSource, setLeadSource] = useState("");
-  const [leadType, setLeadType] = useState("");
-  const [leadStatus, setLeadStatus] = useState("new");
-  const [partnerId, setPartnerId] = useState("");
-  const [companyId, setCompanyId] = useState("");
-
   const [leads, setLeads] = useState<any[]>([]);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
 
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [form, setForm] = useState({
+    first_name: "",
+    last_name: "",
+    email_address: "",
+    customer_phone: "",
+    looking_for: "",
+    lead_status: "new",
+    partner_id: "",
+  });
 
   useEffect(() => {
     loadLeads();
-    loadCompany();
   }, []);
 
-  async function loadCompany() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user?.user_metadata?.company_id) {
-      setCompanyId(user.user_metadata.company_id);
-    }
-  }
-
   async function loadLeads() {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("leads")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error) setLeads(data || []);
+    if (data) setLeads(data);
   }
 
-  async function saveLead() {
-    if (!partnerId.trim()) {
-      alert("Partner ID is required.");
-      return;
-    }
+  function setField(k: string, v: string) {
+    setForm(p => ({ ...p, [k]: v }));
+  }
 
-    const payload = {
-      customer_name: customerName,
-      customer_email: customerEmail,
-      customer_phone: customerPhone,
-      lead_source: leadSource,
-      lead_type: leadType,
-      status: leadStatus,
-      partner_id: partnerId,
-      company_id: companyId
-    };
+  async function addLead() {
+    const leadId = `LD${Date.now()}`;
 
-    let result;
-    if (editingId) {
-      result = await supabase.from("leads").update(payload).eq("id", editingId);
-    } else {
-      result = await supabase.from("leads").insert([payload]);
-    }
+    const { error } = await supabase.from("leads").insert([
+      {
+        lead_id: leadId,
+        first_name: form.first_name,
+        last_name: form.last_name,
+        email_address: form.email_address,
+        customer_phone: form.customer_phone,
+        looking_for: form.looking_for,
+        lead_status: form.lead_status,
+        partner_id: form.partner_id || null,
+        source: "admin",
+      },
+    ]);
 
-    if (result.error) {
-      alert(result.error.message);
-    } else {
-      resetForm();
+    if (!error) {
+      setForm({
+        first_name: "",
+        last_name: "",
+        email_address: "",
+        customer_phone: "",
+        looking_for: "",
+        lead_status: "new",
+        partner_id: "",
+      });
+      setShowAddForm(false);
       loadLeads();
     }
   }
 
-  async function deleteLead(id: string) {
-    if (!confirm("Delete this lead?")) return;
-    await supabase.from("leads").delete().eq("id", id);
-    loadLeads();
-  }
-
-  function startEdit(lead: any) {
-    setEditingId(lead.id);
-    setCustomerName(lead.customer_name);
-    setCustomerEmail(lead.customer_email);
-    setCustomerPhone(lead.customer_phone);
-    setLeadSource(lead.lead_source);
-    setLeadType(lead.lead_type);
-    setLeadStatus(lead.status);
-    setPartnerId(lead.partner_id);
-  }
-
-  function resetForm() {
-    setEditingId(null);
-    setCustomerName("");
-    setCustomerEmail("");
-    setCustomerPhone("");
-    setLeadSource("");
-    setLeadType("");
-    setLeadStatus("new");
-    setPartnerId("");
-  }
-
-  const filteredLeads = leads.filter(l =>
-    (l.customer_name || "").toLowerCase().includes(search.toLowerCase()) &&
-    (statusFilter ? l.status === statusFilter : true)
-  );
-
   return (
-    <div style={{ maxWidth: 1000 }}>
+    <div style={{ maxWidth: 1100 }}>
       <h2>Leads</h2>
 
-      {/* === FORM BOX === */}
-      <div style={box}>
-        <h3>{editingId ? "Edit Lead" : "Add New Lead"}</h3>
+      {/* ADD LEAD TOGGLE */}
+      <button
+        style={btn}
+        onClick={() => setShowAddForm(p => !p)}
+      >
+        {showAddForm ? "Close Add Lead" : "Add Lead"}
+      </button>
 
-        <input placeholder="Customer Name" value={customerName} onChange={e => setCustomerName(e.target.value)} style={input} />
-        <input placeholder="Customer Email" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)} style={input} />
-        <input placeholder="Customer Phone" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} style={input} />
-        <input placeholder="Lead Source" value={leadSource} onChange={e => setLeadSource(e.target.value)} style={input} />
-        <input placeholder="What is this lead for? (Door, Swing, Repair, etc.)" value={leadType} onChange={e => setLeadType(e.target.value)} style={input} />
-        <input placeholder="Partner ID" value={partnerId} onChange={e => setPartnerId(e.target.value)} style={input} />
+      {/* ADD LEAD FORM */}
+      {showAddForm && (
+        <div style={box}>
+          <input style={input} placeholder="First Name" value={form.first_name} onChange={e => setField("first_name", e.target.value)} />
+          <input style={input} placeholder="Last Name" value={form.last_name} onChange={e => setField("last_name", e.target.value)} />
+          <input style={input} placeholder="Email" value={form.email_address} onChange={e => setField("email_address", e.target.value)} />
+          <input style={input} placeholder="Phone" value={form.customer_phone} onChange={e => setField("customer_phone", e.target.value)} />
+          <input style={input} placeholder="What is this lead for?" value={form.looking_for} onChange={e => setField("looking_for", e.target.value)} />
+          <input style={input} placeholder="Partner ID (optional)" value={form.partner_id} onChange={e => setField("partner_id", e.target.value)} />
 
-        <select value={leadStatus} onChange={e => setLeadStatus(e.target.value)} style={input}>
-          <option value="new">New</option>
-          <option value="contacted">Contacted</option>
-          <option value="quote_sent">Quote Sent</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="won">Won</option>
-          <option value="lost">Lost</option>
-        </select>
+          <select style={input} value={form.lead_status} onChange={e => setField("lead_status", e.target.value)}>
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="quote_sent">Quote Sent</option>
+            <option value="won">Won</option>
+            <option value="lost">Lost</option>
+          </select>
 
-        <button onClick={saveLead} style={btn}>{editingId ? "Update Lead" : "Add Lead"}</button>
-        {editingId && <button onClick={resetForm} style={{ ...btn, background: "#666" }}>Cancel</button>}
-      </div>
-
-      {/* === SEARCH + FILTER === */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-        <input placeholder="Search leads..." value={search} onChange={e => setSearch(e.target.value)} style={input} />
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={input}>
-          <option value="">All Statuses</option>
-          <option value="new">New</option>
-          <option value="contacted">Contacted</option>
-          <option value="quote_sent">Quote Sent</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="won">Won</option>
-          <option value="lost">Lost</option>
-        </select>
-      </div>
-
-      {/* === LEAD LIST === */}
-      {filteredLeads.map(lead => (
-        <div key={lead.id} style={box}>
-          <strong>{lead.customer_name}</strong><br />
-          {lead.customer_email} | {lead.customer_phone}<br />
-          <b>For:</b> {lead.lead_type || "Not specified"}<br />
-          <b>Status:</b> {lead.status} | <b>Partner:</b> {lead.partner_id}
-
-          <div style={{ marginTop: 10 }}>
-            <button onClick={() => startEdit(lead)} style={btn}>Edit</button>
-            <button onClick={() => deleteLead(lead.id)} style={{ ...btn, background: "#c0392b" }}>Delete</button>
-          </div>
+          <button style={btn} onClick={addLead}>Save Lead</button>
         </div>
-      ))}
+      )}
+
+      {/* LEADS LIST */}
+      {leads.map(lead => {
+        const open = expandedId === lead.id;
+
+        return (
+          <div key={lead.id} style={box}>
+            <strong>Lead ID:</strong> {lead.lead_id}<br />
+            <strong>Name:</strong> {lead.first_name} {lead.last_name}<br />
+            <strong>Status:</strong> {lead.lead_status}<br />
+
+            <button
+              style={{ ...btn, marginTop: 10 }}
+              onClick={() => setExpandedId(open ? null : lead.id)}
+            >
+              {open ? "Hide Details" : "View More"}
+            </button>
+
+            {open && (
+              <div style={{ marginTop: 12 }}>
+                <div><b>Email:</b> {lead.email_address || "—"}</div>
+                <div><b>Phone:</b> {lead.customer_phone || "—"}</div>
+                <div><b>Looking For:</b> {lead.looking_for || "—"}</div>
+                <div><b>Partner ID:</b> {lead.partner_id || "—"}</div>
+                <div><b>Source:</b> {lead.source}</div>
+                <div><b>Created:</b> {new Date(lead.created_at).toLocaleString()}</div>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -172,21 +140,21 @@ const input = {
   padding: 10,
   marginBottom: 10,
   borderRadius: 6,
-  border: "1px solid #ccc"
+  border: "1px solid #ccc",
 };
 
 const btn = {
   background: "#007bff",
   color: "#fff",
   padding: "8px 14px",
-  marginRight: 10,
   borderRadius: 6,
-  cursor: "pointer"
+  cursor: "pointer",
+  border: "none",
 };
 
 const box = {
   border: "1px solid #ccc",
-  padding: 20,
+  padding: 16,
   borderRadius: 8,
-  marginBottom: 25
+  marginTop: 20,
 };

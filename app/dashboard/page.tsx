@@ -50,15 +50,21 @@ export default function DashboardPage() {
       const { data } = await supabase.auth.getSession();
       setSessionEmail(data.session?.user.email || "");
 
-      setStats({
-        totalLeads: 312,
-        totalOrders: 94,
-        totalRevenue: 48210,
-        pendingCommissions: 3760,
-        paidCommissions: 31800,
-        activePartners: 14,
-        conversionRate: 30.1,
-      });
+      const { count } = await supabase
+  .from("partners")
+  .select("*", { count: "exact", head: true })
+  .eq("shopify_synced", true);
+
+setStats({
+  totalLeads: 0,
+  totalOrders: 0,
+  totalRevenue: 0,
+  pendingCommissions: 0,
+  paidCommissions: 0,
+  activePartners: count || 0,
+  conversionRate: 0,
+});
+
 
       setRecentLeads([
         { id: "1", label: "John – Porch Swing", date: "2025-12-07" },
@@ -162,7 +168,10 @@ export default function DashboardPage() {
       <div style={gridThree}>
         <StatCard title="Total Leads" value={stats.totalLeads} />
         <StatCard title="Total Orders" value={stats.totalOrders} />
-        <StatCard title="Active Partners" value={stats.activePartners} />
+        <div onClick={() => window.location.href = "/dashboard/partners"} style={{ cursor: "pointer" }}>
+  <StatCard title="Active Partners" value={stats.activePartners} />
+</div>
+
       </div>
 
       <div style={{ ...gridThree, marginTop: 16 }}>

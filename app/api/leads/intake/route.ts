@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabaseClient";
 /*
   PURPOSE (LOCK AFTER THIS):
   - Accept public contact / quote submissions
+  - Capture partner_id
+  - Upload photos to Supabase Storage
   - Insert lead into `leads` table
   - Create in-app admin alert (NO EMAILS)
   - Redirect customer to Thank You page
@@ -17,7 +19,46 @@ export async function POST(req: Request) {
     const lead_id = `LD-${Date.now()}`;
 
     /* ===============================
-       1. INSERT LEAD
+       1. CAPTURE PARTNER ID
+    =============================== */
+    let partner_id = formData.get("partner_id") as string | null;
+
+    if (!partner_id) {
+      const referer = req.headers.get("referer") || "";
+      const match = referer.match(/partner_id=([A-Za-z0-9-_]+)/);
+      if (match) partner_id = match[1];
+    }
+
+    /* ===============================
+       2. HANDLE PHOTO UPLOADS
+    =============================== */
+    const photos: string[] = [];
+    const uploadedFiles = formData.getAll("photos[]") as File[];
+
+    for (const file of uploadedFiles) {
+      if (!file || file.size === 0) continue;
+
+      const fileExt = file.name.split(".").pop();
+      const filePath = `leads/${lead_id}/${crypto.randomUUID()}.${fileExt}`;
+
+      const { error } = await supabase.storage
+        .from("lead-photos")
+        .upload(filePath, file, {
+          contentType: file.type,
+          upsert: false,
+        });
+
+      if (!error) {
+        const { data } = supabase.storage
+          .from("lead-photos")
+          .getPublicUrl(filePath);
+
+        if (data?.publicUrl) photos.push(data.publicUrl);
+      }
+    }
+
+    /* ===============================
+       3. INSERT LEAD
     =============================== */
     const { error: leadError } = await supabase.from("leads").insert([
       {
@@ -40,7 +81,9 @@ export async function POST(req: Request) {
         lead_source: formData.get("lead_source"),
         signature: formData.get("signature"),
         lead_status: "new",
-        source: "website",
+        source: partner_id ? "partner" : "website",
+        partner_id,
+        photos,
       },
     ]);
 
@@ -50,20 +93,20 @@ export async function POST(req: Request) {
     }
 
     /* ===============================
-       2. ADMIN ALERT (IN-APP ONLY)
+       4. ADMIN ALERT (IN-APP ONLY)
     =============================== */
     await supabase.from("admin_alerts").insert([
       {
         type: "new_lead",
         reference_id: lead_id,
         title: "New Lead Submitted",
-        message: `New lead received from ${formData.get("first_name")} ${formData.get("last_name")}`,
+        message: `New lead from ${formData.get("first_name")} ${formData.get("last_name")}`,
         read: false,
       },
     ]);
 
     /* ===============================
-       3. REDIRECT CUSTOMER
+       5. REDIRECT CUSTOMER
     =============================== */
     return NextResponse.redirect(
       "https://doorplaceusa.com/pages/thank-you",

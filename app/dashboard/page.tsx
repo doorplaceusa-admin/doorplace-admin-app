@@ -3,19 +3,17 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-
-
 const brandRed = "#b80d0d";
 
 // ================= TYPES =================
 type DashboardStats = {
   totalLeads: number;
   totalOrders: number;
-  totalRevenue: number;
+  totalRevenue: number; // (kept in type to avoid breaking anything else; card removed)
   pendingCommissions: number;
-  paidCommissions: number;
+  paidCommissions: number; // (kept; card still present below)
   activePartners: number;
-  conversionRate: number;
+  conversionRate: number; // (kept in type; card removed)
 };
 
 type RecentItem = {
@@ -40,8 +38,9 @@ export default function DashboardPage() {
 
   const [recentLeads, setRecentLeads] = useState<RecentItem[]>([]);
   const [recentOrders, setRecentOrders] = useState<RecentItem[]>([]);
-  const [partnerPerformance, setPartnerPerformance] =
-    useState<{ partner_id: string; revenue: number; orders: number }[]>([]);
+  const [partnerPerformance, setPartnerPerformance] = useState<
+    { partner_id: string; revenue: number; orders: number }[]
+  >([]);
 
   const [sessionEmail, setSessionEmail] = useState<string>("");
 
@@ -50,28 +49,59 @@ export default function DashboardPage() {
       const { data } = await supabase.auth.getSession();
       setSessionEmail(data.session?.user.email || "");
 
-      const { count } = await supabase
-  .from("partners")
-  .select("*", { count: "exact", head: true })
-  .eq("shopify_synced", true);
+      // ================= ACTIVE PARTNERS (ALREADY WIRED) =================
+      const { count: partnerCount } = await supabase
+        .from("partners")
+        .select("*", { count: "exact", head: true })
+        .eq("shopify_synced", true);
 
-setStats({
-  totalLeads: 0,
-  totalOrders: 0,
-  totalRevenue: 0,
-  pendingCommissions: 0,
-  paidCommissions: 0,
-  activePartners: count || 0,
-  conversionRate: 0,
-});
+      // ================= TOTAL LEADS (WIRE THIS) =================
+      // Assumes your leads table is named "leads"
+      const { count: leadCount } = await supabase
+        .from("leads")
+        .select("*", { count: "exact", head: true });
 
+      // ================= RECENT LEADS (WIRE THIS) =================
+      // Tries common column names; adjust if your table uses different field names
+      const { data: leadsData } = await supabase
+        .from("leads")
+        .select(
+          "id, created_at, customer_name, name, full_name, interest_type, product_interest"
+        )
+        .order("created_at", { ascending: false })
+        .limit(3);
 
-      setRecentLeads([
-        { id: "1", label: "John – Porch Swing", date: "2025-12-07" },
-        { id: "2", label: "Ashley – Dutch Door", date: "2025-12-06" },
-        { id: "3", label: "Mark – Barn Door", date: "2025-12-06" },
-      ]);
+      const mappedRecentLeads: RecentItem[] = (leadsData || []).map((l: any) => {
+        const who =
+          l.customer_name || l.full_name || l.name || "Lead";
+        const what =
+          l.interest_type || l.product_interest || "Request";
+        const date =
+          l.created_at
+            ? new Date(l.created_at).toISOString().split("T")[0]
+            : "";
 
+        return {
+          id: String(l.id),
+          label: `${who} – ${what}`,
+          date,
+        };
+      });
+
+      // ✅ Keep your existing placeholders for now where you haven’t wired yet
+      setStats({
+        totalLeads: leadCount || 0,
+        totalOrders: 0,
+        totalRevenue: 0,
+        pendingCommissions: 0,
+        paidCommissions: 0,
+        activePartners: partnerCount || 0,
+        conversionRate: 0,
+      });
+
+      setRecentLeads(mappedRecentLeads);
+
+      // (kept as-is, per your request)
       setRecentOrders([
         { id: "1", label: "Twin Swing – Dallas", date: "2025-12-07", amount: 1895 },
         { id: "2", label: "Crib Swing – Houston", date: "2025-12-06", amount: 1295 },
@@ -98,7 +128,6 @@ setStats({
 
   return (
     <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
-
       {/* =================== HEADER =================== */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold" style={{ color: brandRed }}>
@@ -114,125 +143,121 @@ setStats({
         </div>
       </div>
 
-{/* ===================== QUICK ACTIONS BAR ===================== */}
-<div style={{
-  display: "flex",
-  gap: "12px",
-  marginBottom: "20px"
-}}>
-  <button
-    style={{
-      background: "#b80d0d",
-      color: "white",
-      padding: "10px 16px",
-      borderRadius: "6px",
-      fontWeight: "600",
-      cursor: "pointer"
-    }}
-    onClick={() => window.location.href = "/dashboard/leads?create=new"}
-  >
-    + New Lead
-  </button>
+      {/* ===================== QUICK ACTIONS BAR ===================== */}
+      <div
+        style={{
+          display: "flex",
+          gap: "12px",
+          marginBottom: "20px",
+        }}
+      >
+        <button
+          style={{
+            background: "#b80d0d",
+            color: "white",
+            padding: "10px 16px",
+            borderRadius: "6px",
+            fontWeight: "600",
+            cursor: "pointer",
+          }}
+          onClick={() => (window.location.href = "/dashboard/leads?create=new")}
+        >
+          + New Lead
+        </button>
 
-  <button
-    style={{
-      background: "#b80d0d",
-      color: "white",
-      padding: "10px 16px",
-      borderRadius: "6px",
-      fontWeight: "600",
-      cursor: "pointer"
-    }}
-    onClick={() => window.location.href = "/dashboard/orders?create=new"}
-  >
-    + New Order
-  </button>
+        <button
+          style={{
+            background: "#b80d0d",
+            color: "white",
+            padding: "10px 16px",
+            borderRadius: "6px",
+            fontWeight: "600",
+            cursor: "pointer",
+          }}
+          onClick={() => (window.location.href = "/dashboard/orders?create=new")}
+        >
+          + New Order
+        </button>
 
-  <button
-    style={{
-      background: "#b80d0d",
-      color: "white",
-      padding: "10px 16px",
-      borderRadius: "6px",
-      fontWeight: "600",
-      cursor: "pointer"
-    }}
-    onClick={() => window.location.href = "/dashboard/partners?create=new"}
-  >
-    + Add Partner
-  </button>
-</div>
-
+        <button
+          style={{
+            background: "#b80d0d",
+            color: "white",
+            padding: "10px 16px",
+            borderRadius: "6px",
+            fontWeight: "600",
+            cursor: "pointer",
+          }}
+          onClick={() => (window.location.href = "/dashboard/partners?create=new")}
+        >
+          + Add Partner
+        </button>
+      </div>
 
       {/* =================== SUMMARY CARDS =================== */}
       <div style={gridThree}>
         <StatCard title="Total Leads" value={stats.totalLeads} />
         <StatCard title="Total Orders" value={stats.totalOrders} />
-        <div onClick={() => window.location.href = "/dashboard/partners"} style={{ cursor: "pointer" }}>
-  <StatCard title="Active Partners" value={stats.activePartners} />
-</div>
-
+        <div
+          onClick={() => (window.location.href = "/dashboard/partners")}
+          style={{ cursor: "pointer" }}
+        >
+          <StatCard title="Active Partners" value={stats.activePartners} />
+        </div>
       </div>
 
+      {/* ✅ ONLY KEEP: Pending Commissions (REMOVE Total Revenue + Conversion Rate) */}
       <div style={{ ...gridThree, marginTop: 16 }}>
-        <StatCard title="Conversion Rate" value={`${stats.conversionRate}%`} />
-        {isAdmin && <StatCard title="Total Revenue" value={fmt(stats.totalRevenue)} />}
         <StatCard title="Pending Commissions" value={fmt(stats.pendingCommissions)} />
       </div>
 
+      {/* ✅ REMOVE Avg Order Value (and keep Paid Commissions if you still want it visible) */}
       <div style={{ ...gridTwo, marginTop: 16 }}>
         <StatCard title="Paid Commissions" value={fmt(stats.paidCommissions)} />
-        <StatCard title="Avg Order Value" value={fmt(stats.totalRevenue / stats.totalOrders)} />
       </div>
 
-{/* 🟡 TASKS REQUIRING ATTENTION */}
-<div className="bg-white p-4 rounded shadow mb-6">
-  <h2 className="text-lg font-semibold mb-3" style={{ color: "#b80d0d" }}>
-    Tasks Requiring Attention
-  </h2>
+      {/* 🟡 TASKS REQUIRING ATTENTION (kept) */}
+      <div className="bg-white p-4 rounded shadow mb-6">
+        <h2 className="text-lg font-semibold mb-3" style={{ color: "#b80d0d" }}>
+          Tasks Requiring Attention
+        </h2>
 
-  <ul className="space-y-2">
+        <ul className="space-y-2">
+          <li className="flex justify-between border-b pb-1">
+            <span>Unread Leads</span>
+            <span className="font-bold text-gray-700">0</span>
+          </li>
 
-    {/* Unread Leads */}
-    <li className="flex justify-between border-b pb-1">
-      <span>Unread Leads</span>
-      <span className="font-bold text-gray-700">0</span>
-    </li>
+          <li className="flex justify-between border-b pb-1">
+            <span>Orders Missing Measurements</span>
+            <span className="font-bold text-gray-700">0</span>
+          </li>
 
-    {/* Missing Measurements */}
-    <li className="flex justify-between border-b pb-1">
-      <span>Orders Missing Measurements</span>
-      <span className="font-bold text-gray-700">0</span>
-    </li>
+          <li className="flex justify-between border-b pb-1">
+            <span>Pending Partner Payouts</span>
+            <span className="font-bold text-gray-700">0</span>
+          </li>
 
-    {/* Pending Partner Payouts */}
-    <li className="flex justify-between border-b pb-1">
-      <span>Pending Partner Payouts</span>
-      <span className="font-bold text-gray-700">0</span>
-    </li>
+          <li className="flex justify-between border-b pb-1">
+            <span>Invoices Needing Approval</span>
+            <span className="font-bold text-gray-700">0</span>
+          </li>
 
-    {/* Invoices Needing Approval */}
-    <li className="flex justify-between border-b pb-1">
-      <span>Invoices Needing Approval</span>
-      <span className="font-bold text-gray-700">0</span>
-    </li>
-
-    {/* Leads older than 48 hours */}
-    <li className="flex justify-between">
-      <span>Leads Older Than 48 Hours</span>
-      <span className="font-bold text-gray-700">0</span>
-    </li>
-
-  </ul>
-</div>
-
+          <li className="flex justify-between">
+            <span>Leads Older Than 48 Hours</span>
+            <span className="font-bold text-gray-700">0</span>
+          </li>
+        </ul>
+      </div>
 
       {/* =================== RECENT LEADS + ORDERS =================== */}
       <div style={{ ...gridTwo, marginTop: 20 }}>
         <Panel title="Recent Leads">
-          {recentLeads.map((l) => (
-            <Row key={l.id} label={l.label} value={l.date} />
-          ))}
+          {recentLeads.length === 0 ? (
+            <div style={{ color: "#777" }}>No recent leads yet</div>
+          ) : (
+            recentLeads.map((l) => <Row key={l.id} label={l.label} value={l.date} />)
+          )}
         </Panel>
 
         <Panel title="Recent Orders">
@@ -246,7 +271,7 @@ setStats({
         </Panel>
       </div>
 
-      {/* =================== LEADERBOARD =================== */}
+      {/* =================== LEADERBOARD (kept) =================== */}
       <Panel title="Top Partner Performance" style={{ marginTop: 20 }}>
         <table style={tableStyle}>
           <thead>
@@ -268,14 +293,13 @@ setStats({
         </table>
       </Panel>
 
-      {/* =================== SYSTEM HEALTH =================== */}
+      {/* =================== SYSTEM HEALTH (leave it) =================== */}
       <Panel title="System Health" style={{ marginTop: 20 }}>
         <Row label="API Status" value="✅ Online" />
         <Row label="Lead Sync" value="✅ Live" />
         <Row label="Commission Sync" value="✅ Live" />
         <Row label="Payout Engine" value="🟡 Simulated Mode" />
       </Panel>
-
     </div>
   );
 }

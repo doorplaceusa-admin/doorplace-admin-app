@@ -137,10 +137,11 @@ for (const file of files) {
         // Partner swing order pricing
         wood_type: formData.get("wood_type"),
         finish: formData.get("finish"),
-        swing_price: formData.get("swing_price"),
-        accessory_price: formData.get("accessory_price"),
-        installation_fee: formData.get("installation_fee"),
-        shipping_fee: formData.get("shipping_fee"),
+       swing_price: formData.get("swing_price") ? Number(formData.get("swing_price")) : null,
+       accessory_price: formData.get("accessory_price") ? Number(formData.get("accessory_price")) : null,
+       installation_fee: formData.get("installation_fee") ? Number(formData.get("installation_fee")) : null,
+       shipping_fee: formData.get("shipping_fee") ? Number(formData.get("shipping_fee")) : null,
+
 
         signature: formData.get("signature"),
         photos: photoUrls,

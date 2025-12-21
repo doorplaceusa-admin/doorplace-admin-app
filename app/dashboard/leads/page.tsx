@@ -62,20 +62,22 @@ export default function LeadsPage() {
   const [viewLead, setViewLead] = useState<Lead | null>(null);
   const [editLead, setEditLead] = useState<Lead | null>(null);
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
   /* ===============================
-     LOAD LEADS (ONLY NON-PARTNER ORDERS)
+     LOAD LEADS
   ================================ */
   async function loadLeads() {
     setLoading(true);
 
     const { data } = await supabase
-  .from("leads")
-  .select("*")
-  .or("submission_type.is.null,submission_type.neq.partner_order")
-  .order("created_at", { ascending: false });
-
+      .from("leads")
+      .select("*")
+      .or("submission_type.is.null,submission_type.neq.partner_order")
+      .order("created_at", { ascending: false });
 
     setLeads(data || []);
+    setSelectedIds([]);
     setLoading(false);
   }
 
@@ -88,17 +90,36 @@ export default function LeadsPage() {
   ================================ */
   const filteredLeads = useMemo(() => {
     if (!search.trim()) return leads;
-
     const q = search.toLowerCase();
     return leads.filter((l) =>
-      `${l.first_name} ${l.last_name} ${l.email} ${l.lead_id}`
+      `${l.first_name} ${l.last_name} ${l.lead_id}`
         .toLowerCase()
         .includes(q)
     );
   }, [leads, search]);
 
   /* ===============================
-     SAVE EDIT (SAFE FIELDS ONLY)
+     SINGLE DELETE (RESTORED)
+  ================================ */
+  async function deleteLead(lead: Lead) {
+    if (!confirm(`Delete lead ${lead.lead_id}?`)) return;
+    await supabase.from("leads").delete().eq("id", lead.id);
+    loadLeads();
+  }
+
+  /* ===============================
+     BULK DELETE
+  ================================ */
+  async function bulkDelete() {
+    if (!selectedIds.length) return;
+    if (!confirm(`Delete ${selectedIds.length} leads?`)) return;
+
+    await supabase.from("leads").delete().in("id", selectedIds);
+    loadLeads();
+  }
+
+  /* ===============================
+     SAVE EDIT
   ================================ */
   async function saveEdit() {
     if (!editLead) return;
@@ -114,21 +135,12 @@ export default function LeadsPage() {
         city: editLead.city,
         state: editLead.state,
         zip: editLead.zip,
-        lead_status: editLead.lead_status,
         partner_id: editLead.partner_id,
+        lead_status: editLead.lead_status,
       })
       .eq("id", editLead.id);
 
     setEditLead(null);
-    loadLeads();
-  }
-
-  /* ===============================
-     DELETE
-  ================================ */
-  async function deleteLead(lead: Lead) {
-    if (!confirm(`Delete lead ${lead.lead_id}?`)) return;
-    await supabase.from("leads").delete().eq("id", lead.id);
     loadLeads();
   }
 
@@ -141,17 +153,34 @@ export default function LeadsPage() {
     <div className="h-[calc(100vh-64px)] overflow-y-auto px-6 pb-6 space-y-4">
       {/* HEADER */}
       <div className="sticky top-0 bg-white z-30 border-b pb-4">
-        <h1 className="text-3xl font-bold text-red-700">Leads</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-red-700">Leads</h1>
+          <span className="text-sm text-gray-600">
+            Total: {filteredLeads.length}
+          </span>
+        </div>
+
         <p className="text-sm text-gray-500 mb-3">
           General Inquiry & Swing / Door Quotes
         </p>
 
-        <input
-          className="border rounded px-3 py-2 w-full md:max-w-sm"
-          placeholder="Search name, email, or Lead ID"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="flex gap-2 items-center">
+          <input
+            className="border rounded px-3 py-2 w-full md:max-w-sm"
+            placeholder="Search name or Lead ID"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+
+          {selectedIds.length > 0 && (
+            <button
+              className="bg-red-700 text-white px-4 py-2 rounded text-sm"
+              onClick={bulkDelete}
+            >
+              Delete Selected ({selectedIds.length})
+            </button>
+          )}
+        </div>
       </div>
 
       {/* TABLE */}
@@ -159,12 +188,24 @@ export default function LeadsPage() {
         <table className="w-full text-sm">
           <thead className="bg-gray-100 border-b">
             <tr>
-              <th className="px-3 py-3 text-left">Name</th>
-              <th className="px-3 py-3 text-left hidden md:table-cell">
-                Email
+              <th className="px-3 py-3">
+                <input
+                  type="checkbox"
+                  checked={
+                    selectedIds.length > 0 &&
+                    selectedIds.length === filteredLeads.length
+                  }
+                  onChange={(e) =>
+                    setSelectedIds(
+                      e.target.checked
+                        ? filteredLeads.map((l) => l.id)
+                        : []
+                    )
+                  }
+                />
               </th>
+              <th className="px-3 py-3 text-left">Name</th>
               <th className="px-3 py-3 text-left">Lead ID</th>
-              <th className="px-3 py-3 text-left">Type</th>
               <th className="px-3 py-3 text-left">Status</th>
               <th className="px-3 py-3 text-left">Actions</th>
             </tr>
@@ -173,21 +214,25 @@ export default function LeadsPage() {
           <tbody>
             {filteredLeads.map((l) => (
               <tr key={l.id} className="border-b hover:bg-gray-50">
+                <td className="px-3 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(l.id)}
+                    onChange={(e) =>
+                      setSelectedIds((prev) =>
+                        e.target.checked
+                          ? [...prev, l.id]
+                          : prev.filter((id) => id !== l.id)
+                      )
+                    }
+                  />
+                </td>
+
                 <td className="px-3 py-3 font-medium">
                   {l.first_name} {l.last_name}
                 </td>
 
-                <td className="px-3 py-3 hidden md:table-cell">
-                  {l.email || "—"}
-                </td>
-
-                <td className="px-3 py-3 font-mono text-xs">
-                  {l.lead_id}
-                </td>
-
-                <td className="px-3 py-3 text-xs">
-                  {l.submission_type}
-                </td>
+                <td className="px-3 py-3 font-mono text-xs">{l.lead_id}</td>
 
                 <td className="px-3 py-3 text-xs">
                   {l.lead_status || "new"}
@@ -216,12 +261,10 @@ export default function LeadsPage() {
         </table>
       </div>
 
-      {/* ===============================
-         VIEW MODAL (FULL READ-ONLY)
-      ================================ */}
+      {/* VIEW MODAL */}
       {viewLead && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white p-6 rounded max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">
               Lead Details — {viewLead.lead_id}
             </h2>
@@ -290,9 +333,7 @@ export default function LeadsPage() {
         </div>
       )}
 
-      {/* ===============================
-         EDIT MODAL (RESTORED + SAFE)
-      ================================ */}
+      {/* EDIT MODAL */}
       {editLead && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 rounded max-w-lg w-full">

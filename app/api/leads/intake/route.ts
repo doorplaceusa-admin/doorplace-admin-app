@@ -55,14 +55,15 @@ for (const file of files) {
     const submissionType = formData.get("submission_type");
 
     const firstName =
-      formData.get("customer_first_name") ||
-      formData.get("first_name") ||
-      null;
+  formData.get("first_name") ||
+  formData.get("customer_first_name") ||
+  null;
 
-    const lastName =
-      formData.get("customer_last_name") ||
-      formData.get("last_name") ||
-      null;
+const lastName =
+  formData.get("last_name") ||
+  formData.get("customer_last_name") ||
+  null;
+
 
     const email =
       formData.get("customer_email") ||

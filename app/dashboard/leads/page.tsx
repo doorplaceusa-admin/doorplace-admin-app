@@ -9,21 +9,44 @@ import { supabase } from "@/lib/supabaseClient";
 type Lead = {
   id: string;
   lead_id: string;
-  first_name: string;
-  last_name: string;
-  customer_email?: string;
-  customer_phone?: string;
+
+  submission_type?: string;
+  quote_type?: string;
+
+  // General / Quote
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+  project_details?: string;
+
   street_address?: string;
   city?: string;
   state?: string;
-  zip_code?: string;
-  project_type?: string;
-  size_needed?: string;
+  zip?: string;
+
+  // Swing quote
+  swing_size?: string;
+  porch_ceiling_height?: string;
   installation_needed?: string;
-  project_details?: string;
-  lead_status?: string;
+  hanging_method?: string;
+
+  // Door quote
+  door_width?: string;
+  door_height?: string;
+  number_of_doors?: string;
+  door_type?: string;
+  door_type_other?: string;
+  door_material?: string;
+  door_material_other?: string;
+  finish_preference?: string;
+  door_installation_needed?: string;
+  installation_location?: string;
+
+  // Meta
   partner_id?: string;
-  lead_source?: string;
+  lead_status?: string;
+  source?: string;
   photos?: string[];
   created_at: string;
 };
@@ -40,15 +63,17 @@ export default function LeadsPage() {
   const [editLead, setEditLead] = useState<Lead | null>(null);
 
   /* ===============================
-     LOAD LEADS
+     LOAD LEADS (ONLY NON-PARTNER ORDERS)
   ================================ */
   async function loadLeads() {
     setLoading(true);
 
     const { data } = await supabase
-      .from("leads")
-      .select("*")
-      .order("created_at", { ascending: false });
+  .from("leads")
+  .select("*")
+  .or("submission_type.is.null,submission_type.neq.partner_order")
+  .order("created_at", { ascending: false });
+
 
     setLeads(data || []);
     setLoading(false);
@@ -66,14 +91,14 @@ export default function LeadsPage() {
 
     const q = search.toLowerCase();
     return leads.filter((l) =>
-      `${l.first_name} ${l.last_name} ${l.customer_email} ${l.lead_id}`
+      `${l.first_name} ${l.last_name} ${l.email} ${l.lead_id}`
         .toLowerCase()
         .includes(q)
     );
   }, [leads, search]);
 
   /* ===============================
-     SAVE EDIT
+     SAVE EDIT (SAFE FIELDS ONLY)
   ================================ */
   async function saveEdit() {
     if (!editLead) return;
@@ -83,12 +108,12 @@ export default function LeadsPage() {
       .update({
         first_name: editLead.first_name,
         last_name: editLead.last_name,
-        customer_email: editLead.customer_email,
-        customer_phone: editLead.customer_phone,
+        email: editLead.email,
+        phone: editLead.phone,
         street_address: editLead.street_address,
         city: editLead.city,
         state: editLead.state,
-        zip_code: editLead.zip_code,
+        zip: editLead.zip,
         lead_status: editLead.lead_status,
         partner_id: editLead.partner_id,
       })
@@ -103,7 +128,6 @@ export default function LeadsPage() {
   ================================ */
   async function deleteLead(lead: Lead) {
     if (!confirm(`Delete lead ${lead.lead_id}?`)) return;
-
     await supabase.from("leads").delete().eq("id", lead.id);
     loadLeads();
   }
@@ -116,16 +140,10 @@ export default function LeadsPage() {
   return (
     <div className="h-[calc(100vh-64px)] overflow-y-auto px-6 pb-6 space-y-4">
       {/* HEADER */}
-      <div className="sticky top-0 z-30 bg-white pb-4 border-b shadow-sm">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-red-700">Leads</h1>
-          <span className="text-sm text-gray-600">
-            Total: {filteredLeads.length}
-          </span>
-        </div>
-
+      <div className="sticky top-0 bg-white z-30 border-b pb-4">
+        <h1 className="text-3xl font-bold text-red-700">Leads</h1>
         <p className="text-sm text-gray-500 mb-3">
-          Doorplace USA — Lead Management
+          General Inquiry & Swing / Door Quotes
         </p>
 
         <input
@@ -138,43 +156,46 @@ export default function LeadsPage() {
 
       {/* TABLE */}
       <div className="bg-white border rounded-lg overflow-x-auto">
-        <table className="w-full text-sm table-fixed">
+        <table className="w-full text-sm">
           <thead className="bg-gray-100 border-b">
             <tr>
-              <th className="px-3 py-3 text-left w-[30%]">Name</th>
-              <th className="px-3 py-3 text-left hidden md:table-cell w-[30%]">
+              <th className="px-3 py-3 text-left">Name</th>
+              <th className="px-3 py-3 text-left hidden md:table-cell">
                 Email
               </th>
-              <th className="px-3 py-3 text-left w-[15%]">Lead ID</th>
-              <th className="px-3 py-3 text-left w-[15%]">Status</th>
-              <th className="px-3 py-3 text-left w-[10%]">Actions</th>
+              <th className="px-3 py-3 text-left">Lead ID</th>
+              <th className="px-3 py-3 text-left">Type</th>
+              <th className="px-3 py-3 text-left">Status</th>
+              <th className="px-3 py-3 text-left">Actions</th>
             </tr>
           </thead>
 
           <tbody>
             {filteredLeads.map((l) => (
               <tr key={l.id} className="border-b hover:bg-gray-50">
-                <td className="px-3 py-3 font-medium truncate">
+                <td className="px-3 py-3 font-medium">
                   {l.first_name} {l.last_name}
                 </td>
 
-                <td className="px-3 py-3 hidden md:table-cell truncate">
-                  {l.customer_email || "—"}
+                <td className="px-3 py-3 hidden md:table-cell">
+                  {l.email || "—"}
                 </td>
 
-                <td className="px-3 py-3 font-mono text-xs truncate">
+                <td className="px-3 py-3 font-mono text-xs">
                   {l.lead_id}
                 </td>
 
-                <td className="px-3 py-3">
-                  <span className="inline-flex px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs font-semibold">
-                    {l.lead_status || "new"}
-                  </span>
+                <td className="px-3 py-3 text-xs">
+                  {l.submission_type}
+                </td>
+
+                <td className="px-3 py-3 text-xs">
+                  {l.lead_status || "new"}
                 </td>
 
                 <td className="px-3 py-3">
                   <select
-                    className="border rounded px-2 py-1 text-xs w-full"
+                    className="border rounded px-2 py-1 text-xs"
                     onChange={(e) => {
                       const v = e.target.value;
                       e.target.value = "";
@@ -195,40 +216,60 @@ export default function LeadsPage() {
         </table>
       </div>
 
-      {/* VIEW MODAL */}
+      {/* ===============================
+         VIEW MODAL (FULL READ-ONLY)
+      ================================ */}
       {viewLead && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded max-w-xl w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-3">Lead Profile</h2>
+          <div className="bg-white p-6 rounded max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">
+              Lead Details — {viewLead.lead_id}
+            </h2>
 
-            <p><b>Lead ID:</b> {viewLead.lead_id}</p>
-            <p><b>Name:</b> {viewLead.first_name} {viewLead.last_name}</p>
-            <p><b>Email:</b> {viewLead.customer_email}</p>
-            <p><b>Phone:</b> {viewLead.customer_phone}</p>
+            <Section title="Contact">
+              <Row label="Name" value={`${viewLead.first_name} ${viewLead.last_name}`} />
+              <Row label="Email" value={viewLead.email} />
+              <Row label="Phone" value={viewLead.phone} />
+              <Row
+                label="Address"
+                value={`${viewLead.street_address || ""} ${viewLead.city || ""}, ${viewLead.state || ""} ${viewLead.zip || ""}`}
+              />
+            </Section>
 
-            <p className="mt-2">
-              <b>Address:</b><br />
-              {viewLead.street_address}<br />
-              {viewLead.city}, {viewLead.state} {viewLead.zip_code}
-            </p>
+            <Section title="Submission">
+              <Row label="Submission Type" value={viewLead.submission_type} />
+              <Row label="Quote Type" value={viewLead.quote_type} />
+              <Row label="Project Details" value={viewLead.project_details} />
+            </Section>
 
-            <p className="mt-2"><b>Project:</b> {viewLead.project_type}</p>
-            <p><b>Size:</b> {viewLead.size_needed}</p>
-            <p><b>Installation:</b> {viewLead.installation_needed}</p>
-            <p><b>Status:</b> {viewLead.lead_status}</p>
-            <p><b>Partner ID:</b> {viewLead.partner_id || "—"}</p>
-            <p><b>Source:</b> {viewLead.lead_source}</p>
+            {viewLead.quote_type === "swing" && (
+              <Section title="Swing Quote">
+                <Row label="Swing Size" value={viewLead.swing_size} />
+                <Row label="Ceiling Height" value={viewLead.porch_ceiling_height} />
+                <Row label="Installation Needed" value={viewLead.installation_needed} />
+                <Row label="Hanging Method" value={viewLead.hanging_method} />
+              </Section>
+            )}
 
-            {/* PHOTOS */}
-            <div className="mt-3">
-              <b>Photos:</b>
-              <div className="flex gap-2 flex-wrap mt-2">
-                {Array.isArray(viewLead.photos) && viewLead.photos.length > 0 ? (
-                  viewLead.photos.map((url, i) => (
+            {viewLead.quote_type === "door" && (
+              <Section title="Door Quote">
+                <Row label="Door Width" value={viewLead.door_width} />
+                <Row label="Door Height" value={viewLead.door_height} />
+                <Row label="Number of Doors" value={viewLead.number_of_doors} />
+                <Row label="Door Type" value={viewLead.door_type} />
+                <Row label="Door Material" value={viewLead.door_material} />
+                <Row label="Finish Preference" value={viewLead.finish_preference} />
+              </Section>
+            )}
+
+            <Section title="Photos">
+              <div className="flex gap-2 flex-wrap">
+                {viewLead.photos?.length ? (
+                  viewLead.photos.map((p, i) => (
                     <img
                       key={i}
-                      src={url}
-                      className="w-28 h-28 object-cover rounded border"
+                      src={p}
+                      className="w-28 h-28 object-cover border rounded"
                     />
                   ))
                 ) : (
@@ -237,7 +278,7 @@ export default function LeadsPage() {
                   </span>
                 )}
               </div>
-            </div>
+            </Section>
 
             <button
               className="mt-4 bg-black text-white px-4 py-2 rounded w-full"
@@ -249,7 +290,9 @@ export default function LeadsPage() {
         </div>
       )}
 
-      {/* EDIT MODAL */}
+      {/* ===============================
+         EDIT MODAL (RESTORED + SAFE)
+      ================================ */}
       {editLead && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 rounded max-w-lg w-full">
@@ -258,12 +301,12 @@ export default function LeadsPage() {
             {[
               "first_name",
               "last_name",
-              "customer_email",
-              "customer_phone",
+              "email",
+              "phone",
               "street_address",
               "city",
               "state",
-              "zip_code",
+              "zip",
               "partner_id",
               "lead_status",
             ].map((f) => (
@@ -296,5 +339,26 @@ export default function LeadsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+/* ===============================
+   HELPERS
+================================ */
+function Section({ title, children }: any) {
+  return (
+    <div className="mt-4">
+      <h3 className="font-bold text-gray-800 mb-2">{title}</h3>
+      <div className="space-y-1 text-sm">{children}</div>
+    </div>
+  );
+}
+
+function Row({ label, value }: any) {
+  if (!value) return null;
+  return (
+    <p>
+      <b>{label}:</b> {value}
+    </p>
   );
 }

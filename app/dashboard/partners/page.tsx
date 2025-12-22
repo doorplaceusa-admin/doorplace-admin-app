@@ -153,7 +153,8 @@ export default function PartnersPage() {
      RENDER
   ================================ */
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto px-6 pb-6 space-y-4">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto overflow-x-hidden px-6 pb-6 space-y-4">
+
 
       {/* HEADER — SAME AS LEADS */}
       <div className="sticky top-0 z-30 bg-white border-b pb-4">
@@ -261,10 +262,11 @@ export default function PartnersPage() {
           switch (key) {
             case "name":
             return (
-          <div className="font-medium">
+          <span className="font-medium">
            {p.first_name} {p.last_name}
-    </div>
-  );
+          </span>
+
+           );
 
 
             case "status":

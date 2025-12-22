@@ -4,10 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import AdminTable from "../../components/ui/admintable";
 
-
 /* ===============================
    TYPES
-=============================== */
+================================ */
 type Partner = {
   id: string;
   first_name: string;
@@ -30,8 +29,6 @@ type Partner = {
   shopify_synced?: boolean;
 };
 
-
-/* ✅ Bulk repair response (what we expect back) */
 type BulkRepairResponse = {
   success: boolean;
   repaired?: number;
@@ -39,15 +36,14 @@ type BulkRepairResponse = {
   alreadyClean?: number;
   skipped?: number;
   dryRun?: boolean;
-  logs?: string[]; // optional
+  logs?: string[];
   error?: string;
 };
 
 /* ===============================
    PAGE
-=============================== */
+================================ */
 export default function PartnersPage() {
-  /* ---------- core state ---------- */
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,28 +53,16 @@ export default function PartnersPage() {
   const [viewPartner, setViewPartner] = useState<Partner | null>(null);
   const [editPartner, setEditPartner] = useState<Partner | null>(null);
 
-  /* ---------- GLOBAL APPROVAL MODE (FIXED: persists) ---------- */
-  
-
-  /* ✅ BULK REPAIR UI STATE (ADDED) */
+  /* BULK REPAIR */
   const [repairRunning, setRepairRunning] = useState(false);
   const [repairDryRun, setRepairDryRun] = useState(false);
-  const [repairResult, setRepairResult] = useState<BulkRepairResponse | null>(
-    null
-  );
+  const [repairResult, setRepairResult] =
+    useState<BulkRepairResponse | null>(null);
   const [repairLogs, setRepairLogs] = useState<string[]>([]);
 
-  /* ===============================
-     LOAD SYSTEM SETTINGS (FIXED)
-  =============================== */
-  
-
-  /* ===============================
-     LOAD PARTNERS
-  =============================== */
+  /* LOAD PARTNERS */
   async function loadPartners() {
     setLoading(true);
-
     const { data } = await supabase
       .from("partners")
       .select("*")
@@ -92,47 +76,32 @@ export default function PartnersPage() {
     loadPartners();
   }, [sort]);
 
-  /* ===============================
-     ACTIONS
-=============================== */
-async function runAction(
-  action:
-    | "regenerate_partner_id"
-    | "approve_partner"
-    | "send_onboarding_email"
-    | "delete_partner"
-    | "sync_shopify_tags",
-  partner: Partner
-) {
-  if (
-    !confirm(`Run ${action.replaceAll("_", " ")} for ${partner.email_address}?`)
-  )
-    return;
+  /* ACTIONS */
+  async function runAction(
+    action:
+      | "regenerate_partner_id"
+      | "send_onboarding_email"
+      | "delete_partner"
+      | "sync_shopify_tags",
+    partner: Partner
+  ) {
+    if (!confirm(`Run ${action.replaceAll("_", " ")} for ${partner.email_address}?`))
+      return;
 
-  const res = await fetch("/api/partners/actions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action,
-      partner_id: partner.partner_id,
-      email_address: partner.email_address,
-    }),
-  });
+    await fetch("/api/partners/actions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action,
+        partner_id: partner.partner_id,
+        email_address: partner.email_address,
+      }),
+    });
 
-  const json = await res.json();
-  if (!res.ok) {
-    alert(json.error || "Action failed");
-    return;
+    loadPartners();
   }
 
-  await loadPartners();
-}
-
-
-
-  /* ===============================
-     SAVE EDIT
-  =============================== */
+  /* SAVE EDIT */
   async function saveEdit() {
     if (!editPartner) return;
 
@@ -154,9 +123,7 @@ async function runAction(
     loadPartners();
   }
 
-  /* ===============================
-     FILTER + SORT
-  =============================== */
+  /* FILTER */
   const filteredPartners = useMemo(() => {
     let list = [...partners];
 
@@ -180,30 +147,18 @@ async function runAction(
     return list;
   }, [partners, search, sort]);
 
-  const columns = [
-  { key: "name", label: "Name" },
-  { key: "email", label: "Email", className: "hidden md:table-cell" },
-  { key: "status", label: "Status" },
-  { key: "actions", label: "Actions" },
-];
-
-
   if (loading) return <div className="p-6">Loading partners…</div>;
-
 
   /* ===============================
      RENDER
-  =============================== */
+  ================================ */
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto px-6 pt-0 pb-6 space-y-4 max-w-full overflow-x-hidden">
-      {/* ==========================
-            HEADER (STICKY)
-      =========================== */}
-      <div className="sticky top-0 z-30 bg-white pb-4 border-b shadow-sm">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto px-6 pb-6 space-y-4">
+
+      {/* HEADER — SAME AS LEADS */}
+      <div className="sticky top-0 z-30 bg-white border-b pb-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-red-700 leading-tight">
-            Partners
-          </h1>
+          <h1 className="text-3xl font-bold text-red-700">Partners</h1>
           <span className="text-sm text-gray-600">
             Total: {filteredPartners.length}
           </span>
@@ -213,11 +168,9 @@ async function runAction(
           Doorplace USA — Partner Control Panel
         </p>
 
-        {/* GLOBAL APPROVAL TOGGLE + BULK REPAIR */}
-        <div className="flex items-center gap-3 mb-3 flex-wrap">
-
-          {/* ✅ DRY RUN TOGGLE (ADDED) */}
-          <label className="flex items-center gap-2 text-xs ml-2 select-none">
+        {/* BULK REPAIR */}
+        <div className="flex gap-3 items-center flex-wrap mb-3">
+          <label className="flex items-center gap-2 text-xs">
             <input
               type="checkbox"
               checked={repairDryRun}
@@ -226,60 +179,37 @@ async function runAction(
             Dry Run
           </label>
 
-          {/* BULK REPAIR BUTTON (UPGRADED: progress + results) */}
           <button
+            className="bg-black text-white px-4 py-1 rounded text-sm"
             onClick={async () => {
               if (repairRunning) return;
+              if (!confirm("Run bulk repair + sync for ALL partners?")) return;
 
+              setRepairRunning(true);
               setRepairResult(null);
               setRepairLogs([]);
 
-              if (!confirm("Run bulk repair + sync for ALL partners?")) return;
+              const res = await fetch("/api/partners/bulk-repair", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ dryRun: repairDryRun }),
+              });
 
-              try {
-                setRepairRunning(true);
-
-                const res = await fetch("/api/partners/bulk-repair", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ dryRun: repairDryRun }),
-                });
-
-                const json: BulkRepairResponse = await res.json();
-
-                if (!res.ok) {
-                  alert(json.error || "Bulk repair failed");
-                  return;
-                }
-
-                setRepairResult(json);
-                setRepairLogs(json.logs || []);
-
-                alert("Bulk repair + sync completed");
-                loadPartners();
-              } catch (e: any) {
-                alert(e?.message || "Bulk repair failed");
-              } finally {
-                setRepairRunning(false);
-              }
+              const json = await res.json();
+              setRepairResult(json);
+              setRepairLogs(json.logs || []);
+              setRepairRunning(false);
+              loadPartners();
             }}
-            className={`px-4 py-1 rounded text-sm font-bold ${
-              repairRunning ? "bg-gray-400 text-white" : "bg-black text-white"
-            }`}
           >
             {repairRunning ? "Running…" : "Repair / Sync All Partners"}
           </button>
         </div>
 
-        {/* ✅ RESULT SUMMARY UI (ADDED) */}
+        {/* RESULTS */}
         {repairResult?.success && (
           <div className="bg-gray-100 border rounded p-3 text-xs space-y-1">
-            <div>
-              <b>Bulk Repair Results</b>
-              {typeof repairResult.dryRun === "boolean"
-                ? ` (Dry Run: ${repairResult.dryRun ? "YES" : "NO"})`
-                : ""}
-            </div>
+            <div><b>Bulk Repair Results</b></div>
             <div>Repaired: {repairResult.repaired ?? 0}</div>
             <div>Emails Sent: {repairResult.emailsSent ?? 0}</div>
             <div>Already Clean: {repairResult.alreadyClean ?? 0}</div>
@@ -287,158 +217,105 @@ async function runAction(
           </div>
         )}
 
-        {/* ✅ LOGS UI (ADDED) */}
+        {/* LOGS */}
         {repairLogs.length > 0 && (
-          <div className="mt-2 bg-black text-green-400 font-mono text-xs rounded p-3 max-h-48 overflow-y-auto">
-            {repairLogs.map((line, idx) => (
-              <div key={idx}>{line}</div>
+          <div className="mt-2 bg-black text-green-400 font-mono text-xs rounded p-3 max-h-40 overflow-y-auto">
+            {repairLogs.map((l, i) => (
+              <div key={i}>{l}</div>
             ))}
           </div>
         )}
 
         {/* SEARCH / SORT */}
-        <div className="flex flex-col md:flex-row gap-2">
+        <div className="flex gap-2 mt-2">
           <input
-            type="text"
+            className="border rounded px-3 py-2 w-full md:max-w-sm"
             placeholder="Search name, email, or Partner ID"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="border rounded px-3 py-2 w-full md:max-w-sm"
           />
 
           <select
+            className="border rounded px-3 py-2"
             value={sort}
             onChange={(e) => setSort(e.target.value as any)}
-            className="border rounded px-3 py-2 w-full md:w-auto"
           >
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
             <option value="name">Name A–Z</option>
           </select>
         </div>
       </div>
 
-      {/* ==========================
-            TABLE
-      =========================== */}
+      {/* TABLE */}
       <AdminTable
-  columns={columns}
-  rows={filteredPartners}
-  rowKey={(p) => p.id}
-  renderCell={(p, key) => {
-    switch (key) {
-      case "name":
-  return (
-    <div className="leading-tight">
-      <div className="font-medium">{p.first_name}</div>
-      <div className="text-xs text-gray-500">{p.last_name}</div>
-    </div>
-  );
+        columns={[
+          { key: "name", label: "Name" },
+          { key: "status", label: "Status" },
+          { key: "actions", label: "Actions" },
+        ]}
+        rows={filteredPartners}
+        rowKey={(p) => p.id}
+        renderCell={(p, key) => {
+          switch (key) {
+            case "name":
+              return (
+                <div>
+                  <div className="font-medium">{p.first_name}</div>
+                  <div className="text-xs text-gray-500">{p.last_name}</div>
+                </div>
+              );
 
+            case "status":
+              return p.shopify_synced ? (
+                <span className="text-xs font-semibold text-green-700">● Approved</span>
+              ) : (
+                <span className="text-xs font-semibold text-orange-700">● Not Approved</span>
+              );
 
-      case "email":
-        return (
-          <span className="truncate hidden md:block">
-            {p.email_address}
-          </span>
-        );
+            case "actions":
+              return (
+                <select
+                  className="border rounded px-2 py-1 text-xs w-full"
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    e.target.value = "";
+                    if (v === "view") setViewPartner(p);
+                    if (v === "edit") setEditPartner(p);
+                    if (v === "regen") runAction("regenerate_partner_id", p);
+                    if (v === "email") runAction("send_onboarding_email", p);
+                    if (v === "shopify") runAction("sync_shopify_tags", p);
+                    if (v === "delete") runAction("delete_partner", p);
+                  }}
+                >
+                  <option value="">Select</option>
+                  <option value="view">View</option>
+                  <option value="edit">Edit</option>
+                  <option value="regen">Regenerate ID</option>
+                  <option value="email">Send Approval Email</option>
+                  <option value="shopify">Sync Shopify</option>
+                  <option value="delete">Delete</option>
+                </select>
+              );
+          }
+        }}
+      />
 
-      case "status":
-        return p.shopify_synced ? (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-semibold">
-            ● Approved
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-orange-100 text-orange-700 text-xs font-semibold">
-            ● Not Approved
-          </span>
-        );
-
-      case "actions":
-        return (
-          <select
-            className="border rounded px-2 py-1 text-xs w-full"
-            onChange={(e) => {
-              const val = e.target.value;
-              e.target.value = "";
-
-              if (val === "view") setViewPartner(p);
-              if (val === "edit") setEditPartner(p);
-              if (val === "regen") runAction("regenerate_partner_id", p);
-              if (val === "email") runAction("send_onboarding_email", p);
-              if (val === "shopify") runAction("sync_shopify_tags", p);
-              if (val === "delete") runAction("delete_partner", p);
-            }}
-          >
-            <option value="">Select</option>
-            <option value="view">View</option>
-            <option value="edit">Edit</option>
-            <option value="regen">Regenerate ID</option>
-            <option value="email"> Send Approval Email</option>
-            <option value="shopify">Sync Shopify</option>
-            <option value="delete">Delete</option>
-          </select>
-        );
-
-      default:
-        return null;
-    }
-  }}
-/>
-
-
-      {/* ==========================
-            VIEW MODAL
-      =========================== */}
+      {/* VIEW MODAL */}
       {viewPartner && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 rounded max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-3">Partner Profile</h2>
 
-            <p>
-              <b>Name:</b> {viewPartner.first_name} {viewPartner.last_name}
-            </p>
-            <p>
-              <b>Email:</b> {viewPartner.email_address}
-            </p>
-            <p>
-              <b>Phone:</b> {viewPartner.cell_phone_number}
-            </p>
-            <p>
-              <b>Partner ID:</b> {viewPartner.partner_id}
-            </p>
-
-            <p>
-              <b>Onboarded:</b>{" "}
-              {new Date(viewPartner.created_at).toLocaleString()}
-            </p>
-
-            <p className="break-all mt-2">
-              <b>Tracking Link:</b>
-              <br />
-              {viewPartner.tracking_link ||
-                `https://doorplaceusa.com/pages/swing-partner-lead?partner_id=${viewPartner.partner_id}`}
-            </p>
+            <p><b>Name:</b> {viewPartner.first_name} {viewPartner.last_name}</p>
+            <p><b>Email:</b> {viewPartner.email_address}</p>
+            <p><b>Phone:</b> {viewPartner.cell_phone_number}</p>
+            <p><b>Partner ID:</b> {viewPartner.partner_id}</p>
 
             <p className="mt-2">
-              <b>Address:</b>
-              <br />
-              {viewPartner.street_address}
-              <br />
+              <b>Address:</b><br />
+              {viewPartner.street_address}<br />
               {viewPartner.city}, {viewPartner.state} {viewPartner.zip_code}
-            </p>
-
-            <p>
-              <b>Business Name:</b> {viewPartner.business_name}
-            </p>
-            <p>
-              <b>Coverage Area:</b> {viewPartner.coverage_area}
-            </p>
-            <p>
-              <b>Preferred Contact:</b> {viewPartner.preferred_contact_method}
-            </p>
-            <p>
-              <b>Sales Experience:</b> {viewPartner.sales_experience}
             </p>
 
             <button
@@ -451,9 +328,7 @@ async function runAction(
         </div>
       )}
 
-      {/* ==========================
-            EDIT MODAL
-      =========================== */}
+      {/* EDIT MODAL */}
       {editPartner && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 rounded max-w-lg w-full">
@@ -500,6 +375,7 @@ async function runAction(
           </div>
         </div>
       )}
+
     </div>
   );
 }

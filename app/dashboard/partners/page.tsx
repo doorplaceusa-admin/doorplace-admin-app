@@ -229,7 +229,8 @@ export default function PartnersPage() {
         {/* SEARCH / SORT */}
         <div className="flex gap-2 mt-2">
           <input
-            className="border rounded px-3 py-2 w-full md:max-w-sm"
+            className="border rounded px-3 py-2 w-full"
+
             placeholder="Search name, email, or Partner ID"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -259,12 +260,12 @@ export default function PartnersPage() {
         renderCell={(p, key) => {
           switch (key) {
             case "name":
-              return (
-                <div>
-                  <div className="font-medium">{p.first_name}</div>
-                  <div className="text-xs text-gray-500">{p.last_name}</div>
-                </div>
-              );
+            return (
+          <div className="font-medium">
+           {p.first_name} {p.last_name}
+    </div>
+  );
+
 
             case "status":
               return p.shopify_synced ? (
@@ -276,7 +277,7 @@ export default function PartnersPage() {
             case "actions":
               return (
                 <select
-                  className="border rounded px-2 py-1 text-xs w-full"
+                  className="border rounded px-2 py-1 text-xs"
                   onChange={(e) => {
                     const v = e.target.value;
                     e.target.value = "";

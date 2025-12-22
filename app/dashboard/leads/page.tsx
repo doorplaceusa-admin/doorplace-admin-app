@@ -205,8 +205,7 @@ export default function LeadsPage() {
                 />
               </th>
               <th className="px-3 py-3 text-left">Name</th>
-              <th className="px-3 py-3 text-left">Lead ID</th>
-              <th className="px-3 py-3 text-left">Status</th>
+              <th className="px-3 py-3 text-left">Lead Type</th>
               <th className="px-3 py-3 text-left">Actions</th>
             </tr>
           </thead>
@@ -232,11 +231,16 @@ export default function LeadsPage() {
                   {l.first_name} {l.last_name}
                 </td>
 
-                <td className="px-3 py-3 font-mono text-xs">{l.lead_id}</td>
+                <td className="px-3 py-3 text-xs font-medium">
+  {l.submission_type === "general"
+    ? "General Inquiry"
+    : l.submission_type === "quote"
+    ? "Swing / Door Quote"
+    : l.submission_type === "partner_tracking"
+    ? "Partner Tracking Link"
+    : "—"}
+</td>
 
-                <td className="px-3 py-3 text-xs">
-                  {l.lead_status || "new"}
-                </td>
 
                 <td className="px-3 py-3">
                   <select
@@ -262,76 +266,102 @@ export default function LeadsPage() {
       </div>
 
       {/* VIEW MODAL */}
-      {viewLead && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">
-              Lead Details — {viewLead.lead_id}
-            </h2>
+{viewLead && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div className="bg-white p-6 rounded max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+      <h2 className="text-xl font-bold mb-4">
+        Lead Details — {viewLead.lead_id}
+      </h2>
 
-            <Section title="Contact">
-              <Row label="Name" value={`${viewLead.first_name} ${viewLead.last_name}`} />
-              <Row label="Email" value={viewLead.email} />
-              <Row label="Phone" value={viewLead.phone} />
-              <Row
-                label="Address"
-                value={`${viewLead.street_address || ""} ${viewLead.city || ""}, ${viewLead.state || ""} ${viewLead.zip || ""}`}
-              />
-            </Section>
+      {/* CONTACT */}
+      <Section title="Contact">
+        <Row label="Name" value={`${viewLead.first_name} ${viewLead.last_name}`} />
+        <Row label="Email" value={viewLead.email} />
+        <Row label="Phone" value={viewLead.phone} />
+        <Row
+          label="Address"
+          value={`${viewLead.street_address || ""} ${viewLead.city || ""}, ${viewLead.state || ""} ${viewLead.zip || ""}`}
+        />
+      </Section>
 
-            <Section title="Submission">
-              <Row label="Submission Type" value={viewLead.submission_type} />
-              <Row label="Quote Type" value={viewLead.quote_type} />
-              <Row label="Project Details" value={viewLead.project_details} />
-            </Section>
-
-            {viewLead.quote_type === "swing" && (
-              <Section title="Swing Quote">
-                <Row label="Swing Size" value={viewLead.swing_size} />
-                <Row label="Ceiling Height" value={viewLead.porch_ceiling_height} />
-                <Row label="Installation Needed" value={viewLead.installation_needed} />
-                <Row label="Hanging Method" value={viewLead.hanging_method} />
-              </Section>
-            )}
-
-            {viewLead.quote_type === "door" && (
-              <Section title="Door Quote">
-                <Row label="Door Width" value={viewLead.door_width} />
-                <Row label="Door Height" value={viewLead.door_height} />
-                <Row label="Number of Doors" value={viewLead.number_of_doors} />
-                <Row label="Door Type" value={viewLead.door_type} />
-                <Row label="Door Material" value={viewLead.door_material} />
-                <Row label="Finish Preference" value={viewLead.finish_preference} />
-              </Section>
-            )}
-
-            <Section title="Photos">
-              <div className="flex gap-2 flex-wrap">
-                {viewLead.photos?.length ? (
-                  viewLead.photos.map((p, i) => (
-                    <img
-                      key={i}
-                      src={p}
-                      className="w-28 h-28 object-cover border rounded"
-                    />
-                  ))
-                ) : (
-                  <span className="text-gray-500 text-sm">
-                    No photos uploaded
-                  </span>
-                )}
-              </div>
-            </Section>
-
-            <button
-              className="mt-4 bg-black text-white px-4 py-2 rounded w-full"
-              onClick={() => setViewLead(null)}
-            >
-              Close
-            </button>
-          </div>
-        </div>
+      {/* PARTNER TRACKING (ONLY SHOW IF EXISTS) */}
+      {viewLead.partner_id && (
+        <Section title="Partner Tracking">
+          <Row label="Partner ID" value={viewLead.partner_id} />
+        </Section>
       )}
+
+      {/* SUBMISSION */}
+      <Section title="Submission">
+        <Row
+          label="Submission Type"
+          value={
+            viewLead.submission_type === "partner_tracking"
+              ? "Partner Tracking Link"
+              : viewLead.submission_type === "partner_order"
+              ? "Partner Swing Order"
+              : viewLead.submission_type === "quote"
+              ? "Swing / Door Quote"
+              : viewLead.submission_type === "general"
+              ? "General Inquiry"
+              : viewLead.submission_type
+          }
+        />
+        <Row label="Quote Type" value={viewLead.quote_type} />
+        <Row label="Project Details" value={viewLead.project_details} />
+      </Section>
+
+      {/* SWING QUOTE */}
+      {viewLead.quote_type === "swing" && (
+        <Section title="Swing Quote">
+          <Row label="Swing Size" value={viewLead.swing_size} />
+          <Row label="Ceiling Height" value={viewLead.porch_ceiling_height} />
+          <Row label="Installation Needed" value={viewLead.installation_needed} />
+          <Row label="Hanging Method" value={viewLead.hanging_method} />
+        </Section>
+      )}
+
+      {/* DOOR QUOTE */}
+      {viewLead.quote_type === "door" && (
+        <Section title="Door Quote">
+          <Row label="Door Width" value={viewLead.door_width} />
+          <Row label="Door Height" value={viewLead.door_height} />
+          <Row label="Number of Doors" value={viewLead.number_of_doors} />
+          <Row label="Door Type" value={viewLead.door_type} />
+          <Row label="Door Material" value={viewLead.door_material} />
+          <Row label="Finish Preference" value={viewLead.finish_preference} />
+        </Section>
+      )}
+
+      {/* PHOTOS */}
+      <Section title="Photos">
+        <div className="flex gap-2 flex-wrap">
+          {viewLead.photos?.length ? (
+            viewLead.photos.map((p, i) => (
+              <img
+                key={i}
+                src={p}
+                className="w-28 h-28 object-cover border rounded"
+              />
+            ))
+          ) : (
+            <span className="text-gray-500 text-sm">
+              No photos uploaded
+            </span>
+          )}
+        </div>
+      </Section>
+
+      <button
+        className="mt-4 bg-black text-white px-4 py-2 rounded w-full"
+        onClick={() => setViewLead(null)}
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
+
 
       {/* EDIT MODAL */}
       {editLead && (

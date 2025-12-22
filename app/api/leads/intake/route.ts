@@ -177,12 +177,10 @@ const partnerId = formData.get("partner_id");
 /* ===============================
    FINAL RESPONSE (NO REDIRECTS)
 =============================== */
-return Response.redirect(
+return NextResponse.redirect(
   "https://doorplaceusa.com/pages/thank-you",
-  302
+  { status: 302 }
 );
-
-
 
 
   } catch (err) {

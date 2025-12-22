@@ -262,9 +262,11 @@ export default function PartnersPage() {
           switch (key) {
             case "name":
             return (
-          <span className="font-medium">
-           {p.first_name} {p.last_name}
-          </span>
+          <div className="flex flex-col">
+  <span className="font-medium">{p.first_name}</span>
+  <span className="text-xs text-gray-500">{p.last_name}</span>
+</div>
+
 
            );
 

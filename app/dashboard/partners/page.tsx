@@ -363,7 +363,6 @@ async function runAction(
               <th className="px-3 py-3 text-left hidden md:table-cell w-[30%]">
                 Email
               </th>
-              <th className="px-3 py-3 text-left w-[15%]">Partner ID</th>
               <th className="px-3 py-3 text-left w-[15%]">Status</th>
               <th className="px-3 py-3 text-left w-[10%]">Actions</th>
             </tr>
@@ -378,10 +377,6 @@ async function runAction(
 
                 <td className="px-3 py-3 hidden md:table-cell truncate">
                   {p.email_address}
-                </td>
-
-                <td className="px-3 py-3 font-mono text-xs truncate">
-                  {p.partner_id}
                 </td>
 
                 <td className="px-3 py-3">

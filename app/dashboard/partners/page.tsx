@@ -30,10 +30,6 @@ type Partner = {
   shopify_synced?: boolean;
 };
 
-type SystemSettings = {
-  id: string;
-  approval_mode: "manual" | "automatic";
-};
 
 /* ✅ Bulk repair response (what we expect back) */
 type BulkRepairResponse = {
@@ -62,8 +58,7 @@ export default function PartnersPage() {
   const [editPartner, setEditPartner] = useState<Partner | null>(null);
 
   /* ---------- GLOBAL APPROVAL MODE (FIXED: persists) ---------- */
-  const [systemSettings, setSystemSettings] =
-    useState<SystemSettings | null>(null);
+  
 
   /* ✅ BULK REPAIR UI STATE (ADDED) */
   const [repairRunning, setRepairRunning] = useState(false);
@@ -76,32 +71,7 @@ export default function PartnersPage() {
   /* ===============================
      LOAD SYSTEM SETTINGS (FIXED)
   =============================== */
-  useEffect(() => {
-    supabase
-      .from("system_settings")
-      .select("id, approval_mode")
-      .single()
-      .then(({ data }) => {
-        if (data) setSystemSettings(data);
-      });
-  }, []);
-
-  async function toggleApprovalMode() {
-    if (!systemSettings) return;
-
-    const newMode =
-      systemSettings.approval_mode === "manual" ? "automatic" : "manual";
-
-    await supabase
-      .from("system_settings")
-      .update({ approval_mode: newMode })
-      .eq("id", systemSettings.id); // ✅ REQUIRED so it actually persists
-
-    setSystemSettings({
-      ...systemSettings,
-      approval_mode: newMode,
-    });
-  }
+  
 
   /* ===============================
      LOAD PARTNERS
@@ -218,8 +188,8 @@ async function runAction(
 ];
 
 
-  if (loading || !systemSettings)
-    return <div className="p-6">Loading partners…</div>;
+  if (loading) return <div className="p-6">Loading partners…</div>;
+
 
   /* ===============================
      RENDER
@@ -245,20 +215,6 @@ async function runAction(
 
         {/* GLOBAL APPROVAL TOGGLE + BULK REPAIR */}
         <div className="flex items-center gap-3 mb-3 flex-wrap">
-          <span className="text-sm font-medium">Approval Mode:</span>
-
-          <button
-            onClick={toggleApprovalMode}
-            className={`px-4 py-1 rounded text-sm font-bold ${
-              systemSettings.approval_mode === "automatic"
-                ? "bg-green-600 text-white"
-                : "bg-orange-500 text-white"
-            }`}
-          >
-            {systemSettings.approval_mode === "automatic"
-              ? "Automatic"
-              : "Manual"}
-          </button>
 
           {/* ✅ DRY RUN TOGGLE (ADDED) */}
           <label className="flex items-center gap-2 text-xs ml-2 select-none">
@@ -372,11 +328,13 @@ async function runAction(
   renderCell={(p, key) => {
     switch (key) {
       case "name":
-        return (
-          <span className="font-medium">
-            {p.first_name} {p.last_name}
-          </span>
-        );
+  return (
+    <div className="leading-tight">
+      <div className="font-medium">{p.first_name}</div>
+      <div className="text-xs text-gray-500">{p.last_name}</div>
+    </div>
+  );
+
 
       case "email":
         return (
@@ -416,9 +374,7 @@ async function runAction(
             <option value="view">View</option>
             <option value="edit">Edit</option>
             <option value="regen">Regenerate ID</option>
-            <option value="email" disabled={p.onboarding_email_sent}>
-              {p.onboarding_email_sent ? "Email Already Sent" : "Send Email"}
-            </option>
+            <option value="email"> Send Approval Email</option>
             <option value="shopify">Sync Shopify</option>
             <option value="delete">Delete</option>
           </select>

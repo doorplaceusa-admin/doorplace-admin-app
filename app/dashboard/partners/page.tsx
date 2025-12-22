@@ -153,7 +153,7 @@ export default function PartnersPage() {
      TEMPLATE RENDER
   ================================ */
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto px-6 pb-6 space-y-4">
+<div className="h-[calc(100vh-64px)] overflow-y-auto overflow-x-hidden max-w-full px-4 pb-6 space-y-4">
       {/* HEADER */}
       <div className="sticky top-0 bg-white z-30 border-b pb-4">
         <div className="flex justify-between items-center">

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import AdminTable from "../../components/ui/admintable";
+
 
 /* ===============================
    TYPES
@@ -208,6 +210,14 @@ async function runAction(
     return list;
   }, [partners, search, sort]);
 
+  const columns = [
+  { key: "name", label: "Name" },
+  { key: "email", label: "Email", className: "hidden md:table-cell" },
+  { key: "status", label: "Status" },
+  { key: "actions", label: "Actions" },
+];
+
+
   if (loading || !systemSettings)
     return <div className="p-6">Loading partners…</div>;
 
@@ -355,100 +365,71 @@ async function runAction(
       {/* ==========================
             TABLE
       =========================== */}
-      <div className="bg-white border rounded-lg overflow-x-auto">
-        <table className="w-full text-sm table-fixed">
-          <thead className="bg-gray-100 border-b">
-            <tr>
-              <th className="px-3 py-3 text-left w-[30%]">Name</th>
-              <th className="px-3 py-3 text-left hidden md:table-cell w-[30%]">
-                Email
-              </th>
-              <th className="px-3 py-3 text-left w-[15%]">Status</th>
-              <th className="px-3 py-3 text-left w-[10%]">Actions</th>
-            </tr>
-          </thead>
+      <AdminTable
+  columns={columns}
+  rows={filteredPartners}
+  rowKey={(p) => p.id}
+  renderCell={(p, key) => {
+    switch (key) {
+      case "name":
+        return (
+          <span className="font-medium">
+            {p.first_name} {p.last_name}
+          </span>
+        );
 
-          <tbody>
-            {filteredPartners.map((p) => (
-              <tr key={p.id} className="border-b hover:bg-gray-50">
-                <td className="px-3 py-3 font-medium truncate">
-                  {p.first_name} {p.last_name}
-                </td>
+      case "email":
+        return (
+          <span className="truncate hidden md:block">
+            {p.email_address}
+          </span>
+        );
 
-                <td className="px-3 py-3 hidden md:table-cell truncate">
-                  {p.email_address}
-                </td>
+      case "status":
+        return p.shopify_synced ? (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-semibold">
+            ● Approved
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-orange-100 text-orange-700 text-xs font-semibold">
+            ● Not Approved
+          </span>
+        );
 
-                <td className="px-3 py-3">
-  {p.shopify_synced ? (
-  <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-green-100 text-green-700 text-xs font-semibold">
-    ● Approved
-  </span>
-) : (
-  <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-orange-100 text-orange-700 text-xs font-semibold">
-    ● Not Approved
-  </span>
-)}
+      case "actions":
+        return (
+          <select
+            className="border rounded px-2 py-1 text-xs w-full"
+            onChange={(e) => {
+              const val = e.target.value;
+              e.target.value = "";
 
+              if (val === "view") setViewPartner(p);
+              if (val === "edit") setEditPartner(p);
+              if (val === "regen") runAction("regenerate_partner_id", p);
+              if (val === "email") runAction("send_onboarding_email", p);
+              if (val === "shopify") runAction("sync_shopify_tags", p);
+              if (val === "delete") runAction("delete_partner", p);
+            }}
+          >
+            <option value="">Select</option>
+            <option value="view">View</option>
+            <option value="edit">Edit</option>
+            <option value="regen">Regenerate ID</option>
+            <option value="email" disabled={p.onboarding_email_sent}>
+              {p.onboarding_email_sent ? "Email Already Sent" : "Send Email"}
+            </option>
+            <option value="shopify">Sync Shopify</option>
+            <option value="delete">Delete</option>
+          </select>
+        );
 
-
-</td>
-
-
-
-                <td className="px-3 py-3">
-                 {/* APPROVE PARTNER (MANUAL ONLY, NO EMAIL AUTO) */}
-{systemSettings.approval_mode === "manual" &&
-  !p.onboarding_email_sent && (
-    <button
-      onClick={() => runAction("send_onboarding_email", p)}
-      className="mb-1 w-full bg-green-600 text-white text-xs font-bold px-2 py-1 rounded hover:bg-green-700"
-    >
-      Send Approval Email
-    </button>
-)}
-
-
-
-                  <select
-  className="border rounded px-2 py-1 text-xs w-full"
-  onChange={(e) => {
-    const val = e.target.value;
-    e.target.value = "";
-
-    if (val === "view") setViewPartner(p);
-    if (val === "edit") setEditPartner(p);
-   if (val === "regen") runAction("regenerate_partner_id", p);
-if (val === "email") runAction("send_onboarding_email", p);
-if (val === "shopify") runAction("sync_shopify_tags", p);
-if (val === "delete") runAction("delete_partner", p);
-
+      default:
+        return null;
+    }
   }}
->
-  <option value="">Select</option>
-  <option value="view">View</option>
-  <option value="edit">Edit</option>
-  <option value="regen">Regenerate ID</option>
+/>
 
-  <option
-    value="email"
-    disabled={p.onboarding_email_sent === true}
-  >
-    {p.onboarding_email_sent === true
-      ? "Email Already Sent"
-      : "Send Email"}
-  </option>
-
-  <option value="shopify">Sync Shopify</option>
-  <option value="delete">Delete</option>
-</select>
-
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
 
       {/* ==========================
             VIEW MODAL

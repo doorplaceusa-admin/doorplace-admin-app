@@ -2,6 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import AdminTable from "../../components/ui/admintable";
+
+
 
 /* ===============================
    TYPES
@@ -184,86 +187,78 @@ export default function LeadsPage() {
       </div>
 
       {/* TABLE */}
-      <div className="bg-white border rounded-lg overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-100 border-b">
-            <tr>
-              <th className="px-3 py-3">
-                <input
-                  type="checkbox"
-                  checked={
-                    selectedIds.length > 0 &&
-                    selectedIds.length === filteredLeads.length
-                  }
-                  onChange={(e) =>
-                    setSelectedIds(
-                      e.target.checked
-                        ? filteredLeads.map((l) => l.id)
-                        : []
-                    )
-                  }
-                />
-              </th>
-              <th className="px-3 py-3 text-left">Name</th>
-              <th className="px-3 py-3 text-left">Lead Type</th>
-              <th className="px-3 py-3 text-left">Actions</th>
-            </tr>
-          </thead>
+      <AdminTable<Lead>
+  columns={[
+    { key: "select", label: "" },
+    { key: "name", label: "Name" },
+    { key: "type", label: "Lead Type" },
+    { key: "actions", label: "Actions" },
+  ]}
+  rows={filteredLeads}
+  rowKey={(l) => l.id}
+  renderCell={(l, key) => {
+    switch (key) {
+      case "select":
+        return (
+          <input
+            type="checkbox"
+            checked={selectedIds.includes(l.id)}
+            onChange={(e) =>
+              setSelectedIds((prev) =>
+                e.target.checked
+                  ? [...prev, l.id]
+                  : prev.filter((id) => id !== l.id)
+              )
+            }
+          />
+        );
 
-          <tbody>
-            {filteredLeads.map((l) => (
-              <tr key={l.id} className="border-b hover:bg-gray-50">
-                <td className="px-3 py-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.includes(l.id)}
-                    onChange={(e) =>
-                      setSelectedIds((prev) =>
-                        e.target.checked
-                          ? [...prev, l.id]
-                          : prev.filter((id) => id !== l.id)
-                      )
-                    }
-                  />
-                </td>
+      case "name":
+        return (
+          <span className="font-medium">
+            {l.first_name} {l.last_name}
+          </span>
+        );
 
-                <td className="px-3 py-3 font-medium">
-                  {l.first_name} {l.last_name}
-                </td>
+      case "type":
+        return (
+          <span className="text-xs font-medium">
+            {l.submission_type === "general"
+              ? "General Inquiry"
+              : l.submission_type === "quote"
+              ? "Swing / Door Quote"
+              : l.submission_type === "partner_tracking"
+              ? "Partner Tracking Link"
+              : "—"}
+          </span>
+        );
 
-                <td className="px-3 py-3 text-xs font-medium">
-  {l.submission_type === "general"
-    ? "General Inquiry"
-    : l.submission_type === "quote"
-    ? "Swing / Door Quote"
-    : l.submission_type === "partner_tracking"
-    ? "Partner Tracking Link"
-    : "—"}
-</td>
+      case "actions":
+        return (
+          <select
+            className="border rounded px-2 py-1 text-xs"
+            onChange={(e) => {
+              const v = e.target.value;
+              e.target.value = "";
+              if (v === "view") setViewLead(l);
+              if (v === "edit") setEditLead(l);
+              if (v === "delete") deleteLead(l);
+            }}
+          >
+            <option value="">Select</option>
+            <option value="view">View</option>
+            <option value="edit">Edit</option>
+            <option value="delete">Delete</option>
+          </select>
+        );
+
+      default:
+        return null;
+    }
+  }}
+/>
 
 
-                <td className="px-3 py-3">
-                  <select
-                    className="border rounded px-2 py-1 text-xs"
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      e.target.value = "";
-                      if (v === "view") setViewLead(l);
-                      if (v === "edit") setEditLead(l);
-                      if (v === "delete") deleteLead(l);
-                    }}
-                  >
-                    <option value="">Select</option>
-                    <option value="view">View</option>
-                    <option value="edit">Edit</option>
-                    <option value="delete">Delete</option>
-                  </select>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
 
       {/* VIEW MODAL */}
 {viewLead && (

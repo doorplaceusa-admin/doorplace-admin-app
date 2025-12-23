@@ -189,7 +189,6 @@ export default function LeadsPage() {
       {/* TABLE */}
       <AdminTable<Lead>
   columns={[
-    { key: "select", label: "" },
     { key: "name", label: "Name" },
     { key: "type", label: "Lead Type" },
     { key: "actions", label: "Actions" },
@@ -216,7 +215,7 @@ export default function LeadsPage() {
       case "name":
         return (
           <span className="font-medium">
-            {l.first_name} {l.last_name}
+            {l.first_name} {l.last_name} 
           </span>
         );
 
@@ -236,7 +235,7 @@ export default function LeadsPage() {
       case "actions":
         return (
           <select
-            className="border rounded px-2 py-1 text-xs"
+            className="border rounded px-2 py-1 text-xs w-full max-w-[140px]"
             onChange={(e) => {
               const v = e.target.value;
               e.target.value = "";

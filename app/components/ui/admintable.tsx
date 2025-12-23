@@ -1,3 +1,4 @@
+// app/components/ui/admintable.tsx
 "use client";
 
 import React from "react";
@@ -5,10 +6,11 @@ import React from "react";
 type Column = {
   key: string;
   label: string;
-  className?: string; // optional per-column styling (like hidden md:table-cell)
+  headerClassName?: string;
+  cellClassName?: string;
 };
 
-type AdminTableProps<T> = {
+export type AdminTableProps<T> = {
   columns: Column[];
   rows: T[];
   rowKey: (row: T) => string;
@@ -22,27 +24,32 @@ export default function AdminTable<T>({
   renderCell,
 }: AdminTableProps<T>) {
   return (
-    <div className="bg-white border rounded-lg overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-gray-100 border-b">
+    <div className="w-full max-w-full overflow-hidden rounded border bg-white">
+      <table className="w-full table-fixed border-collapse">
+        <thead className="bg-gray-50">
           <tr>
             {columns.map((c) => (
               <th
                 key={c.key}
-                className={`px-3 py-3 text-left ${c.className || ""}`}
+                className={`text-left text-xs font-semibold text-gray-600 px-3 py-2 border-b ${c.headerClassName || ""}`}
               >
-                {c.label}
+                <div className="min-w-0 truncate">{c.label}</div>
               </th>
             ))}
           </tr>
         </thead>
 
         <tbody>
-          {rows.map((row) => (
-            <tr key={rowKey(row)} className="border-b hover:bg-gray-50">
+          {rows.map((r) => (
+            <tr key={rowKey(r)} className="border-b last:border-b-0">
               {columns.map((c) => (
-                <td key={c.key} className={`px-3 py-3 ${c.className || ""}`}>
-                  {renderCell(row, c.key)}
+                <td
+                  key={c.key}
+                  className={`px-3 py-3 align-top text-sm ${c.cellClassName || ""}`}
+                >
+                  <div className="min-w-0 break-words overflow-hidden">
+                    {renderCell(r, c.key)}
+                  </div>
                 </td>
               ))}
             </tr>

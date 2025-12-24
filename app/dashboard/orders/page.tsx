@@ -9,11 +9,12 @@ import AdminTable from "../../components/ui/admintable";
    TYPES
 ================================ */
 type Order = {
+  // Core
   id: string;
-  order_id: string;
-  created_at: string;
+  order_id?: string;
+  created_at?: string;
 
-  // Partner (read-only)
+  // Partner
   partner_id?: string;
   partner_name?: string;
 
@@ -27,27 +28,30 @@ type Order = {
   customer_state?: string;
   customer_zip_code?: string;
 
-  // Swing details
+  // Swing
   swing_size?: string;
   wood_type?: string;
-  finish_stain?: string;
+  finish?: string;
   hanging_method?: string;
 
-  // Pricing
+  // Pricing (MATCHES LEADS TABLE EXACTLY)
   swing_price?: number | string;
-  accessory_total?: number | string;
+  accessory_price?: number | string;
   installation_fee?: number | string;
-  delivery_fee?: number | string;
+  shipping_fee?: number | string;
 
   // Status
   order_status?: string;
+  lead_status?: string;
+
+  // Extras
+  bonus_extra?: number | string;
 
   // Media
   photos?: string[];
-
-  // Overrides / extras (editable)
-  bonus_extra?: number | string; // used for bonus OR residual entry
 };
+
+
 
 /* ===============================
    HELPERS
@@ -76,11 +80,46 @@ export default function OrdersPage() {
     setLoading(true);
 
     const { data } = await supabase
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false });
+  .from("leads")
+  .select("*")
+  .eq("submission_type", "partner_order")
+  .order("created_at", { ascending: false });
+  const mapped = (data || []).map((l: any) => ({
+  id: l.id,
+  order_id: l.lead_id,
+  created_at: l.created_at,
 
-    setRows((data as any) || []);
+  partner_id: l.partner_id,
+  partner_name: l.partner_name || null,
+
+  customer_first_name: l.first_name,
+  customer_last_name: l.last_name,
+  customer_email: l.email,
+  customer_phone: l.phone,
+  customer_street_address: l.street_address,
+  customer_city: l.city,
+  customer_state: l.state,
+  customer_zip_code: l.zip,
+
+  swing_size: l.swing_size,
+  wood_type: l.wood_type,
+  finish_stain: l.finish,
+  hanging_method: l.hanging_method,
+
+  swing_price: l.swing_price,
+  accessory_total: l.accessory_price,
+  installation_fee: l.installation_fee,
+  delivery_fee: l.shipping_fee,
+
+  photos: l.photos || [],
+  order_status: l.order_status || "new",
+  bonus_extra: l.bonus_extra || 0,
+}));
+
+
+
+    setRows(mapped);
+
     setLoading(false);
   }
 
@@ -106,80 +145,89 @@ export default function OrdersPage() {
      - Uses current values (including edits) and recalculates instantly.
   ================================ */
   function calc(order: Order) {
-    const swing = toNum(order.swing_price);
-    const acc = toNum(order.accessory_total);
-    const install = toNum(order.installation_fee);
-    const delivery = toNum(order.delivery_fee);
+  const swing = toNum(order.swing_price);
+  const accessories = toNum(order.accessory_price);
+  const install = toNum(order.installation_fee);
+  const delivery = toNum(order.shipping_fee);
 
-    const subtotal = swing + acc + install + delivery;
+  // COMMISSION BASE (ONLY THESE TWO)
+  const commissionBase = swing + accessories;
 
-    // Base commission rate (adjust later if you plug in your existing logic tables)
-    const commissionRate = 0.12;
+  const commissionRate = 0.12;
+  const commission = Math.round(commissionBase * commissionRate * 100) / 100;
 
-    const commission = Math.round(subtotal * commissionRate * 100) / 100;
-    const bonusExtra = toNum(order.bonus_extra);
+  const bonusExtra = toNum(order.bonus_extra);
+  const payoutTotal = Math.round((commission + bonusExtra) * 100) / 100;
 
-    // "Residual" is NOT auto-calculated — you enter it in bonus_extra (same field)
-    const residual = bonusExtra;
+  return {
+    swing,
+    accessories,
+    install,
+    delivery,
 
-    const payoutTotal = Math.round((commission + bonusExtra) * 100) / 100;
+    commissionBase,
+    commissionRate,
+    commission,
+    bonusExtra,
+    payoutTotal,
+  };
+}
 
-    return {
-      swing,
-      acc,
-      install,
-      delivery,
-      subtotal,
-      commissionRate,
-      commission,
-      residual,
-      bonusExtra,
-      payoutTotal,
-    };
+
+
+ /* ===============================
+   SAVE EDIT (LEADS TABLE)
+================================ */
+async function saveEdit() {
+  if (!editItem) return;
+
+  const payload = {
+    // customer
+    customer_first_name: editItem.customer_first_name,
+    customer_last_name: editItem.customer_last_name,
+    customer_email: editItem.customer_email,
+    customer_phone: editItem.customer_phone,
+    customer_street_address: editItem.customer_street_address,
+    customer_city: editItem.customer_city,
+    customer_state: editItem.customer_state,
+    customer_zip: editItem.customer_zip_code,
+
+    // swing
+    swing_size: editItem.swing_size,
+    wood_type: editItem.wood_type,
+    finish: editItem.finish,
+    hanging_method: editItem.hanging_method,
+
+    // pricing (MATCHES LEADS TABLE)
+    swing_price: toNum(editItem.swing_price),
+    accessory_price: toNum(editItem.accessory_price),
+    installation_fee: toNum(editItem.installation_fee),
+    shipping_fee: toNum(editItem.shipping_fee),
+
+    // status
+    lead_status: editItem.order_status,
+
+    // bonus / residual
+    bonus_extra: toNum(editItem.bonus_extra),
+  };
+
+  const { error } = await supabase
+    .from("leads")
+    .update(payload)
+    .eq("id", editItem.id);
+
+  if (error) {
+    console.error("SAVE FAILED:", error);
+    alert(error.message);
+    return;
   }
 
-  /* ===============================
-     SAVE EDIT
-  ================================ */
-  async function saveEdit() {
-    if (!editItem) return;
+  setEditItem(null);
+  await loadRows();
+}
 
-    await supabase
-      .from("orders")
-      .update({
-        // customer
-        customer_first_name: editItem.customer_first_name,
-        customer_last_name: editItem.customer_last_name,
-        customer_email: editItem.customer_email,
-        customer_phone: editItem.customer_phone,
-        customer_street_address: editItem.customer_street_address,
-        customer_city: editItem.customer_city,
-        customer_state: editItem.customer_state,
-        customer_zip_code: editItem.customer_zip_code,
 
-        // swing
-        swing_size: editItem.swing_size,
-        wood_type: editItem.wood_type,
-        finish_stain: editItem.finish_stain,
-        hanging_method: editItem.hanging_method,
 
-        // pricing
-        swing_price: toNum(editItem.swing_price),
-        accessory_total: toNum(editItem.accessory_total),
-        installation_fee: toNum(editItem.installation_fee),
-        delivery_fee: toNum(editItem.delivery_fee),
-
-        // status
-        order_status: editItem.order_status,
-
-        // extra
-        bonus_extra: toNum(editItem.bonus_extra),
-      })
-      .eq("id", editItem.id);
-
-    setEditItem(null);
-    loadRows();
-  }
 
   if (loading) return <div className="p-6">Loading orders…</div>;
 
@@ -219,10 +267,10 @@ export default function OrdersPage() {
               return (
                 <div className="min-w-0">
                   <div className="font-medium truncate">
-                    {o.order_id || "—"} — {o.customer_first_name || ""} {o.customer_last_name || ""}
+                    
                   </div>
                   <div className="text-xs text-gray-500 truncate">
-                    Partner: {o.partner_name || "—"} {o.partner_id ? `(${o.partner_id})` : ""}
+                  {o.partner_id ? `(${o.partner_id})` : ""}
                   </div>
                 </div>
               );
@@ -289,7 +337,7 @@ export default function OrdersPage() {
             <Section title="Swing Details">
               <Row label="Swing Size" value={viewItem.swing_size} />
               <Row label="Wood Type" value={viewItem.wood_type} />
-              <Row label="Finish / Stain" value={viewItem.finish_stain} />
+              <Row label="Finish / Stain" value={viewItem.finish} />
               <Row label="Hanging Method" value={viewItem.hanging_method} />
             </Section>
 
@@ -298,23 +346,26 @@ export default function OrdersPage() {
               const c = calc(viewItem);
               return (
                 <Section title="Pricing & Commission">
-                  <Row label="Swing Price" value={money(c.swing)} />
-                  <Row label="Accessory Total" value={money(c.acc)} />
-                  <Row label="Installation Fee" value={money(c.install)} />
-                  <Row label="Delivery Fee" value={money(c.delivery)} />
-                  <Row label="Order Total" value={money(c.subtotal)} />
+  <Row label="Swing Price" value={money(c.swing)} />
+  <Row label="Accessory Total" value={money(c.accessories)} />
+  <Row label="Installation Fee" value={money(c.install)} />
+  <Row label="Delivery Fee" value={money(c.delivery)} />
 
-                  <div className="mt-2" />
+  <div className="mt-2" />
 
-                  <Row label="Commission Rate" value={`${Math.round(c.commissionRate * 100)}%`} />
-                  <Row label="Commission" value={money(c.commission)} />
+  <Row label="Commission Base" value={money(c.commissionBase)} />
+  <Row label="Commission Rate" value={`${Math.round(c.commissionRate * 100)}%`} />
+  <Row label="Commission" value={money(c.commission)} />
 
-                  <Row
-                    label="Residual / Bonus (Manual)"
-                    value={c.bonusExtra ? money(c.bonusExtra) : "—"}
-                  />
-                  <Row label="Total Payout" value={money(c.payoutTotal)} />
-                </Section>
+  <Row
+    label="Residual / Bonus (Manual)"
+    value={c.bonusExtra ? money(c.bonusExtra) : "—"}
+  />
+
+  <Row label="Total Payout" value={money(c.payoutTotal)} />
+</Section>
+
+
               );
             })()}
 
@@ -365,7 +416,7 @@ export default function OrdersPage() {
               return (
                 <div className="bg-white border rounded p-3 text-sm mb-4">
                   <div className="font-semibold mb-1">Live Commission Preview</div>
-                  <div>Order Total: {money(c.subtotal)}</div>
+                  <div>Order Total</div>
                   <div>
                     Commission ({Math.round(c.commissionRate * 100)}%): {money(c.commission)}
                   </div>
@@ -437,8 +488,8 @@ export default function OrdersPage() {
                 />
                 <Field
                   label="Finish / Stain"
-                  value={editItem.finish_stain || ""}
-                  onChange={(v) => setEditItem({ ...editItem, finish_stain: v })}
+                  value={editItem.finish || ""}
+                  onChange={(v) => setEditItem({ ...editItem, finish: v })}
                 />
                 <Field
                   label="Hanging Method"
@@ -458,8 +509,8 @@ export default function OrdersPage() {
                 />
                 <NumberField
                   label="Accessory Total"
-                  value={editItem.accessory_total ?? ""}
-                  onChange={(v) => setEditItem({ ...editItem, accessory_total: v })}
+                  value={editItem.accessory_price ?? ""}
+                  onChange={(v) => setEditItem({ ...editItem, accessory_price: v })}
                 />
                 <NumberField
                   label="Installation Fee"
@@ -468,8 +519,8 @@ export default function OrdersPage() {
                 />
                 <NumberField
                   label="Delivery Fee"
-                  value={editItem.delivery_fee ?? ""}
-                  onChange={(v) => setEditItem({ ...editItem, delivery_fee: v })}
+                  value={editItem.shipping_fee ?? ""}
+                  onChange={(v) => setEditItem({ ...editItem, shipping_fee: v })}
                 />
               </Grid2>
             </Section>

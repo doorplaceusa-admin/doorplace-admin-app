@@ -191,7 +191,7 @@ export async function POST(req: Request) {
         .update({
           partner_id: newPartnerID,
           tracking_link: newTrackingLink,
-          onboarding_email_sent: null,
+          approval_email_sent: null,
         })
         .eq("partner_id", partner_id);
 
@@ -216,39 +216,42 @@ export async function POST(req: Request) {
 
 
     /* ===============================
-       SEND ONBOARDING EMAIL
-    =============================== */
-    if (action === "send_onboarding_email") {
-      const { data: partner } = await supabaseAdmin
-        .from("partners")
-        .select("*")
-        .eq("partner_id", partner_id)
-        .single();
+   SEND ONBOARDING EMAIL (FIXED)
+=============================== */
+if (action === "send_approval_email") {
+  const { data: partner, error } = await supabaseAdmin
+    .from("partners")
+    .select("*")
+    .eq("partner_id", partner_id)
+    .single();
 
-      if (!partner) {
-        return NextResponse.json({ error: "Partner not found" }, { status: 404 });
-      }
+  if (error || !partner) {
+    return NextResponse.json({ error: "Partner not found" }, { status: 404 });
+  }
 
-      await sendPartnerEmail(partner);
+  // ✅ Send email FIRST
+  await sendPartnerEmail(partner);
 
-      await supabaseAdmin
-  .from("partners")
-  .update({
-    shopify_synced: true, // ✅ ADD THIS LINE
-  })
-  .eq("partner_id", partner_id);
+  // ✅ THEN mark approval + email sent
+  await supabaseAdmin
+    .from("partners")
+    .update({
+      approval_email_sent: true,
+      approved_at: new Date().toISOString(),
+    })
+    .eq("partner_id", partner_id);
 
+  return NextResponse.json({ status: "email_sent_and_marked" });
+}
 
-      return NextResponse.json({ status: "email_sent" });
-    }
 
     /* ===============================
        RESET EMAIL STATUS
     =============================== */
-    if (action === "reset_onboarding_email") {
+    if (action === "reset_approval_email") {
       await supabaseAdmin
         .from("partners")
-        .update({ onboarding_email_sent: null })
+        .update({ approval_email_sent: null })
         .eq("partner_id", partner_id);
 
       return NextResponse.json({ status: "email_status_reset" });

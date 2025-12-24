@@ -61,6 +61,13 @@ export default function DashboardPage() {
         .from("leads")
         .select("*", { count: "exact", head: true });
 
+        // ================= TOTAL ORDERS (WIRED HERE) =================
+const { count: orderCount } = await supabase
+  .from("leads")
+  .select("*", { count: "exact", head: true })
+  .not("order_status", "is", null);
+
+
       // ================= RECENT LEADS (WIRE THIS) =================
       // Tries common column names; adjust if your table uses different field names
       const { data: leadsData } = await supabase
@@ -91,7 +98,7 @@ export default function DashboardPage() {
       // ✅ Keep your existing placeholders for now where you haven’t wired yet
       setStats({
         totalLeads: leadCount || 0,
-        totalOrders: 0,
+        totalOrders: orderCount || 0,
         totalRevenue: 0,
         pendingCommissions: 0,
         paidCommissions: 0,

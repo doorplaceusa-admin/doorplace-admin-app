@@ -49,51 +49,62 @@ for (const file of files) {
 }
 
 
+
     /* ===============================
        2. NORMALIZE CORE CONTACT INFO
     =============================== */
     const submissionType = formData.get("submission_type");
+    const shopify_account_email = formData.get("shopify_account_email") as string | null;
+
 
     const firstName =
-  formData.get("first_name") ||
+  formData.get("partner_customer_first_name") ||
   formData.get("customer_first_name") ||
+  formData.get("first_name") ||
   null;
 
 const lastName =
-  formData.get("last_name") ||
+  formData.get("partner_customer_last_name") ||
   formData.get("customer_last_name") ||
+  formData.get("last_name") ||
   null;
 
+const email =
+  formData.get("partner_customer_email") ||
+  formData.get("customer_email") ||
+  formData.get("email") ||
+  null;
 
-    const email =
-      formData.get("customer_email") ||
-      formData.get("email") ||
-      null;
+const phone =
+  formData.get("partner_customer_phone") ||
+  formData.get("customer_phone") ||
+  formData.get("phone") ||
+  null;
 
-    const phone =
-      formData.get("customer_phone") ||
-      formData.get("phone") ||
-      null;
+const streetAddress =
+  formData.get("partner_customer_street_address") ||
+  formData.get("customer_street_address") ||
+  formData.get("street_address") ||
+  null;
 
-    const streetAddress =
-      formData.get("customer_street_address") ||
-      formData.get("street_address") ||
-      null;
+const city =
+  formData.get("partner_customer_city") ||
+  formData.get("customer_city") ||
+  formData.get("city") ||
+  null;
 
-    const city =
-      formData.get("customer_city") ||
-      formData.get("city") ||
-      null;
+const state =
+  formData.get("partner_customer_state") ||
+  formData.get("customer_state") ||
+  formData.get("state") ||
+  null;
 
-    const state =
-      formData.get("customer_state") ||
-      formData.get("state") ||
-      null;
+const zip =
+  formData.get("partner_customer_zip") ||
+  formData.get("customer_zip") ||
+  formData.get("zip") ||
+  null;
 
-    const zip =
-      formData.get("customer_zip") ||
-      formData.get("zip") ||
-      null;
 
     /* ===============================
        3. INSERT LEAD (FULLY ALIGNED)
@@ -105,6 +116,7 @@ const lastName =
         submission_type: submissionType,
         quote_type: formData.get("quote_type"),
         is_partner_order: formData.get("is_partner_order") === "true",
+        shopify_account_email,
 
         first_name: firstName,
         last_name: lastName,
@@ -155,6 +167,28 @@ const lastName =
       console.error("Lead insert error:", leadError);
       return new NextResponse("Internal Server Error", { status: 500 });
     }
+
+/* ===============================
+   4. CREATE ORDER IF PARTNER ORDER
+=============================== */
+if (submissionType === "partner_order") {
+  const processUrl = new URL("/api/orders/process", req.url);
+
+  const res = await fetch(processUrl.toString(), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ lead_id }),
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error("❌ Order process failed:", res.status, errorText);
+  } else {
+    console.log("✅ Order process succeeded");
+  }
+}
+
+
 
     /* ===============================
        4. ADMIN ALERT

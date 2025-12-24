@@ -29,7 +29,7 @@ type Partner = {
   zip_code?: string;
 
   shopify_synced?: boolean;
-  onboarding_email_sent?: boolean;
+  approval_email_sent?: boolean;
 };
 
 
@@ -100,7 +100,7 @@ export default function PartnersPage() {
   }, [rows, search, sort]);
 
   async function runAction(
-    action: "regenerate_partner_id" | "send_onboarding_email" | "sync_shopify_tags" | "delete_partner",
+    action: "regenerate_partner_id" | "send_approval_email" | "sync_shopify_tags" | "delete_partner",
     partner: Partner
   ) {
     if (!confirm(`Run ${action.replaceAll("_", " ")} for ${partner.email_address}?`)) return;
@@ -272,7 +272,7 @@ export default function PartnersPage() {
               if (v === "view") setViewItem(p);
               if (v === "edit") setEditItem(p);
               if (v === "regen") runAction("regenerate_partner_id", p);
-              if (v === "email") runAction("send_onboarding_email", p);
+              if (v === "email") runAction("send_approval_email", p);
               if (v === "shopify") runAction("sync_shopify_tags", p);
               if (v === "delete") runAction("delete_partner", p);
             }}
@@ -332,8 +332,8 @@ export default function PartnersPage() {
           {viewItem.shopify_synced ? "Yes" : "No"}
         </p>
         <p>
-          <b>Onboarding Email Sent:</b>{" "}
-          {viewItem.onboarding_email_sent ? "Yes" : "No"}
+          <b>Approval Email Sent:</b>{" "}
+          {viewItem.approval_email_sent ? "Yes" : "No"}
         </p>
       </div>
 
@@ -472,7 +472,7 @@ export default function PartnersPage() {
       <div className="text-xs text-gray-500 mb-4 space-y-1">
         <div>Partner ID: {editItem.partner_id}</div>
         <div>Shopify Synced: {editItem.shopify_synced ? "Yes" : "No"}</div>
-        <div>Onboarding Email Sent: {editItem.onboarding_email_sent ? "Yes" : "No"}</div>
+        <div>Approval Email Sent: {editItem.approval_email_sent ? "Yes" : "No"}</div>
       </div>
 
       {/* ACTIONS */}

@@ -1,5 +1,6 @@
-// app/partners/commissions/page.tsx
+
 "use client";
+export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useState } from "react";
 const [partnerId, setPartnerId] = useState<string | null>(null);

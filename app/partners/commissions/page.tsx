@@ -1,4 +1,3 @@
-
 "use client";
 export const dynamic = "force-dynamic";
 
@@ -57,115 +56,77 @@ export default function PartnerCommissionsPage() {
   const [dateRange, setDateRange] =
     useState<"30" | "60" | "90" | "all">("all");
 
+  /* ===============================
+     LOAD PARTNER ID (FROM TAGS)
+  ================================ */
+  async function loadPartnerId() {
+    const { data, error } = await supabase.auth.getUser();
 
-    async function loadPartnerId() {
+    if (error || !data?.user) {
+      console.warn("No logged in user");
+      return;
+    }
 
-useEffect(() => {
-  loadPartnerId();
-}, []);
+    const tags =
+      (data.user.user_metadata?.tags as string | undefined) || "";
 
+    const foundPartnerId = tags
+      .split(",")
+      .map((t) => t.trim())
+      .find((t) => t.startsWith("DP"));
 
-  const { data, error } = await supabase.auth.getUser();
+    if (!foundPartnerId) {
+      console.warn("Partner ID not found in tags:", tags);
+      return;
+    }
 
-  if (error || !data?.user) {
-    console.warn("No logged in user");
-    return;
+    setPartnerId(foundPartnerId);
   }
-
-  const tags =
-    (data.user.user_metadata?.tags as string | undefined) || "";
-
-  const foundPartnerId = tags
-    .split(",")
-    .map(t => t.trim())
-    .find(t => t.startsWith("DP"));
-
-  if (!foundPartnerId) {
-    console.warn("Partner ID not found in tags:", tags);
-    return;
-  }
-
-  setPartnerId(foundPartnerId);
-}
-
 
   /* ===============================
-   LOAD DATA (PARTNER-SCOPED) — DEBUG
-================================ */
-async function loadData() {
-  setLoading(true);
+     LOAD DATA (PARTNER SCOPED)
+  ================================ */
+  async function loadData() {
+    if (!partnerId) return;
 
-  console.log("🔍 loadData() fired");
+    setLoading(true);
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+    console.log("🔍 loadData()");
+    console.log("🆔 Partner ID:", partnerId);
 
-  console.log("👤 Logged in user:", user);
-  console.log("❌ User error:", userError);
+    let query = supabase
+      .from("leads")
+      .select("*")
+      .eq("partner_id", partnerId)
+      .order("created_at", { ascending: false });
 
-  if (!user?.email) {
-    console.warn("⛔ No user email found");
-    setRows([]);
+    if (dateRange !== "all") {
+      const days = Number(dateRange);
+      const since = new Date();
+      since.setDate(since.getDate() - days);
+      query = query.gte("created_at", since.toISOString());
+    }
+
+    const { data, error } = await query;
+
+    console.log("📦 Rows:", data);
+    console.log("❌ Error:", error);
+
+    setRows(data || []);
     setLoading(false);
-    return;
   }
 
-  console.log("📧 User email:", user.email);
-
-  const { data: partner, error: partnerError } = await supabase
-    .from("partners")
-    .select("partner_id, email_address")
-    .eq("email_address", user.email)
-    .single();
-
-  console.log("🤝 Partner row:", partner);
-  console.log("❌ Partner error:", partnerError);
-
-  if (!partner?.partner_id) {
-    console.warn("⛔ No partner_id found for this user");
-    setRows([]);
-    setLoading(false);
-    return;
-  }
-
-  console.log("🆔 Using partner_id:", partner.partner_id);
-
-  let query = supabase
-    .from("leads")
-    .select("*")
-    .eq("partner_id", partner.partner_id)
-    .order("created_at", { ascending: false });
-
-  if (dateRange !== "all") {
-    const days = Number(dateRange);
-    const since = new Date();
-    since.setDate(since.getDate() - days);
-
-    console.log("📅 Date filter since:", since.toISOString());
-
-    query = query.gte("created_at", since.toISOString());
-  }
-
-  const { data, error } = await query;
-
-  console.log("📦 Leads returned:", data);
-  console.log("❌ Leads error:", error);
-  console.log("📊 Row count:", data?.length || 0);
-
-  setRows(data || []);
-  setLoading(false);
-}
-
+  /* ===============================
+     EFFECTS
+  ================================ */
+  useEffect(() => {
+    loadPartnerId();
+  }, []);
 
   useEffect(() => {
-  if (!partnerId) return;
-  loadData();
-}, [partnerId, dateRange]);
-
-
-
+    if (!partnerId) return;
+    loadData();
+  }, [partnerId, dateRange]);
 
   /* ===============================
      FILTERS
@@ -278,7 +239,6 @@ async function loadData() {
         </div>
       </div>
 
-      {/* SUMMARY CARDS */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card label="Total Leads" value={totals.totalLeads} />
         <Card label="Total Orders" value={totals.totalOrders} />
@@ -290,23 +250,15 @@ async function loadData() {
         <Card label="Pending" value={money(totals.pending)} />
       </div>
 
-      {/* TABS */}
       <div className="flex gap-2">
-        <Tab
-          active={activeTab === "orders"}
-          onClick={() => setActiveTab("orders")}
-        >
+        <Tab active={activeTab === "orders"} onClick={() => setActiveTab("orders")}>
           Orders
         </Tab>
-        <Tab
-          active={activeTab === "leads"}
-          onClick={() => setActiveTab("leads")}
-        >
+        <Tab active={activeTab === "leads"} onClick={() => setActiveTab("leads")}>
           Leads
         </Tab>
       </div>
 
-      {/* TABLES */}
       {activeTab === "orders" && (
         <Table>
           {orders.length === 0 && <Empty>No orders yet.</Empty>}
@@ -324,9 +276,7 @@ async function loadData() {
                 </div>
                 <div>{money(commission)}</div>
                 <div>{o.commission_status || "—"}</div>
-                <div className="text-gray-500">
-                  {o.notes || "—"}
-                </div>
+                <div className="text-gray-500">{o.notes || "—"}</div>
               </RowItem>
             );
           })}
@@ -343,24 +293,20 @@ async function loadData() {
                 {l.customer_first_name} {l.customer_last_name}
               </div>
               <div>{l.order_status || "New"}</div>
-              <div className="text-gray-500">
-                {l.notes || "—"}
-              </div>
+              <div className="text-gray-500">{l.notes || "—"}</div>
             </RowItem>
           ))}
         </Table>
       )}
 
-<div className="pt-6 text-center">
-  <a
-    href="https://doorplaceusa.com/account"
-    className="inline-block px-4 py-2 border border-gray-400 rounded text-sm text-gray-700 hover:bg-gray-100"
-  >
-    ← Back to Dashboard
-  </a>
-</div>
-
-
+      <div className="pt-6 text-center">
+        <a
+          href="https://doorplaceusa.com/account"
+          className="inline-block px-4 py-2 border border-gray-400 rounded text-sm text-gray-700 hover:bg-gray-100"
+        >
+          ← Back to Dashboard
+        </a>
+      </div>
     </div>
   );
 }

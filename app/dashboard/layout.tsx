@@ -75,6 +75,7 @@ export default function DashboardLayout({
           <NavLink href="/dashboard/leads" icon={<ClipboardList size={18} />} label="Leads" />
           <NavLink href="/dashboard/orders" icon={<Package size={18} />} label="Orders" />
           <NavLink href="/dashboard/partners" icon={<Handshake size={18} />} label="Partners" />
+          <NavLink href="/dashboard/partners/commissions" icon={<Settings size={18} />} label="Commissions" />
           <NavLink href="/dashboard/settings" icon={<Settings size={18} />} label="Settings" />
         </nav>
       </aside>
@@ -137,6 +138,7 @@ export default function DashboardLayout({
           <MobileNavItem href="/dashboard/leads" icon={<ClipboardList size={20} />} label="Leads" />
           <MobileNavItem href="/dashboard/orders" icon={<Package size={20} />} label="Orders" />
           <MobileNavItem href="/dashboard/partners" icon={<Handshake size={20} />} label="Partners" />
+          <MobileNavItem href="/dashboard/partners/commissions" icon={<Settings size={20} />} label="Commissions" />
           <MobileNavItem href="/dashboard/settings" icon={<Settings size={20} />} label="Settings" />
         </nav>
       </div>

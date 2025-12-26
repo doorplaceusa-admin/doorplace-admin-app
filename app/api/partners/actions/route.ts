@@ -163,6 +163,71 @@ async function sendPartnerEmail(partner: any) {
   });
 }
 
+async function syncShopifyContactInfo(partner: any) {
+  const SHOPIFY_STORE = requireEnv("SHOPIFY_STORE");
+  const SHOPIFY_API_VERSION = requireEnv("SHOPIFY_API_VERSION");
+  const SHOPIFY_ACCESS_TOKEN = requireEnv("SHOPIFY_ACCESS_TOKEN");
+
+  const headers = {
+    "X-Shopify-Access-Token": SHOPIFY_ACCESS_TOKEN,
+    "Content-Type": "application/json",
+  };
+
+  // Find Shopify customer by email
+  const searchRes = await fetch(
+    `https://${SHOPIFY_STORE}.myshopify.com/admin/api/${SHOPIFY_API_VERSION}/customers/search.json?query=email:${encodeURIComponent(
+      partner.email_address
+    )}`,
+    { headers }
+  );
+
+  const searchJson = await searchRes.json();
+  if (!searchJson.customers || searchJson.customers.length === 0) return;
+
+  const customer = searchJson.customers[0];
+
+  const update: any = { id: customer.id };
+
+  // Phone
+  if (partner.cell_phone_number) {
+    update.phone = partner.cell_phone_number.replace(/[^\d+]/g, "");
+
+  }
+
+  // Address (safe — only fills what exists)
+  if (
+    partner.street_address ||
+    partner.city ||
+    partner.state ||
+    partner.zip_code
+  ) {
+    update.addresses = [
+  {
+    address1: partner.street_address || "",
+    city: partner.city || "",
+    province_code: partner.state || "",
+    zip: partner.zip_code || "",
+    country_code: "US",
+    default: true,
+  },
+];
+
+  }
+
+  // Nothing to update → exit quietly
+  if (Object.keys(update).length === 1) return;
+
+  await fetch(
+    `https://${SHOPIFY_STORE}.myshopify.com/admin/api/${SHOPIFY_API_VERSION}/customers/${customer.id}.json`,
+    {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ customer: update }),
+    }
+  );
+}
+
+
 /* ======================================================
    MAIN ROUTE
 ====================================================== */
@@ -275,7 +340,7 @@ if (action === "send_approval_email") {
     if (action === "sync_shopify_tags") {
       const { data: partner } = await supabaseAdmin
         .from("partners")
-        .select("email_address, partner_id")
+        .select("*")
         .eq("partner_id", partner_id)
         .single();
 
@@ -290,6 +355,9 @@ if (action === "send_approval_email") {
         partner.email_address,
         partner.partner_id
       );
+
+      await syncShopifyContactInfo(partner);
+
 
       await supabaseAdmin
   .from("partners")

@@ -105,6 +105,26 @@ const zip =
   formData.get("zip") ||
   null;
 
+/* ===============================
+   PARTNER NAME RESOLUTION (STEP 1)
+=============================== */
+const partnerId = formData.get("partner_id") as string | null;
+
+let partnerName: string | null = null;
+
+
+if (partnerId) {
+  const { data: partner } = await supabase
+    .from("partners")
+    .select("first_name, last_name")
+    .eq("partner_id", partnerId)
+    .single();
+
+  if (partner) {
+    partnerName = `${partner.first_name ?? ""} ${partner.last_name ?? ""}`.trim();
+  }
+}
+
 
     /* ===============================
        3. INSERT LEAD (FULLY ALIGNED)
@@ -112,7 +132,11 @@ const zip =
     const { error: leadError } = await supabase.from("leads").insert([
       {
         lead_id,
-        partner_id: formData.get("partner_id"),
+        partner_id: partnerId,
+        partner_name: partnerName,
+      
+
+
         submission_type: submissionType,
         quote_type: formData.get("quote_type"),
         is_partner_order: formData.get("is_partner_order") === "true",
@@ -206,7 +230,6 @@ if (submissionType === "partner_order") {
    /* ===============================
    5. THANK-YOU RESPONSE (FINAL)
 =============================== */
-const partnerId = formData.get("partner_id");
 
 /* ===============================
    FINAL RESPONSE (NO REDIRECTS)

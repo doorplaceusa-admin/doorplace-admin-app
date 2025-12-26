@@ -140,11 +140,11 @@ export default function OrdersPage() {
     );
   }, [rows, search]);
 
-  /* ===============================
-     COMMISSION CALC (CLIENT-SIDE)
-     - Uses current values (including edits) and recalculates instantly.
-  ================================ */
-  function calc(order: Order) {
+ /* ===============================
+   COMMISSION CALC (CLIENT-SIDE)
+   - Base commission + residual (display only)
+================================ */
+function calc(order: Order) {
   const swing = toNum(order.swing_price);
   const accessories = toNum(order.accessory_price);
   const install = toNum(order.installation_fee);
@@ -153,11 +153,22 @@ export default function OrdersPage() {
   // COMMISSION BASE (ONLY THESE TWO)
   const commissionBase = swing + accessories;
 
+  // PRIMARY COMMISSION (12%)
   const commissionRate = 0.12;
-  const commission = Math.round(commissionBase * commissionRate * 100) / 100;
+  const commission =
+    Math.round(commissionBase * commissionRate * 100) / 100;
 
+  // RESIDUAL (5%) — DISPLAY ONLY
+  const residualRate = 0.05;
+  const residualCommission =
+    Math.round(commissionBase * residualRate * 100) / 100;
+
+  // MANUAL BONUS (optional)
   const bonusExtra = toNum(order.bonus_extra);
-  const payoutTotal = Math.round((commission + bonusExtra) * 100) / 100;
+
+  // PAYOUT TOTAL (NO RESIDUAL INCLUDED)
+  const payoutTotal =
+    Math.round((commission + bonusExtra) * 100) / 100;
 
   return {
     swing,
@@ -166,12 +177,18 @@ export default function OrdersPage() {
     delivery,
 
     commissionBase,
+
     commissionRate,
     commission,
+
+    residualRate,
+    residualCommission, // ← DISPLAY ONLY
+
     bonusExtra,
     payoutTotal,
   };
 }
+
 
 
 
@@ -342,32 +359,42 @@ async function saveEdit() {
             </Section>
 
             {/* PRICING + COMMISSION */}
-            {(() => {
-              const c = calc(viewItem);
-              return (
-                <Section title="Pricing & Commission">
-  <Row label="Swing Price" value={money(c.swing)} />
-  <Row label="Accessory Total" value={money(c.accessories)} />
-  <Row label="Installation Fee" value={money(c.install)} />
-  <Row label="Delivery Fee" value={money(c.delivery)} />
+{(() => {
+  const c = calc(viewItem);
+  return (
+    <Section title="Pricing & Commission">
+      <Row label="Swing Price" value={money(c.swing)} />
+      <Row label="Accessory Total" value={money(c.accessories)} />
+      <Row label="Installation Fee" value={money(c.install)} />
+      <Row label="Delivery Fee" value={money(c.delivery)} />
 
-  <div className="mt-2" />
+      <div className="mt-2" />
 
-  <Row label="Commission Base" value={money(c.commissionBase)} />
-  <Row label="Commission Rate" value={`${Math.round(c.commissionRate * 100)}%`} />
-  <Row label="Commission" value={money(c.commission)} />
+      <Row label="Commission Base" value={money(c.commissionBase)} />
+      <Row
+        label="Commission Rate"
+        value={`${Math.round(c.commissionRate * 100)}%`}
+      />
+      <Row label="Commission" value={money(c.commission)} />
 
-  <Row
-    label="Residual / Bonus (Manual)"
-    value={c.bonusExtra ? money(c.bonusExtra) : "—"}
-  />
+      {/* RESIDUAL — DISPLAY ONLY */}
+      <Row
+        label="Residual (5% – if repeat customer)"
+        value={money(c.residualCommission)}
+        muted
+      />
 
-  <Row label="Total Payout" value={money(c.payoutTotal)} />
-</Section>
+      {/* MANUAL BONUS */}
+      <Row
+        label="Manual Bonus"
+        value={c.bonusExtra ? money(c.bonusExtra) : "—"}
+      />
 
+      <Row label="Total Payout" value={money(c.payoutTotal)} />
+    </Section>
+  );
+})()}
 
-              );
-            })()}
 
             {/* PHOTOS */}
             <Section title="Photos">

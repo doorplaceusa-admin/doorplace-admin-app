@@ -17,6 +17,7 @@ type Partner = {
   email_address: string;
   cell_phone_number: string;
   partner_id: string;
+  tracking_link: string;
 
   business_name?: string;
   coverage_area?: string;
@@ -315,6 +316,7 @@ export default function PartnersPage() {
         <p><b>Sales Experience:</b> {viewItem.sales_experience || "—"}</p>
       </div>
 
+
       {/* ADDRESS */}
       <div>
         <h3 className="font-semibold mb-1">Address</h3>
@@ -336,6 +338,33 @@ export default function PartnersPage() {
           {viewItem.approval_email_sent ? "Yes" : "No"}
         </p>
       </div>
+
+{/* TRACKING LINK */}
+<div>
+  <h3 className="font-semibold mb-1">Partner Tracking Link</h3>
+
+  {viewItem.tracking_link ? (
+    <div className="flex items-center gap-2">
+      <input
+        type="text"
+        readOnly
+        value={viewItem.tracking_link}
+        className="w-full border px-2 py-1 rounded text-sm bg-gray-50"
+      />
+      <button
+        className="bg-black text-white px-3 py-1 rounded text-sm"
+        onClick={() => {
+          navigator.clipboard.writeText(viewItem.tracking_link);
+          alert("Tracking link copied!");
+        }}
+      >
+        Copy
+      </button>
+    </div>
+  ) : (
+    <p className="text-gray-500 text-sm">—</p>
+  )}
+</div>
 
       <button
         className="mt-4 bg-black text-white px-4 py-2 rounded w-full"

@@ -3,7 +3,6 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useState } from "react";
-const [partnerId, setPartnerId] = useState<string | null>(null);
 import { supabase } from "@/lib/supabaseClient";
 
 /* ===============================
@@ -48,6 +47,7 @@ function money(n: number) {
    PAGE
 ================================ */
 export default function PartnerCommissionsPage() {
+  const [partnerId, setPartnerId] = useState<string | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -59,6 +59,12 @@ export default function PartnerCommissionsPage() {
 
 
     async function loadPartnerId() {
+
+useEffect(() => {
+  loadPartnerId();
+}, []);
+
+
   const { data, error } = await supabase.auth.getUser();
 
   if (error || !data?.user) {
@@ -154,8 +160,10 @@ async function loadData() {
 
 
   useEffect(() => {
+  if (!partnerId) return;
   loadData();
-}, [dateRange]);
+}, [partnerId, dateRange]);
+
 
 
 

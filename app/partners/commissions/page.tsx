@@ -83,50 +83,74 @@ export default function PartnerCommissionsPage() {
 
 
   /* ===============================
-     LOAD DATA (PARTNER-SCOPED)
-  ================================ */
-  async function loadData() {
-    setLoading(true);
+   LOAD DATA (PARTNER-SCOPED) — DEBUG
+================================ */
+async function loadData() {
+  setLoading(true);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  console.log("🔍 loadData() fired");
 
-    if (!user?.email) {
-      setRows([]);
-      setLoading(false);
-      return;
-    }
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
 
-    const { data: partner } = await supabase
-      .from("partners")
-      .select("partner_id")
-      .eq("email_address", user.email)
-      .single();
+  console.log("👤 Logged in user:", user);
+  console.log("❌ User error:", userError);
 
-    if (!partner?.partner_id) {
-      setRows([]);
-      setLoading(false);
-      return;
-    }
-
-    let query = supabase
-      .from("leads")
-      .select("*")
-      .eq("partner_id", partner.partner_id)
-      .order("created_at", { ascending: false });
-
-    if (dateRange !== "all") {
-      const days = Number(dateRange);
-      const since = new Date();
-      since.setDate(since.getDate() - days);
-      query = query.gte("created_at", since.toISOString());
-    }
-
-    const { data } = await query;
-    setRows(data || []);
+  if (!user?.email) {
+    console.warn("⛔ No user email found");
+    setRows([]);
     setLoading(false);
+    return;
   }
+
+  console.log("📧 User email:", user.email);
+
+  const { data: partner, error: partnerError } = await supabase
+    .from("partners")
+    .select("partner_id, email_address")
+    .eq("email_address", user.email)
+    .single();
+
+  console.log("🤝 Partner row:", partner);
+  console.log("❌ Partner error:", partnerError);
+
+  if (!partner?.partner_id) {
+    console.warn("⛔ No partner_id found for this user");
+    setRows([]);
+    setLoading(false);
+    return;
+  }
+
+  console.log("🆔 Using partner_id:", partner.partner_id);
+
+  let query = supabase
+    .from("leads")
+    .select("*")
+    .eq("partner_id", partner.partner_id)
+    .order("created_at", { ascending: false });
+
+  if (dateRange !== "all") {
+    const days = Number(dateRange);
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    console.log("📅 Date filter since:", since.toISOString());
+
+    query = query.gte("created_at", since.toISOString());
+  }
+
+  const { data, error } = await query;
+
+  console.log("📦 Leads returned:", data);
+  console.log("❌ Leads error:", error);
+  console.log("📊 Row count:", data?.length || 0);
+
+  setRows(data || []);
+  setLoading(false);
+}
+
 
   useEffect(() => {
   loadData();

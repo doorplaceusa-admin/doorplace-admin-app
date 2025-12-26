@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+const [partnerId, setPartnerId] = useState<string | null>(null);
 import { supabase } from "@/lib/supabaseClient";
 
 /* ===============================
@@ -55,6 +56,32 @@ export default function PartnerCommissionsPage() {
   const [dateRange, setDateRange] =
     useState<"30" | "60" | "90" | "all">("all");
 
+
+    async function loadPartnerId() {
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data?.user) {
+    console.warn("No logged in user");
+    return;
+  }
+
+  const tags =
+    (data.user.user_metadata?.tags as string | undefined) || "";
+
+  const foundPartnerId = tags
+    .split(",")
+    .map(t => t.trim())
+    .find(t => t.startsWith("DP"));
+
+  if (!foundPartnerId) {
+    console.warn("Partner ID not found in tags:", tags);
+    return;
+  }
+
+  setPartnerId(foundPartnerId);
+}
+
+
   /* ===============================
      LOAD DATA (PARTNER-SCOPED)
   ================================ */
@@ -102,8 +129,10 @@ export default function PartnerCommissionsPage() {
   }
 
   useEffect(() => {
-    loadData();
-  }, [dateRange]);
+  loadData();
+}, [dateRange]);
+
+
 
   /* ===============================
      FILTERS

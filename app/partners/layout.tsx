@@ -6,23 +6,20 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import {
   LayoutGrid,
-  ClipboardList,
-  Package,
-  Handshake,
-  MoreHorizontal,
   DollarSign,
-  Building2,
-  Settings,
+  Package,
+  BookOpen,
   Bell,
   User,
   LogOut,
+  MoreHorizontal,
 } from "lucide-react";
 
 /* ======================
-   DASHBOARD LAYOUT
+   PARTNER DASHBOARD LAYOUT
 ====================== */
 
-export default function DashboardLayout({
+export default function PartnerLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -45,7 +42,6 @@ export default function DashboardLayout({
     });
   }, [router]);
 
-  // close profile dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (
@@ -78,26 +74,26 @@ export default function DashboardLayout({
         </h1>
 
         <nav className="flex flex-col gap-4 text-sm">
-          <NavLink href="/dashboard" icon={<LayoutGrid size={18} />} label="Dashboard" />
-          <NavLink href="/dashboard/leads" icon={<ClipboardList size={18} />} label="Leads" />
-          <NavLink href="/dashboard/orders" icon={<Package size={18} />} label="Orders" />
-          <NavLink href="/dashboard/partners" icon={<Handshake size={18} />} label="Partners" />
           <NavLink
-            href="/dashboard/partners/commissions"
+            href="/partners/dashboard"
+            icon={<LayoutGrid size={18} />}
+            label="Dashboard"
+          />
+          <NavLink
+            href="/partners/commissions"
             icon={<DollarSign size={18} />}
             label="Commissions"
           />
           <NavLink
-            href="/dashboard/admin-partner-resources"
-            icon={<Building2 size={18} />}
-            label="Partner Resource Panel"
+            href="/partners/orders"
+            icon={<Package size={18} />}
+            label="My Orders"
           />
           <NavLink
-            href="/dashboard/companies"
-            icon={<Building2 size={18} />}
-            label="Companies"
+            href="/partners/resources"
+            icon={<BookOpen size={18} />}
+            label="Resources"
           />
-          <NavLink href="/dashboard/settings" icon={<Settings size={18} />} label="Settings" />
         </nav>
       </aside>
 
@@ -116,14 +112,6 @@ export default function DashboardLayout({
 
             {profileOpen && (
               <div className="absolute left-0 mt-2 w-44 bg-white border rounded shadow z-50">
-                <Link
-                  href="/dashboard/settings"
-                  className="block px-4 py-2 text-sm hover:bg-gray-100"
-                  onClick={() => setProfileOpen(false)}
-                >
-                  Account Settings
-                </Link>
-
                 <button
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
@@ -135,12 +123,19 @@ export default function DashboardLayout({
             )}
           </div>
 
-          <span className="font-semibold">Admin Dashboard</span>
+          <div className="flex flex-col text-center leading-tight">
+           <span className="font-semibold text-base">
+             Partner Dashboard
+            </span>
+           <span className="text-sm text-gray-500">
+            Powered by Doorplace USA
+           </span>
+           </div>
 
-          <button
-            onClick={() => alert("Notifications coming next")}
-            className="p-1 rounded hover:bg-gray-100"
-          >
+
+          
+
+          <button className="p-1 rounded hover:bg-gray-100">
             <Bell size={22} />
           </button>
         </header>
@@ -151,7 +146,7 @@ export default function DashboardLayout({
         </main>
 
         {/* ===== MOBILE BOTTOM NAV ===== */}
-        <MobileBottomNav />
+        <PartnerBottomNav />
       </div>
     </div>
   );
@@ -161,16 +156,27 @@ export default function DashboardLayout({
    MOBILE BOTTOM NAV
 ====================== */
 
-function MobileBottomNav() {
+function PartnerBottomNav() {
   const [showMore, setShowMore] = useState(false);
 
   return (
     <>
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-50">
-        <MobileNavItem href="/dashboard" icon={<LayoutGrid size={20} />} label="Dashboard" />
-        <MobileNavItem href="/dashboard/leads" icon={<ClipboardList size={20} />} label="Leads" />
-        <MobileNavItem href="/dashboard/orders" icon={<Package size={20} />} label="Orders" />
-        <MobileNavItem href="/dashboard/partners" icon={<Handshake size={20} />} label="Partners" />
+        <MobileNavItem
+          href="/partners/dashboard"
+          icon={<LayoutGrid size={20} />}
+          label="Home"
+        />
+        <MobileNavItem
+          href="/partners/commissions"
+          icon={<DollarSign size={20} />}
+          label="Pay"
+        />
+        <MobileNavItem
+          href="/partners/orders"
+          icon={<Package size={20} />}
+          label="Orders"
+        />
 
         <button
           onClick={() => setShowMore(true)}
@@ -191,27 +197,9 @@ function MobileBottomNav() {
             onClick={(e) => e.stopPropagation()}
           >
             <MobileNavItem
-              href="/dashboard/partners/commissions"
-              icon={<DollarSign size={20} />}
-              label="Commissions"
-              onClick={() => setShowMore(false)}
-            />
-            <MobileNavItem
-              href="/dashboard/companies"
-              icon={<Building2 size={20} />}
-              label="Companies"
-              onClick={() => setShowMore(false)}
-            />
-            <MobileNavItem
-              href="/dashboard/admin-partner-resources"
-              icon={<Building2 size={20} />}
-              label="Partner Resource Panel"
-              onClick={() => setShowMore(false)}
-            />
-            <MobileNavItem
-              href="/dashboard/settings"
-              icon={<Settings size={20} />}
-              label="Settings"
+              href="/partners/resources"
+              icon={<BookOpen size={20} />}
+              label="Resources"
               onClick={() => setShowMore(false)}
             />
           </div>
@@ -221,7 +209,8 @@ function MobileBottomNav() {
   );
 }
 
-/* ===== DESKTOP NAV LINK ===== */
+/* ===== NAV HELPERS ===== */
+
 function NavLink({
   href,
   icon,
@@ -242,7 +231,6 @@ function NavLink({
   );
 }
 
-/* ===== MOBILE NAV ITEM ===== */
 function MobileNavItem({
   href,
   icon,
@@ -257,25 +245,20 @@ function MobileNavItem({
   const pathname = usePathname();
 
   const isActive =
-  href === "/dashboard"
-    ? pathname === "/dashboard"
-    : pathname === href || pathname.startsWith(href + "/");
-
+    href === "/partners"
+      ? pathname === "/partners"
+      : pathname.startsWith(href);
 
   return (
     <Link
       href={href}
       onClick={onClick}
       className={`flex flex-col items-center text-xs px-2 py-1 rounded ${
-  isActive
-    ? "text-red-700 bg-red-50"
-    : "text-gray-700"
-}`}
-
+        isActive ? "text-red-700 bg-red-50" : "text-gray-700"
+      }`}
     >
       {icon}
       <span className="mt-1">{label}</span>
     </Link>
   );
 }
-

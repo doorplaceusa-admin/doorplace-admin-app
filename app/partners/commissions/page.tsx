@@ -11,7 +11,6 @@ type Row = {
   id: string;
   lead_id: string;
   submission_type: string;
-
   partner_id?: string;
 
   customer_first_name?: string;
@@ -20,6 +19,11 @@ type Row = {
   swing_price?: number | string;
   accessory_price?: number | string;
 
+  bonus_extra?: number | string;
+  total_payout?: number | string;
+
+  pending?: string;
+  paid?: string;
   order_status?: string;
   commission_status?: string;
   notes?: string;
@@ -42,6 +46,15 @@ function money(n: number) {
   });
 }
 
+/* 🔑 SINGLE SOURCE OF TRUTH */
+function getPayout(o: Row) {
+  const base = toNum(o.swing_price) + toNum(o.accessory_price);
+  const commission = Math.round(base * 0.12 * 100) / 100;
+
+  return commission + toNum(o.bonus_extra);
+}
+
+
 /* ===============================
    PAGE
 ================================ */
@@ -57,47 +70,43 @@ export default function PartnerCommissionsPage() {
     useState<"30" | "60" | "90" | "all">("all");
 
   /* ===============================
-     LOAD PARTNER ID (FROM TAGS)
+     LOAD PARTNER ID
   ================================ */
   async function loadPartnerId() {
-    const { data, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
-    if (error || !data?.user) {
-      console.warn("No logged in user");
+    if (error || !user?.email) {
+      setLoading(false);
       return;
     }
 
-    const tags =
-      (data.user.user_metadata?.tags as string | undefined) || "";
+    const { data: partner } = await supabase
+      .from("partners")
+      .select("partner_id")
+      .eq("email_address", user.email)
+      .single();
 
-    const foundPartnerId = tags
-      .split(",")
-      .map((t) => t.trim())
-      .find((t) => t.startsWith("DP"));
-
-    if (!foundPartnerId) {
-      console.warn("Partner ID not found in tags:", tags);
+    if (!partner?.partner_id) {
+      setLoading(false);
       return;
     }
 
-    setPartnerId(foundPartnerId);
+    setPartnerId(partner.partner_id);
   }
 
   /* ===============================
-     LOAD DATA (PARTNER SCOPED)
+     LOAD DATA
   ================================ */
-  async function loadData() {
-    if (!partnerId) return;
-
+  async function loadData(pid: string) {
     setLoading(true);
-
-    console.log("🔍 loadData()");
-    console.log("🆔 Partner ID:", partnerId);
 
     let query = supabase
       .from("leads")
       .select("*")
-      .eq("partner_id", partnerId)
+      .eq("partner_id", pid)
       .order("created_at", { ascending: false });
 
     if (dateRange !== "all") {
@@ -107,11 +116,7 @@ export default function PartnerCommissionsPage() {
       query = query.gte("created_at", since.toISOString());
     }
 
-    const { data, error } = await query;
-
-    console.log("📦 Rows:", data);
-    console.log("❌ Error:", error);
-
+    const { data } = await query;
     setRows(data || []);
     setLoading(false);
   }
@@ -124,8 +129,7 @@ export default function PartnerCommissionsPage() {
   }, []);
 
   useEffect(() => {
-    if (!partnerId) return;
-    loadData();
+    if (partnerId) loadData(partnerId);
   }, [partnerId, dateRange]);
 
   /* ===============================
@@ -142,38 +146,38 @@ export default function PartnerCommissionsPage() {
   );
 
   /* ===============================
-     SUMMARY TOTALS
+     TOTALS (FIXED)
   ================================ */
   const totals = useMemo(() => {
-    let commission = 0;
-    let paid = 0;
-    let pending = 0;
+    let totalCommission = 0;
 
     orders.forEach((o) => {
       const base =
-        toNum(o.swing_price) + toNum(o.accessory_price);
-      const c = Math.round(base * 0.12 * 100) / 100;
-      commission += c;
+        toNum(o.swing_price) +
+        toNum(o.accessory_price);
 
-      if (o.commission_status === "paid") paid += c;
-      else pending += c;
+      const commission =
+        Math.round(base * 0.12 * 100) / 100;
+
+      const bonus = toNum(o.bonus_extra);
+
+      totalCommission += commission + bonus;
     });
 
     return {
       totalLeads: leads.length,
       totalOrders: orders.length,
-      totalCommission: commission,
-      paid,
-      pending,
+      totalCommission,
     };
   }, [orders, leads]);
 
+
   /* ===============================
-     CSV EXPORT
+     CSV EXPORT (FIXED)
   ================================ */
   function exportCSV() {
     const headers = [
-      "ID",
+      "Lead ID",
       "Customer",
       "Swing Price",
       "Accessory Price",
@@ -183,9 +187,7 @@ export default function PartnerCommissionsPage() {
     ];
 
     const lines = orders.map((o) => {
-      const base =
-        toNum(o.swing_price) + toNum(o.accessory_price);
-      const commission = Math.round(base * 0.12 * 100) / 100;
+      const commission = getPayout(o);
 
       return [
         o.lead_id,
@@ -209,8 +211,27 @@ export default function PartnerCommissionsPage() {
     URL.revokeObjectURL(url);
   }
 
+  /* ===============================
+     GUARDS
+  ================================ */
   if (loading) return <div className="p-6">Loading…</div>;
 
+  if (!partnerId) {
+    return (
+      <div className="p-6 text-center">
+        <h2 className="text-xl font-bold text-red-700">
+          Partner Access Pending
+        </h2>
+        <p className="mt-2 text-gray-600">
+          Your partner account is not active yet.
+        </p>
+      </div>
+    );
+  }
+
+  /* ===============================
+     RENDER
+  ================================ */
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center flex-wrap gap-2">
@@ -242,12 +263,7 @@ export default function PartnerCommissionsPage() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card label="Total Leads" value={totals.totalLeads} />
         <Card label="Total Orders" value={totals.totalOrders} />
-        <Card
-          label="Total Commission"
-          value={money(totals.totalCommission)}
-        />
-        <Card label="Paid" value={money(totals.paid)} />
-        <Card label="Pending" value={money(totals.pending)} />
+        <Card label="Total Commission" value={money(totals.totalCommission)} />
       </div>
 
       <div className="flex gap-2">
@@ -263,17 +279,12 @@ export default function PartnerCommissionsPage() {
         <Table>
           {orders.length === 0 && <Empty>No orders yet.</Empty>}
           {orders.map((o) => {
-            const base =
-              toNum(o.swing_price) + toNum(o.accessory_price);
-            const commission =
-              Math.round(base * 0.12 * 100) / 100;
+            const commission = getPayout(o);
 
             return (
               <RowItem key={o.id}>
                 <div>{o.lead_id}</div>
-                <div>
-                  {o.customer_first_name} {o.customer_last_name}
-                </div>
+                <div>{o.customer_first_name} {o.customer_last_name}</div>
                 <div>{money(commission)}</div>
                 <div>{o.commission_status || "—"}</div>
                 <div className="text-gray-500">{o.notes || "—"}</div>
@@ -289,9 +300,7 @@ export default function PartnerCommissionsPage() {
           {leads.map((l) => (
             <RowItem key={l.id}>
               <div>{l.lead_id}</div>
-              <div>
-                {l.customer_first_name} {l.customer_last_name}
-              </div>
+              <div>{l.customer_first_name} {l.customer_last_name}</div>
               <div>{l.order_status || "New"}</div>
               <div className="text-gray-500">{l.notes || "—"}</div>
             </RowItem>
@@ -301,7 +310,7 @@ export default function PartnerCommissionsPage() {
 
       <div className="pt-6 text-center">
         <a
-          href="https://doorplaceusa.com/account"
+          href="/partners/dashboard"
           className="inline-block px-4 py-2 border border-gray-400 rounded text-sm text-gray-700 hover:bg-gray-100"
         >
           ← Back to Dashboard
@@ -337,11 +346,7 @@ function Tab({ active, children, onClick }: any) {
 }
 
 function Table({ children }: any) {
-  return (
-    <div className="border rounded divide-y text-sm">
-      {children}
-    </div>
-  );
+  return <div className="border rounded divide-y text-sm">{children}</div>;
 }
 
 function RowItem({ children }: any) {
@@ -354,8 +359,6 @@ function RowItem({ children }: any) {
 
 function Empty({ children }: any) {
   return (
-    <div className="p-6 text-center text-gray-500">
-      {children}
-    </div>
+    <div className="p-6 text-center text-gray-500">{children}</div>
   );
 }

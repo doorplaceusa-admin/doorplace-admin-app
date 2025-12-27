@@ -53,7 +53,17 @@ for (const file of files) {
     /* ===============================
        2. NORMALIZE CORE CONTACT INFO
     =============================== */
-    const submissionType = formData.get("submission_type");
+    let submissionType = formData.get("submission_type");
+
+// ✅ PARTNER ID (single source of truth)
+const partnerId = formData.get("partner_id") as string | null;
+
+// 🔒 SAFETY NET — auto-detect partner tracking leads
+if (partnerId && submissionType === "general_inquiry") {
+  submissionType = "partner_tracking";
+}
+
+
     const shopify_account_email = formData.get("shopify_account_email") as string | null;
 
 
@@ -108,7 +118,7 @@ const zip =
 /* ===============================
    PARTNER NAME RESOLUTION (STEP 1)
 =============================== */
-const partnerId = formData.get("partner_id") as string | null;
+
 
 let partnerName: string | null = null;
 

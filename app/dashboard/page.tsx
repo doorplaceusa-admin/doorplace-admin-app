@@ -58,14 +58,17 @@ export default function DashboardPage() {
       // ================= TOTAL LEADS (WIRE THIS) =================
       // Assumes your leads table is named "leads"
       const { count: leadCount } = await supabase
-        .from("leads")
-        .select("*", { count: "exact", head: true });
+  .from("leads")
+  .select("*", { count: "exact", head: true })
+  .neq("submission_type", "partner_order");
+
 
         // ================= TOTAL ORDERS (WIRED HERE) =================
 const { count: orderCount } = await supabase
   .from("leads")
   .select("*", { count: "exact", head: true })
-  .not("order_status", "is", null);
+  .eq("submission_type", "partner_order");
+
 
 
       // ================= RECENT LEADS (WIRE THIS) =================
@@ -145,82 +148,43 @@ const { count: orderCount } = await supabase
           Powered by Doorplace USA
         </div>
 
-        <div className="mt-2 text-xl font-semibold border-b pb-1">
-          Admin Dashboard
-        </div>
       </div>
 
-      {/* ===================== QUICK ACTIONS BAR ===================== */}
-      <div
-        style={{
-          display: "flex",
-          gap: "12px",
-          marginBottom: "20px",
-        }}
-      >
-        <button
-          style={{
-            background: "#b80d0d",
-            color: "white",
-            padding: "10px 16px",
-            borderRadius: "6px",
-            fontWeight: "600",
-            cursor: "pointer",
-          }}
-          onClick={() => (window.location.href = "/dashboard/leads?create=new")}
-        >
-          + New Lead
-        </button>
-
-        <button
-          style={{
-            background: "#b80d0d",
-            color: "white",
-            padding: "10px 16px",
-            borderRadius: "6px",
-            fontWeight: "600",
-            cursor: "pointer",
-          }}
-          onClick={() => (window.location.href = "/dashboard/orders?create=new")}
-        >
-          + New Order
-        </button>
-
-        <button
-          style={{
-            background: "#b80d0d",
-            color: "white",
-            padding: "10px 16px",
-            borderRadius: "6px",
-            fontWeight: "600",
-            cursor: "pointer",
-          }}
-          onClick={() => (window.location.href = "/dashboard/partners?create=new")}
-        >
-          + Add Partner
-        </button>
-      </div>
+      
 
       {/* =================== SUMMARY CARDS =================== */}
       <div style={gridThree}>
-        <StatCard title="Total Leads" value={stats.totalLeads} />
-        <StatCard title="Total Orders" value={stats.totalOrders} />
+        
+        
+        <div
+          onClick={() => (window.location.href = "/dashboard/leads")}
+          style={{ cursor: "pointer" }}
+        >
+          <StatCard title="Total Leads" value={stats.totalLeads} />
+        </div>
+
+        <div
+          onClick={() => (window.location.href = "/dashboard/orders")}
+          style={{ cursor: "pointer" }}
+        >
+          <StatCard title="Total Orders" value={stats.totalOrders} />
+        </div>
+
         <div
           onClick={() => (window.location.href = "/dashboard/partners")}
           style={{ cursor: "pointer" }}
         >
           <StatCard title="Active Partners" value={stats.activePartners} />
         </div>
-      </div>
 
-      {/* ✅ ONLY KEEP: Pending Commissions (REMOVE Total Revenue + Conversion Rate) */}
-      <div style={{ ...gridThree, marginTop: 16 }}>
+        <div>
         <StatCard title="Pending Commissions" value={fmt(stats.pendingCommissions)} />
+        </div>
+
+        <div>
+        <StatCard title="Paid Commissions" value={fmt(stats.paidCommissions)} />
       </div>
 
-      {/* ✅ REMOVE Avg Order Value (and keep Paid Commissions if you still want it visible) */}
-      <div style={{ ...gridTwo, marginTop: 16 }}>
-        <StatCard title="Paid Commissions" value={fmt(stats.paidCommissions)} />
       </div>
 
       {/* 🟡 TASKS REQUIRING ATTENTION (kept) */}

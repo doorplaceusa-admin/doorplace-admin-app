@@ -10,21 +10,43 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     setError("");
+    setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // 1. Sign in
+    const { data, error: authError } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      setError(error.message);
-    } else {
-      router.push("/dashboard");
-      router.refresh();
+    if (authError || !data.user) {
+      setError(authError?.message || "Login failed");
+      setLoading(false);
+      return;
     }
+
+    // 2. Check PARTNERS table by email
+    const { data: partner, error: partnerError } = await supabase
+      .from("partners")
+      .select("id")
+      .eq("email_address", email)
+      .maybeSingle();
+
+    // 3. Route based on role
+    if (partner && !partnerError) {
+      // ✅ Partner
+      router.push("/partners/dashboard");
+    } else {
+      // ✅ Admin
+      router.push("/dashboard");
+    }
+
+    router.refresh();
+    setLoading(false);
   };
 
   return (
@@ -71,9 +93,10 @@ export default function LoginPage() {
 
           <button
             onClick={handleLogin}
-            className="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-3 rounded-lg transition"
+            disabled={loading}
+            className="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-3 rounded-lg transition disabled:opacity-60"
           >
-            Log In
+            {loading ? "Signing in…" : "Log In"}
           </button>
         </div>
       </div>

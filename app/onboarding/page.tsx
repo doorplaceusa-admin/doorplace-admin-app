@@ -52,7 +52,7 @@ export default function OnboardingPage() {
       );
 
       setTimeout(() => {
-        window.location.href = "https://doorplaceusa.com/account";
+        window.location.href = "https://tradepilot.doorplaceusa.com/partners/dashboard";
       }, 9000);
     } catch (e) {
       setErr("Network error.");

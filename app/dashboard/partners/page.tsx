@@ -291,90 +291,103 @@ export default function PartnersPage() {
   }}
 />
 
-
-      {/* VIEW MODAL */}
+{/* ===============================
+    VIEW MODAL — PARTNER PROFILE
+================================ */}
 {viewItem && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-    <div className="bg-white p-6 rounded max-w-2xl w-full max-h-[90vh] overflow-y-auto space-y-4">
-      <h2 className="text-xl font-bold">Partner Profile</h2>
-
-      {/* BASIC INFO */}
-      <div>
-        <h3 className="font-semibold mb-1">Basic Information</h3>
-        <p><b>Name:</b> {viewItem.first_name} {viewItem.last_name}</p>
-        <p><b>Email:</b> {viewItem.email_address}</p>
-        <p><b>Phone:</b> {viewItem.cell_phone_number}</p>
-        <p><b>Partner ID:</b> {viewItem.partner_id}</p>
+  <div
+    className="fixed inset-0 bg-black/40 flex items-start justify-center z-50 p-4"
+    onClick={() => setViewItem(null)}
+  >
+    {/* MODAL CONTAINER */}
+    <div
+      className="bg-white rounded max-w-2xl w-full max-h-[77vh] flex flex-col shadow-lg"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* HEADER */}
+      <div className="p-6 border-b">
+        <h2 className="text-xl font-bold">Partner Profile</h2>
       </div>
 
-      {/* BUSINESS INFO */}
-      <div>
-        <h3 className="font-semibold mb-1">Business Information</h3>
-        <p><b>Business Name:</b> {viewItem.business_name || "—"}</p>
-        <p><b>Coverage Area:</b> {viewItem.coverage_area || "—"}</p>
-        <p><b>Preferred Contact:</b> {viewItem.preferred_contact_method || "—"}</p>
-        <p><b>Sales Experience:</b> {viewItem.sales_experience || "—"}</p>
+      {/* SCROLLABLE CONTENT */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+
+        {/* BASIC INFO */}
+        <div>
+          <h3 className="font-semibold mb-1">Basic Information</h3>
+          <p><b>Name:</b> {viewItem.first_name} {viewItem.last_name}</p>
+          <p><b>Email:</b> {viewItem.email_address}</p>
+          <p><b>Phone:</b> {viewItem.cell_phone_number}</p>
+          <p><b>Partner ID:</b> {viewItem.partner_id}</p>
+        </div>
+
+        {/* BUSINESS INFO */}
+        <div>
+          <h3 className="font-semibold mb-1">Business Information</h3>
+          <p><b>Business Name:</b> {viewItem.business_name || "—"}</p>
+          <p><b>Coverage Area:</b> {viewItem.coverage_area || "—"}</p>
+          <p><b>Preferred Contact:</b> {viewItem.preferred_contact_method || "—"}</p>
+          <p><b>Sales Experience:</b> {viewItem.sales_experience || "—"}</p>
+        </div>
+
+        {/* ADDRESS */}
+        <div>
+          <h3 className="font-semibold mb-1">Address</h3>
+          <p><b>Street:</b> {viewItem.street_address || "—"}</p>
+          <p><b>City:</b> {viewItem.city || "—"}</p>
+          <p><b>State:</b> {viewItem.state || "—"}</p>
+          <p><b>Zip:</b> {viewItem.zip_code || "—"}</p>
+        </div>
+
+        {/* SYSTEM STATUS */}
+        <div>
+          <h3 className="font-semibold mb-1">System Status</h3>
+          <p><b>Shopify Synced:</b> {viewItem.shopify_synced ? "Yes" : "No"}</p>
+          <p><b>Approval Email Sent:</b> {viewItem.approval_email_sent ? "Yes" : "No"}</p>
+        </div>
+
+        {/* TRACKING LINK */}
+        <div>
+          <h3 className="font-semibold mb-1">Partner Tracking Link</h3>
+
+          {viewItem.tracking_link ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={viewItem.tracking_link}
+                className="w-full border px-2 py-1 rounded text-sm bg-gray-50"
+              />
+              <button
+                className="bg-black text-white px-3 py-1 rounded text-sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(viewItem.tracking_link);
+                  alert("Tracking link copied!");
+                }}
+              >
+                Copy
+              </button>
+            </div>
+          ) : (
+            <p className="text-gray-500 text-sm">—</p>
+          )}
+        </div>
+
       </div>
 
-
-      {/* ADDRESS */}
-      <div>
-        <h3 className="font-semibold mb-1">Address</h3>
-        <p><b>Street:</b> {viewItem.street_address || "—"}</p>
-        <p><b>City:</b> {viewItem.city || "—"}</p>
-        <p><b>State:</b> {viewItem.state || "—"}</p>
-        <p><b>Zip:</b> {viewItem.zip_code || "—"}</p>
+      {/* FIXED FOOTER */}
+      <div className="p-4 border-t bg-white">
+        <button
+          className="bg-black text-white px-4 py-2 rounded w-full"
+          onClick={() => setViewItem(null)}
+        >
+          Close
+        </button>
       </div>
-
-      {/* SYSTEM STATUS */}
-      <div>
-        <h3 className="font-semibold mb-1">System Status</h3>
-        <p>
-          <b>Shopify Synced:</b>{" "}
-          {viewItem.shopify_synced ? "Yes" : "No"}
-        </p>
-        <p>
-          <b>Approval Email Sent:</b>{" "}
-          {viewItem.approval_email_sent ? "Yes" : "No"}
-        </p>
-      </div>
-
-{/* TRACKING LINK */}
-<div>
-  <h3 className="font-semibold mb-1">Partner Tracking Link</h3>
-
-  {viewItem.tracking_link ? (
-    <div className="flex items-center gap-2">
-      <input
-        type="text"
-        readOnly
-        value={viewItem.tracking_link}
-        className="w-full border px-2 py-1 rounded text-sm bg-gray-50"
-      />
-      <button
-        className="bg-black text-white px-3 py-1 rounded text-sm"
-        onClick={() => {
-          navigator.clipboard.writeText(viewItem.tracking_link);
-          alert("Tracking link copied!");
-        }}
-      >
-        Copy
-      </button>
-    </div>
-  ) : (
-    <p className="text-gray-500 text-sm">—</p>
-  )}
-</div>
-
-      <button
-        className="mt-4 bg-black text-white px-4 py-2 rounded w-full"
-        onClick={() => setViewItem(null)}
-      >
-        Close
-      </button>
     </div>
   </div>
 )}
+
 
 
       {/* EDIT MODAL */}

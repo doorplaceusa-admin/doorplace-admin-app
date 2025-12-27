@@ -322,112 +322,139 @@ async function saveEdit() {
         }}
       />
 
-      {/* VIEW MODAL */}
-      {viewItem && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">Order Details — {viewItem.order_id}</h2>
+{/* ===============================
+    VIEW MODAL — ORDER DETAILS
+================================ */}
+{viewItem && (
+  <div
+    className="fixed inset-0 bg-black/40 flex items-start justify-center z-50 p-4"
+    onClick={() => setViewItem(null)}
+  >
+    {/* MODAL CONTAINER */}
+    <div
+      className="bg-white rounded max-w-3xl w-full max-h-[75vh] flex flex-col shadow-lg"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* HEADER */}
+      <div className="p-6 border-b">
+        <h2 className="text-xl font-bold">
+          Order Details — {viewItem.order_id}
+        </h2>
+      </div>
 
-            {/* CUSTOMER */}
-            <Section title="Customer">
-              <Row label="Name" value={`${viewItem.customer_first_name || ""} ${viewItem.customer_last_name || ""}`} />
-              <Row label="Email" value={viewItem.customer_email} />
-              <Row label="Phone" value={viewItem.customer_phone} />
+      {/* SCROLLABLE CONTENT */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
+        {/* CUSTOMER */}
+        <Section title="Customer">
+          <Row
+            label="Name"
+            value={`${viewItem.customer_first_name || ""} ${viewItem.customer_last_name || ""}`}
+          />
+          <Row label="Email" value={viewItem.customer_email} />
+          <Row label="Phone" value={viewItem.customer_phone} />
+          <Row
+            label="Address"
+            value={`${viewItem.customer_street_address || ""} ${viewItem.customer_city || ""}, ${viewItem.customer_state || ""} ${viewItem.customer_zip_code || ""}`}
+          />
+        </Section>
+
+        {/* PARTNER (READ ONLY) */}
+        <Section title="Partner">
+          <Row label="Partner Name" value={viewItem.partner_name} />
+          <Row label="Partner ID" value={viewItem.partner_id} />
+        </Section>
+
+        {/* ORDER STATUS */}
+        <Section title="Order Status">
+          <Row label="Status" value={viewItem.order_status} />
+        </Section>
+
+        {/* SWING DETAILS */}
+        <Section title="Swing Details">
+          <Row label="Swing Size" value={viewItem.swing_size} />
+          <Row label="Wood Type" value={viewItem.wood_type} />
+          <Row label="Finish / Stain" value={viewItem.finish} />
+          <Row label="Hanging Method" value={viewItem.hanging_method} />
+        </Section>
+
+        {/* PRICING + COMMISSION */}
+        {(() => {
+          const c = calc(viewItem);
+          return (
+            <Section title="Pricing & Commission">
+              <Row label="Swing Price" value={money(c.swing)} />
+              <Row label="Accessory Total" value={money(c.accessories)} />
+              <Row label="Installation Fee" value={money(c.install)} />
+              <Row label="Delivery Fee" value={money(c.delivery)} />
+
+              <div className="mt-2" />
+
+              <Row label="Commission Base" value={money(c.commissionBase)} />
               <Row
-                label="Address"
-                value={`${viewItem.customer_street_address || ""} ${viewItem.customer_city || ""}, ${viewItem.customer_state || ""} ${viewItem.customer_zip_code || ""}`}
+                label="Commission Rate"
+                value={`${Math.round(c.commissionRate * 100)}%`}
               />
+              <Row label="Commission" value={money(c.commission)} />
+
+              {/* RESIDUAL — DISPLAY ONLY */}
+              <Row
+                label="Residual (5% – if repeat customer)"
+                value={money(c.residualCommission)}
+                muted
+              />
+
+              {/* MANUAL BONUS */}
+              <Row
+                label="Manual Bonus"
+                value={c.bonusExtra ? money(c.bonusExtra) : "—"}
+              />
+
+              <Row label="Total Payout" value={money(c.payoutTotal)} />
             </Section>
+          );
+        })()}
 
-            {/* PARTNER (READ ONLY) */}
-            <Section title="Partner">
-              <Row label="Partner Name" value={viewItem.partner_name} />
-              <Row label="Partner ID" value={viewItem.partner_id} />
-            </Section>
-
-            {/* ORDER STATUS */}
-            <Section title="Order Status">
-              <Row label="Status" value={viewItem.order_status} />
-            </Section>
-
-            {/* SWING DETAILS */}
-            <Section title="Swing Details">
-              <Row label="Swing Size" value={viewItem.swing_size} />
-              <Row label="Wood Type" value={viewItem.wood_type} />
-              <Row label="Finish / Stain" value={viewItem.finish} />
-              <Row label="Hanging Method" value={viewItem.hanging_method} />
-            </Section>
-
-            {/* PRICING + COMMISSION */}
-{(() => {
-  const c = calc(viewItem);
-  return (
-    <Section title="Pricing & Commission">
-      <Row label="Swing Price" value={money(c.swing)} />
-      <Row label="Accessory Total" value={money(c.accessories)} />
-      <Row label="Installation Fee" value={money(c.install)} />
-      <Row label="Delivery Fee" value={money(c.delivery)} />
-
-      <div className="mt-2" />
-
-      <Row label="Commission Base" value={money(c.commissionBase)} />
-      <Row
-        label="Commission Rate"
-        value={`${Math.round(c.commissionRate * 100)}%`}
-      />
-      <Row label="Commission" value={money(c.commission)} />
-
-      {/* RESIDUAL — DISPLAY ONLY */}
-      <Row
-        label="Residual (5% – if repeat customer)"
-        value={money(c.residualCommission)}
-        muted
-      />
-
-      {/* MANUAL BONUS */}
-      <Row
-        label="Manual Bonus"
-        value={c.bonusExtra ? money(c.bonusExtra) : "—"}
-      />
-
-      <Row label="Total Payout" value={money(c.payoutTotal)} />
-    </Section>
-  );
-})()}
-
-
-            {/* PHOTOS */}
-            <Section title="Photos">
-              <div className="flex gap-2 flex-wrap">
-                {viewItem.photos?.length ? (
-                  viewItem.photos.map((p, i) => (
-                    <img
-                      key={i}
-                      src={p}
-                      className="w-28 h-28 object-cover border rounded"
-                      alt={`order-photo-${i}`}
-                    />
-                  ))
-                ) : (
-                  <span className="text-gray-500 text-sm">No photos uploaded</span>
-                )}
-              </div>
-            </Section>
-
-            <button
-              className="mt-4 bg-black text-white px-4 py-2 rounded w-full"
-              onClick={() => setViewItem(null)}
-            >
-              Close
-            </button>
+        {/* PHOTOS */}
+        <Section title="Photos">
+          <div className="flex gap-2 flex-wrap">
+            {viewItem.photos?.length ? (
+              viewItem.photos.map((p, i) => (
+                <img
+                  key={i}
+                  src={p}
+                  className="w-28 h-28 object-cover border rounded"
+                  alt={`order-photo-${i}`}
+                />
+              ))
+            ) : (
+              <span className="text-gray-500 text-sm">
+                No photos uploaded
+              </span>
+            )}
           </div>
-        </div>
-      )}
+        </Section>
+
+      </div>
+
+      {/* FIXED FOOTER */}
+      <div className="p-4 border-t bg-white">
+        <button
+          className="bg-black text-white px-4 py-2 rounded w-full"
+          onClick={() => setViewItem(null)}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {/* EDIT MODAL */}
       {editItem && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white p-6 rounded max-w-3xl w-full max-h-[77vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">Edit Order — {editItem.order_id}</h2>
 
             {/* PARTNER (READ ONLY) */}

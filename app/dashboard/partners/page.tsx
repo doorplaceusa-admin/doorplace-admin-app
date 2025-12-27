@@ -393,7 +393,7 @@ export default function PartnersPage() {
       {/* EDIT MODAL */}
       {editItem && (
   <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-    <div className="bg-white p-6 rounded max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="bg-white p-6 rounded max-w-2xl w-full max-h-[75vh] overflow-y-auto">
       <h2 className="text-xl font-bold mb-4">Edit Partner</h2>
 
       {/* BASIC INFO */}

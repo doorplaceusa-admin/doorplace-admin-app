@@ -1,7 +1,5 @@
 "use client";
-
 import { useEffect, useMemo, useState } from "react";
-
 type Resource = {
   id: string;
   title: string;
@@ -14,7 +12,6 @@ type Resource = {
   sort_order: number;
   created_at?: string;
 };
-
 const emptyForm: Omit<Resource, "id"> = {
   title: "",
   description: "",
@@ -25,16 +22,12 @@ const emptyForm: Omit<Resource, "id"> = {
   show_new: false,
   sort_order: 100,
 };
-
 export default function AdminResourcesPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [form, setForm] = useState<Omit<Resource, "id">>(emptyForm);
   const [saving, setSaving] = useState(false);
-
   const [editItem, setEditItem] = useState<Resource | null>(null);
-
   const fetchResources = async () => {
     setLoading(true);
     const res = await fetch("/api/admin/partner-resources");
@@ -42,21 +35,17 @@ export default function AdminResourcesPage() {
     setResources(data || []);
     setLoading(false);
   };
-
   useEffect(() => {
     fetchResources();
   }, []);
-
   const categories = useMemo(() => {
     const set = new Set<string>();
     (resources || []).forEach((r) => r.category && set.add(r.category));
     return ["General", ...Array.from(set).filter((c) => c !== "General")];
   }, [resources]);
-
   async function createResource() {
     if (!form.title.trim()) return alert("Title required");
     if (!form.resource_url.trim()) return alert("Resource URL required");
-
     setSaving(true);
     const res = await fetch("/api/admin/partner-resources", {
       method: "POST",
@@ -64,22 +53,18 @@ export default function AdminResourcesPage() {
       body: JSON.stringify(form),
     });
     setSaving(false);
-
     if (!res.ok) {
       const t = await res.text();
       alert(t || "Failed to create resource");
       return;
     }
-
     setForm(emptyForm);
     fetchResources();
   }
-
   async function saveEdit() {
     if (!editItem) return;
     if (!editItem.title.trim()) return alert("Title required");
     if (!editItem.resource_url.trim()) return alert("Resource URL required");
-
     setSaving(true);
     const res = await fetch("/api/admin/partner-resources", {
       method: "PUT",
@@ -87,36 +72,29 @@ export default function AdminResourcesPage() {
       body: JSON.stringify(editItem),
     });
     setSaving(false);
-
     if (!res.ok) {
       const t = await res.text();
       alert(t || "Failed to update resource");
       return;
     }
-
     setEditItem(null);
     fetchResources();
   }
-
   async function deleteResource(id: string) {
     const ok = confirm("Delete this resource?");
     if (!ok) return;
-
     setSaving(true);
     const res = await fetch(`/api/admin/partner-resources?id=${encodeURIComponent(id)}`, {
       method: "DELETE",
     });
     setSaving(false);
-
     if (!res.ok) {
       const t = await res.text();
       alert(t || "Failed to delete resource");
       return;
     }
-
     fetchResources();
   }
-
   async function toggleActive(r: Resource) {
     const next = { ...r, is_active: !r.is_active };
     await fetch("/api/admin/partner-resources", {
@@ -126,13 +104,10 @@ export default function AdminResourcesPage() {
     });
     fetchResources();
   }
-
   if (loading) return <div style={{ padding: 30 }}>Loading admin resources…</div>;
-
   return (
     <div style={{ padding: 30, maxWidth: 980 }}>
       <h1 style={{ fontSize: 28, marginBottom: 14 }}>Partner Resource Panel</h1>
-
       {/* ADD NEW */}
       <div
         style={{
@@ -144,7 +119,6 @@ export default function AdminResourcesPage() {
         }}
       >
         <div style={{ fontWeight: 700, marginBottom: 10 }}>Add New Resource</div>
-
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <Input
             label="Title"
@@ -185,7 +159,6 @@ export default function AdminResourcesPage() {
             value={form.description}
             onChange={(v) => setForm({ ...form, description: v })}
           />
-
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <input
@@ -195,7 +168,6 @@ export default function AdminResourcesPage() {
               />
               Active
             </label>
-
             <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <input
                 type="checkbox"
@@ -206,13 +178,11 @@ export default function AdminResourcesPage() {
             </label>
           </div>
         </div>
-
         <datalist id="category-list">
           {categories.map((c) => (
             <option key={c} value={c} />
           ))}
         </datalist>
-
         <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
           <button
             onClick={createResource}
@@ -221,7 +191,6 @@ export default function AdminResourcesPage() {
           >
             {saving ? "Saving…" : "Add Resource"}
           </button>
-
           <button
             onClick={() => setForm(emptyForm)}
             disabled={saving}
@@ -229,7 +198,6 @@ export default function AdminResourcesPage() {
           >
             Reset
           </button>
-
           <button
             onClick={fetchResources}
             disabled={saving}
@@ -239,10 +207,8 @@ export default function AdminResourcesPage() {
           </button>
         </div>
       </div>
-
       {/* LIST */}
       {resources.length === 0 && <p>No resources yet.</p>}
-
       {resources
         .slice()
         .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
@@ -279,29 +245,23 @@ export default function AdminResourcesPage() {
                     <span style={{ fontSize: 12, color: "#666" }}>(disabled)</span>
                   )}
                 </div>
-
                 {r.description ? <p style={{ marginTop: 6 }}>{r.description}</p> : null}
-
                 <div style={{ fontSize: 12, color: "#555", marginTop: 6 }}>
                   {r.category} • {r.resource_type} • sort: {r.sort_order}
                 </div>
-
                 <div style={{ marginTop: 6, fontSize: 12 }}>
                   <a href={r.resource_url} target="_blank" rel="noreferrer">
                     Open resource
                   </a>
                 </div>
               </div>
-
               <div style={{ display: "flex", flexDirection: "column", gap: 8, width: 160 }}>
                 <button onClick={() => toggleActive(r)} style={btnStyle(r.is_active ? "#b80d0d" : "#22c55e")}>
                   {r.is_active ? "Disable" : "Enable"}
                 </button>
-
                 <button onClick={() => setEditItem(r)} style={btnStyle("#111")}>
                   Edit
                 </button>
-
                 <button onClick={() => deleteResource(r.id)} style={btnOutline()}>
                   Delete
                 </button>
@@ -309,7 +269,6 @@ export default function AdminResourcesPage() {
             </div>
           </div>
         ))}
-
       {/* EDIT MODAL */}
       {editItem && (
         <div
@@ -326,7 +285,6 @@ export default function AdminResourcesPage() {
         >
           <div style={{ background: "#fff", borderRadius: 10, width: 900, maxWidth: "100%", padding: 16 }}>
             <div style={{ fontWeight: 800, marginBottom: 10 }}>Edit Resource</div>
-
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <Input
                 label="Title"
@@ -367,7 +325,6 @@ export default function AdminResourcesPage() {
                 value={editItem.description || ""}
                 onChange={(v) => setEditItem({ ...editItem, description: v })}
               />
-
               <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                 <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <input
@@ -377,7 +334,6 @@ export default function AdminResourcesPage() {
                   />
                   Active
                 </label>
-
                 <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <input
                     type="checkbox"
@@ -388,7 +344,6 @@ export default function AdminResourcesPage() {
                 </label>
               </div>
             </div>
-
             <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
               <button onClick={saveEdit} disabled={saving} style={btnStyle("#b80d0d")}>
                 {saving ? "Saving…" : "Save"}
@@ -403,7 +358,6 @@ export default function AdminResourcesPage() {
     </div>
   );
 }
-
 function Input({
   label,
   value,
@@ -438,7 +392,6 @@ function Input({
     </label>
   );
 }
-
 function Select({
   label,
   value,
@@ -476,7 +429,6 @@ function Select({
     </label>
   );
 }
-
 function btnStyle(bg: string) {
   return {
     padding: "10px 12px",
@@ -488,7 +440,6 @@ function btnStyle(bg: string) {
     fontWeight: 800 as const,
   };
 }
-
 function btnOutline() {
   return {
     padding: "10px 12px",
@@ -500,3 +451,4 @@ function btnOutline() {
     fontWeight: 800 as const,
   };
 }
+

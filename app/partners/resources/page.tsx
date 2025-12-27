@@ -1,8 +1,6 @@
 // app/partners/resources/page.tsx
 "use client";
-
 import { useEffect, useState } from "react";
-
 type Resource = {
   id: string;
   title: string;
@@ -12,11 +10,9 @@ type Resource = {
   resource_type: string;
   show_new: boolean;
 };
-
 export default function PartnerResourcesPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     fetch("/api/partners-resources")
       .then(res => res.json())
@@ -25,21 +21,17 @@ export default function PartnerResourcesPage() {
         setLoading(false);
       });
   }, []);
-
   if (loading) {
     return <div className="p-6">Loading resources…</div>;
   }
-
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
       <h1 className="text-3xl font-bold text-red-700">
         Partner Resources
       </h1>
-
       {resources.length === 0 && (
         <p className="text-gray-500">No resources available.</p>
       )}
-
       <div className="grid gap-4">
         {resources.map(resource => (
           <div
@@ -59,7 +51,6 @@ export default function PartnerResourcesPage() {
                 {resource.description}
               </p>
             </div>
-
             <a
               href={resource.resource_url}
               target="_blank"
@@ -73,3 +64,4 @@ export default function PartnerResourcesPage() {
     </div>
   );
 }
+

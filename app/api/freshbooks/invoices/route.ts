@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    /* 1️⃣ Get FreshBooks access token from Supabase */
+    /* 1️⃣ Get latest FreshBooks access token */
     const { data: tokenRow, error } = await supabaseAdmin
       .from("freshbooks_tokens")
       .select("access_token")
@@ -22,9 +22,18 @@ export async function GET() {
     }
 
     const ACCESS_TOKEN = tokenRow.access_token;
-    /* 2️⃣ Fetch invoices from FreshBooks */
+    const ACCOUNT_ID = process.env.FRESHBOOKS_ACCOUNT_ID;
+
+    if (!ACCOUNT_ID) {
+      return NextResponse.json(
+        { error: "FRESHBOOKS_ACCOUNT_ID missing" },
+        { status: 500 }
+      );
+    }
+
+    /* 2️⃣ Fetch invoices */
     const res = await fetch(
-      "https://api.freshbooks.com/accounting/account/${process.env.FRESHBOOKS_ACCOUNT_ID}/invoices/invoices",
+      `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/invoices/invoices`,
       {
         headers: {
           Authorization: `Bearer ${ACCESS_TOKEN}`,
@@ -43,7 +52,7 @@ export async function GET() {
 
     const json = await res.json();
 
-    /* 3️⃣ Return invoices to TradePilot */
+    /* 3️⃣ Return invoices */
     return NextResponse.json({
       success: true,
       invoices: json.response?.result?.invoices || [],

@@ -91,6 +91,11 @@ export default function DashboardLayout({
             label="Invoices"
           />
           <NavLink
+            href="/dashboard/iplum"
+            icon={<Building2 size={18} />}
+            label="Iplum"
+          />
+          <NavLink
             href="/dashboard/admin-partner-resources"
             icon={<Building2 size={18} />}
             label="Partner Resource Panel"
@@ -209,6 +214,12 @@ function MobileBottomNav() {
               href="/dashboard/companies"
               icon={<Building2 size={20} />}
               label="Companies"
+              onClick={() => setShowMore(false)}
+            />
+            <MobileNavItem
+              href="/dashboard/iplum"
+              icon={<Building2 size={20} />}
+              label="Iplum"
               onClick={() => setShowMore(false)}
             />
             <MobileNavItem

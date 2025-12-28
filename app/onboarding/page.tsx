@@ -48,11 +48,11 @@ export default function OnboardingPage() {
       }
 
       setMsg(
-        "Thank you for submitting your Partner Onboarding Form! Your information has been received. You will be redirected to your Partner Dashboard shortly. If you do not receive an email within 12–24 hours, please check your spam or junk folder or reach out to customer support."
+        "Thank you for submitting your Partner Onboarding Form! Your information has been received. You will be redirected shortly. If you do not receive an email within 12–24 hours, please check your spam or junk folder or reach out to customer support."
       );
 
       setTimeout(() => {
-        window.location.href = "https://tradepilot.doorplaceusa.com/partners/dashboard";
+        window.location.href = "https://doorplaceusa.com/";
       }, 9000);
     } catch (e) {
       setErr("Network error.");

@@ -222,14 +222,14 @@ if (leadError || !leadData) {
 
 await sendAdminNotification({
   type: "lead",
-  title: "New Lead Submitte!",
+  title: "New Lead Submitted",
   details: {
     lead_id: leadData.lead_id,
     name: `${leadData.first_name ?? ""} ${leadData.last_name ?? ""}`,
-    email: `${leadData.email}"${leadData.email}`,
-    phone: `${leadData.phone}"${leadData.phone}`,
-    city: `${leadData.city}>`,
-    state: `${leadData.state}>`,
+    email: `${leadData.email}`,
+    phone: `${leadData.phone}`,
+    city: `${leadData.city}`,
+    state: `${leadData.state}`,
   },
 });
 

@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
@@ -139,68 +140,74 @@ if (partnerId) {
     /* ===============================
        3. INSERT LEAD (FULLY ALIGNED)
     =============================== */
-    const { error: leadError } = await supabase.from("leads").insert([
-      {
-        lead_id,
-        partner_id: partnerId,
-        partner_name: partnerName,
-      
+    const { data: leadData, error: leadError } = await supabase
+  .from("leads")
+  .insert([
+    {
+      lead_id,
+      partner_id: partnerId,
+      partner_name: partnerName,
 
+      submission_type: submissionType,
+      quote_type: formData.get("quote_type"),
+      is_partner_order: formData.get("is_partner_order") === "true",
+      shopify_account_email,
 
-        submission_type: submissionType,
-        quote_type: formData.get("quote_type"),
-        is_partner_order: formData.get("is_partner_order") === "true",
-        shopify_account_email,
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      phone,
+      street_address: streetAddress,
+      city,
+      state,
+      zip,
 
-        first_name: firstName,
-        last_name: lastName,
-        email,
-        phone,
-        street_address: streetAddress,
-        city,
-        state,
-        zip,
+      project_details: formData.get("project_details"),
 
-        project_details: formData.get("project_details"),
+      swing_size: formData.get("swing_size"),
+      porch_ceiling_height: formData.get("porch_ceiling_height"),
+      installation_needed: formData.get("installation_needed"),
+      hanging_method: formData.get("hanging_method"),
 
-        // Swing quote
-        swing_size: formData.get("swing_size"),
-        porch_ceiling_height: formData.get("porch_ceiling_height"),
-        installation_needed: formData.get("installation_needed"),
-        hanging_method: formData.get("hanging_method"),
+      door_width: formData.get("door_width"),
+      door_height: formData.get("door_height"),
+      number_of_doors: formData.get("number_of_doors"),
+      door_type: formData.get("door_type"),
+      door_type_other: formData.get("door_type_other"),
+      door_material: formData.get("door_material"),
+      door_material_other: formData.get("door_material_other"),
+      finish_preference: formData.get("finish_preference"),
+      door_installation_needed: formData.get("door_installation_needed"),
+      installation_location: formData.get("installation_location"),
 
-        // Door quote
-        door_width: formData.get("door_width"),
-        door_height: formData.get("door_height"),
-        number_of_doors: formData.get("number_of_doors"),
-        door_type: formData.get("door_type"),
-        door_type_other: formData.get("door_type_other"),
-        door_material: formData.get("door_material"),
-        door_material_other: formData.get("door_material_other"),
-        finish_preference: formData.get("finish_preference"),
-        door_installation_needed: formData.get("door_installation_needed"),
-        installation_location: formData.get("installation_location"),
+      wood_type: formData.get("wood_type"),
+      finish: formData.get("finish"),
+      swing_price: formData.get("swing_price")
+        ? Number(formData.get("swing_price"))
+        : null,
+      accessory_price: formData.get("accessory_price")
+        ? Number(formData.get("accessory_price"))
+        : null,
+      installation_fee: formData.get("installation_fee")
+        ? Number(formData.get("installation_fee"))
+        : null,
+      shipping_fee: formData.get("shipping_fee")
+        ? Number(formData.get("shipping_fee"))
+        : null,
 
-        // Partner swing order pricing
-        wood_type: formData.get("wood_type"),
-        finish: formData.get("finish"),
-       swing_price: formData.get("swing_price") ? Number(formData.get("swing_price")) : null,
-       accessory_price: formData.get("accessory_price") ? Number(formData.get("accessory_price")) : null,
-       installation_fee: formData.get("installation_fee") ? Number(formData.get("installation_fee")) : null,
-       shipping_fee: formData.get("shipping_fee") ? Number(formData.get("shipping_fee")) : null,
+      signature: formData.get("signature"),
+      photos: photoUrls,
+      lead_status: "new",
+      source: "website",
+    },
+  ])
+  .select();
 
+if (leadError) {
+  console.error("Lead insert error:", leadError);
+  return new NextResponse("Internal Server Error", { status: 500 });
+}
 
-        signature: formData.get("signature"),
-        photos: photoUrls,
-        lead_status: "new",
-        source: "website",
-      },
-    ]);
-
-    if (leadError) {
-      console.error("Lead insert error:", leadError);
-      return new NextResponse("Internal Server Error", { status: 500 });
-    }
 
 /* ===============================
    4. CREATE ORDER IF PARTNER ORDER

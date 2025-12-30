@@ -3,6 +3,9 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { sendAdminNotification } from "@/lib/sendAdminNotification";
+
+
 
 
 
@@ -142,7 +145,8 @@ if (partnerId) {
     /* ===============================
        3. INSERT LEAD (FULLY ALIGNED)
     =============================== */
-    const { data: leadData, error: leadError } = await supabase
+    // INSERT LEAD
+const { data: leadData, error: leadError } = await supabase
   .from("leads")
   .insert([
     {
@@ -203,23 +207,25 @@ if (partnerId) {
       source: "website",
     },
   ])
-  .select();
+  .select()
+  .single();
 
-if (leadError) {
+if (leadError || !leadData) {
   console.error("Lead insert error:", leadError);
   return new NextResponse("Internal Server Error", { status: 500 });
 }
-await supabaseAdmin.from("admin_alerts").insert({
+
+// ADMIN EMAIL ALERT
+await sendAdminNotification({
   type: "lead",
-  reference_id: lead_id,
   title: "New Lead Submitted",
-  message: `New lead from ${firstName ?? ""} ${lastName ?? ""}`.trim(),
-  payload: {
-    lead_id,
-    email,
-    phone,
-    city,
-    state,
+  details: {
+    lead_id: leadData.lead_id,
+    name: `${leadData.first_name ?? ""} ${leadData.last_name ?? ""}`,
+    email: leadData.email,
+    phone: leadData.phone,
+    city: leadData.city,
+    state: leadData.state,
   },
 });
 

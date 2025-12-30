@@ -111,6 +111,7 @@ export default function PartnersPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action,
+        id: partner.id, 
         partner_id: partner.partner_id,
         email_address: partner.email_address,
       }),
@@ -124,17 +125,24 @@ export default function PartnersPage() {
 
     await supabase
       .from("partners")
-      .update({
-        first_name: editItem.first_name,
-        last_name: editItem.last_name,
-        email_address: editItem.email_address,
-        cell_phone_number: editItem.cell_phone_number,
-        street_address: editItem.street_address,
-        city: editItem.city,
-        state: editItem.state,
-        zip_code: editItem.zip_code,
-      })
-      .eq("id", editItem.id);
+  .update({
+    first_name: editItem.first_name,
+    last_name: editItem.last_name,
+    email_address: editItem.email_address,
+    cell_phone_number: editItem.cell_phone_number,
+
+    business_name: editItem.business_name,
+    coverage_area: editItem.coverage_area,
+    preferred_contact_method: editItem.preferred_contact_method,
+    sales_experience: editItem.sales_experience,
+
+    street_address: editItem.street_address,
+    city: editItem.city,
+    state: editItem.state,
+    zip_code: editItem.zip_code,
+  })
+  .eq("id", editItem.id);
+
 
     setEditItem(null);
     loadRows();

@@ -234,14 +234,15 @@ async function syncShopifyContactInfo(partner: any) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { action, partner_id } = body;
+    const { action, partner_id,id } = body
 
-    if (!action || !partner_id) {
-      return NextResponse.json(
-        { error: "action and partner_id required" },
-        { status: 400 }
-      );
-    }
+    if (!action) {
+  return NextResponse.json(
+    { error: "action required" },
+    { status: 400 }
+  );
+}
+
 
     /* ===============================
        REGENERATE PARTNER ID
@@ -326,13 +327,21 @@ if (action === "send_approval_email") {
        DELETE PARTNER
     =============================== */
     if (action === "delete_partner") {
-      await supabaseAdmin
-        .from("partners")
-        .delete()
-        .eq("partner_id", partner_id);
+  if (!id) {
+    return NextResponse.json(
+      { error: "id required for delete" },
+      { status: 400 }
+    );
+  }
 
-      return NextResponse.json({ status: "partner_deleted" });
-    }
+  await supabaseAdmin
+    .from("partners")
+    .delete()
+    .eq("id", id);
+
+  return NextResponse.json({ status: "partner_deleted" });
+}
+
 
     /* ===============================
        SYNC SHOPIFY TAGS

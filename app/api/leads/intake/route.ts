@@ -2,6 +2,8 @@
 
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
 
 
 export async function POST(req: Request) {
@@ -207,6 +209,20 @@ if (leadError) {
   console.error("Lead insert error:", leadError);
   return new NextResponse("Internal Server Error", { status: 500 });
 }
+await supabaseAdmin.from("admin_alerts").insert({
+  type: "lead",
+  reference_id: lead_id,
+  title: "New Lead Submitted",
+  message: `New lead from ${firstName ?? ""} ${lastName ?? ""}`.trim(),
+  payload: {
+    lead_id,
+    email,
+    phone,
+    city,
+    state,
+  },
+});
+
 
 
 /* ===============================

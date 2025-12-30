@@ -218,7 +218,7 @@ if (leadError || !leadData) {
 // ADMIN EMAIL ALERT
 await sendAdminNotification({
   type: "lead",
-  title: "New Lead Submitted",
+  title: "New Lead Submitted2",
   details: {
     lead_id: leadData.lead_id,
     name: `${leadData.first_name ?? ""} ${leadData.last_name ?? ""}`,
@@ -277,7 +277,7 @@ if (submissionType === "partner_order") {
       {
         type: "new_lead",
         reference_id: lead_id,
-        title: "New Lead Submitted",
+        title: "New Lead Submitted1",
         message: `New lead from ${firstName ?? ""} ${lastName ?? ""}`,
         read: false,
       },

@@ -86,6 +86,11 @@ export default function DashboardLayout({
             href="/dashboard/partners/commissions" icon={<DollarSign size={18} />} label="Commissions"
           />
           <NavLink
+            href="/dashboard/receipts"
+            icon={<Building2 size={18} />}
+            label="Receipts"
+          />
+          <NavLink
             href="/dashboard/invoices"
             icon={<Building2 size={18} />}
             label="Invoices"
@@ -198,6 +203,12 @@ function MobileBottomNav() {
             className="absolute bottom-16 left-2 right-2 bg-white rounded-lg shadow-lg p-2"
             onClick={(e) => e.stopPropagation()}
           >
+            <MobileNavItem
+              href="/dashboard/receipts"
+              icon={<DollarSign size={20} />}
+              label="Receipts"
+              onClick={() => setShowMore(false)}
+            />
             <MobileNavItem
               href="/dashboard/partners/commissions"
               icon={<DollarSign size={20} />}

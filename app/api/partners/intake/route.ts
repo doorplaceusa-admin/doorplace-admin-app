@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { Resend } from "resend";
+import { sendAdminNotification } from "@/lib/sendAdminNotification";
 
-/* ============================
-   SETUP
-============================ */
-const resend = new Resend(process.env.RESEND_API_KEY);
+
 
 /**
  * Generate Doorplace USA Partner ID
@@ -102,37 +99,46 @@ export async function POST(req: Request) {
       partner_row_id = inserted.id;
     }
 
-    /* ============================
-       ADMIN EMAIL NOTIFICATION
-       (FAIL-SAFE — NEVER BLOCKS)
-    ============================ */
-    if (process.env.RESEND_API_KEY && process.env.ADMIN_NOTIFICATION_EMAIL) {
-      try {
-        await resend.emails.send({
-          from: "Doorplace USA <no-reply@doorplaceusa.com>",
-          to: process.env.ADMIN_NOTIFICATION_EMAIL,
-          subject:
-            actionType === "created"
-              ? "New Partner Onboarding Submitted"
-              : "Partner Onboarding Updated",
-          html: `
-            <h2>${actionType === "created" ? "New" : "Updated"} Partner Onboarding</h2>
-            <p><strong>Name:</strong> ${normalized.first_name} ${normalized.last_name}</p>
-            <p><strong>Email:</strong> ${normalized.email_address}</p>
-            <p><strong>Partner ID:</strong> ${partner_id}</p>
-            <p>
-              <a href="https://doorplaceusa.com/account" target="_blank">
-                Open TradePilot Dashboard
-              </a>
-            </p>
-          `,
-        });
-      } catch (emailErr) {
-        console.error("ADMIN EMAIL FAILED:", emailErr);
-      }
-    } else {
-      console.warn("⚠️ Admin email ENV vars missing — email skipped");
-    }
+
+   // ===============================
+// ADMIN EMAIL ALERT — PARTNER ONBOARDING
+// ===============================
+console.log("🔥 ADMIN ONBOARDING EMAIL TRIGGERED");
+
+await sendAdminNotification({
+  type: "partner",
+  title:
+    actionType === "created"
+      ? "New Partner Onboarded"
+      : "Partner Onboarding Updated",
+  details: {
+    partner_id: partner_id,
+    name: `${normalized.first_name ?? ""} ${normalized.last_name ?? ""}`,
+    email: `<a href="mailto:${normalized.email_address}" style="color:#b80d0d;text-decoration:none;"><strong>${normalized.email_address}</strong></a>`,
+    phone: normalized.cell_phone_number
+      ? `<a href="tel:${normalized.cell_phone_number}" style="color:#b80d0d;text-decoration:none;"><strong>${normalized.cell_phone_number}</strong></a>`
+      : "",
+    city: `<strong>${normalized.city ?? ""}</strong>`,
+    state: `<strong>${normalized.state ?? ""}</strong>`,
+    action: `
+      <a href="https://tradepilot.doorplaceusa.com/dashboard/partners"
+         style="
+           display:inline-block;
+           margin-top:12px;
+           padding:10px 16px;
+           background:#b80d0d;
+           color:#ffffff;
+           text-decoration:none;
+           border-radius:6px;
+           font-weight:600;
+           font-size:14px;
+         ">
+        View Partner
+      </a>
+    `,
+  },
+});
+
 
     /* ============================
        TRADEPILOT NOTIFICATION

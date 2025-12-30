@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendAdminNotification } from "@/lib/sendAdminNotification";
+import nodemailer from "nodemailer";
 
 
 
@@ -215,35 +216,23 @@ if (leadError || !leadData) {
   return new NextResponse("Internal Server Error", { status: 500 });
 }
 
-// ADMIN EMAIL ALERT
+// ===============================
+// ADMIN EMAIL ALERT (FINAL)
+// ===============================
+
 await sendAdminNotification({
   type: "lead",
-  title: "New Lead Submitted2",
+  title: "New Lead Submitte!",
   details: {
     lead_id: leadData.lead_id,
     name: `${leadData.first_name ?? ""} ${leadData.last_name ?? ""}`,
-    email: `<a href="mailto:${leadData.email}" style="color:#b80d0d; text-decoration:none;"><strong>${leadData.email}</strong></a>`,
-    phone: `<a href="tel:${leadData.phone}" style="color:#b80d0d; text-decoration:none;"><strong>${leadData.phone}</strong></a>`,
-    city: `<strong>${leadData.city}</strong>`,
-    state: `<strong>${leadData.state}</strong>`,
-    action: `
-      <a href="https://tradepilot.doorplaceusa.com/dashboard/leads"
-         style="
-           display:inline-block;
-           margin-top:12px;
-           padding:10px 16px;
-           background:#b80d0d;
-           color:#ffffff;
-           text-decoration:none;
-           border-radius:6px;
-           font-weight:600;
-           font-size:14px;
-         ">
-        View Lead
-      </a>
-    `
+    email: `${leadData.email}"${leadData.email}`,
+    phone: `${leadData.phone}"${leadData.phone}`,
+    city: `${leadData.city}>`,
+    state: `${leadData.state}>`,
   },
 });
+
 
 
 
@@ -277,7 +266,7 @@ if (submissionType === "partner_order") {
       {
         type: "new_lead",
         reference_id: lead_id,
-        title: "New Lead Submitted1",
+        title: "New Lead Submitted",
         message: `New lead from ${firstName ?? ""} ${lastName ?? ""}`,
         read: false,
       },

@@ -42,30 +42,87 @@ async function sendAdminEmail(payload: {
   const SMTP_FROM = requireEnv("SMTP_FROM");
   const ADMIN_ALERT_EMAIL = requireEnv("ADMIN_ALERT_EMAIL");
 
-  const rows = payload.details
-    ? Object.entries(payload.details)
-        .map(
-          ([k, v]) => `
-          <tr>
-            <td style="padding:6px 10px;font-weight:bold;">${k}</td>
-            <td style="padding:6px 10px;">${v ?? ""}</td>
-          </tr>`
-        )
-        .join("")
-    : "";
-
   const html = `
-    <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;">
-      <h2 style="color:#b80d0d;">🚨 TradePilot Admin Alert</h2>
-      <p><strong>Type:</strong> ${payload.type.toUpperCase()}</p>
-      <p><strong>Summary:</strong> ${payload.title}</p>
+<div style="font-family: Arial, Helvetica, sans-serif; background:#f6f7f9; padding:24px;">
+  <div style="max-width:640px; margin:0 auto; background:#ffffff; border-radius:8px; overflow:hidden; border:1px solid #e0e0e0;">
+
+    <!-- Header -->
+    <div style="background:#b80d0d; color:#ffffff; padding:16px 20px;">
+      <h2 style="margin:0; font-size:20px;">🚨 TradePilot Admin Alert</h2>
+    </div>
+
+    <!-- Body -->
+    <div style="padding:20px;">
+      <p style="margin:0 0 8px 0; font-size:14px;">
+        <strong>Event Type:</strong>
+        <span style="text-transform:uppercase;">${payload.type}</span>
+      </p>
+
+      <p style="margin:0 0 16px 0; font-size:16px;">
+        <strong>${payload.title}</strong>
+      </p>
+
       ${
-        rows
-          ? `<table border="1" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin-top:12px;">${rows}</table>`
+        payload.details
+          ? `
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse; font-size:14px;">
+            ${Object.entries(payload.details)
+              .map(([key, value]) => {
+                let displayValue = value ?? "";
+
+                if (key === "email") {
+                  displayValue = `<a href="mailto:${value}" style="color:#b80d0d; text-decoration:none; font-weight:600;">${value}</a>`;
+                }
+
+                if (key === "phone") {
+                  displayValue = `<a href="tel:${value}" style="color:#b80d0d; text-decoration:none; font-weight:600;">${value}</a>`;
+                }
+
+                return `
+                <tr>
+                  <td style="padding:8px 6px; color:#555; width:40%; text-transform:capitalize;">
+                    ${key.replace(/_/g, " ")}
+                  </td>
+                  <td style="padding:8px 6px; color:#000; font-weight:600;">
+                    ${displayValue}
+                  </td>
+                </tr>
+                `;
+              })
+              .join("")}
+          </table>
+          `
           : ""
       }
+
+      <!-- Button -->
+      <div style="margin-top:24px; text-align:center;">
+        <a
+          href="https://tradepilot.doorplaceusa.com/dashboard/leads"
+          target="_blank"
+          style="
+            display:inline-block;
+            background:#b80d0d;
+            color:#ffffff;
+            padding:12px 20px;
+            border-radius:6px;
+            text-decoration:none;
+            font-weight:600;
+            font-size:14px;
+          "
+        >
+          View Lead
+        </a>
+      </div>
+
+      <p style="margin-top:20px; font-size:13px; color:#666; text-align:center;">
+        Log in to <strong>TradePilot</strong> to review full details.
+      </p>
     </div>
-  `;
+
+  </div>
+</div>
+`;
 
   await transporter.sendMail({
     from: SMTP_FROM,
@@ -74,6 +131,7 @@ async function sendAdminEmail(payload: {
     html,
   });
 }
+
 
 /* ======================================================
    POST — DIRECT / TEST SEND

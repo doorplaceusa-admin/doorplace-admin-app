@@ -222,12 +222,29 @@ await sendAdminNotification({
   details: {
     lead_id: leadData.lead_id,
     name: `${leadData.first_name ?? ""} ${leadData.last_name ?? ""}`,
-    email: leadData.email,
-    phone: leadData.phone,
-    city: leadData.city,
-    state: leadData.state,
+    email: `<a href="mailto:${leadData.email}" style="color:#b80d0d; text-decoration:none;"><strong>${leadData.email}</strong></a>`,
+    phone: `<a href="tel:${leadData.phone}" style="color:#b80d0d; text-decoration:none;"><strong>${leadData.phone}</strong></a>`,
+    city: `<strong>${leadData.city}</strong>`,
+    state: `<strong>${leadData.state}</strong>`,
+    action: `
+      <a href="https://tradepilot.doorplaceusa.com/dashboard/leads"
+         style="
+           display:inline-block;
+           margin-top:12px;
+           padding:10px 16px;
+           background:#b80d0d;
+           color:#ffffff;
+           text-decoration:none;
+           border-radius:6px;
+           font-weight:600;
+           font-size:14px;
+         ">
+        View Lead
+      </a>
+    `
   },
 });
+
 
 
 

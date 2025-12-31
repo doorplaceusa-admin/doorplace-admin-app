@@ -217,8 +217,9 @@ if (leadError || !leadData) {
 }
 
 // ===============================
-// ADMIN EMAIL ALERT (FINAL)
+// ADMIN EMAIL ALERT FOR LEADS (FINAL)
 // ===============================
+console.log("🔥 ADMIN LEAD EMAIL TRIGGERED");
 
 await sendAdminNotification({
   type: "lead",

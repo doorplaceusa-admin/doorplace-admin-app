@@ -113,29 +113,11 @@ await sendAdminNotification({
       : "Partner Onboarding Updated",
   details: {
     partner_id: partner_id,
-    name: `${normalized.first_name ?? ""} ${normalized.last_name ?? ""}`,
-    email: `<a href="mailto:${normalized.email_address}" style="color:#b80d0d;text-decoration:none;"><strong>${normalized.email_address}</strong></a>`,
-    phone: normalized.cell_phone_number
-      ? `<a href="tel:${normalized.cell_phone_number}" style="color:#b80d0d;text-decoration:none;"><strong>${normalized.cell_phone_number}</strong></a>`
-      : "",
-    city: `<strong>${normalized.city ?? ""}</strong>`,
-    state: `<strong>${normalized.state ?? ""}</strong>`,
-    action: `
-      <a href="https://tradepilot.doorplaceusa.com/dashboard/partners"
-         style="
-           display:inline-block;
-           margin-top:12px;
-           padding:10px 16px;
-           background:#b80d0d;
-           color:#ffffff;
-           text-decoration:none;
-           border-radius:6px;
-           font-weight:600;
-           font-size:14px;
-         ">
-        View Partner
-      </a>
-    `,
+    name: `${normalized.first_name ?? ""}`,
+    email: `${normalized.email_address}`,
+    phone: `,${normalized.cell_phone_number??""}`,
+    city: `${normalized.city ?? ""}`,
+    state: `${normalized.state ?? ""}`,
   },
 });
 

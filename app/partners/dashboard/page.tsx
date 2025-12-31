@@ -1,18 +1,30 @@
+
+
 "use client";
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useSearchParams } from "next/navigation";
 
 /* ===============================
    TYPES
 ================================ */
 type Partner = {
   id: string;
-  partner_id: string;
+  partner_id: string | null;
   first_name: string | null;
   last_name: string | null;
   email_address: string | null;
+  phone: string | null;
+  business_name: string | null;
+  coverage_area: string | null;
+  preferred_contact: string | null;
+  sales_experience: string | null;
+  street: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
 };
 
 export default function PartnerDashboardPage() {
@@ -20,134 +32,156 @@ export default function PartnerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
 
-  // ✅ NEW: dashboard stats (wired to leads table)
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [editProfileItem, setEditProfileItem] = useState<Partner | null>(null);
+
   const [stats, setStats] = useState({
     totalLeads: 0,
     totalOrders: 0,
     totalCommission: 0,
   });
 
+  const searchParams = useSearchParams();
+
+  /* ===============================
+     SEARCH PARAM HANDLER
+  =============================== */
+  useEffect(() => {
+    const open = searchParams.get("editProfile");
+    if (open === "1" && partner) {
+      setEditProfileItem(partner);
+      setEditProfileOpen(true);
+    }
+  }, [searchParams, partner]);
+
   /* ===============================
      LOAD PARTNER
   =============================== */
-  async function loadPartner() {
-    setLoading(true);
+  useEffect(() => {
+    async function loadPartner() {
+      setLoading(true);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user?.email) {
+      if (!user?.email) {
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("partners")
+        .select(`
+          id,
+          partner_id,
+          first_name,
+          last_name,
+          email_address,
+          phone,
+          business_name,
+          coverage_area,
+          preferred_contact,
+          sales_experience,
+          street,
+          city,
+          state,
+          zip
+        `)
+        .eq("email_address", user.email)
+        .limit(1);
+
+      if (!error && data && data.length > 0) {
+        setPartner(data[0]);
+      }
+
       setLoading(false);
-      return;
     }
 
-    const { data } = await supabase
-      .from("partners")
-      .select("id, partner_id, first_name, last_name, email_address")
-      .eq("email_address", user.email)
-      .single();
-
-    if (data?.partner_id) {
-      setPartner(data);
-      loadDashboardStats(data.partner_id); // 👈 load real stats
-    } else {
-      setPartner(null);
-    }
-
-    setLoading(false);
-  }
+    loadPartner();
+  }, []);
 
   /* ===============================
      LOAD DASHBOARD STATS
-     (SAME LOGIC AS COMMISSIONS PAGE)
   =============================== */
-  async function loadDashboardStats(pid: string) {
-  const { data: rows } = await supabase
-    .from("leads")
-    .select("submission_type, swing_price, accessory_price, bonus_extra")
-    .eq("partner_id", pid);
-
-  if (!rows) return;
-
-  let totalLeads = 0;
-  let totalOrders = 0;
-  let totalCommission = 0;
-
-  rows.forEach((r: any) => {
-    const swing = Number(r.swing_price || 0);
-    const accessories = Number(r.accessory_price || 0);
-    const bonus = Number(r.bonus_extra || 0);
-
-    const base = swing + accessories;
-    const commission = Math.round(base * 0.12 * 100) / 100;
-
-    if (r.submission_type === "partner_order") {
-      totalOrders += 1;
-      totalCommission += commission + bonus; // ✅ FIX
-    } else {
-      totalLeads += 1;
-    }
-  });
-
-  setStats({
-    totalLeads,
-    totalOrders,
-    totalCommission,
-  });
-}
-
-
   useEffect(() => {
-    loadPartner();
-  }, []);
+    if (!partner?.partner_id) return;
+
+    async function loadDashboardStats() {
+      const { data: rows } = await supabase
+        .from("leads")
+        .select("submission_type, swing_price, accessory_price, bonus_extra")
+        .eq("partner_id", partner!.partner_id);
+
+      if (!rows) return;
+
+      let totalLeads = 0;
+      let totalOrders = 0;
+      let totalCommission = 0;
+
+      rows.forEach((r: any) => {
+        const swing = Number(r.swing_price || 0);
+        const accessories = Number(r.accessory_price || 0);
+        const bonus = Number(r.bonus_extra || 0);
+
+        const base = swing + accessories;
+        const commission = Math.round(base * 0.12 * 100) / 100;
+
+        if (r.submission_type === "partner_order") {
+          totalOrders += 1;
+          totalCommission += commission + bonus;
+        } else {
+          totalLeads += 1;
+        }
+      });
+
+      setStats({ totalLeads, totalOrders, totalCommission });
+    }
+
+    loadDashboardStats();
+  }, [partner?.partner_id]);
 
   /* ===============================
      GUARDS
   =============================== */
   if (loading) return <div className="p-6">Loading…</div>;
-
   if (!partner) {
-    return (
-      <div className="p-6 text-center">
-        <h2 className="text-xl font-bold text-red-700">
-          Partner Access Pending
-        </h2>
-        <p className="mt-2 text-gray-600">
-          Your partner account has not been activated yet.
-        </p>
-      </div>
-    );
-  }
+  return (
+    <div className="p-6">
+      <h2 className="text-xl font-bold text-red-700">
+        Partner record not found
+      </h2>
+      <p className="mt-2 text-gray-600">
+        Logged in email did not match a row in the partners table.
+      </p>
+    </div>
+  );
+}
+
 
   const swingTrackingLink = `https://doorplaceusa.com/pages/swing-partner-lead?pid=${partner.partner_id}`;
 
   function copyTrackingLink() {
-  const text = swingTrackingLink;
-
-  // Modern browsers (HTTPS, desktop)
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(() => {
-      alert("Tracking link copied!");
-    }).catch(() => {
-      fallbackCopy(text);
-    });
-  } else {
-    fallbackCopy(text);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard
+        .writeText(swingTrackingLink)
+        .then(() => alert("Tracking link copied!"))
+        .catch(() => fallbackCopy(swingTrackingLink));
+    } else {
+      fallbackCopy(swingTrackingLink);
+    }
   }
-}
 
-function fallbackCopy(text: string) {
-  const input = document.createElement("input");
-  input.value = text;
-  document.body.appendChild(input);
-  input.select();
-  input.setSelectionRange(0, 99999); // iOS fix
-  document.execCommand("copy");
-  document.body.removeChild(input);
-  alert("Tracking link copied!");
-}
-
+  function fallbackCopy(text: string) {
+    const input = document.createElement("input");
+    input.value = text;
+    document.body.appendChild(input);
+    input.select();
+    input.setSelectionRange(0, 99999);
+    document.execCommand("copy");
+    document.body.removeChild(input);
+    alert("Tracking link copied!");
+  }
 
   /* ===============================
      RENDER
@@ -164,7 +198,7 @@ function fallbackCopy(text: string) {
         </p>
       </div>
 
-      {/* SUMMARY CARDS — NOW LIVE DATA */}
+      {/* STATS */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <Card label="Total Leads" value={stats.totalLeads} />
         <Card label="Total Orders" value={stats.totalOrders} />
@@ -190,16 +224,14 @@ function fallbackCopy(text: string) {
         {showVideo && (
           <div className="p-4 bg-white space-y-4">
             <div className="aspect-video bg-black rounded overflow-hidden">
-  <video
-    src="https://cdn.shopify.com/videos/c/o/v/3cb96a79231f4f72891a5d6d4b279c7b.mp4"
-    controls
-    playsInline
-    preload="metadata"
-    className="w-full h-full object-contain"
-  />
-</div>
-
-
+              <video
+                src="https://cdn.shopify.com/videos/c/o/v/3cb96a79231f4f72891a5d6d4b279c7b.mp4"
+                controls
+                playsInline
+                preload="metadata"
+                className="w-full h-full object-contain"
+              />
+            </div>
             <p className="text-sm text-gray-600">
               This video explains how to earn commissions, how to use your
               tracking link, and which partner path is best for you.
@@ -233,22 +265,11 @@ function fallbackCopy(text: string) {
           </div>
 
           <ul className="text-sm text-gray-600 list-disc pl-5 space-y-1">
-            <li>
-              Share this link anywhere — Facebook, Instagram, TikTok, text,
-              flyers.
-            </li>
-            <li>
-              Leads submitted through this link are tracked to your Partner ID.
-            </li>
-            <li>
-              If a swing is purchased, you earn a tracking-link commission.
-            </li>
-            <li>
-              Track all activity in your Commission Tracker.
-            </li>
-            <li>
-              You’ll receive an email notification when a form is submitted.
-            </li>
+            <li>Share this link anywhere — Facebook, Instagram, TikTok, text, flyers.</li>
+            <li>Leads submitted through this link are tracked to your Partner ID.</li>
+            <li>If a swing is purchased, you earn a tracking-link commission.</li>
+            <li>Track all activity in your Commission Tracker.</li>
+            <li>You’ll receive an email notification when a form is submitted.</li>
           </ul>
         </div>
       </div>
@@ -262,6 +283,36 @@ function fallbackCopy(text: string) {
         <ActionButton href="/partners/leads" label="My Leads" />
         <ActionButton href="/partners/help" label="Help & Docs" />
       </div>
+
+      {/* EDIT PROFILE MODAL */}
+      {editProfileOpen && editProfileItem && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded max-w-md w-full p-6 space-y-3">
+            <h2 className="text-xl font-bold">My Profile</h2>
+
+            <input className="border w-full px-3 py-2" placeholder="First Name" value={editProfileItem.first_name || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,first_name:e.target.value})}/>
+            <input className="border w-full px-3 py-2" placeholder="Last Name" value={editProfileItem.last_name || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,last_name:e.target.value})}/>
+            <input className="border w-full px-3 py-2" placeholder="Phone" value={editProfileItem.phone || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,phone:e.target.value})}/>
+            <input className="border w-full px-3 py-2" placeholder="Business Name" value={editProfileItem.business_name || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,business_name:e.target.value})}/>
+            <input className="border w-full px-3 py-2" placeholder="Coverage Area" value={editProfileItem.coverage_area || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,coverage_area:e.target.value})}/>
+            <input className="border w-full px-3 py-2" placeholder="Preferred Contact" value={editProfileItem.preferred_contact || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,preferred_contact:e.target.value})}/>
+            <input className="border w-full px-3 py-2" placeholder="Sales Experience" value={editProfileItem.sales_experience || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,sales_experience:e.target.value})}/>
+            <input className="border w-full px-3 py-2" placeholder="Street" value={editProfileItem.street || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,street:e.target.value})}/>
+            <input className="border w-full px-3 py-2" placeholder="City" value={editProfileItem.city || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,city:e.target.value})}/>
+            <input className="border w-full px-3 py-2" placeholder="State" value={editProfileItem.state || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,state:e.target.value})}/>
+            <input className="border w-full px-3 py-2" placeholder="Zip" value={editProfileItem.zip || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,zip:e.target.value})}/>
+
+            <div className="flex gap-2 pt-2">
+              <button className="bg-red-700 text-white px-4 py-2 rounded flex-1" onClick={async ()=>{
+                await supabase.from("partners").update(editProfileItem).eq("id",editProfileItem.id);
+                setPartner(editProfileItem);
+                setEditProfileOpen(false);
+              }}>Save</button>
+              <button className="bg-gray-300 px-4 py-2 rounded flex-1" onClick={()=>setEditProfileOpen(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -288,3 +339,4 @@ function ActionButton({ href, label }: any) {
     </a>
   );
 }
+

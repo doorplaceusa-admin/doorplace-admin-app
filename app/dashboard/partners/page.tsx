@@ -55,6 +55,9 @@ export default function PartnersPage() {
 
   const [viewItem, setViewItem] = useState<Partner | null>(null);
   const [editItem, setEditItem] = useState<Partner | null>(null);
+  const [viewProfileOpen, setViewProfileOpen] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+
 
   /* ===== BULK REPAIR ===== */
   const [repairRunning, setRepairRunning] = useState(false);

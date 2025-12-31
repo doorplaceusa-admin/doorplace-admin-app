@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 /* ======================
-   DASHBOARD LAYOUT
+   DASHBOARD LAYOUT (ADMIN ONLY)
 ====================== */
 
 export default function DashboardLayout({
@@ -38,13 +38,34 @@ export default function DashboardLayout({
   const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
+    async function checkAccess() {
+      // 1. Get session
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      if (!sessionData.session) {
         router.replace("/login");
-      } else {
-        setLoading(false);
+        return;
       }
-    });
+
+      const user = sessionData.session.user;
+
+      // 2. Fetch role from profiles
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      // 3. Block non-admins
+      if (error || !profile || profile.role !== "admin") {
+        router.replace("/partners/dashboard");
+        return;
+      }
+
+      setLoading(false);
+    }
+
+    checkAccess();
   }, [router]);
 
   // close profile dropdown when clicking outside
@@ -85,33 +106,19 @@ export default function DashboardLayout({
           <NavLink href="/dashboard/orders" icon={<Package size={18} />} label="Orders" />
           <NavLink href="/dashboard/partners" icon={<Handshake size={18} />} label="Partners" />
           <NavLink
-            href="/dashboard/partners/commissions" icon={<DollarSign size={18} />} label="Commissions"
+            href="/dashboard/partners/commissions"
+            icon={<DollarSign size={18} />}
+            label="Commissions"
           />
-          <NavLink
-            href="/dashboard/receipts"
-            icon={<Building2 size={18} />}
-            label="Receipts"
-          />
-          <NavLink
-            href="/dashboard/invoices"
-            icon={<Building2 size={18} />}
-            label="Invoices"
-          />
-          <NavLink
-            href="/dashboard/iplum"
-            icon={<Building2 size={18} />}
-            label="Iplum"
-          />
+          <NavLink href="/dashboard/receipts" icon={<Building2 size={18} />} label="Receipts" />
+          <NavLink href="/dashboard/invoices" icon={<Building2 size={18} />} label="Invoices" />
+          <NavLink href="/dashboard/iplum" icon={<Building2 size={18} />} label="Iplum" />
           <NavLink
             href="/dashboard/admin-partner-resources"
             icon={<Building2 size={18} />}
             label="Partner Resource Panel"
           />
-          <NavLink
-            href="/dashboard/companies"
-            icon={<Building2 size={18} />}
-            label="Companies"
-          />
+          <NavLink href="/dashboard/companies" icon={<Building2 size={18} />} label="Companies" />
           <NavLink href="/dashboard/settings" icon={<Settings size={18} />} label="Settings" />
         </nav>
       </aside>
@@ -171,6 +178,7 @@ export default function DashboardLayout({
     </div>
   );
 }
+
 
 /* ======================
    MOBILE BOTTOM NAV

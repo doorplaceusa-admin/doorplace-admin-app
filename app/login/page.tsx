@@ -16,12 +16,8 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    // 1. Sign in
     const { data, error: authError } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      await supabase.auth.signInWithPassword({ email, password });
 
     if (authError || !data.user) {
       setError(authError?.message || "Login failed");
@@ -29,20 +25,23 @@ export default function LoginPage() {
       return;
     }
 
-    // 2. Check PARTNERS table by email
-    const { data: partner, error: partnerError } = await supabase
-      .from("partners")
-      .select("id")
-      .eq("email_address", email)
-      .maybeSingle();
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", data.user.id)
+      .single();
 
-    // 3. Route based on role
-    if (partner && !partnerError) {
-      // ✅ Partner
+    if (profileError || !profile?.role) {
+      router.push("/pending");
+      return;
+    }
+
+    if (profile.role === "admin") {
+      router.push("/dashboard");
+    } else if (profile.role === "partner") {
       router.push("/partners/dashboard");
     } else {
-      // ✅ Admin
-      router.push("/dashboard");
+      router.push("/pending");
     }
 
     router.refresh();
@@ -50,55 +49,39 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-200">
-        {/* Header */}
-        <div className="text-center px-6 pt-8 pb-4">
-          <h1 className="text-3xl font-bold text-red-700">TradePilot</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Powered by Doorplace USA
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="w-full max-w-md bg-white rounded-xl shadow border p-6">
+        <h1 className="text-2xl font-bold text-red-700 mb-4">TradePilot</h1>
 
-        {/* Divider */}
-        <div className="h-px bg-gray-200 mx-6 mb-6" />
+        {error && (
+          <div className="mb-3 text-sm text-red-600 bg-red-50 p-2 rounded">
+            {error}
+          </div>
+        )}
 
-        {/* Form */}
-        <div className="px-6 pb-8">
-          {error && (
-            <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded p-2">
-              {error}
-            </div>
-          )}
+        <input
+          className="w-full p-3 border rounded mb-3"
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Email address
-          </label>
-          <input
-            className="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-red-600"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+        <input
+          className="w-full p-3 border rounded mb-4"
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Password
-          </label>
-          <input
-            className="w-full p-3 border rounded-lg mb-6 focus:outline-none focus:ring-2 focus:ring-red-600"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
-          <button
-            onClick={handleLogin}
-            disabled={loading}
-            className="w-full bg-red-700 hover:bg-red-800 text-white font-semibold py-3 rounded-lg transition disabled:opacity-60"
-          >
-            {loading ? "Signing in…" : "Log In"}
-          </button>
-        </div>
+        <button
+          onClick={handleLogin}
+          disabled={loading}
+          className="w-full bg-red-700 text-white py-3 rounded disabled:opacity-60"
+        >
+          {loading ? "Signing in…" : "Log In"}
+        </button>
       </div>
     </div>
   );

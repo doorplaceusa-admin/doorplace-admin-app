@@ -29,18 +29,79 @@ export default function PartnerLayout({
 
   const [loading, setLoading] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
-
   const profileRef = useRef<HTMLDivElement>(null);
 
+  const [profilePartner, setProfilePartner] = useState<any>(null);
+  const [viewProfileOpen, setViewProfileOpen] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [viewItem, setViewItem] = useState<any>(null);
+
+
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        router.replace("/login");
-      } else {
-        setLoading(false);
-      }
-    });
-  }, [router]);
+  async function checkPartnerAccess() {
+
+    if (pathname === "/pending") {
+  setLoading(false);
+  return;
+}
+
+    const { data: sessionData } = await supabase.auth.getSession();
+
+    if (!sessionData.session) {
+      router.replace("/login");
+      return;
+    }
+
+    const userId = sessionData.session.user.id;
+
+    const { data: partner, error } = await supabase
+  .from("partners")
+  .select("*")
+  .eq("email_address", sessionData.session.user.email)
+  .single();
+
+
+    if (error || !partner) {
+      router.replace("/login");
+      return;
+    }
+
+    if (partner.status === "pending") {
+      router.replace("/pending");
+      return;
+    }
+
+    setProfilePartner(partner);
+    setLoading(false);
+  }
+
+  checkPartnerAccess();
+}, [router]);
+
+
+useEffect(() => {
+  async function loadPartnerProfile() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) return;
+
+    const userId = sessionData.session.user.id;
+
+    const { data, error } = await supabase
+      .from("partners")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (!error && data) {
+      setProfilePartner(data);
+    }
+  }
+
+  loadPartnerProfile();
+}, []);
+
+
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -111,16 +172,29 @@ export default function PartnerLayout({
             </button>
 
             {profileOpen && (
-              <div className="absolute left-0 mt-2 w-44 bg-white border rounded shadow z-50">
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
-                >
-                  <LogOut size={14} />
-                  Log out
-                </button>
-              </div>
-            )}
+  <div className="absolute left-0 mt-2 w-48 bg-white border rounded shadow z-50">
+    <button
+  onClick={() => {
+    router.push("/partners/dashboard?editProfile=1");
+    setProfileOpen(false);
+  }}
+  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+>
+  My Profile
+</button>
+
+
+    <button
+      onClick={handleLogout}
+      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2"
+    >
+      <LogOut size={14} />
+      Log out
+    </button>
+  </div>
+)}
+
+
           </div>
 
           <div className="flex flex-col text-center leading-tight">

@@ -12,6 +12,7 @@ import { useSearchParams } from "next/navigation";
 ================================ */
 type Partner = {
   id: string;
+  auth_user_id: string | null;
   partner_id: string | null;
   first_name: string | null;
   last_name: string | null;
@@ -71,29 +72,29 @@ export default function PartnerDashboardPage() {
       }
 
       const { data, error } = await supabase
-        .from("partners")
-        .select(`
-          id,
-          partner_id,
-          first_name,
-          last_name,
-          email_address,
-          phone,
-          business_name,
-          coverage_area,
-          preferred_contact,
-          sales_experience,
-          street,
-          city,
-          state,
-          zip
-        `)
-        .eq("email_address", user.email)
-        .limit(1);
+  .from("partners")
+  .select(`
+    id,
+    auth_user_id,
+    partner_id,
+    first_name,
+    last_name,
+    email_address,
+    phone,
+    business_name,
+    coverage_area,
+    preferred_contact,
+    sales_experience,
+    street,
+    city,
+    state,
+    zip
+  `)
+  .eq("auth_user_id", user.id)
+  .single(); // ✅ IMPORTANT
 
-      if (!error && data && data.length > 0) {
-        setPartner(data[0]);
-      }
+
+
 
       setLoading(false);
     }
@@ -105,41 +106,43 @@ export default function PartnerDashboardPage() {
      LOAD DASHBOARD STATS
   =============================== */
   useEffect(() => {
-    if (!partner?.partner_id) return;
+  if (!partner) return;
 
-    async function loadDashboardStats() {
-      const { data: rows } = await supabase
-        .from("leads")
-        .select("submission_type, swing_price, accessory_price, bonus_extra")
-        .eq("partner_id", partner!.partner_id);
+  async function loadDashboardStats() {
+    const { data: rows } = await supabase
+      .from("leads")
+      .select("submission_type, swing_price, accessory_price, bonus_extra")
+      .eq("partner_id", partner!.partner_id);
+ // ✅ CORRECT KEY
 
-      if (!rows) return;
+    if (!rows) return;
 
-      let totalLeads = 0;
-      let totalOrders = 0;
-      let totalCommission = 0;
+    let totalLeads = 0;
+    let totalOrders = 0;
+    let totalCommission = 0;
 
-      rows.forEach((r: any) => {
-        const swing = Number(r.swing_price || 0);
-        const accessories = Number(r.accessory_price || 0);
-        const bonus = Number(r.bonus_extra || 0);
+    rows.forEach((r: any) => {
+      const swing = Number(r.swing_price || 0);
+      const accessories = Number(r.accessory_price || 0);
+      const bonus = Number(r.bonus_extra || 0);
 
-        const base = swing + accessories;
-        const commission = Math.round(base * 0.12 * 100) / 100;
+      const base = swing + accessories;
+      const commission = Math.round(base * 0.12 * 100) / 100;
 
-        if (r.submission_type === "partner_order") {
-          totalOrders += 1;
-          totalCommission += commission + bonus;
-        } else {
-          totalLeads += 1;
-        }
-      });
+      if (r.submission_type === "partner_order") {
+        totalOrders++;
+        totalCommission += commission + bonus;
+      } else {
+        totalLeads++;
+      }
+    });
 
-      setStats({ totalLeads, totalOrders, totalCommission });
-    }
+    setStats({ totalLeads, totalOrders, totalCommission });
+  }
 
-    loadDashboardStats();
-  }, [partner?.partner_id]);
+  loadDashboardStats();
+}, [partner]);
+
 
   /* ===============================
      GUARDS
@@ -152,7 +155,8 @@ export default function PartnerDashboardPage() {
         Partner record not found
       </h2>
       <p className="mt-2 text-gray-600">
-        Logged in email did not match a row in the partners table.
+        Partner record found, but dashboard data is not yet linked.
+
       </p>
     </div>
   );

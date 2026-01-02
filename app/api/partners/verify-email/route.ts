@@ -3,14 +3,15 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://tradepilot.doorplaceusa.com";
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const token = searchParams.get("token");
 
   if (!token) {
-    return NextResponse.redirect(
-      new URL("/login?error=invalid_token", req.url)
-    );
+    return NextResponse.redirect(`${SITE_URL}/login?error=invalid_token`);
   }
 
   const { data: partner } = await supabaseAdmin
@@ -20,9 +21,7 @@ export async function GET(req: Request) {
     .maybeSingle();
 
   if (!partner) {
-    return NextResponse.redirect(
-      new URL("/login?error=expired_token", req.url)
-    );
+    return NextResponse.redirect(`${SITE_URL}/login?error=expired_token`);
   }
 
   await supabaseAdmin
@@ -33,5 +32,5 @@ export async function GET(req: Request) {
     })
     .eq("id", partner.id);
 
-  return NextResponse.redirect(new URL("/pending", req.url));
+  return NextResponse.redirect(`${SITE_URL}/pending?verified=true`);
 }

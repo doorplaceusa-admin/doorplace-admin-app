@@ -1,5 +1,3 @@
-
-
 "use client";
 export const dynamic = "force-dynamic";
 
@@ -20,9 +18,9 @@ type Partner = {
   phone: string | null;
   business_name: string | null;
   coverage_area: string | null;
-  preferred_contact: string | null;
+  preferred_contact_method: string | null;
   sales_experience: string | null;
-  street: string | null;
+  street_address: string | null;
   city: string | null;
   state: string | null;
   zip: string | null;
@@ -42,6 +40,8 @@ export default function PartnerDashboardPage() {
     totalCommission: 0,
   });
 
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const searchParams = useSearchParams();
 
   /* ===============================
@@ -56,46 +56,62 @@ export default function PartnerDashboardPage() {
   }, [searchParams, partner]);
 
   /* ===============================
-     LOAD PARTNER
+     LOAD PARTNER  ✅ (THIS IS THE WORKING PART)
   =============================== */
   useEffect(() => {
     async function loadPartner() {
       setLoading(true);
+      setLoadError(null);
 
       const {
         data: { user },
+        error: userErr,
       } = await supabase.auth.getUser();
 
-      if (!user?.email) {
+      if (userErr) {
+        setLoadError(userErr.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!user?.id) {
+        setLoadError("No authenticated user found.");
         setLoading(false);
         return;
       }
 
       const { data, error } = await supabase
-  .from("partners")
-  .select(`
-    id,
-    auth_user_id,
-    partner_id,
-    first_name,
-    last_name,
-    email_address,
-    phone,
-    business_name,
-    coverage_area,
-    preferred_contact,
-    sales_experience,
-    street,
-    city,
-    state,
-    zip
-  `)
-  .eq("auth_user_id", user.id)
-  .single(); // ✅ IMPORTANT
+        .from("partners")
+        .select(
+          `
+            id,
+            auth_user_id,
+            partner_id,
+            first_name,
+            last_name,
+            email_address,
+            phone,
+            business_name,
+            coverage_area,
+            preferred_contact_method,
+            sales_experience,
+            street_address,
+            city,
+            state,
+            zip
+          `
+        )
+        .eq("auth_user_id", user.id)
+        .single();
 
+      if (error) {
+        setPartner(null);
+        setLoadError(error.message);
+        setLoading(false);
+        return;
+      }
 
-
-
+      setPartner(data);
       setLoading(false);
     }
 
@@ -103,19 +119,20 @@ export default function PartnerDashboardPage() {
   }, []);
 
   /* ===============================
-     LOAD DASHBOARD STATS
+     LOAD DASHBOARD STATS ✅ (NO "partner possibly null")
   =============================== */
   useEffect(() => {
-  if (!partner) return;
+  if (!partner?.partner_id) return;
+
+  const partnerId = partner.partner_id;
 
   async function loadDashboardStats() {
-    const { data: rows } = await supabase
+    const { data: rows, error } = await supabase
       .from("leads")
       .select("submission_type, swing_price, accessory_price, bonus_extra")
-      .eq("partner_id", partner!.partner_id);
- // ✅ CORRECT KEY
+      .eq("partner_id", partnerId);
 
-    if (!rows) return;
+    if (error || !rows) return;
 
     let totalLeads = 0;
     let totalOrders = 0;
@@ -148,22 +165,24 @@ export default function PartnerDashboardPage() {
      GUARDS
   =============================== */
   if (loading) return <div className="p-6">Loading…</div>;
+
   if (!partner) {
-  return (
-    <div className="p-6">
-      <h2 className="text-xl font-bold text-red-700">
-        Partner record not found
-      </h2>
-      <p className="mt-2 text-gray-600">
-        Partner record found, but dashboard data is not yet linked.
+    return (
+      <div className="p-6">
+        <h2 className="text-xl font-bold text-red-700">Partner record not found</h2>
+        <p className="mt-2 text-gray-600">
+          This logged-in user does not have a matching row in <b>partners</b> by <b>auth_user_id</b>.
+        </p>
+        {loadError && (
+          <p className="mt-3 text-sm text-gray-500">
+            Debug: <span className="font-mono">{loadError}</span>
+          </p>
+        )}
+      </div>
+    );
+  }
 
-      </p>
-    </div>
-  );
-}
-
-
-  const swingTrackingLink = `https://doorplaceusa.com/pages/swing-partner-lead?pid=${partner.partner_id}`;
+  const swingTrackingLink = `https://doorplaceusa.com/pages/swing-partner-lead?pid=${partner.partner_id ?? ""}`;
 
   function copyTrackingLink() {
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -194,9 +213,7 @@ export default function PartnerDashboardPage() {
     <div className="p-6 space-y-6">
       {/* HEADER */}
       <div>
-        <h1 className="text-2xl font-bold">
-          Welcome, {partner.first_name || "Partner"}
-        </h1>
+        <h1 className="text-2xl font-bold">Welcome, {partner.first_name || "Partner"}</h1>
         <p className="text-gray-600 text-sm">
           Partner ID: <span className="font-mono">{partner.partner_id}</span>
         </p>
@@ -237,8 +254,8 @@ export default function PartnerDashboardPage() {
               />
             </div>
             <p className="text-sm text-gray-600">
-              This video explains how to earn commissions, how to use your
-              tracking link, and which partner path is best for you.
+              This video explains how to earn commissions, how to use your tracking link, and which partner
+              path is best for you.
             </p>
           </div>
         )}
@@ -246,21 +263,12 @@ export default function PartnerDashboardPage() {
 
       {/* TRACKING LINK */}
       <div className="border rounded overflow-hidden">
-        <div className="bg-red-700 text-white px-4 py-3 font-bold">
-          Your Swing Tracking Link
-        </div>
+        <div className="bg-red-700 text-white px-4 py-3 font-bold">Your Swing Tracking Link</div>
 
         <div className="p-4 space-y-4">
-          <input
-            readOnly
-            value={swingTrackingLink}
-            className="w-full border rounded px-3 py-2 text-sm"
-          />
+          <input readOnly value={swingTrackingLink} className="w-full border rounded px-3 py-2 text-sm" />
 
-          <button
-            onClick={copyTrackingLink}
-            className="w-full bg-black text-white py-3 rounded font-bold"
-          >
+          <button onClick={copyTrackingLink} className="w-full bg-black text-white py-3 rounded font-bold">
             Copy Link
           </button>
 
@@ -294,25 +302,103 @@ export default function PartnerDashboardPage() {
           <div className="bg-white rounded max-w-md w-full p-6 space-y-3">
             <h2 className="text-xl font-bold">My Profile</h2>
 
-            <input className="border w-full px-3 py-2" placeholder="First Name" value={editProfileItem.first_name || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,first_name:e.target.value})}/>
-            <input className="border w-full px-3 py-2" placeholder="Last Name" value={editProfileItem.last_name || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,last_name:e.target.value})}/>
-            <input className="border w-full px-3 py-2" placeholder="Phone" value={editProfileItem.phone || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,phone:e.target.value})}/>
-            <input className="border w-full px-3 py-2" placeholder="Business Name" value={editProfileItem.business_name || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,business_name:e.target.value})}/>
-            <input className="border w-full px-3 py-2" placeholder="Coverage Area" value={editProfileItem.coverage_area || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,coverage_area:e.target.value})}/>
-            <input className="border w-full px-3 py-2" placeholder="Preferred Contact" value={editProfileItem.preferred_contact || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,preferred_contact:e.target.value})}/>
-            <input className="border w-full px-3 py-2" placeholder="Sales Experience" value={editProfileItem.sales_experience || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,sales_experience:e.target.value})}/>
-            <input className="border w-full px-3 py-2" placeholder="Street" value={editProfileItem.street || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,street:e.target.value})}/>
-            <input className="border w-full px-3 py-2" placeholder="City" value={editProfileItem.city || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,city:e.target.value})}/>
-            <input className="border w-full px-3 py-2" placeholder="State" value={editProfileItem.state || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,state:e.target.value})}/>
-            <input className="border w-full px-3 py-2" placeholder="Zip" value={editProfileItem.zip || ""} onChange={(e)=>setEditProfileItem({...editProfileItem,zip:e.target.value})}/>
+            <input
+              className="border w-full px-3 py-2"
+              placeholder="First Name"
+              value={editProfileItem.first_name || ""}
+              onChange={(e) => setEditProfileItem({ ...editProfileItem, first_name: e.target.value })}
+            />
+            <input
+              className="border w-full px-3 py-2"
+              placeholder="Last Name"
+              value={editProfileItem.last_name || ""}
+              onChange={(e) => setEditProfileItem({ ...editProfileItem, last_name: e.target.value })}
+            />
+            <input
+              className="border w-full px-3 py-2"
+              placeholder="Phone"
+              value={editProfileItem.phone || ""}
+              onChange={(e) => setEditProfileItem({ ...editProfileItem, phone: e.target.value })}
+            />
+            <input
+              className="border w-full px-3 py-2"
+              placeholder="Business Name"
+              value={editProfileItem.business_name || ""}
+              onChange={(e) => setEditProfileItem({ ...editProfileItem, business_name: e.target.value })}
+            />
+            <input
+              className="border w-full px-3 py-2"
+              placeholder="Coverage Area"
+              value={editProfileItem.coverage_area || ""}
+              onChange={(e) => setEditProfileItem({ ...editProfileItem, coverage_area: e.target.value })}
+            />
+            <input
+              className="border w-full px-3 py-2"
+              placeholder="Preferred Contact"
+              value={editProfileItem.preferred_contact_method || ""}
+              onChange={(e) => setEditProfileItem({ ...editProfileItem, preferred_contact_method: e.target.value })}
+            />
+            <input
+              className="border w-full px-3 py-2"
+              placeholder="Sales Experience"
+              value={editProfileItem.sales_experience || ""}
+              onChange={(e) => setEditProfileItem({ ...editProfileItem, sales_experience: e.target.value })}
+            />
+            <input
+              className="border w-full px-3 py-2"
+              placeholder="Street"
+              value={editProfileItem.street_address || ""}
+              onChange={(e) => setEditProfileItem({ ...editProfileItem, street_address: e.target.value })}
+            />
+            <input
+              className="border w-full px-3 py-2"
+              placeholder="City"
+              value={editProfileItem.city || ""}
+              onChange={(e) => setEditProfileItem({ ...editProfileItem, city: e.target.value })}
+            />
+            <input
+              className="border w-full px-3 py-2"
+              placeholder="State"
+              value={editProfileItem.state || ""}
+              onChange={(e) => setEditProfileItem({ ...editProfileItem, state: e.target.value })}
+            />
+            <input
+              className="border w-full px-3 py-2"
+              placeholder="Zip"
+              value={editProfileItem.zip || ""}
+              onChange={(e) => setEditProfileItem({ ...editProfileItem, zip: e.target.value })}
+            />
 
             <div className="flex gap-2 pt-2">
-              <button className="bg-red-700 text-white px-4 py-2 rounded flex-1" onClick={async ()=>{
-                await supabase.from("partners").update(editProfileItem).eq("id",editProfileItem.id);
-                setPartner(editProfileItem);
-                setEditProfileOpen(false);
-              }}>Save</button>
-              <button className="bg-gray-300 px-4 py-2 rounded flex-1" onClick={()=>setEditProfileOpen(false)}>Cancel</button>
+              <button
+                className="bg-red-700 text-white px-4 py-2 rounded flex-1"
+                onClick={async () => {
+                  // Keep update small & safe (don’t accidentally push auth_user_id / partner_id changes)
+                  const payload = {
+                    first_name: editProfileItem.first_name,
+                    last_name: editProfileItem.last_name,
+                    phone: editProfileItem.phone,
+                    business_name: editProfileItem.business_name,
+                    coverage_area: editProfileItem.coverage_area,
+                    preferred_contact: editProfileItem.preferred_contact_method,
+                    sales_experience: editProfileItem.sales_experience,
+                    street: editProfileItem.street_address,
+                    city: editProfileItem.city,
+                    state: editProfileItem.state,
+                    zip: editProfileItem.zip,
+                  };
+
+                  await supabase.from("partners").update(payload).eq("id", editProfileItem.id);
+
+                  setPartner({ ...partner, ...payload });
+                  setEditProfileOpen(false);
+                }}
+              >
+                Save
+              </button>
+              <button className="bg-gray-300 px-4 py-2 rounded flex-1" onClick={() => setEditProfileOpen(false)}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -335,12 +421,8 @@ function Card({ label, value }: any) {
 
 function ActionButton({ href, label }: any) {
   return (
-    <a
-      href={href}
-      className="block text-center bg-red-700 text-white py-3 rounded font-bold"
-    >
+    <a href={href} className="block text-center bg-red-700 text-white py-3 rounded font-bold">
       {label}
     </a>
   );
 }
-

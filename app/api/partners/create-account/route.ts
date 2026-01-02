@@ -7,8 +7,7 @@ export const runtime = "nodejs";
 
 /**
  * Generate Doorplace USA Partner ID
- * Matches onboarding logic exactly
- * Format: DP####### (7 digits, no dash)
+ * Format: DP####### (7 digits)
  */
 function generatePartnerID() {
   return "DP" + Math.floor(1000000 + Math.random() * 9000000);
@@ -42,19 +41,64 @@ export async function POST(req: Request) {
       );
     }
 
-    // CHECK IF EMAIL ALREADY EXISTS
-    const { data: existing } = await supabaseAdmin
-      .from("partners")
-      .select("id")
-      .eq("email_address", email_address)
-      .maybeSingle();
+    // CHECK IF PARTNER EXISTS BY EMAIL
+const { data: existingPartner } = await supabaseAdmin
+  .from("partners")
+  .select("id, auth_user_id")
+  .eq("email_address", email_address)
+  .maybeSingle();
 
-    if (existing) {
-      return NextResponse.json(
-        { error: "An account with this email already exists." },
-        { status: 409 }
-      );
-    }
+// CASE 1: Existing partner, NOT linked yet → LINK ACCOUNT
+if (existingPartner && !existingPartner.auth_user_id) {
+  await supabaseAdmin
+    .from("partners")
+    .update({
+      auth_user_id,
+      email_verify_sent_at: new Date().toISOString(),
+    })
+    .eq("id", existingPartner.id);
+
+  // send verification email (reuse your existing email logic)
+  const email_verify_token = crypto.randomUUID();
+
+  await supabaseAdmin
+    .from("partners")
+    .update({ email_verify_token })
+    .eq("id", existingPartner.id);
+
+  await sendEmail({
+    to: email_address,
+    subject: "Confirm your Doorplace USA partner account (TradePilot)",
+    html: `
+<p>Your TradePilot login has been linked to your existing Doorplace USA partner profile.</p>
+
+<p>Please confirm your email to activate access:</p>
+
+<p>
+  <a
+    href="https://tradepilot.doorplaceusa.com/api/partners/verify-email?token=${email_verify_token}"
+    style="display:inline-block;padding:12px 20px;background:#b80d0d;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;"
+  >
+    Confirm Email
+  </a>
+</p>
+`,
+  });
+
+  return NextResponse.json({
+    success: true,
+    linked_existing_partner: true,
+  });
+}
+
+// CASE 2: Existing partner already linked → STOP
+if (existingPartner?.auth_user_id) {
+  return NextResponse.json(
+    { error: "Account already exists. Please log in." },
+    { status: 409 }
+  );
+}
+
 
     // GENERATE UNIQUE PARTNER ID
     let partner_id: string | null = null;
@@ -81,15 +125,21 @@ export async function POST(req: Request) {
       );
     }
 
-    // GENERATE EMAIL VERIFICATION TOKEN
+    // ✅ AUTO-CREATE TRACKING LINK
+    const tracking_link =
+      `https://doorplaceusa.com/pages/swing-partner-lead?partner_id=${partner_id}`;
+
+    // EMAIL VERIFICATION TOKEN
     const email_verify_token = crypto.randomUUID();
 
-    // INSERT PARTNER
+    // INSERT PARTNER (WITH TRACKING LINK)
     const { data: partner, error } = await supabaseAdmin
       .from("partners")
       .insert({
         auth_user_id,
         partner_id,
+        tracking_link,
+
         first_name,
         last_name,
         email_address,
@@ -126,26 +176,11 @@ export async function POST(req: Request) {
       to: email_address,
       subject: "Confirm your Doorplace USA partner account (TradePilot)",
       html: `
-  <p>Your Doorplace USA partner account has been created.</p>
+<p>Your Doorplace USA partner account has been created.</p>
 
-<p>
-  <strong>TradePilot</strong> is the partner portal used by Doorplace USA.
-</p>
+<p><strong>TradePilot</strong> is the partner portal used by Doorplace USA.</p>
 
-<p>
-  This will be your home base as a partner — the place where you’ll log in to:
-</p>
-
-<ul>
-  <li>Complete onboarding</li>
-  <li>Submit and track orders</li>
-  <li>View commissions and payouts</li>
-  <li>Access partner resources and updates</li>
-</ul>
-
-<p>
-  Please confirm your email address to activate your account and continue:
-</p>
+<p>Please confirm your email address to activate your account:</p>
 
 <p>
   <a
@@ -156,21 +191,16 @@ export async function POST(req: Request) {
   </a>
 </p>
 
-<p style="margin-top:24px;font-size:13px;color:#555;">
-  If you did not request this account, you can safely ignore this email.
-</p>
-
 <p style="font-size:12px;color:#777;margin-top:30px;">
   TradePilot • Built by Doorplace USA
 </p>
-
 `,
-
     });
 
     return NextResponse.json({
       success: true,
       partner_id,
+      tracking_link,
     });
   } catch (err: any) {
     return NextResponse.json(

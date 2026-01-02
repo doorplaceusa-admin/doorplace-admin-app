@@ -28,9 +28,34 @@ export default function PartnerPendingPage() {
           </ul>
         </div>
 
-        <p className="text-sm text-gray-500 mb-6">
-          You’ll be notified once your account is approved.
-        </p>
+        {/* FAQ */}
+        <div className="border-t pt-4 mb-6 text-sm text-left text-gray-600">
+          <p className="font-semibold mb-2">Quick FAQ</p>
+
+          <p className="mb-1">
+            <strong>Do I need to do anything right now?</strong>
+            <br />
+            No — our team is reviewing your submission.
+          </p>
+
+          <p className="mb-1">
+            <strong>How long does approval take?</strong>
+            <br />
+            Most approvals are completed the same day.
+          </p>
+
+          <p>
+            <strong>Questions?</strong>
+            <br />
+            Email us at{" "}
+            <a
+              href="mailto:partners@doorplaceusa.com"
+              className="text-red-700 underline"
+            >
+              partners@doorplaceusa.com
+            </a>
+          </p>
+        </div>
 
         <Link
           href="/login"

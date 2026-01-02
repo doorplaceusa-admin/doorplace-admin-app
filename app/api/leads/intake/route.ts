@@ -63,7 +63,16 @@ for (const file of files) {
     let submissionType = formData.get("submission_type");
 
 // ✅ PARTNER ID (single source of truth)
-const partnerId = formData.get("partner_id") as string | null;
+const url = new URL(req.url);
+
+const partnerId =
+  (formData.get("partner_id") as string | null) ||
+  url.searchParams.get("partner_id");
+
+
+console.log("📱 submission_type:", submissionType);
+console.log("📱 partner_id:", partnerId);
+
 
 // 🔒 SAFETY NET — auto-detect partner tracking leads
 if (partnerId && submissionType === "general_inquiry") {

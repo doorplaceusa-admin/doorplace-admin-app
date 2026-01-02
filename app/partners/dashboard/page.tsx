@@ -182,7 +182,7 @@ export default function PartnerDashboardPage() {
     );
   }
 
-  const swingTrackingLink = `https://doorplaceusa.com/pages/swing-partner-lead?pid=${partner.partner_id ?? ""}`;
+  const swingTrackingLink = `https://doorplaceusa.com/pages/swing-partner-lead?partner_id=${partner.partner_id ?? ""}`;
 
   function copyTrackingLink() {
     if (navigator.clipboard && navigator.clipboard.writeText) {

@@ -19,6 +19,10 @@ type Partner = {
   partner_id: string;
   tracking_link: string;
 
+  status: "pending" | "active";
+  email_verified: boolean;
+  welcome_email_sent: boolean;
+
   business_name?: string;
   coverage_area?: string;
   preferred_contact_method?: string;
@@ -28,10 +32,8 @@ type Partner = {
   city?: string;
   state?: string;
   zip_code?: string;
-
-  shopify_synced?: boolean;
-  approval_email_sent?: boolean;
 };
+
 
 
 type BulkRepairResponse = {
@@ -104,7 +106,7 @@ export default function PartnersPage() {
   }, [rows, search, sort]);
 
   async function runAction(
-    action: "regenerate_partner_id" | "send_approval_email" | "sync_shopify_tags" | "delete_partner",
+    action: "regenerate_partner_id" | "send_welcome_email"|"delete_partner",
     partner: Partner
   ) {
     if (!confirm(`Run ${action.replaceAll("_", " ")} for ${partner.email_address}?`)) return;
@@ -150,6 +152,19 @@ export default function PartnersPage() {
     setEditItem(null);
     loadRows();
   }
+
+async function updatePartnerStatus(
+  partnerId: string,
+  status: "active" | "pending"
+) {
+  await supabase
+    .from("partners")
+    .update({ status })
+    .eq("id", partnerId);
+
+  loadRows();
+}
+
 
   if (loading) return <div className="p-6">Loading partners…</div>;
 
@@ -264,15 +279,29 @@ export default function PartnersPage() {
         );
 
       case "status":
-        return p.shopify_synced ? (
-          <span className="text-xs font-semibold text-green-700">
-            ● Approved
-          </span>
-        ) : (
-          <span className="text-xs font-semibold text-orange-700">
-            ● Not Approved
-          </span>
-        );
+  return (
+    <select
+      className={`text-xs font-semibold border rounded px-2 py-1 ${
+        p.status === "active"
+          ? "text-green-700"
+          : p.status === "pending"
+          ? "text-orange-700"
+          : "text-gray-500"
+      }`}
+      value={p.status}
+      onChange={(e) =>
+        updatePartnerStatus(
+          p.id,
+          e.target.value as "active" | "pending"
+        )
+      }
+    >
+      <option value="pending">● Pending</option>
+      <option value="active">● Active</option>
+    </select>
+  );
+
+
 
       case "actions":
         return (
@@ -283,18 +312,16 @@ export default function PartnersPage() {
               e.target.value = "";
               if (v === "view") setViewItem(p);
               if (v === "edit") setEditItem(p);
+              if (v === "welcome") runAction("send_welcome_email", p);
               if (v === "regen") runAction("regenerate_partner_id", p);
-              if (v === "email") runAction("send_approval_email", p);
-              if (v === "shopify") runAction("sync_shopify_tags", p);
               if (v === "delete") runAction("delete_partner", p);
             }}
           >
             <option value="">Select</option>
             <option value="view">View</option>
             <option value="edit">Edit</option>
+            <option value="welcome">Send Welcome Email</option>
             <option value="regen">Regenerate ID</option>
-            <option value="email">Send Approval Email</option>
-            <option value="shopify">Sync Shopify</option>
             <option value="delete">Delete</option>
           </select>
         );
@@ -352,10 +379,35 @@ export default function PartnersPage() {
 
         {/* SYSTEM STATUS */}
         <div>
-          <h3 className="font-semibold mb-1">System Status</h3>
-          <p><b>Shopify Synced:</b> {viewItem.shopify_synced ? "Yes" : "No"}</p>
-          <p><b>Approval Email Sent:</b> {viewItem.approval_email_sent ? "Yes" : "No"}</p>
-        </div>
+  <h3 className="font-semibold mb-1">System Status</h3>
+
+  <p>
+    <b>Partner Status:</b>{" "}
+    <span
+      className={
+        viewItem.status === "active"
+          ? "text-green-700 font-semibold"
+          : viewItem.status === "pending"
+          ? "text-orange-700 font-semibold"
+          : "text-gray-500 font-semibold"
+      }
+    >
+      {viewItem.status}
+    </span>
+  </p>
+
+  <p>
+    <b>Account Email Confirmed:</b>{" "}
+    {viewItem.email_verified ? "Yes" : "No"}
+  </p>
+  <p>
+  <b>Welcome Email Sent:</b>{" "}
+  {viewItem.welcome_email_sent ? "Yes" : "No"}
+</p>
+</div>
+
+
+
 
         {/* TRACKING LINK */}
         <div>
@@ -522,11 +574,33 @@ export default function PartnersPage() {
       />
 
       {/* READ-ONLY INFO */}
-      <div className="text-xs text-gray-500 mb-4 space-y-1">
-        <div>Partner ID: {editItem.partner_id}</div>
-        <div>Shopify Synced: {editItem.shopify_synced ? "Yes" : "No"}</div>
-        <div>Approval Email Sent: {editItem.approval_email_sent ? "Yes" : "No"}</div>
-      </div>
+      {/* READ-ONLY INFO */}
+<div className="text-xs text-gray-500 mb-4 space-y-1">
+  <div>
+    <b>Partner ID:</b> {editItem.partner_id}
+  </div>
+
+  <div>
+    <b>Partner Status:</b>{" "}
+    <span
+      className={
+        editItem.status === "active"
+          ? "text-green-700 font-semibold"
+          : editItem.status === "pending"
+          ? "text-orange-700 font-semibold"
+          : "text-gray-500 font-semibold"
+      }
+    >
+      {editItem.status}
+    </span>
+  </div>
+
+  <div>
+    <b>Account Email Confirmed:</b>{" "}
+    {editItem.email_verified ? "Yes" : "No"}
+  </div>
+</div>
+
 
       {/* ACTIONS */}
       <div className="flex gap-2">

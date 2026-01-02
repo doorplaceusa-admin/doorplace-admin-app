@@ -101,12 +101,28 @@ async function sendPartnerEmail(partner: any) {
 
   const htmlBody = `
 <div style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; line-height: 1.6; color:#000;">
+
   <h2 style="color:#b80d0d;">Welcome to Doorplace USA!</h2>
 
   <p>Hello,</p>
 
   <p>
     You're officially set up as a <strong>Doorplace USA Partner</strong>.
+  </p>
+
+  <p>
+    <strong>TradePilot</strong> is the partner portal where you can log in to view
+    your leads, orders, and commissions.
+  </p>
+
+  <p style="margin:16px 0;">
+    <a
+      href="https://tradepilot.doorplaceusa.com/login"
+      style="display:inline-block;padding:12px 20px;background:#b80d0d;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;"
+      target="_blank"
+    >
+      Log In to TradePilot
+    </a>
   </p>
 
   <p>
@@ -142,16 +158,19 @@ async function sendPartnerEmail(partner: any) {
   </p>
 
   <p>
-    You can track all leads, orders, and commissions through your Partner Dashboard
-    at any time.
+    You can track all leads, orders, and commissions through your
+    <strong>TradePilot Partner Dashboard</strong> at any time.
   </p>
 
   <p style="margin-top:24px;">
     Welcome aboard,<br>
-    <strong>Doorplace USA</strong>
+    <strong>Doorplace USA</strong><br>
+    <span style="font-size:12px;color:#777;">Powered by TradePilot</span>
   </p>
+
 </div>
 `;
+
 
 
   return transporter.sendMail({
@@ -309,6 +328,34 @@ if (action === "send_approval_email") {
 
   return NextResponse.json({ status: "email_sent_and_marked" });
 }
+
+/* ===============================
+   SEND WELCOME EMAIL
+=============================== */
+if (action === "send_welcome_email") {
+  const { data: partner, error } = await supabaseAdmin
+    .from("partners")
+    .select("*")
+    .eq("partner_id", partner_id)
+    .single();
+
+  if (error || !partner) {
+    return NextResponse.json({ error: "Partner not found" }, { status: 404 });
+  }
+
+  // reuse existing email sender
+  await sendPartnerEmail(partner);
+
+  await supabaseAdmin
+    .from("partners")
+    .update({
+      welcome_email_sent: true,
+    })
+    .eq("partner_id", partner_id);
+
+  return NextResponse.json({ status: "welcome_email_sent" });
+}
+
 
 
     /* ===============================

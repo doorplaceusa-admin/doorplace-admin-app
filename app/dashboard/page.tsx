@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+
 const brandRed = "#b80d0d";
 
 // ================= TYPES =================
@@ -35,6 +36,8 @@ export default function DashboardPage() {
     activePartners: 0,
     conversionRate: 0,
   });
+  const [totalPartners, setTotalPartners] = useState(0);
+
 
   const [recentLeads, setRecentLeads] = useState<RecentItem[]>([]);
   const [recentOrders, setRecentOrders] = useState<RecentItem[]>([]);
@@ -49,11 +52,21 @@ export default function DashboardPage() {
       const { data } = await supabase.auth.getSession();
       setSessionEmail(data.session?.user.email || "");
 
-      // ================= ACTIVE PARTNERS (ALREADY WIRED) =================
-      const { count: partnerCount } = await supabase
-        .from("partners")
-        .select("*", { count: "exact", head: true })
-        .eq("shopify_synced", true);
+      // ================= TOTAL PARTNERS =================
+const { count: totalPartnersCount } = await supabase
+  .from("partners")
+  .select("*", { count: "exact", head: true });
+  setTotalPartners(totalPartnersCount || 0);
+
+  
+  
+
+// ================= ACTIVATED PARTNERS (TradePilot) =================
+const { count: activatedPartners } = await supabase
+  .from("partners")
+  .select("*", { count: "exact", head: true })
+  .not("auth_user_id", "is", null);
+
 
       // ================= TOTAL LEADS (WIRE THIS) =================
       // Assumes your leads table is named "leads"
@@ -105,7 +118,7 @@ const { count: orderCount } = await supabase
         totalRevenue: 0,
         pendingCommissions: 0,
         paidCommissions: 0,
-        activePartners: partnerCount || 0,
+        activePartners: activatedPartners || 0,
         conversionRate: 0,
       });
 
@@ -163,6 +176,7 @@ const { count: orderCount } = await supabase
           <StatCard title="Total Leads" value={stats.totalLeads} />
         </div>
 
+
         <div
           onClick={() => (window.location.href = "/dashboard/orders")}
           style={{ cursor: "pointer" }}
@@ -174,8 +188,17 @@ const { count: orderCount } = await supabase
           onClick={() => (window.location.href = "/dashboard/partners")}
           style={{ cursor: "pointer" }}
         >
-          <StatCard title="Active Partners" value={stats.activePartners} />
+          <StatCard title="Activated Partners" value={stats.activePartners} />
         </div>
+
+        <div
+         onClick={() => (window.location.href = "/dashboard/partners")}
+         style={{ cursor: "pointer" }}
+         >
+          <StatCard title="Total Partners" value={totalPartners} />
+         </div>
+
+
 
         <div>
         <StatCard title="Pending Commissions" value={fmt(stats.pendingCommissions)} />

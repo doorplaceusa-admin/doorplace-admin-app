@@ -374,7 +374,7 @@ if (showLegalGate && partner) {
       <div className="border rounded overflow-hidden">
         <button
           onClick={() => setShowVideo(!showVideo)}
-          className="w-full flex justify-between items-center bg-red-700 text-white px-4 py-3 font-bold"
+          className="w-full flex justify-between items-center bg-gray-400 text-white px-4 py-3 font-bold"
         >
           <span>Welcome Video</span>
           <span className="text-xl">{showVideo ? "−" : "+"}</span>
@@ -424,6 +424,59 @@ if (showLegalGate && partner) {
         </div>
       </div>
 
+      {/* PAYOUTS / DIRECT DEPOSIT */}
+<div className="border rounded overflow-hidden">
+  <div className="bg-gray-400 text-white px-4 py-3 font-bold">
+    Payouts & Direct Deposit
+  </div>
+
+  <div className="p-4 space-y-3 bg-white">
+
+    {/* STATUS */}
+    {!stats.totalOrders ? (
+      <>
+        <div className="text-sm font-semibold text-gray-700">
+          Direct Deposit: Not Available Yet
+        </div>
+
+        <p className="text-sm text-gray-600">
+          Direct deposit will be available after your first completed sale.
+        </p>
+
+        <button
+          disabled
+          className="w-full py-3 rounded font-bold bg-gray-400 text-white cursor-not-allowed"
+        >
+          Set Up Direct Deposit (Available after first sale)
+        </button>
+      </>
+    ) : (
+      <>
+        <div className="text-sm font-semibold text-gray-700">
+          Direct Deposit: Setup Required
+        </div>
+
+        <p className="text-sm text-gray-600">
+          When your first payout is ready, you’ll receive a secure email from
+          our payment partner to set up direct deposit.
+        </p>
+
+        <button
+          className="w-full py-3 rounded font-bold bg-black text-white"
+          onClick={() =>
+            alert(
+              "Direct deposit setup is sent when your first payout is issued."
+            )
+          }
+        >
+          Set Up Direct Deposit
+        </button>
+      </>
+    )}
+  </div>
+</div>
+
+
       {/* ACTIONS */}
       <div className="grid grid-cols-2 gap-4">
         <ActionButton href="/partners/orders/new" label="Submit Swing Order" />
@@ -439,7 +492,7 @@ if (showLegalGate && partner) {
 <div className="border rounded overflow-hidden">
   <button
     onClick={() => setShowUploads(!showUploads)}
-    className="w-full flex justify-between items-center bg-red-700 text-white px-4 py-3 font-bold"
+    className="w-full flex justify-between items-center bg-gray-300 text-white px-4 py-3 font-bold"
   >
     <span>Upload Files</span>
     <span className="text-xl">{showUploads ? "−" : "+"}</span>
@@ -782,7 +835,7 @@ function Card({ label, value }: any) {
 
 function ActionButton({ href, label }: any) {
   return (
-    <a href={href} className="block text-center bg-red-700 text-white py-3 rounded font-bold">
+    <a href={href} className="block text-center bg-gray-400 text-white py-3 rounded font-bold">
       {label}
     </a>
   );

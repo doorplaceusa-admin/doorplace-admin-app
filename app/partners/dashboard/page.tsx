@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
+import PartnerMessages from "./components/PartnerMessages";
+
 
 
 
@@ -52,6 +54,7 @@ const [uploading, setUploading] = useState(false);
 const [uploadMessage, setUploadMessage] = useState<string | null>(null);
 const [showUploads, setShowUploads] = useState(false);
 const [selectedFile, setSelectedFile] = useState<File | null>(null);
+const [showMessages, setShowMessages] = useState(false);
 
 
 

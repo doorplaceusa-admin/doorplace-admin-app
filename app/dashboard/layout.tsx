@@ -4,6 +4,8 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { AdminPresenceProvider } from "@/app/components/presence/AdminPresenceContext";
+
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import {
@@ -34,8 +36,68 @@ export default function DashboardLayout({
 
   const [loading, setLoading] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [onlineStats, setOnlineStats] = useState({
+  partners: 0,
+  admins: 0,
+  total: 0,
+});
+
 
   const profileRef = useRef<HTMLDivElement>(null);
+
+
+useEffect(() => {
+  let channel: any;
+
+  const startPresence = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    channel = supabase.channel("tradepilot-presence", {
+      config: {
+        presence: { key: user.id },
+      },
+    });
+
+    channel.on("presence", { event: "sync" }, () => {
+      const state = channel.presenceState();
+      const users = Object.values(state).flat() as any[];
+
+      const partners = users.filter((u) => u.role === "partner").length;
+      const admins = users.filter((u) => u.role === "admin").length;
+
+      setOnlineStats({
+        partners,
+        admins,
+        total: users.length,
+      });
+    });
+
+    channel.subscribe(async (status: string) => {
+      if (status === "SUBSCRIBED") {
+        await channel.track({
+          user_id: user.id,
+          role: "admin",
+          online_at: new Date().toISOString(),
+        });
+      }
+    });
+  };
+
+  startPresence();
+
+  return () => {
+    if (channel) supabase.removeChannel(channel);
+  };
+}, []);
+
+useEffect(() => {
+  console.log("ONLINE STATS:", onlineStats);
+}, [onlineStats]);
+
 
   useEffect(() => {
     async function checkAccess() {
@@ -111,6 +173,7 @@ export default function DashboardLayout({
             label="Commissions"
           />
           <NavLink href="/dashboard/receipts" icon={<Building2 size={18} />} label="Receipts" />
+          <NavLink href="/dashboard/chat" icon={<Building2 size={18} />} label="Chat" />
           <NavLink href="/dashboard/partner-uploads" icon={<Building2 size={18} />} label="Partner Uploads" />
           <NavLink href="/dashboard/invoices" icon={<Building2 size={18} />} label="Invoices" />
           <NavLink href="/dashboard/iplum" icon={<Building2 size={18} />} label="Iplum" />
@@ -169,9 +232,16 @@ export default function DashboardLayout({
         </header>
 
         {/* ===== PAGE CONTENT ===== */}
-        <main className="flex-1 px-1 pb-24 md:px-6 md:pb-6 w-full overflow-x-hidden">
-          {children}
-        </main>
+       <AdminPresenceProvider value={onlineStats}>
+  <main className="flex-1 w-full flex justify-center pb-24 md:pb-6 overflow-x-hidden">
+    <div className="w-full max-w-6xl px-2 md:px-6">
+      {children}
+    </div>
+  </main>
+</AdminPresenceProvider>
+
+
+
 
         {/* ===== MOBILE BOTTOM NAV ===== */}
         <MobileBottomNav />

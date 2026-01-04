@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
+import PartnerMessages from "./dashboard/components/PartnerMessages";
+
 import { supabase } from "@/lib/supabaseClient";
 import {
   LayoutGrid,
@@ -39,7 +41,42 @@ export default function PartnerLayout({
   const [viewProfileOpen, setViewProfileOpen] = useState(false);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [viewItem, setViewItem] = useState<any>(null);
+  const [chatOpen, setChatOpen] = useState(false);
 
+
+useEffect(() => {
+  let channel: any;
+
+  const startPresence = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    channel = supabase.channel("tradepilot-presence", {
+      config: {
+        presence: { key: user.id },
+      },
+    });
+
+    channel.subscribe(async (status: string) => {
+      if (status === "SUBSCRIBED") {
+        await channel.track({
+          user_id: user.id,
+          role: "partner",
+          online_at: new Date().toISOString(),
+        });
+      }
+    });
+  };
+
+  startPresence();
+
+  return () => {
+    if (channel) supabase.removeChannel(channel);
+  };
+}, []);
 
 
   useEffect(() => {
@@ -170,9 +207,9 @@ useEffect(() => {
       </aside>
 
       {/* ===== MAIN CONTENT ===== */}
-      <div className="flex-1 flex flex-col">
+<div className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* ===== TOP BAR ===== */}
-        <header className="flex items-center justify-between px-4 py-3 bg-white shadow md:px-6">
+<header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-white border-b md:px-6">
           {/* PROFILE */}
           <div className="relative" ref={profileRef}>
             <button
@@ -220,13 +257,51 @@ useEffect(() => {
 
           
 
-          <button className="p-1 rounded hover:bg-gray-100">
-            <Bell size={22} />
-          </button>
+          <div className="flex flex-col items-center">
+  <button
+    onClick={() => {}}
+    className="p-1 rounded hover:bg-gray-100"
+  >
+    <Bell size={22} />
+  </button>
+
+  <button
+    onClick={() => setChatOpen(true)}
+    className="text-[11px] text-red-700 font-semibold leading-none mt-1"
+  >
+    Live Chat
+  </button>
+</div>
+
         </header>
 
+{chatOpen && profilePartner?.partner_id && (
+  <div className="fixed inset-0 z-50 bg-black/40 flex justify-end">
+    <div className="w-full max-w-md h-[92dvh] bg-white shadow-xl flex flex-col">
+      
+      {/* CHAT HEADER */}
+      <div className="flex items-center justify-between px-4 py-3 border-b">
+        <strong className="text-sm">Live Chat</strong>
+        <button
+          onClick={() => setChatOpen(false)}
+          className="text-gray-500 hover:text-black"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* CHAT BODY */}
+      <div className="flex-1 overflow-y-auto p-3">
+        <PartnerMessages partnerId={profilePartner.partner_id} />
+      </div>
+
+    </div>
+  </div>
+)}
+
+
         {/* ===== PAGE CONTENT ===== */}
-        <main className="flex-1 px-1 pb-24 md:px-6 md:pb-6 w-full overflow-x-hidden">
+<main className="flex-1 overflow-y-auto overflow-x-hidden px-1 pb-24 md:px-6 md:pb-6">
           {children}
         </main>
 

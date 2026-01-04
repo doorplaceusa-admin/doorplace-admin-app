@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useAdminPresence } from "@/app/components/presence/AdminPresenceContext";
+
 
 
 const brandRed = "#b80d0d";
@@ -43,6 +45,7 @@ export default function DashboardPage() {
   active: 0,
 });
 
+const { partners, admins, total } = useAdminPresence();
 
 
   const [recentLeads, setRecentLeads] = useState<RecentItem[]>([]);
@@ -181,9 +184,9 @@ const { count: orderCount } = await supabase
     sessionEmail === "thomas@doorplaceusa.com";
 
   return (
-    <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
-      {/* =================== HEADER =================== */}
-      <div className="mb-6">
+  <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4">
+    <div className="px-4 md:px-6 space-y-4">
+
         <h1 className="text-3xl font-bold" style={{ color: brandRed }}>
           TradePilot
         </h1>
@@ -197,7 +200,7 @@ const { count: orderCount } = await supabase
       
 
       {/* =================== SUMMARY CARDS =================== */}
-      <div style={gridFour}>
+      <div style={gridThree}>
         
         
         <div
@@ -218,13 +221,11 @@ const { count: orderCount } = await supabase
         <StatCard title="Pending Commissions" value={fmt(stats.pendingCommissions)} />
         </div>
 
-        <div>
-        <StatCard title="Paid Commissions" value={fmt(stats.paidCommissions)} />
-      </div>
+        
 
       </div>
 
-{/* =================== PARTNER FUNNEL SNAPSHOT =================== */}
+       {/* =================== PARTNER FUNNEL SNAPSHOT =================== */}
 <div className="bg-white p-4 rounded shadow mb-6">
   <h2 className="text-lg font-semibold mb-2" style={{ color: brandRed }}>
     Partner Funnel Snapshot
@@ -256,6 +257,23 @@ const { count: orderCount } = await supabase
         {partnerSnapshot.active}
       </div>
     </div>
+  </div>
+</div>
+
+<div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+  <div className="border rounded p-4 bg-white">
+    <div className="text-xs text-gray-500">Partners Online</div>
+    <div className="text-2xl font-bold text-green-600">{partners}</div>
+  </div>
+
+  <div className="border rounded p-4 bg-white">
+    <div className="text-xs text-gray-500">Admins Online</div>
+    <div className="text-2xl font-bold text-blue-600">{admins}</div>
+  </div>
+
+  <div className="border rounded p-4 bg-white">
+    <div className="text-xs text-gray-500">Total Online</div>
+    <div className="text-2xl font-bold">{total}</div>
   </div>
 </div>
 

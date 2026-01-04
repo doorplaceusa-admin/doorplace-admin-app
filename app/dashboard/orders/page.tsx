@@ -103,13 +103,13 @@ export default function OrdersPage() {
 
   swing_size: l.swing_size,
   wood_type: l.wood_type,
-  finish_stain: l.finish,
+  finish: l.finish,
   hanging_method: l.hanging_method,
 
   swing_price: l.swing_price,
-  accessory_total: l.accessory_price,
+  accessory_price: l.accessory_price,
   installation_fee: l.installation_fee,
-  delivery_fee: l.shipping_fee,
+  shipping_fee: l.shipping_fee,
 
   photos: l.photos || [],
   order_status: l.order_status || "new",
@@ -198,35 +198,36 @@ function calc(order: Order) {
 async function saveEdit() {
   if (!editItem) return;
 
-  const payload = {
-    // customer
-    customer_first_name: editItem.customer_first_name,
-    customer_last_name: editItem.customer_last_name,
-    customer_email: editItem.customer_email,
-    customer_phone: editItem.customer_phone,
-    customer_street_address: editItem.customer_street_address,
-    customer_city: editItem.customer_city,
-    customer_state: editItem.customer_state,
-    customer_zip: editItem.customer_zip_code,
+ const payload = {
+  // ✅ CUSTOMER — MUST MATCH LEADS TABLE
+  first_name: editItem.customer_first_name,
+  last_name: editItem.customer_last_name,
+  email: editItem.customer_email,
+  phone: editItem.customer_phone,
+  street_address: editItem.customer_street_address,
+  city: editItem.customer_city,
+  state: editItem.customer_state,
+  zip: editItem.customer_zip_code,
 
-    // swing
-    swing_size: editItem.swing_size,
-    wood_type: editItem.wood_type,
-    finish: editItem.finish,
-    hanging_method: editItem.hanging_method,
+  // swing
+  swing_size: editItem.swing_size,
+  wood_type: editItem.wood_type,
+  finish: editItem.finish,
+  hanging_method: editItem.hanging_method,
 
-    // pricing (MATCHES LEADS TABLE)
-    swing_price: toNum(editItem.swing_price),
-    accessory_price: toNum(editItem.accessory_price),
-    installation_fee: toNum(editItem.installation_fee),
-    shipping_fee: toNum(editItem.shipping_fee),
+  // pricing
+  swing_price: toNum(editItem.swing_price),
+  accessory_price: toNum(editItem.accessory_price),
+  installation_fee: toNum(editItem.installation_fee),
+  shipping_fee: toNum(editItem.shipping_fee),
 
-    // status
-    lead_status: editItem.order_status,
+  // status
+  order_status: editItem.order_status,
 
-    // bonus / residual
-    bonus_extra: toNum(editItem.bonus_extra),
-  };
+  // bonus
+  bonus_extra: toNum(editItem.bonus_extra),
+};
+
 
   const { error } = await supabase
     .from("leads")
@@ -330,7 +331,6 @@ async function saveEdit() {
     className="fixed inset-0 bg-black/40 flex items-start justify-center z-50 p-4"
     onClick={() => setViewItem(null)}
   >
-    {/* MODAL CONTAINER */}
     <div
       className="bg-white rounded max-w-3xl w-full max-h-[75vh] flex flex-col shadow-lg"
       onClick={(e) => e.stopPropagation()}
@@ -344,7 +344,6 @@ async function saveEdit() {
 
       {/* SCROLLABLE CONTENT */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
-
         {/* CUSTOMER */}
         <Section title="Customer">
           <Row
@@ -374,43 +373,53 @@ async function saveEdit() {
         <Section title="Swing Details">
           <Row label="Swing Size" value={viewItem.swing_size} />
           <Row label="Wood Type" value={viewItem.wood_type} />
-          <Row label="Finish / Stain" value={viewItem.finish} />
+          <Row label="Finish / Stain" value={(viewItem as any).finish ?? (viewItem as any).finish ?? ""} />
           <Row label="Hanging Method" value={viewItem.hanging_method} />
         </Section>
 
         {/* PRICING + COMMISSION */}
         {(() => {
-          const c = calc(viewItem);
+          // ✅ HARD FALLBACKS (fixes admin-mapped alias fields)
+          const swing = toNum(viewItem.swing_price);
+          const accessories = toNum((viewItem as any).accessory_price ?? (viewItem as any).accessory_total);
+          const install = toNum(viewItem.installation_fee);
+          const delivery = toNum((viewItem as any).shipping_fee ?? (viewItem as any).delivery_fee);
+          const bonusExtra = toNum(viewItem.bonus_extra);
+
+          const commissionBase = swing + accessories;
+          const commissionRate = 0.12;
+          const commission = Math.round(commissionBase * commissionRate * 100) / 100;
+
+          const residualRate = 0.05;
+          const residualCommission = Math.round(commissionBase * residualRate * 100) / 100;
+
+          const payoutTotal = Math.round((commission + bonusExtra) * 100) / 100;
+
           return (
             <Section title="Pricing & Commission">
-              <Row label="Swing Price" value={money(c.swing)} />
-              <Row label="Accessory Total" value={money(c.accessories)} />
-              <Row label="Installation Fee" value={money(c.install)} />
-              <Row label="Delivery Fee" value={money(c.delivery)} />
+              <Row label="Swing Price" value={money(swing)} />
+              <Row label="Accessory Total" value={money(accessories)} />
+              <Row label="Installation Fee" value={money(install)} />
+              <Row label="Delivery Fee" value={money(delivery)} />
 
               <div className="mt-2" />
 
-              <Row label="Commission Base" value={money(c.commissionBase)} />
-              <Row
-                label="Commission Rate"
-                value={`${Math.round(c.commissionRate * 100)}%`}
-              />
-              <Row label="Commission" value={money(c.commission)} />
+              <Row label="Commission Base" value={money(commissionBase)} />
+              <Row label="Commission Rate" value={`${Math.round(commissionRate * 100)}%`} />
+              <Row label="Commission" value={money(commission)} />
 
-              {/* RESIDUAL — DISPLAY ONLY */}
               <Row
                 label="Residual (5% – if repeat customer)"
-                value={money(c.residualCommission)}
+                value={money(residualCommission)}
                 muted
               />
 
-              {/* MANUAL BONUS */}
               <Row
                 label="Manual Bonus"
-                value={c.bonusExtra ? money(c.bonusExtra) : "—"}
+                value={bonusExtra ? money(bonusExtra) : "—"}
               />
 
-              <Row label="Total Payout" value={money(c.payoutTotal)} />
+              <Row label="Total Payout" value={money(payoutTotal)} />
             </Section>
           );
         })()}
@@ -428,13 +437,10 @@ async function saveEdit() {
                 />
               ))
             ) : (
-              <span className="text-gray-500 text-sm">
-                No photos uploaded
-              </span>
+              <span className="text-gray-500 text-sm">No photos uploaded</span>
             )}
           </div>
         </Section>
-
       </div>
 
       {/* FIXED FOOTER */}
@@ -444,6 +450,8 @@ async function saveEdit() {
           onClick={() => setViewItem(null)}
         >
           Close
+
+
         </button>
       </div>
     </div>
@@ -454,161 +462,220 @@ async function saveEdit() {
       {/* EDIT MODAL */}
       {editItem && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded max-w-3xl w-full max-h-[77vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">Edit Order — {editItem.order_id}</h2>
+    <div className="bg-white p-6 rounded max-w-3xl w-full max-h-[80vh] overflow-y-auto">
+      <h2 className="text-xl font-bold mb-4">
+        Edit Order — {editItem.order_id}
+      </h2>
 
-            {/* PARTNER (READ ONLY) */}
-            <div className="bg-gray-50 border rounded p-3 text-sm mb-4">
-              <div className="font-semibold mb-1">Partner (Read Only)</div>
-              <div>Partner Name: {editItem.partner_name || "—"}</div>
-              <div>Partner ID: {editItem.partner_id || "—"}</div>
+      {/* PARTNER (READ ONLY) */}
+      <div className="bg-gray-50 border rounded p-3 text-sm mb-4">
+        <div className="font-semibold mb-1">Partner (Read Only)</div>
+        <div>Partner Name: {editItem.partner_name || "—"}</div>
+        <div>Partner ID: {editItem.partner_id || "—"}</div>
+      </div>
+
+      {/* LIVE COMMISSION PREVIEW */}
+      {(() => {
+        const swing = toNum(editItem.swing_price);
+        const accessories = toNum(editItem.accessory_price);
+        const bonusExtra = toNum(editItem.bonus_extra);
+        const commissionBase = swing + accessories;
+        const commission = Math.round(commissionBase * 0.12 * 100) / 100;
+        const payoutTotal = Math.round((commission + bonusExtra) * 100) / 100;
+
+        return (
+          <div className="bg-white border rounded p-3 text-sm mb-4">
+            <div className="font-semibold mb-1">Live Commission Preview</div>
+            <div>Commission Base: {money(commissionBase)}</div>
+            <div>Commission (12%): {money(commission)}</div>
+            <div>Manual Bonus: {bonusExtra ? money(bonusExtra) : "—"}</div>
+            <div className="font-semibold">
+              Total Payout: {money(payoutTotal)}
             </div>
+          </div>
+        );
+      })()}
 
-            {/* LIVE CALCS */}
-            {(() => {
-              const c = calc(editItem);
-              return (
-                <div className="bg-white border rounded p-3 text-sm mb-4">
-                  <div className="font-semibold mb-1">Live Commission Preview</div>
-                  <div>Order Total</div>
-                  <div>
-                    Commission ({Math.round(c.commissionRate * 100)}%): {money(c.commission)}
-                  </div>
-                  <div>Residual / Bonus (Manual): {c.bonusExtra ? money(c.bonusExtra) : "—"}</div>
-                  <div className="font-semibold">Total Payout: {money(c.payoutTotal)}</div>
-                </div>
-              );
-            })()}
+      {/* CUSTOMER */}
+      <Section title="Customer (Editable)">
+        <Grid2>
+          <Field
+            label="First Name"
+            value={editItem.customer_first_name || ""}
+            onChange={(v) =>
+              setEditItem({ ...editItem, customer_first_name: v })
+            }
+          />
+          <Field
+            label="Last Name"
+            value={editItem.customer_last_name || ""}
+            onChange={(v) =>
+              setEditItem({ ...editItem, customer_last_name: v })
+            }
+          />
+          <Field
+            label="Email"
+            value={editItem.customer_email || ""}
+            onChange={(v) =>
+              setEditItem({ ...editItem, customer_email: v })
+            }
+          />
+          <Field
+            label="Phone"
+            value={editItem.customer_phone || ""}
+            onChange={(v) =>
+              setEditItem({ ...editItem, customer_phone: v })
+            }
+          />
+          <Field
+            label="Street Address"
+            value={editItem.customer_street_address || ""}
+            onChange={(v) =>
+              setEditItem({ ...editItem, customer_street_address: v })
+            }
+            full
+          />
+          <Field
+            label="City"
+            value={editItem.customer_city || ""}
+            onChange={(v) =>
+              setEditItem({ ...editItem, customer_city: v })
+            }
+          />
+          <Field
+            label="State"
+            value={editItem.customer_state || ""}
+            onChange={(v) =>
+              setEditItem({ ...editItem, customer_state: v })
+            }
+          />
+          <Field
+            label="Zip Code"
+            value={editItem.customer_zip_code || ""}
+            onChange={(v) =>
+              setEditItem({ ...editItem, customer_zip_code: v })
+            }
+          />
+        </Grid2>
+      </Section>
 
-            {/* CUSTOMER */}
-            <Section title="Customer (Editable)">
-              <Grid2>
-                <Field
-                  label="First Name"
-                  value={editItem.customer_first_name || ""}
-                  onChange={(v) => setEditItem({ ...editItem, customer_first_name: v })}
-                />
-                <Field
-                  label="Last Name"
-                  value={editItem.customer_last_name || ""}
-                  onChange={(v) => setEditItem({ ...editItem, customer_last_name: v })}
-                />
-                <Field
-                  label="Email"
-                  value={editItem.customer_email || ""}
-                  onChange={(v) => setEditItem({ ...editItem, customer_email: v })}
-                />
-                <Field
-                  label="Phone"
-                  value={editItem.customer_phone || ""}
-                  onChange={(v) => setEditItem({ ...editItem, customer_phone: v })}
-                />
-                <Field
-                  label="Street Address"
-                  value={editItem.customer_street_address || ""}
-                  onChange={(v) => setEditItem({ ...editItem, customer_street_address: v })}
-                  full
-                />
-                <Field
-                  label="City"
-                  value={editItem.customer_city || ""}
-                  onChange={(v) => setEditItem({ ...editItem, customer_city: v })}
-                />
-                <Field
-                  label="State"
-                  value={editItem.customer_state || ""}
-                  onChange={(v) => setEditItem({ ...editItem, customer_state: v })}
-                />
-                <Field
-                  label="Zip Code"
-                  value={editItem.customer_zip_code || ""}
-                  onChange={(v) => setEditItem({ ...editItem, customer_zip_code: v })}
-                />
-              </Grid2>
-            </Section>
+      {/* SWING */}
+      <Section title="Swing Details (Editable)">
+        <Grid2>
+          <Field
+            label="Swing Size"
+            value={editItem.swing_size || ""}
+            onChange={(v) => setEditItem({ ...editItem, swing_size: v })}
+          />
+          <Field
+            label="Wood Type"
+            value={editItem.wood_type || ""}
+            onChange={(v) => setEditItem({ ...editItem, wood_type: v })}
+          />
+          <Field
+            label="Finish / Stain"
+            value={editItem.finish || ""}
+            onChange={(v) => setEditItem({ ...editItem, finish: v })}
+          />
+          <Field
+            label="Hanging Method"
+            value={editItem.hanging_method || ""}
+            onChange={(v) =>
+              setEditItem({ ...editItem, hanging_method: v })
+            }
+          />
+        </Grid2>
+      </Section>
 
-            {/* SWING */}
-            <Section title="Swing Details (Editable)">
-              <Grid2>
-                <Field
-                  label="Swing Size"
-                  value={editItem.swing_size || ""}
-                  onChange={(v) => setEditItem({ ...editItem, swing_size: v })}
-                />
-                <Field
-                  label="Wood Type"
-                  value={editItem.wood_type || ""}
-                  onChange={(v) => setEditItem({ ...editItem, wood_type: v })}
-                />
-                <Field
-                  label="Finish / Stain"
-                  value={editItem.finish || ""}
-                  onChange={(v) => setEditItem({ ...editItem, finish: v })}
-                />
-                <Field
-                  label="Hanging Method"
-                  value={editItem.hanging_method || ""}
-                  onChange={(v) => setEditItem({ ...editItem, hanging_method: v })}
-                />
-              </Grid2>
-            </Section>
+      {/* PRICING */}
+      <Section title="Pricing (Editable)">
+        <Grid2>
+          <NumberField
+            label="Swing Price"
+            value={editItem.swing_price ?? ""}
+            onChange={(v) => setEditItem({ ...editItem, swing_price: v })}
+          />
+          <NumberField
+            label="Accessory Total"
+            value={editItem.accessory_price ?? ""}
+            onChange={(v) =>
+              setEditItem({ ...editItem, accessory_price: v })
+            }
+          />
+          <NumberField
+            label="Installation Fee"
+            value={editItem.installation_fee ?? ""}
+            onChange={(v) =>
+              setEditItem({ ...editItem, installation_fee: v })
+            }
+          />
+          <NumberField
+            label="Delivery Fee"
+            value={editItem.shipping_fee ?? ""}
+            onChange={(v) =>
+              setEditItem({ ...editItem, shipping_fee: v })
+            }
+          />
+        </Grid2>
+      </Section>
 
-            {/* PRICING */}
-            <Section title="Pricing (Editable)">
-              <Grid2>
-                <NumberField
-                  label="Swing Price"
-                  value={editItem.swing_price ?? ""}
-                  onChange={(v) => setEditItem({ ...editItem, swing_price: v })}
-                />
-                <NumberField
-                  label="Accessory Total"
-                  value={editItem.accessory_price ?? ""}
-                  onChange={(v) => setEditItem({ ...editItem, accessory_price: v })}
-                />
-                <NumberField
-                  label="Installation Fee"
-                  value={editItem.installation_fee ?? ""}
-                  onChange={(v) => setEditItem({ ...editItem, installation_fee: v })}
-                />
-                <NumberField
-                  label="Delivery Fee"
-                  value={editItem.shipping_fee ?? ""}
-                  onChange={(v) => setEditItem({ ...editItem, shipping_fee: v })}
-                />
-              </Grid2>
-            </Section>
+      {/* STATUS + BONUS */}
+      <Section title="Status & Extras (Editable)">
+        <Grid2>
+          <div className="md:col-span-2">
+            <div className="text-xs font-semibold text-gray-600 mb-1">
+              Order Status
+            </div>
+            <select
+              className="border w-full px-3 py-2 rounded"
+              value={editItem.order_status || "new"}
+              onChange={(e) =>
+                setEditItem({ ...editItem, order_status: e.target.value })
+              }
+            >
+              {[
+                "new",
+                "deposit_pending",
+                "deposit_received",
+                "order_confirmed",
+                "in_progress",
+                "scheduled",
+                "completed",
+                "cancelled",
+              ].map((s) => (
+                <option key={s} value={s}>
+                  {s.replaceAll("_", " ")}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {/* STATUS + BONUS/RESIDUAL */}
-            <Section title="Status & Extras (Editable)">
-              <Grid2>
-                <Field
-                  label="Order Status"
-                  value={editItem.order_status || ""}
-                  onChange={(v) => setEditItem({ ...editItem, order_status: v })}
-                  full
-                />
-                <NumberField
-                  label="Bonus / Residual (Manual)"
-                  value={editItem.bonus_extra ?? ""}
-                  onChange={(v) => setEditItem({ ...editItem, bonus_extra: v })}
-                  full
-                />
-              </Grid2>
-            </Section>
+          <NumberField
+            label="Bonus / Residual (Manual)"
+            value={editItem.bonus_extra ?? ""}
+            onChange={(v) =>
+              setEditItem({ ...editItem, bonus_extra: v })
+            }
+            full
+          />
+        </Grid2>
+      </Section>
 
-            <div className="flex gap-2 mt-4">
-              <button
-                className="bg-red-700 text-white px-4 py-2 rounded flex-1"
-                onClick={saveEdit}
-              >
-                Save
-              </button>
-              <button
-                className="bg-gray-300 px-4 py-2 rounded flex-1"
-                onClick={() => setEditItem(null)}
-              >
-                Cancel
+      <div className="flex gap-2 mt-6">
+        <button
+          className="bg-red-700 text-white px-4 py-2 rounded flex-1"
+          onClick={saveEdit}
+        >
+          Save
+        </button>
+        <button
+          className="bg-gray-300 px-4 py-2 rounded flex-1"
+          onClick={() => setEditItem(null)}
+        >
+          Cancel
+
+
+
               </button>
             </div>
           </div>

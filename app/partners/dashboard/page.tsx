@@ -4,6 +4,9 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+
+
 
 /* ===============================
    TYPES
@@ -24,15 +27,35 @@ type Partner = {
   city: string | null;
   state: string | null;
   zip: string | null;
+
+  // ✅ NEW
+  agreed_to_partner_terms: boolean;
+  agreed_to_partner_terms_at: string | null;
 };
+
 
 export default function PartnerDashboardPage() {
   const [partner, setPartner] = useState<Partner | null>(null);
   const [loading, setLoading] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
+  const router = useRouter();
+
 
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [editProfileItem, setEditProfileItem] = useState<Partner | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  const [showLegalGate, setShowLegalGate] = useState(false);
+const [agreeChecked, setAgreeChecked] = useState(false);
+const [agreeSaving, setAgreeSaving] = useState(false);
+const [uploading, setUploading] = useState(false);
+const [uploadMessage, setUploadMessage] = useState<string | null>(null);
+const [showUploads, setShowUploads] = useState(false);
+const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+
+
+
 
   const [stats, setStats] = useState({
     totalLeads: 0,
@@ -81,28 +104,29 @@ export default function PartnerDashboardPage() {
       }
 
       const { data, error } = await supabase
-        .from("partners")
-        .select(
-          `
-            id,
-            auth_user_id,
-            partner_id,
-            first_name,
-            last_name,
-            email_address,
-            phone,
-            business_name,
-            coverage_area,
-            preferred_contact_method,
-            sales_experience,
-            street_address,
-            city,
-            state,
-            zip
-          `
-        )
-        .eq("auth_user_id", user.id)
-        .single();
+  .from("partners")
+  .select(`
+    id,
+    auth_user_id,
+    partner_id,
+    first_name,
+    last_name,
+    email_address,
+    phone,
+    business_name,
+    coverage_area,
+    preferred_contact_method,
+    sales_experience,
+    street_address,
+    city,
+    state,
+    zip,
+    agreed_to_partner_terms,
+    agreed_to_partner_terms_at
+  `)
+  .eq("auth_user_id", user.id)
+  .single();
+
 
       if (error) {
         setPartner(null);
@@ -117,6 +141,44 @@ export default function PartnerDashboardPage() {
 
     loadPartner();
   }, []);
+
+  useEffect(() => {
+  if (partner && !partner.agreed_to_partner_terms) {
+    setShowLegalGate(true);
+  }
+}, [partner]);
+
+async function handlePartnerUpload() {
+  if (!partner?.partner_id || !selectedFile) {
+    setUploadMessage("Please select a file before submitting.");
+    return;
+  }
+
+  setUploading(true);
+  setUploadMessage(null);
+
+  const file = selectedFile;
+  const ext = file.name.split(".").pop();
+  const filePath = `${partner.partner_id}/uploads/${Date.now()}-${file.name}`;
+
+  const { error } = await supabase.storage
+    .from("partner-uploads")
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+  if (error) {
+    setUploadMessage("Upload failed. Please try again.");
+  } else {
+    setUploadMessage("File uploaded successfully.");
+    setSelectedFile(null);
+  }
+
+  setUploading(false);
+}
+
+
 
   /* ===============================
      LOAD DASHBOARD STATS ✅ (NO "partner possibly null")
@@ -206,6 +268,79 @@ export default function PartnerDashboardPage() {
     alert("Tracking link copied!");
   }
 
+if (showLegalGate && partner) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg w-full max-w-3xl max-h-[85vh] flex flex-col shadow-xl">
+
+        {/* HEADER */}
+        <div className="border-b p-5">
+          <h2 className="text-xl font-bold">
+            Legal, Privacy & Partner Terms
+          </h2>
+          <p className="text-sm text-gray-600">
+            You must agree before accessing your partner dashboard.
+          </p>
+        </div>
+
+        {/* CONTENT */}
+        <div className="flex-1 overflow-y-auto p-5">
+          <iframe
+            src="/legal/partner-terms"
+            className="w-full h-[60vh] border rounded"
+          />
+        </div>
+
+        {/* FOOTER */}
+        <div className="border-t p-5 space-y-4">
+          <label className="flex items-center gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={agreeChecked}
+              onChange={(e) => setAgreeChecked(e.target.checked)}
+            />
+            I agree to the Legal, Privacy & Partner Terms
+          </label>
+
+          <button
+            disabled={!agreeChecked || agreeSaving}
+            className={`w-full py-3 rounded font-bold text-white ${
+              !agreeChecked || agreeSaving
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-red-700"
+            }`}
+            onClick={async () => {
+              if (!partner || agreeSaving) return;
+
+              setAgreeSaving(true);
+
+              const { error } = await supabase
+                .from("partners")
+                .update({
+                  agreed_to_partner_terms: true,
+                  agreed_to_partner_terms_at: new Date().toISOString(),
+                })
+                .eq("id", partner.id);
+
+              if (!error) {
+                setShowLegalGate(false);
+              } else {
+                alert("Failed to save agreement. Please try again.");
+              }
+
+              setAgreeSaving(false);
+            }}
+          >
+            {agreeSaving ? "Saving…" : "Accept & Continue"}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+
   /* ===============================
      RENDER
   =============================== */
@@ -293,111 +428,278 @@ export default function PartnerDashboardPage() {
         <ActionButton href="/partners/resources" label="Swing Resources" />
         <ActionButton href="/partners/orders" label="My Orders" />
         <ActionButton href="/partners/leads" label="My Leads" />
-        <ActionButton href="/partners/help" label="Help & Docs" />
+        
       </div>
+
+      
+{/* PARTNER UPLOADS */}
+<div className="border rounded overflow-hidden">
+  <button
+    onClick={() => setShowUploads(!showUploads)}
+    className="w-full flex justify-between items-center bg-red-700 text-white px-4 py-3 font-bold"
+  >
+    <span>Upload Files</span>
+    <span className="text-xl">{showUploads ? "−" : "+"}</span>
+  </button>
+
+  {showUploads && (
+    <div className="p-4 space-y-4 bg-white">
+
+      {/* FILE INPUT */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Select a file to upload
+        </label>
+
+        <input
+          type="file"
+          className="block w-full text-sm border rounded px-3 py-2"
+          onChange={(e) => {
+            const file = e.target.files?.[0] || null;
+            setSelectedFile(file);
+            setUploadMessage(null);
+          }}
+        />
+      </div>
+
+      {/* SELECTED FILE NAME */}
+      {selectedFile && (
+        <p className="text-sm text-gray-600">
+          Selected file: <b>{selectedFile.name}</b>
+        </p>
+      )}
+
+      {/* SUBMIT BUTTON */}
+      <button
+        onClick={handlePartnerUpload}
+        disabled={!selectedFile || uploading}
+        className={`w-full py-3 rounded font-bold text-white ${
+          !selectedFile || uploading
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-black"
+        }`}
+      >
+        {uploading ? "Uploading…" : "Submit Upload"}
+      </button>
+
+      {/* MESSAGE */}
+      {uploadMessage && (
+        <p className="text-sm font-semibold text-green-700">
+          {uploadMessage}
+        </p>
+      )}
+
+      {/* DESCRIPTION */}
+      <div className="text-xs text-gray-500 leading-relaxed">
+        Upload swing photos, door photos, customer videos, installation photos,
+        signed documents, or any supporting files requested by Doorplace USA.
+      </div>
+
+    </div>
+  )}
+</div>
+
 
       {/* EDIT PROFILE MODAL */}
       {editProfileOpen && editProfileItem && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded max-w-md w-full p-6 space-y-3">
-            <h2 className="text-xl font-bold">My Profile</h2>
+  <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <div className="bg-white rounded max-w-2xl w-full max-h-[75vh] flex flex-col shadow-lg">
 
-            <input
-              className="border w-full px-3 py-2"
-              placeholder="First Name"
-              value={editProfileItem.first_name || ""}
-              onChange={(e) => setEditProfileItem({ ...editProfileItem, first_name: e.target.value })}
-            />
-            <input
-              className="border w-full px-3 py-2"
-              placeholder="Last Name"
-              value={editProfileItem.last_name || ""}
-              onChange={(e) => setEditProfileItem({ ...editProfileItem, last_name: e.target.value })}
-            />
-            <input
-              className="border w-full px-3 py-2"
-              placeholder="Phone"
-              value={editProfileItem.phone || ""}
-              onChange={(e) => setEditProfileItem({ ...editProfileItem, phone: e.target.value })}
-            />
-            <input
-              className="border w-full px-3 py-2"
-              placeholder="Business Name"
-              value={editProfileItem.business_name || ""}
-              onChange={(e) => setEditProfileItem({ ...editProfileItem, business_name: e.target.value })}
-            />
-            <input
-              className="border w-full px-3 py-2"
-              placeholder="Coverage Area"
-              value={editProfileItem.coverage_area || ""}
-              onChange={(e) => setEditProfileItem({ ...editProfileItem, coverage_area: e.target.value })}
-            />
-            <input
-              className="border w-full px-3 py-2"
-              placeholder="Preferred Contact"
-              value={editProfileItem.preferred_contact_method || ""}
-              onChange={(e) => setEditProfileItem({ ...editProfileItem, preferred_contact_method: e.target.value })}
-            />
-            <input
-              className="border w-full px-3 py-2"
-              placeholder="Sales Experience"
-              value={editProfileItem.sales_experience || ""}
-              onChange={(e) => setEditProfileItem({ ...editProfileItem, sales_experience: e.target.value })}
-            />
-            <input
-              className="border w-full px-3 py-2"
-              placeholder="Street"
-              value={editProfileItem.street_address || ""}
-              onChange={(e) => setEditProfileItem({ ...editProfileItem, street_address: e.target.value })}
-            />
-            <input
-              className="border w-full px-3 py-2"
-              placeholder="City"
-              value={editProfileItem.city || ""}
-              onChange={(e) => setEditProfileItem({ ...editProfileItem, city: e.target.value })}
-            />
-            <input
-              className="border w-full px-3 py-2"
-              placeholder="State"
-              value={editProfileItem.state || ""}
-              onChange={(e) => setEditProfileItem({ ...editProfileItem, state: e.target.value })}
-            />
-            <input
-              className="border w-full px-3 py-2"
-              placeholder="Zip"
-              value={editProfileItem.zip || ""}
-              onChange={(e) => setEditProfileItem({ ...editProfileItem, zip: e.target.value })}
-            />
+      {/* ================= HEADER (STICKY) ================= */}
+      <div className="sticky top-0 bg-white z-10 border-b p-5">
+        <h2 className="text-xl font-bold">My Profile</h2>
+        <p className="text-sm text-gray-500">
+          Partner ID:{" "}
+          <span className="font-mono">{editProfileItem.partner_id}</span>
+        </p>
+      </div>
 
-            <div className="flex gap-2 pt-2">
-              <button
-                className="bg-red-700 text-white px-4 py-2 rounded flex-1"
-                onClick={async () => {
-                  // Keep update small & safe (don’t accidentally push auth_user_id / partner_id changes)
-                  const payload = {
-                    first_name: editProfileItem.first_name,
-                    last_name: editProfileItem.last_name,
-                    phone: editProfileItem.phone,
-                    business_name: editProfileItem.business_name,
-                    coverage_area: editProfileItem.coverage_area,
-                    preferred_contact: editProfileItem.preferred_contact_method,
-                    sales_experience: editProfileItem.sales_experience,
-                    street: editProfileItem.street_address,
-                    city: editProfileItem.city,
-                    state: editProfileItem.state,
-                    zip: editProfileItem.zip,
-                  };
+      {/* ================= SCROLLABLE CONTENT ================= */}
+      <div className="flex-1 overflow-y-auto p-5 space-y-6">
 
-                  await supabase.from("partners").update(payload).eq("id", editProfileItem.id);
+        {/* BASIC INFO */}
+        <section>
+          <h3 className="font-semibold text-sm mb-3 text-gray-700">
+            Basic Information
+          </h3>
 
-                  setPartner({ ...partner, ...payload });
-                  setEditProfileOpen(false);
-                }}
-              >
-                Save
-              </button>
-              <button className="bg-gray-300 px-4 py-2 rounded flex-1" onClick={() => setEditProfileOpen(false)}>
-                Cancel
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Field
+              label="First Name"
+              value={editProfileItem.first_name}
+              onChange={(v) =>
+                setEditProfileItem({ ...editProfileItem, first_name: v })
+              }
+            />
+            <Field
+              label="Last Name"
+              value={editProfileItem.last_name}
+              onChange={(v) =>
+                setEditProfileItem({ ...editProfileItem, last_name: v })
+              }
+            />
+          </div>
+
+          <Field
+            label="Email Address"
+            value={editProfileItem.email_address}
+            disabled
+          />
+
+          <Field
+            label="Phone Number"
+            value={editProfileItem.phone}
+            onChange={(v) =>
+              setEditProfileItem({ ...editProfileItem, phone: v })
+            }
+          />
+        </section>
+
+        {/* BUSINESS INFO */}
+        <section>
+          <h3 className="font-semibold text-sm mb-3 text-gray-700">
+            Business Information
+          </h3>
+
+          <Field
+            label="Business Name"
+            value={editProfileItem.business_name}
+            onChange={(v) =>
+              setEditProfileItem({ ...editProfileItem, business_name: v })
+            }
+          />
+
+          <Field
+            label="Coverage Area"
+            value={editProfileItem.coverage_area}
+            onChange={(v) =>
+              setEditProfileItem({ ...editProfileItem, coverage_area: v })
+            }
+          />
+
+          <Field
+            label="Preferred Contact Method"
+            value={editProfileItem.preferred_contact_method}
+            onChange={(v) =>
+              setEditProfileItem({
+                ...editProfileItem,
+                preferred_contact_method: v,
+              })
+            }
+          />
+
+          <Field
+            label="Sales Experience"
+            value={editProfileItem.sales_experience}
+            onChange={(v) =>
+              setEditProfileItem({
+                ...editProfileItem,
+                sales_experience: v,
+              })
+            }
+          />
+        </section>
+
+        {/* ADDRESS */}
+        <section>
+          <h3 className="font-semibold text-sm mb-3 text-gray-700">
+            Address
+          </h3>
+
+          <Field
+            label="Street Address"
+            value={editProfileItem.street_address}
+            onChange={(v) =>
+              setEditProfileItem({ ...editProfileItem, street_address: v })
+            }
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Field
+              label="City"
+              value={editProfileItem.city}
+              onChange={(v) =>
+                setEditProfileItem({ ...editProfileItem, city: v })
+              }
+            />
+            <Field
+              label="State"
+              value={editProfileItem.state}
+              onChange={(v) =>
+                setEditProfileItem({ ...editProfileItem, state: v })
+              }
+            />
+            <Field
+              label="Zip Code"
+              value={editProfileItem.zip}
+              onChange={(v) =>
+                setEditProfileItem({ ...editProfileItem, zip: v })
+              }
+            />
+          </div>
+        </section>
+      </div>
+
+      {/* ================= FOOTER (STICKY) ================= */}
+      <div className="sticky bottom-0 bg-white border-t p-4 flex gap-3">
+        <button
+  disabled={savingProfile}
+  className={`bg-red-700 text-white px-4 py-2 rounded flex-1 ${
+    savingProfile ? "opacity-60 cursor-not-allowed" : ""
+  }`}
+  onClick={async () => {
+    if (!editProfileItem || !partner || savingProfile) return;
+
+    setSavingProfile(true);
+
+    const payload = {
+      first_name: editProfileItem.first_name,
+      last_name: editProfileItem.last_name,
+      phone: editProfileItem.phone,
+      business_name: editProfileItem.business_name,
+      coverage_area: editProfileItem.coverage_area,
+      preferred_contact_method: editProfileItem.preferred_contact_method,
+      sales_experience: editProfileItem.sales_experience,
+      street_address: editProfileItem.street_address,
+      city: editProfileItem.city,
+      state: editProfileItem.state,
+      zip: editProfileItem.zip,
+    };
+
+    const { error } = await supabase
+      .from("partners")
+      .update(payload)
+      .eq("id", editProfileItem.id);
+
+    if (error) {
+      alert("Save failed. Please try again.");
+      setSavingProfile(false);
+      return;
+    }
+
+    // ✅ Update local state FIRST
+    setPartner((prev) => (prev ? { ...prev, ...payload } : prev));
+
+    // ✅ Close modal FIRST
+    setEditProfileOpen(false);
+
+    // ✅ THEN clean the URL (no race condition)
+    router.replace("/partners/dashboard", { scroll: false });
+
+    // reset flag
+    setSavingProfile(false);
+  }}
+>
+  {savingProfile ? "Saving…" : "Save & Close"}
+</button>
+
+
+        <button
+          className="bg-gray-300 px-4 py-2 rounded flex-1"
+          onClick={() => setEditProfileOpen(false)}
+        >
+          Cancel
+
               </button>
             </div>
           </div>
@@ -406,6 +708,62 @@ export default function PartnerDashboardPage() {
     </div>
   );
 }
+
+function Field({
+  label,
+  value,
+  onChange,
+  disabled = false,
+}: {
+  label: string;
+  value?: string | null;
+  onChange?: (v: string) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="space-y-1">
+      <label className="text-xs font-medium text-gray-500">{label}</label>
+      <input
+        className={`border w-full px-3 py-2 rounded ${
+          disabled ? "bg-gray-100 text-gray-600 cursor-not-allowed" : ""
+        }`}
+        value={value ?? ""}
+        disabled={disabled}
+        onChange={(e) => onChange?.(e.target.value)}
+      />
+    </div>
+  );
+}
+
+
+function UploadRow({
+  label,
+  accept,
+  onSelect,
+}: {
+  label: string;
+  accept: string;
+  onSelect: (file: File) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="block mb-1 text-sm font-medium text-gray-700">
+        {label}
+      </span>
+
+      <input
+        type="file"
+        accept={accept}
+        className="block w-full text-sm border rounded px-3 py-2"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onSelect(file);
+        }}
+      />
+    </label>
+  );
+}
+
 
 /* ===============================
    UI COMPONENTS

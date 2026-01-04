@@ -36,7 +36,13 @@ export default function DashboardPage() {
     activePartners: 0,
     conversionRate: 0,
   });
-  const [totalPartners, setTotalPartners] = useState(0);
+  const [partnerSnapshot, setPartnerSnapshot] = useState({
+  total: 0,
+  activated: 0,
+  pending: 0,
+  active: 0,
+});
+
 
 
   const [recentLeads, setRecentLeads] = useState<RecentItem[]>([]);
@@ -52,20 +58,45 @@ export default function DashboardPage() {
       const { data } = await supabase.auth.getSession();
       setSessionEmail(data.session?.user.email || "");
 
-      // ================= TOTAL PARTNERS =================
+      // ================= PARTNER FUNNEL SNAPSHOT =================
 const { count: totalPartnersCount } = await supabase
   .from("partners")
   .select("*", { count: "exact", head: true });
-  setTotalPartners(totalPartnersCount || 0);
 
-  
-  
-
-// ================= ACTIVATED PARTNERS (TradePilot) =================
-const { count: activatedPartners } = await supabase
+const { count: activatedPartnersCount } = await supabase
   .from("partners")
   .select("*", { count: "exact", head: true })
   .not("auth_user_id", "is", null);
+
+const { count: pendingPartners } = await supabase
+  .from("partners")
+  .select("*", { count: "exact", head: true })
+  .eq("status", "pending");
+
+const { count: activePartners } = await supabase
+  .from("partners")
+  .select("*", { count: "exact", head: true })
+  .eq("status", "active");
+
+
+setStats((prev) => ({
+  ...prev,
+  activePartners: activatedPartnersCount || 0,
+}));
+
+// local state for snapshot
+setPartnerSnapshot({
+  total: totalPartnersCount || 0,
+  activated: activatedPartnersCount || 0,
+  pending: pendingPartners || 0,
+  active: activePartners || 0,
+});
+
+
+  
+  
+
+
 
 
       // ================= TOTAL LEADS (WIRE THIS) =================
@@ -118,7 +149,7 @@ const { count: orderCount } = await supabase
         totalRevenue: 0,
         pendingCommissions: 0,
         paidCommissions: 0,
-        activePartners: activatedPartners || 0,
+        activePartners: activatedPartnersCount || 0,
         conversionRate: 0,
       });
 
@@ -166,7 +197,7 @@ const { count: orderCount } = await supabase
       
 
       {/* =================== SUMMARY CARDS =================== */}
-      <div style={gridThree}>
+      <div style={gridFour}>
         
         
         <div
@@ -176,29 +207,12 @@ const { count: orderCount } = await supabase
           <StatCard title="Total Leads" value={stats.totalLeads} />
         </div>
 
-
         <div
           onClick={() => (window.location.href = "/dashboard/orders")}
           style={{ cursor: "pointer" }}
         >
           <StatCard title="Total Orders" value={stats.totalOrders} />
         </div>
-
-        <div
-          onClick={() => (window.location.href = "/dashboard/partners")}
-          style={{ cursor: "pointer" }}
-        >
-          <StatCard title="Activated Partners" value={stats.activePartners} />
-        </div>
-
-        <div
-         onClick={() => (window.location.href = "/dashboard/partners")}
-         style={{ cursor: "pointer" }}
-         >
-          <StatCard title="Total Partners" value={totalPartners} />
-         </div>
-
-
 
         <div>
         <StatCard title="Pending Commissions" value={fmt(stats.pendingCommissions)} />
@@ -209,6 +223,42 @@ const { count: orderCount } = await supabase
       </div>
 
       </div>
+
+{/* =================== PARTNER FUNNEL SNAPSHOT =================== */}
+<div className="bg-white p-4 rounded shadow mb-6">
+  <h2 className="text-lg font-semibold mb-2" style={{ color: brandRed }}>
+    Partner Funnel Snapshot
+  </h2>
+
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+    <div>
+      <div className="text-gray-500">Total Partners</div>
+      <div className="text-xl font-bold">{partnerSnapshot.total}</div>
+    </div>
+
+    <div>
+      <div className="text-gray-500">Activated</div>
+      <div className="text-xl font-bold text-green-700">
+        {partnerSnapshot.activated}
+      </div>
+    </div>
+
+    <div>
+      <div className="text-gray-500">Pending</div>
+      <div className="text-xl font-bold text-orange-700">
+        {partnerSnapshot.pending}
+      </div>
+    </div>
+
+    <div>
+      <div className="text-gray-500">Active</div>
+      <div className="text-xl font-bold text-green-700">
+        {partnerSnapshot.active}
+      </div>
+    </div>
+  </div>
+</div>
+
 
       {/* 🟡 TASKS REQUIRING ATTENTION (kept) */}
       <div className="bg-white p-4 rounded shadow mb-6">
@@ -243,6 +293,8 @@ const { count: orderCount } = await supabase
           </li>
         </ul>
       </div>
+
+
 
       {/* =================== RECENT LEADS + ORDERS =================== */}
       <div style={{ ...gridTwo, marginTop: 20 }}>
@@ -371,6 +423,13 @@ const gridThree = {
   gridTemplateColumns: "repeat(3, 1fr)",
   gap: 12,
 };
+
+const gridFour = {
+  display: "grid",
+  gridTemplateColumns: "repeat(4, 1fr)",
+  gap: 12,
+};
+
 
 const gridTwo = {
   display: "grid",

@@ -3,11 +3,13 @@ import { supabase } from "@/lib/supabaseClient";
 
 /* ===============================
    GET — list resources
-=============================== */
+   (PINNED FIRST, THEN SORT ORDER)
+================================ */
 export async function GET() {
   const { data, error } = await supabase
     .from("partner_resources")
     .select("*")
+    .order("is_pinned", { ascending: false })
     .order("sort_order", { ascending: true });
 
   if (error) {
@@ -19,7 +21,7 @@ export async function GET() {
 
 /* ===============================
    POST — create resource
-=============================== */
+================================ */
 export async function POST(req: Request) {
   const body = await req.json();
 
@@ -32,6 +34,7 @@ export async function POST(req: Request) {
       resource_type: body.resource_type || "link",
       is_active: body.is_active ?? true,
       show_new: body.show_new ?? false,
+      is_pinned: body.is_pinned ?? false,
       sort_order: body.sort_order ?? 100,
     },
   ]);
@@ -45,7 +48,7 @@ export async function POST(req: Request) {
 
 /* ===============================
    PUT — update resource
-=============================== */
+================================ */
 export async function PUT(req: Request) {
   const body = await req.json();
 
@@ -63,6 +66,7 @@ export async function PUT(req: Request) {
       resource_type: body.resource_type || "link",
       is_active: body.is_active ?? true,
       show_new: body.show_new ?? false,
+      is_pinned: body.is_pinned ?? false,
       sort_order: body.sort_order ?? 100,
     })
     .eq("id", body.id);
@@ -76,7 +80,7 @@ export async function PUT(req: Request) {
 
 /* ===============================
    DELETE — delete resource
-=============================== */
+================================ */
 export async function DELETE(req: Request) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");

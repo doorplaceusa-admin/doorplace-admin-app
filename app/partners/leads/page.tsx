@@ -7,47 +7,47 @@ import { supabase } from "@/lib/supabaseClient";
 /* ===============================
    TYPES
 ================================ */
-type Row = {
+type LeadRow = {
   id: string;
   lead_id: string;
-  submission_type: string;
+  submission_type?: string;
   partner_id?: string;
-  customer_first_name?: string;
-  customer_last_name?: string;
-  swing_price?: number | string;
-  accessory_price?: number | string;
-  order_status?: string;
-  notes?: string;
+
+  first_name?: string;
+  last_name?: string;
+
+  lead_status?: string;
+  project_details?: string;
   created_at?: string;
 };
 
 /* ===============================
    HELPERS
 ================================ */
-function toNum(v: any) {
-  if (!v) return 0;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function money(n: number) {
-  return n.toLocaleString(undefined, {
-    style: "currency",
-    currency: "USD",
-  });
-}
-
 function formatDate(d?: string) {
   if (!d) return "—";
   return new Date(d).toLocaleDateString();
 }
 
+function leadTypeLabel(t?: string) {
+  switch (t) {
+    case "general":
+      return "General Inquiry";
+    case "quote":
+      return "Swing / Door Quote";
+    case "partner_tracking":
+      return "Partner Tracking";
+    default:
+      return "—";
+  }
+}
+
 /* ===============================
    PAGE
 ================================ */
-export default function PartnerOrdersPage() {
+export default function PartnerLeadsPage() {
   const [partnerId, setPartnerId] = useState<string | null>(null);
-  const [rows, setRows] = useState<Row[]>([]);
+  const [rows, setRows] = useState<LeadRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   /* LOAD PARTNER ID */
@@ -79,25 +79,25 @@ export default function PartnerOrdersPage() {
     loadPartnerId();
   }, []);
 
-  /* LOAD ORDERS */
+  /* LOAD LEADS */
   useEffect(() => {
     if (!partnerId) return;
 
-    async function loadOrders() {
+    async function loadLeads() {
       setLoading(true);
 
       const { data } = await supabase
         .from("leads")
         .select("*")
         .eq("partner_id", partnerId)
-        .eq("submission_type", "partner_order")
+        .neq("submission_type", "partner_order")
         .order("created_at", { ascending: false });
 
       setRows(data || []);
       setLoading(false);
     }
 
-    loadOrders();
+    loadLeads();
   }, [partnerId]);
 
   if (loading) return <div className="p-6">Loading…</div>;
@@ -116,77 +116,70 @@ export default function PartnerOrdersPage() {
     <div className="p-6 space-y-6">
       {/* HEADER */}
       <div>
-        <h1 className="text-2xl font-bold">My Orders</h1>
+        <h1 className="text-2xl font-bold">My Leads</h1>
         <p className="text-sm text-gray-500">
-          View your submitted orders and current status
+          View leads assigned to you and their current status
         </p>
       </div>
 
-      {/* ORDERS */}
+      {/* LEADS */}
       <div className="space-y-4">
         {rows.length === 0 && (
           <div className="border rounded p-6 text-center text-gray-500">
-            No orders yet.
+            No leads yet.
           </div>
         )}
 
-        {rows.map((o) => (
+        {rows.map((l) => (
           <div
-            key={o.id}
+            key={l.id}
             className="border rounded-lg p-4 space-y-3 bg-white"
           >
-            {/* ORDER ID */}
+            {/* LEAD ID */}
             <div className="flex justify-between text-xs text-gray-500">
-              <span>Order #</span>
-              <span className="font-mono">{o.lead_id}</span>
+              <span>Lead #</span>
+              <span className="font-mono">{l.lead_id}</span>
             </div>
 
             {/* CUSTOMER */}
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Customer</span>
               <span className="font-medium">
-                {o.customer_first_name} {o.customer_last_name}
+                {l.first_name} {l.last_name}
               </span>
             </div>
 
-            {/* SWING PRICE */}
+            {/* LEAD TYPE */}
             <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Swing Price</span>
-              <span className="font-semibold">
-                {money(toNum(o.swing_price))}
-              </span>
-            </div>
-
-            {/* ACCESSORY PRICE */}
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Accessory Price</span>
-              <span className="font-semibold">
-                {money(toNum(o.accessory_price))}
-              </span>
-            </div>
-
-            {/* ORDER DATE */}
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Order Date</span>
+              <span className="text-gray-500">Type</span>
               <span className="font-medium">
-                {formatDate(o.created_at)}
+                {leadTypeLabel(l.submission_type)}
+              </span>
+            </div>
+
+            {/* DATE */}
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Date</span>
+              <span className="font-medium">
+                {formatDate(l.created_at)}
               </span>
             </div>
 
             {/* STATUS */}
             <div className="pt-2 border-t flex justify-between items-center">
               <span className="text-sm text-gray-500">Status</span>
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                {o.order_status
-                  ? o.order_status.replace("_", " ")
-                  : "—"}
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                {l.lead_status
+                  ? l.lead_status.replaceAll("_", " ")
+                  : "new"}
               </span>
             </div>
 
-            {/* NOTES */}
-            {o.notes && (
+            {/* NOTES / DETAILS */}
+            {l.project_details && (
               <div className="pt-2 text-xs text-gray-500">
-                <span className="font-medium">Notes:</span> {o.notes}
+                <span className="font-medium">Details:</span>{" "}
+                {l.project_details}
               </div>
             )}
           </div>

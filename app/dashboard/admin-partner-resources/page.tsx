@@ -9,6 +9,7 @@ type Resource = {
   resource_type: string;
   is_active: boolean;
   show_new: boolean;
+  is_pinned: boolean;
   sort_order: number;
   created_at?: string;
 };
@@ -20,6 +21,7 @@ const emptyForm: Omit<Resource, "id"> = {
   resource_type: "link",
   is_active: true,
   show_new: false,
+  is_pinned: false,
   sort_order: 100,
 };
 export default function AdminResourcesPage() {
@@ -178,6 +180,19 @@ export default function AdminResourcesPage() {
             </label>
           </div>
         </div>
+
+<label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+  <input
+    type="checkbox"
+    checked={form.is_pinned}
+    onChange={(e) =>
+      setForm({ ...form, is_pinned: e.target.checked })
+    }
+  />
+  Pin to top
+</label>
+
+
         <datalist id="category-list">
           {categories.map((c) => (
             <option key={c} value={c} />
@@ -209,10 +224,18 @@ export default function AdminResourcesPage() {
       </div>
       {/* LIST */}
       {resources.length === 0 && <p>No resources yet.</p>}
-      {resources
-        .slice()
-        .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-        .map((r) => (
+     {resources
+  .slice()
+  .sort((a, b) => {
+    // 1️⃣ pinned always first
+    if (a.is_pinned && !b.is_pinned) return -1;
+    if (!a.is_pinned && b.is_pinned) return 1;
+
+    // 2️⃣ then by sort_order
+    return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+  })
+  .map((r) => (
+
           <div
             key={r.id}
             style={{
@@ -241,6 +264,8 @@ export default function AdminResourcesPage() {
                       NEW
                     </span>
                   )}
+
+                  
                   {!r.is_active && (
                     <span style={{ fontSize: 12, color: "#666" }}>(disabled)</span>
                   )}
@@ -344,6 +369,20 @@ export default function AdminResourcesPage() {
                 </label>
               </div>
             </div>
+
+<label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+  <input
+    type="checkbox"
+    checked={!!editItem.is_pinned}
+    onChange={(e) =>
+      setEditItem({ ...editItem, is_pinned: e.target.checked })
+    }
+  />
+  Pin to top
+</label>
+
+
+
             <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
               <button onClick={saveEdit} disabled={saving} style={btnStyle("#b80d0d")}>
                 {saving ? "Saving…" : "Save"}

@@ -34,7 +34,7 @@ export default function ActivateAccountPage() {
 
       const userId = data?.user?.id;
       if (!userId) {
-        throw new Error("Unable to create or fetch auth user");
+        throw new Error("This account is already registered. Your profile is currently pending approval.");
       }
 
       // 2. Link auth user to existing partner + send verification email (backend)

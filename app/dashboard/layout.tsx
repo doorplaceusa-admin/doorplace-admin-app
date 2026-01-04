@@ -106,11 +106,12 @@ export default function DashboardLayout({
           <NavLink href="/dashboard/orders" icon={<Package size={18} />} label="Orders" />
           <NavLink href="/dashboard/partners" icon={<Handshake size={18} />} label="Partners" />
           <NavLink
-            href="/dashboard/partners/commissions"
+            href="/dashboard/commissions"
             icon={<DollarSign size={18} />}
             label="Commissions"
           />
           <NavLink href="/dashboard/receipts" icon={<Building2 size={18} />} label="Receipts" />
+          <NavLink href="/dashboard/partner-uploads" icon={<Building2 size={18} />} label="Partner Uploads" />
           <NavLink href="/dashboard/invoices" icon={<Building2 size={18} />} label="Invoices" />
           <NavLink href="/dashboard/iplum" icon={<Building2 size={18} />} label="Iplum" />
           <NavLink
@@ -194,6 +195,7 @@ function MobileBottomNav() {
         <MobileNavItem href="/dashboard/leads" icon={<ClipboardList size={20} />} label="Leads" />
         <MobileNavItem href="/dashboard/orders" icon={<Package size={20} />} label="Orders" />
         <MobileNavItem href="/dashboard/partners" icon={<Handshake size={20} />} label="Partners" />
+        <MobileNavItem href="/dashboard/commissions" icon={<DollarSign size={20} />} label="Comm" />
 
         <button
           onClick={() => setShowMore(true)}
@@ -217,6 +219,12 @@ function MobileBottomNav() {
               href="/dashboard/receipts"
               icon={<DollarSign size={20} />}
               label="Receipts"
+              onClick={() => setShowMore(false)}
+            />
+            <MobileNavItem
+              href="/dashboard/partner-uploads"
+              icon={<DollarSign size={20} />}
+              label="Partner Uploads"
               onClick={() => setShowMore(false)}
             />
             <MobileNavItem

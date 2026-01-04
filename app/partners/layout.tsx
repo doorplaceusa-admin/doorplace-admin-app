@@ -11,8 +11,12 @@ import {
   BookOpen,
   Bell,
   User,
+  UserPlus,
   LogOut,
   MoreHorizontal,
+  UserPlus2Icon,
+  UserCircle,
+  UserRoundPenIcon,
 } from "lucide-react";
 
 /* ======================
@@ -153,6 +157,11 @@ useEffect(() => {
             label="My Orders"
           />
           <NavLink
+            href="/partners/leads"
+            icon={<Package size={18} />}
+            label="My Leads"
+          />
+          <NavLink
             href="/partners/resources"
             icon={<BookOpen size={18} />}
             label="Resources"
@@ -252,6 +261,11 @@ function PartnerBottomNav() {
           href="/partners/orders"
           icon={<Package size={20} />}
           label="Orders"
+        />
+        <MobileNavItem
+          href="/partners/leads"
+          icon={<UserRoundPenIcon size={20} />}
+          label="leads"
         />
 
         <button

@@ -22,6 +22,7 @@ type Partner = {
   status: "pending" | "active";
   email_verified: boolean;
   welcome_email_sent: boolean;
+  created_at: string; //Joined Date
 
   business_name?: string;
   coverage_area?: string;
@@ -44,6 +45,17 @@ type BulkRepairResponse = {
   skipped?: number;
   logs?: string[];
 };
+
+function formatDate(dateString?: string) {
+  if (!dateString) return "—";
+  const d = new Date(dateString);
+  return d.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 
 /* ===============================
    PAGE
@@ -357,6 +369,8 @@ async function updatePartnerStatus(
           <p><b>Email:</b> {viewItem.email_address}</p>
           <p><b>Phone:</b> {viewItem.cell_phone_number}</p>
           <p><b>Partner ID:</b> {viewItem.partner_id}</p>
+          <p><b>Joined Date:</b> {formatDate(viewItem.created_at)}</p>
+
         </div>
 
         {/* BUSINESS INFO */}

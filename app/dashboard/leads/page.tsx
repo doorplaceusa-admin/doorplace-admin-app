@@ -265,7 +265,6 @@ export default function LeadsPage() {
     className="fixed inset-0 bg-black/40 flex items-start justify-center z-50 p-4"
     onClick={() => setViewLead(null)}
   >
-    {/* MODAL CONTAINER */}
     <div
       className="bg-white rounded max-w-3xl w-full max-h-[75vh] flex flex-col shadow-lg"
       onClick={(e) => e.stopPropagation()}
@@ -282,10 +281,7 @@ export default function LeadsPage() {
 
         {/* CONTACT */}
         <Section title="Contact">
-          <Row
-            label="Name"
-            value={`${viewLead.first_name} ${viewLead.last_name}`}
-          />
+          <Row label="Name" value={`${viewLead.first_name} ${viewLead.last_name}`} />
           <Row label="Email" value={viewLead.email} />
           <Row label="Phone" value={viewLead.phone} />
           <Row
@@ -294,7 +290,14 @@ export default function LeadsPage() {
           />
         </Section>
 
-        {/* PARTNER TRACKING */}
+        {/* STATUS */}
+        <Section title="Lead Status">
+          <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">
+            {viewLead.lead_status || "new"}
+          </span>
+        </Section>
+
+        {/* PARTNER */}
         {viewLead.partner_id && (
           <Section title="Partner Tracking">
             <Row label="Partner ID" value={viewLead.partner_id} />
@@ -303,63 +306,10 @@ export default function LeadsPage() {
 
         {/* SUBMISSION */}
         <Section title="Submission">
-          <Row
-            label="Submission Type"
-            value={
-              viewLead.submission_type === "partner_tracking"
-                ? "Partner Tracking Link"
-                : viewLead.submission_type === "partner_order"
-                ? "Partner Swing Order"
-                : viewLead.submission_type === "quote"
-                ? "Swing / Door Quote"
-                : viewLead.submission_type === "general"
-                ? "General Inquiry"
-                : viewLead.submission_type
-            }
-          />
+          <Row label="Submission Type" value={viewLead.submission_type} />
           <Row label="Quote Type" value={viewLead.quote_type} />
           <Row label="Project Details" value={viewLead.project_details} />
         </Section>
-
-        {/* SWING QUOTE */}
-        {viewLead.quote_type === "swing" && (
-          <Section title="Swing Quote">
-            <Row label="Swing Size" value={viewLead.swing_size} />
-            <Row
-              label="Ceiling Height"
-              value={viewLead.porch_ceiling_height}
-            />
-            <Row
-              label="Installation Needed"
-              value={viewLead.installation_needed}
-            />
-            <Row
-              label="Hanging Method"
-              value={viewLead.hanging_method}
-            />
-          </Section>
-        )}
-
-        {/* DOOR QUOTE */}
-        {viewLead.quote_type === "door" && (
-          <Section title="Door Quote">
-            <Row label="Door Width" value={viewLead.door_width} />
-            <Row label="Door Height" value={viewLead.door_height} />
-            <Row
-              label="Number of Doors"
-              value={viewLead.number_of_doors}
-            />
-            <Row label="Door Type" value={viewLead.door_type} />
-            <Row
-              label="Door Material"
-              value={viewLead.door_material}
-            />
-            <Row
-              label="Finish Preference"
-              value={viewLead.finish_preference}
-            />
-          </Section>
-        )}
 
         {/* PHOTOS */}
         <Section title="Photos">
@@ -374,22 +324,21 @@ export default function LeadsPage() {
                 />
               ))
             ) : (
-              <span className="text-gray-500 text-sm">
-                No photos uploaded
-              </span>
+              <span className="text-gray-500 text-sm">No photos uploaded</span>
             )}
           </div>
         </Section>
 
       </div>
 
-      {/* FIXED FOOTER */}
+      {/* FOOTER */}
       <div className="p-4 border-t bg-white">
         <button
           className="bg-black text-white px-4 py-2 rounded w-full"
           onClick={() => setViewLead(null)}
         >
           Close
+
         </button>
       </div>
     </div>
@@ -401,44 +350,73 @@ export default function LeadsPage() {
       {/* EDIT MODAL */}
       {editLead && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded max-w-lg w-full">
-            <h2 className="text-xl font-bold mb-3">Edit Lead</h2>
+    <div className="bg-white p-6 rounded max-w-3xl w-full max-h-[60vh] overflow-y-auto">
+      <h2 className="text-xl font-bold mb-3">Edit Lead</h2>
 
-            {[
-              "first_name",
-              "last_name",
-              "email",
-              "phone",
-              "street_address",
-              "city",
-              "state",
-              "zip",
-              "partner_id",
-              "lead_status",
-            ].map((f) => (
-              <input
-                key={f}
-                className="border w-full mb-2 px-3 py-2"
-                placeholder={f.replace("_", " ")}
-                value={(editLead as any)[f] || ""}
-                onChange={(e) =>
-                  setEditLead({ ...editLead, [f]: e.target.value })
-                }
-              />
-            ))}
+      {/* BASIC INFO */}
+      {[
+        "first_name",
+        "last_name",
+        "email",
+        "phone",
+        "street_address",
+        "city",
+        "state",
+        "zip",
+        "partner_id",
+      ].map((f) => (
+        <input
+          key={f}
+          className="border w-full mb-2 px-3 py-2"
+          placeholder={f.replace("_", " ")}
+          value={(editLead as any)[f] || ""}
+          onChange={(e) =>
+            setEditLead({ ...editLead, [f]: e.target.value })
+          }
+        />
+      ))}
 
-            <div className="flex gap-2 mt-3">
-              <button
-                className="bg-red-700 text-white px-4 py-2 rounded flex-1"
-                onClick={saveEdit}
-              >
-                Save
-              </button>
-              <button
-                className="bg-gray-300 px-4 py-2 rounded flex-1"
-                onClick={() => setEditLead(null)}
-              >
-                Cancel
+      {/* LEAD STATUS */}
+      <div className="mb-3">
+        <div className="text-xs font-semibold text-gray-600 mb-1">
+          Lead Status
+        </div>
+        <select
+          className="border w-full px-3 py-2 rounded"
+          value={editLead.lead_status || "new"}
+          onChange={(e) =>
+            setEditLead({ ...editLead, lead_status: e.target.value })
+          }
+        >
+          {[
+            "new",
+            "contacted",
+            "in_progress",
+            "converted_to_order",
+            "closed",
+            "lost",
+          ].map((s) => (
+            <option key={s} value={s}>
+              {s.replaceAll("_", " ")}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* ACTIONS */}
+      <div className="flex gap-2 mt-4">
+        <button
+          className="bg-red-700 text-white px-4 py-2 rounded flex-1"
+          onClick={saveEdit}
+        >
+          Save
+        </button>
+        <button
+          className="bg-gray-300 px-4 py-2 rounded flex-1"
+          onClick={() => setEditLead(null)}
+        >
+          Cancel
+
               </button>
             </div>
           </div>

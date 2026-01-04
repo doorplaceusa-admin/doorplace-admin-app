@@ -53,21 +53,6 @@ export default function PartnerSwingOrderPage() {
     window.location.href = "/partners/dashboard";
   }
 
-  /* ===============================
-     GUARD
-  =============================== */
-  if (!partnerId) {
-    return (
-      <div className="p-10 text-center">
-        <h2 className="text-2xl font-bold text-red-700">
-          Partner Access Required
-        </h2>
-        <p className="mt-2 text-gray-600">
-          You must be logged in as an approved partner to submit orders.
-        </p>
-      </div>
-    );
-  }
 
   /* ===============================
      PAGE

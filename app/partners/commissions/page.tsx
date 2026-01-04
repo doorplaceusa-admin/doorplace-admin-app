@@ -13,8 +13,8 @@ type Row = {
   submission_type: string;
   partner_id?: string;
 
-  customer_first_name?: string;
-  customer_last_name?: string;
+  first_name?: string;
+  last_name?: string;
 
   swing_price?: number | string;
   accessory_price?: number | string;
@@ -25,6 +25,7 @@ type Row = {
   pending?: string;
   paid?: string;
   order_status?: string;
+  lead_status?: string
   commission_status?: string;
   notes?: string;
   created_at?: string;
@@ -191,7 +192,7 @@ export default function PartnerCommissionsPage() {
 
       return [
         o.lead_id,
-        `${o.customer_first_name || ""} ${o.customer_last_name || ""}`,
+        `${o.first_name || ""} ${o.last_name || ""}`,
         toNum(o.swing_price),
         toNum(o.accessory_price),
         commission,
@@ -276,37 +277,148 @@ export default function PartnerCommissionsPage() {
       </div>
 
       {activeTab === "orders" && (
-        <Table>
-          {orders.length === 0 && <Empty>No orders yet.</Empty>}
-          {orders.map((o) => {
-            const commission = getPayout(o);
+  <div className="space-y-4">
+    {orders.length === 0 && (
+      <Empty>No orders yet.</Empty>
+    )}
 
-            return (
-              <RowItem key={o.id}>
-                <div>{o.lead_id}</div>
-                <div>{o.customer_first_name} {o.customer_last_name}</div>
-                <div>{money(commission)}</div>
-                <div>{o.commission_status || "—"}</div>
-                <div className="text-gray-500">{o.notes || "—"}</div>
-              </RowItem>
-            );
-          })}
-        </Table>
-      )}
+    {orders.map((o) => {
+      const commission = getPayout(o);
+
+      return (
+        <div
+          key={o.id}
+          className="border rounded-lg p-4 space-y-3 bg-white"
+        >
+          {/* ORDER ID */}
+          <div className="flex justify-between text-xs text-gray-500">
+            <span>Order #</span>
+            <span className="font-mono">{o.lead_id}</span>
+          </div>
+
+          {/* CUSTOMER */}
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Customer</span>
+            <span className="font-medium">
+              {o.first_name} {o.last_name}
+            </span>
+          </div>
+
+          {/* PRICES */}
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Swing Price</span>
+            <span className="font-semibold">
+              {money(toNum(o.swing_price))}
+            </span>
+          </div>
+
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Accessory Price</span>
+            <span className="font-semibold">
+              {money(toNum(o.accessory_price))}
+            </span>
+          </div>
+
+          {/* COMMISSION */}
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Commission</span>
+            <span className="font-semibold text-green-700">
+              {money(commission)}
+            </span>
+          </div>
+
+          {/* STATUS */}
+          <div className="pt-2 border-t flex justify-between items-center">
+            <span className="text-sm text-gray-500">Status</span>
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+              {o.commission_status || "Pending"}
+            </span>
+          </div>
+
+          {/* NOTES */}
+          {o.notes && (
+            <div className="pt-2 text-xs text-gray-500">
+              <span className="font-medium">Notes:</span> {o.notes}
+            </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+)}
+
 
       {activeTab === "leads" && (
-        <Table>
-          {leads.length === 0 && <Empty>No leads yet.</Empty>}
-          {leads.map((l) => (
-            <RowItem key={l.id}>
-              <div>{l.lead_id}</div>
-              <div>{l.customer_first_name} {l.customer_last_name}</div>
-              <div>{l.order_status || "New"}</div>
-              <div className="text-gray-500">{l.notes || "—"}</div>
-            </RowItem>
-          ))}
-        </Table>
-      )}
+  <div className="space-y-4">
+    {leads.length === 0 && (
+      <Empty>No leads yet.</Empty>
+    )}
+
+    {leads.map((l) => (
+      <div
+        key={l.id}
+        className="border rounded-lg p-4 space-y-3 bg-white"
+      >
+        {/* LEAD ID */}
+        <div className="flex justify-between text-xs text-gray-500">
+          <span>Lead #</span>
+          <span className="font-mono">{l.lead_id}</span>
+        </div>
+
+        {/* CUSTOMER */}
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-500">Customer</span>
+          <span className="font-medium">
+            {l.first_name || l.last_name
+              ? `${l.first_name || ""} ${l.last_name || ""}`.trim()
+              : "—"}
+          </span>
+        </div>
+
+        {/* TYPE */}
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-500">Type</span>
+          <span className="font-medium">
+            {l.submission_type === "partner_tracking"
+              ? "Partner Tracking"
+              : l.submission_type === "quote"
+              ? "Quote"
+              : l.submission_type === "general"
+              ? "General Inquiry"
+              : "Lead"}
+          </span>
+        </div>
+
+        {/* DATE */}
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-500">Date</span>
+          <span className="font-medium">
+            {l.created_at
+              ? new Date(l.created_at).toLocaleDateString()
+              : "—"}
+          </span>
+        </div>
+
+        {/* STATUS */}
+        <div className="pt-2 border-t flex justify-between items-center">
+          <span className="text-sm text-gray-500">Status</span>
+          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+            {l.lead_status || "New"}
+          </span>
+        </div>
+
+        {/* NOTES */}
+        {l.notes && (
+          <div className="pt-2 text-xs text-gray-500">
+            <span className="font-medium">Notes:</span> {l.notes}
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+)}
+
+
 
       <div className="pt-6 text-center">
         <a

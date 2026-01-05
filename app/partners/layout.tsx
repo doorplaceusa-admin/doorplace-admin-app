@@ -42,6 +42,41 @@ export default function PartnerLayout({
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [viewItem, setViewItem] = useState<any>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
+  const isLegalPage = pathname.includes("/legal");
+  const lastAdminMessageRef = useRef<string | null>(null);
+
+
+
+  
+
+
+useEffect(() => {
+  if (!profilePartner?.partner_id) return;
+
+  const interval = setInterval(async () => {
+    const { data } = await supabase
+      .from("partner_messages")
+      .select("id, sender")
+      .eq("partner_id", profilePartner.partner_id)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    const latest = data?.[0];
+
+    if (
+      latest &&
+      latest.sender === "admin" &&
+      latest.id !== lastAdminMessageRef.current &&
+      !chatOpen
+    ) {
+      setHasUnread(true);
+      lastAdminMessageRef.current = latest.id;
+    }
+  }, 3000);
+
+  return () => clearInterval(interval);
+}, [profilePartner?.partner_id, chatOpen]);
 
 
 useEffect(() => {
@@ -167,7 +202,10 @@ useEffect(() => {
   if (loading) return null;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+<div
+  className={`${isLegalPage ? "" : "min-h-screen"} bg-gray-100 flex max-w-full overflow-x-hidden`}
+>
+
       {/* ===== DESKTOP SIDEBAR ===== */}
       <aside className="hidden md:flex w-64 bg-white shadow flex-col p-6">
         <h1 className="text-2xl font-bold text-red-700 mb-6">
@@ -207,7 +245,12 @@ useEffect(() => {
       </aside>
 
       {/* ===== MAIN CONTENT ===== */}
-<div className="flex-1 flex flex-col h-screen overflow-hidden">
+<div
+  className={`flex-1 flex flex-col max-w-full overflow-x-hidden ${
+    isLegalPage ? "h-auto overflow-y-auto" : "h-screen overflow-hidden"
+  }`}
+>
+
         {/* ===== TOP BAR ===== */}
 <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-white border-b md:px-6">
           {/* PROFILE */}
@@ -223,13 +266,14 @@ useEffect(() => {
   <div className="absolute left-0 mt-2 w-48 bg-white border rounded shadow z-50">
     <button
   onClick={() => {
-    router.push("/partners/dashboard?editProfile=1");
+    window.dispatchEvent(new Event("open-profile"));
     setProfileOpen(false);
   }}
   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
 >
   My Profile
 </button>
+
 
 
     <button
@@ -265,12 +309,27 @@ useEffect(() => {
     <Bell size={22} />
   </button>
 
-  <button
-    onClick={() => setChatOpen(true)}
-    className="text-[11px] text-red-700 font-semibold leading-none mt-1"
-  >
-    Live Chat
-  </button>
+  
+
+
+<button
+  onClick={() => {
+    setChatOpen(true);
+    setHasUnread(false); // clear unread when opening
+  }}
+  className="relative text-[11px] text-red-700 font-semibold leading-none mt-1"
+>
+  Live Chat
+
+  {hasUnread && (
+    <span className="absolute -top-1 -right-2 h-2 w-2 bg-red-600 rounded-full" />
+  )}
+</button>
+
+
+
+
+
 </div>
 
         </header>
@@ -292,7 +351,15 @@ useEffect(() => {
 
       {/* CHAT BODY */}
       <div className="flex-1 overflow-y-auto p-3">
-        <PartnerMessages partnerId={profilePartner.partner_id} />
+        <PartnerMessages
+  partnerId={profilePartner.partner_id}
+  onNewMessage={() => {
+    if (!chatOpen) {
+      setHasUnread(true);
+    }
+  }}
+/>
+
       </div>
 
     </div>
@@ -301,12 +368,19 @@ useEffect(() => {
 
 
         {/* ===== PAGE CONTENT ===== */}
-<main className="flex-1 overflow-y-auto overflow-x-hidden px-1 pb-24 md:px-6 md:pb-6">
+<main
+  className={`flex-1 overflow-y-auto overflow-x-hidden px-1 md:px-6 ${
+    isLegalPage ? "pb-[140px]" : "pb-24 md:pb-6"
+  }`}
+>
+
+
           {children}
         </main>
 
         {/* ===== MOBILE BOTTOM NAV ===== */}
-        <PartnerBottomNav />
+        {!isLegalPage && <PartnerBottomNav />}
+
       </div>
     </div>
   );
@@ -317,7 +391,13 @@ useEffect(() => {
 ====================== */
 
 function PartnerBottomNav() {
+  const pathname = usePathname();
   const [showMore, setShowMore] = useState(false);
+
+  // 🚫 HARD STOP: never render on legal pages
+  if (pathname.includes("/legal")) {
+    return null;
+  }
 
   return (
     <>
@@ -330,7 +410,7 @@ function PartnerBottomNav() {
         <MobileNavItem
           href="/partners/commissions"
           icon={<DollarSign size={20} />}
-          label="Pay"
+          label="Comm"
         />
         <MobileNavItem
           href="/partners/orders"
@@ -340,7 +420,7 @@ function PartnerBottomNav() {
         <MobileNavItem
           href="/partners/leads"
           icon={<UserRoundPenIcon size={20} />}
-          label="leads"
+          label="Leads"
         />
 
         <button
@@ -361,18 +441,15 @@ function PartnerBottomNav() {
             className="absolute bottom-16 left-2 right-2 bg-white rounded-lg shadow-lg p-2"
             onClick={(e) => e.stopPropagation()}
           >
-            <MobileNavItem
-              href="/partners/resources"
-              icon={<BookOpen size={20} />}
-              label="Resources"
-              onClick={() => setShowMore(false)}
-            />
+          
+            
           </div>
         </div>
       )}
     </>
   );
 }
+
 
 /* ===== NAV HELPERS ===== */
 

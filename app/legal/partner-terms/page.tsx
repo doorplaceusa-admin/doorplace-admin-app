@@ -2,7 +2,19 @@ export const dynamic = "force-dynamic";
 
 export default function PartnerTermsPage() {
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6 text-sm leading-relaxed text-gray-800">
+    <div
+      className="
+        max-w-4xl
+        mx-auto
+        p-6
+        space-y-6
+        text-sm
+        leading-relaxed
+        text-gray-800
+        max-h-[60dvh]
+        overflow-y-auto
+      "
+    >
 
       {/* ===============================
           HEADER
@@ -36,6 +48,7 @@ export default function PartnerTermsPage() {
         tracking link, or representing Doorplace USA in any capacity, you agree
         to be legally bound by the terms outlined below.
       </p>
+
 
       {/* ===============================
           INDEPENDENT CONTRACTOR STATUS
@@ -137,8 +150,10 @@ export default function PartnerTermsPage() {
           has been received and verified</b>, not after project completion.
         </p>
         <p>
-          Payments are issued using the payout method selected during onboarding
-          (Zelle, Cash App, or bank transfer).
+          Payments are issued via direct deposit. After your first sale, you will receive an 
+          email with a secure link to set up your direct deposit information.
+
+
         </p>
         <p>
           Doorplace USA reserves the right to withhold, adjust, or reverse
@@ -251,6 +266,22 @@ export default function PartnerTermsPage() {
         Watauga, Texas · partners@doorplaceusa.com
       </div>
 
+<div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-40">
+  <label className="flex items-center gap-2 text-sm">
+    <input type="checkbox" />
+    I agree to the Legal, Privacy & Partner Terms
+  </label>
+
+  <button className="mt-3 w-full bg-red-700 text-white py-2 rounded">
+    Continue
+  </button>
+</div>
+
+
     </div>
+    
+
+
+
   );
 }

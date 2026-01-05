@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import PartnerMessages from "./components/PartnerMessages";
 
@@ -61,25 +60,27 @@ const [showMessages, setShowMessages] = useState(false);
 
 
   const [stats, setStats] = useState({
-    totalLeads: 0,
-    totalOrders: 0,
-    totalCommission: 0,
-  });
+  totalLeads: 0,
+  totalOrders: 0,
+  totalCommission: 0,
+});
+
 
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  const searchParams = useSearchParams();
 
-  /* ===============================
-     SEARCH PARAM HANDLER
-  =============================== */
+
   useEffect(() => {
-    const open = searchParams.get("editProfile");
-    if (open === "1" && partner) {
-      setEditProfileItem(partner);
-      setEditProfileOpen(true);
-    }
-  }, [searchParams, partner]);
+  function openProfile() {
+    setEditProfileItem(partner);
+    setEditProfileOpen(true);
+  }
+
+  window.addEventListener("open-profile", openProfile);
+  return () => window.removeEventListener("open-profile", openProfile);
+}, [partner]);
+
+
 
   /* ===============================
      LOAD PARTNER  ✅ (THIS IS THE WORKING PART)
@@ -203,6 +204,9 @@ async function handlePartnerUpload() {
     let totalOrders = 0;
     let totalCommission = 0;
 
+  
+
+
     rows.forEach((r: any) => {
       const swing = Number(r.swing_price || 0);
       const accessories = Number(r.accessory_price || 0);
@@ -219,7 +223,13 @@ async function handlePartnerUpload() {
       }
     });
 
-    setStats({ totalLeads, totalOrders, totalCommission });
+    setStats({
+  totalLeads,
+  totalOrders,
+  totalCommission,
+ 
+});
+
   }
 
   loadDashboardStats();
@@ -274,7 +284,7 @@ async function handlePartnerUpload() {
 if (showLegalGate && partner) {
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg w-full max-w-3xl max-h-[85vh] flex flex-col shadow-xl">
+      <div className="bg-white rounded-lg w-full max-w-3xl max-h-[70vh] flex flex-col shadow-xl">
 
         {/* HEADER */}
         <div className="border-b p-5">
@@ -309,7 +319,7 @@ if (showLegalGate && partner) {
             disabled={!agreeChecked || agreeSaving}
             className={`w-full py-3 rounded font-bold text-white ${
               !agreeChecked || agreeSaving
-                ? "bg-gray-400 cursor-not-allowed"
+                ? "bg-red-700 cursor-not-allowed"
                 : "bg-red-700"
             }`}
             onClick={async () => {
@@ -325,11 +335,23 @@ if (showLegalGate && partner) {
                 })
                 .eq("id", partner.id);
 
-              if (!error) {
-                setShowLegalGate(false);
-              } else {
-                alert("Failed to save agreement. Please try again.");
-              }
+             if (!error) {
+  // ✅ IMPORTANT: update LOCAL partner state
+  setPartner((prev) =>
+    prev
+      ? {
+          ...prev,
+          agreed_to_partner_terms: true,
+          agreed_to_partner_terms_at: new Date().toISOString(),
+        }
+      : prev
+  );
+
+  setShowLegalGate(false);
+} else {
+  alert("Failed to save agreement. Please try again.");
+}
+
 
               setAgreeSaving(false);
             }}
@@ -358,17 +380,26 @@ if (showLegalGate && partner) {
       </div>
 
       {/* STATS */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <Card label="Total Leads" value={stats.totalLeads} />
-        <Card label="Total Orders" value={stats.totalOrders} />
-        <Card
-          label="Total Commission"
-          value={stats.totalCommission.toLocaleString("en-US", {
-            style: "currency",
-            currency: "USD",
-          })}
-        />
-      </div>
+<div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+  {/* LINK VIEWS — COMING SOON */}
+  <div className="border rounded p-4 bg-gray-100">
+    <div className="text-xs text-gray-500">Link Views</div>
+    <div className="text-lg font-bold text-gray-400">Coming Soon</div>
+    
+  </div>
+
+  <Card label="Total Leads" value={stats.totalLeads} />
+  <Card label="Total Orders" value={stats.totalOrders} />
+  <Card
+    label="Total Commission"
+    value={stats.totalCommission.toLocaleString("en-US", {
+      style: "currency",
+      currency: "USD",
+    })}
+  />
+</div>
+
+
 
       {/* WELCOME VIDEO */}
       <div className="border rounded overflow-hidden">
@@ -384,7 +415,7 @@ if (showLegalGate && partner) {
           <div className="p-4 bg-white space-y-4">
             <div className="aspect-video bg-black rounded overflow-hidden">
               <video
-                src="https://cdn.shopify.com/videos/c/o/v/3cb96a79231f4f72891a5d6d4b279c7b.mp4"
+                src="https://cdn.shopify.com/videos/c/o/v/7adaf5967a444758acb6f207d59606fe.mp4"
                 controls
                 playsInline
                 preload="metadata"
@@ -401,7 +432,7 @@ if (showLegalGate && partner) {
 
       {/* TRACKING LINK */}
       <div className="border rounded overflow-hidden">
-        <div className="bg-red-700 text-white px-4 py-3 font-bold">Your Swing Tracking Link</div>
+        <div className="bg-gray-600 text-white px-4 py-3 font-bold">Your Swing Tracking Link</div>
 
         <div className="p-4 space-y-4">
           <input readOnly value={swingTrackingLink} className="w-full border rounded px-3 py-2 text-sm" />
@@ -423,6 +454,33 @@ if (showLegalGate && partner) {
           </ul>
         </div>
       </div>
+
+      {/* FUTURE DOOR TRACKING LEADS (COMING SOON) */}
+<div className="border rounded overflow-hidden">
+  <div className="bg-gray-300 text-white px-4 py-3 font-bold">
+    Future Door Tracking Leads — Coming Soon
+  </div>
+
+  <div className="p-4 space-y-3 bg-white">
+    <p className="text-sm text-gray-700 leading-relaxed">
+      We’re actively building a door tracking system similar to your swing
+      tracking link. Once released, you’ll be able to share select Doorplace USA
+      door pages and earn commissions when those leads turn into completed door
+      projects.
+    </p>
+
+    <p className="text-sm text-gray-600 leading-relaxed">
+      This will include interior doors, exterior doors, custom designs, and
+      specialty projects — all tracked back to your Partner ID automatically.
+    </p>
+
+    <div className="bg-gray-100 p-3 rounded text-sm text-gray-700 font-semibold text-center">
+      Door tracking links are not active yet. This feature will unlock in a
+      future update.
+    </div>
+  </div>
+</div>
+
 
       {/* PAYOUTS / DIRECT DEPOSIT */}
 <div className="border rounded overflow-hidden">
@@ -733,14 +791,16 @@ if (showLegalGate && partner) {
       return;
     }
 
-    // ✅ Update local state FIRST
-    setPartner((prev) => (prev ? { ...prev, ...payload } : prev));
+    // ✅ 1) Remove URL trigger FIRST (prevents auto re-open)
+router.replace("/partners/dashboard", { scroll: false });
 
-    // ✅ Close modal FIRST
-    setEditProfileOpen(false);
+// ✅ 2) Close modal + clear item
+setEditProfileOpen(false);
+setEditProfileItem(null);
 
-    // ✅ THEN clean the URL (no race condition)
-    router.replace("/partners/dashboard", { scroll: false });
+// ✅ 3) Update local partner state LAST
+setPartner((prev) => (prev ? { ...prev, ...payload } : prev));
+
 
     // reset flag
     setSavingProfile(false);

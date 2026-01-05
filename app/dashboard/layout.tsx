@@ -20,6 +20,7 @@ import {
   Bell,
   User,
   LogOut,
+  PersonStanding,
 } from "lucide-react";
 
 /* ======================
@@ -265,7 +266,8 @@ function MobileBottomNav() {
         <MobileNavItem href="/dashboard/leads" icon={<ClipboardList size={20} />} label="Leads" />
         <MobileNavItem href="/dashboard/orders" icon={<Package size={20} />} label="Orders" />
         <MobileNavItem href="/dashboard/partners" icon={<Handshake size={20} />} label="Partners" />
-        <MobileNavItem href="/dashboard/commissions" icon={<DollarSign size={20} />} label="Comm" />
+        <MobileNavItem href="/dashboard/chat" icon={<PersonStanding size={20} />} label="Chat" />
+        
 
         <button
           onClick={() => setShowMore(true)}
@@ -286,6 +288,12 @@ function MobileBottomNav() {
             onClick={(e) => e.stopPropagation()}
           >
             <MobileNavItem
+              href="/dashboard/commissions"
+              icon={<DollarSign size={20} />}
+              label="Comm1"
+              onClick={() => setShowMore(false)}
+            />
+            <MobileNavItem
               href="/dashboard/receipts"
               icon={<DollarSign size={20} />}
               label="Receipts"
@@ -300,7 +308,7 @@ function MobileBottomNav() {
             <MobileNavItem
               href="/dashboard/partners/commissions"
               icon={<DollarSign size={20} />}
-              label="Commissions"
+              label="Comm2"
               onClick={() => setShowMore(false)}
             />
             <MobileNavItem

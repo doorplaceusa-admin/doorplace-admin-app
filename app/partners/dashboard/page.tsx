@@ -415,7 +415,7 @@ if (showLegalGate && partner) {
           <div className="p-4 bg-white space-y-4">
             <div className="aspect-video bg-black rounded overflow-hidden">
               <video
-                src="https://cdn.shopify.com/videos/c/o/v/7adaf5967a444758acb6f207d59606fe.mp4"
+                src="https://cdn.shopify.com/videos/c/o/v/aab639df1f4b4ce0937e18ae88b5e3b0.mp4"
                 controls
                 playsInline
                 preload="metadata"

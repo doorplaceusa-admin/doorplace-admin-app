@@ -65,12 +65,25 @@ export default function PartnersPage() {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<"newest" | "oldest" | "name">("newest");
-
   const [viewItem, setViewItem] = useState<Partner | null>(null);
   const [editItem, setEditItem] = useState<Partner | null>(null);
   const [viewProfileOpen, setViewProfileOpen] = useState(false);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
+
+  const [sort, setSort] = useState<
+  | "newest"
+  | "oldest"
+  | "name"
+  | "login_users"
+  | "no_login"
+  | "email_not_verified"
+  | "ready_for_activation"
+  | "welcome_email_not_sent_login"
+  | "pending"
+  | "active"
+>("newest");
+
+
 
 
   /* ===== BULK REPAIR ===== */
@@ -80,16 +93,58 @@ export default function PartnersPage() {
   const [repairLogs, setRepairLogs] = useState<string[]>([]);
 
   async function loadRows() {
-    setLoading(true);
+  setLoading(true);
 
-    const { data } = await supabase
-      .from("partners")
-      .select("*")
-      .order("created_at", { ascending: sort === "oldest" });
+  let query = supabase.from("partners").select("*");
 
-    setRows(data || []);
-    setLoading(false);
+  // ordering
+  if (sort === "oldest") {
+    query = query.order("created_at", { ascending: true });
+  } else {
+    query = query.order("created_at", { ascending: false });
   }
+
+  // filters
+  if (sort === "login_users") {
+    query = query.not("auth_user_id", "is", null);
+  }
+
+  if (sort === "no_login") {
+    query = query.is("auth_user_id", null);
+  }
+
+  if (sort === "email_not_verified") {
+    query = query.eq("email_verified", false);
+  }
+
+  if (sort === "pending") {
+    query = query.eq("status", "pending");
+  }
+
+  if (sort === "active") {
+    query = query.eq("status", "active");
+  }
+
+  if (sort === "ready_for_activation") {
+    query = query
+      .not("auth_user_id", "is", null)
+      .eq("email_verified", true)
+      .eq("status", "pending");
+  }
+
+  if (sort === "welcome_email_not_sent_login") {
+    query = query
+      .not("auth_user_id", "is", null)
+      .eq("status", "pending")
+      .eq("welcome_email_sent", false);
+  }
+
+  const { data } = await query;
+
+  setRows(data || []);
+  setLoading(false);
+}
+
 
   useEffect(() => {
     loadRows();
@@ -261,14 +316,25 @@ async function updatePartnerStatus(
           />
 
           <select
-            className="border rounded px-3 py-2 w-full md:w-auto"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as any)}
-          >
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-            <option value="name">Name A–Z</option>
-          </select>
+  className="border rounded px-3 py-2 w-full md:w-auto"
+  value={sort}
+  onChange={(e) => setSort(e.target.value as any)}
+>
+  <option value="newest">Newest</option>
+  <option value="oldest">Oldest</option>
+  <option value="name">Name A–Z</option>
+
+  <option value="login_users">Login Users</option>
+  <option value="no_login">No Login Yet</option>
+  <option value="email_not_verified">Email Not Verified</option>
+  <option value="ready_for_activation">Ready for Activation</option>
+  <option value="welcome_email_not_sent_login">
+    Welcome Email Not Sent (Login Users)
+  </option>
+  <option value="pending">Pending Approval</option>
+  <option value="active">Active Partners</option>
+</select>
+
         </div>
       </div>
 

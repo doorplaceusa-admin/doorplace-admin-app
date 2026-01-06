@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import PartnerMessages from "./components/PartnerMessages";
 import PartnerSocialShareCard from "./components/PartnerSocialShareCard";
+import PartnerQRCode from "@/app/partners/dashboard/components/PartnerQRCode";
+
 
 
 
@@ -34,6 +36,7 @@ type Partner = {
   // ✅ NEW
   agreed_to_partner_terms: boolean;
   agreed_to_partner_terms_at: string | null;
+
 };
 
 
@@ -447,6 +450,8 @@ if (showLegalGate && partner) {
       </div>
 
 <PartnerSocialShareCard partnerId={partner.partner_id!} />
+<PartnerQRCode trackingLink={swingTrackingLink} />
+
 
       {/* TRACKING LINK */}
       <div className="border rounded overflow-hidden">

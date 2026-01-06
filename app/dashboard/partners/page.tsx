@@ -281,6 +281,9 @@ export default function PartnersPage() {
           <div><b>Joined:</b> {formatDate(p.created_at)}</div>
           <div><b>Email Verified:</b> {p.email_verified ? "Yes" : "No"}</div>
           <div><b>Welcome Email:</b> {p.welcome_email_sent ? "Sent" : "Not Sent"}</div>
+          <div><b>Recent Confirmation:</b> {p.confirmation_email_recent ? "Sent" : "Not Sent"}</div>
+
+  
         </div>
 
         <div className="flex gap-2 pt-2">

@@ -6,6 +6,7 @@ import { useAdminPresence } from "@/app/components/presence/AdminPresenceContext
 
 
 
+
 const brandRed = "#b80d0d";
 
 // ================= TYPES =================
@@ -33,6 +34,7 @@ type RecentItem = {
 
 // ================= PAGE =================
 export default function DashboardPage() {
+  const [tasksOpen, setTasksOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
   totalLeads: 0,
@@ -292,86 +294,58 @@ const uniqueSessions = new Set(
 </div>
 
 
+{/* 🟡 TASKS REQUIRING ATTENTION */}
+<div className="bg-white rounded shadow mb-6 overflow-hidden">
+
+  {/* HEADER (CLICK TO TOGGLE) */}
+  <button
+    onClick={() => setTasksOpen(!tasksOpen)}
+    className="w-full flex items-center justify-between px-4 py-3 text-left border-b"
+  >
+    <h2 className="text-lg font-semibold" style={{ color: "#b80d0d" }}>
+      Tasks Requiring Attention
+    </h2>
+
+    <span className="text-sm text-gray-500">
+      {tasksOpen ? "Hide" : "Show"}
+    </span>
+  </button>
+
+  {/* CONTENT */}
+  {tasksOpen && (
+    <div className="px-4 py-4">
+      <ul className="space-y-2">
+        <li className="flex justify-between border-b pb-1">
+          <span>Unread Leads</span>
+          <span className="font-bold text-gray-700">0</span>
+        </li>
+
+        <li className="flex justify-between border-b pb-1">
+          <span>Orders Missing Measurements</span>
+          <span className="font-bold text-gray-700">0</span>
+        </li>
+
+        <li className="flex justify-between border-b pb-1">
+          <span>Pending Partner Payouts</span>
+          <span className="font-bold text-gray-700">0</span>
+        </li>
+
+        <li className="flex justify-between border-b pb-1">
+          <span>Invoices Needing Approval</span>
+          <span className="font-bold text-gray-700">0</span>
+        </li>
+
+        <li className="flex justify-between">
+          <span>Leads Older Than 48 Hours</span>
+          <span className="font-bold text-gray-700">0</span>
+        </li>
+      </ul>
+    </div>
+  )}
+</div>
 
 
-      {/* 🟡 TASKS REQUIRING ATTENTION (kept) */}
-      <div className="bg-white p-4 rounded shadow mb-6">
-        <h2 className="text-lg font-semibold mb-3" style={{ color: "#b80d0d" }}>
-          Tasks Requiring Attention
-        </h2>
 
-        <ul className="space-y-2">
-          <li className="flex justify-between border-b pb-1">
-            <span>Unread Leads</span>
-            <span className="font-bold text-gray-700">0</span>
-          </li>
-
-          <li className="flex justify-between border-b pb-1">
-            <span>Orders Missing Measurements</span>
-            <span className="font-bold text-gray-700">0</span>
-          </li>
-
-          <li className="flex justify-between border-b pb-1">
-            <span>Pending Partner Payouts</span>
-            <span className="font-bold text-gray-700">0</span>
-          </li>
-
-          <li className="flex justify-between border-b pb-1">
-            <span>Invoices Needing Approval</span>
-            <span className="font-bold text-gray-700">0</span>
-          </li>
-
-          <li className="flex justify-between">
-            <span>Leads Older Than 48 Hours</span>
-            <span className="font-bold text-gray-700">0</span>
-          </li>
-        </ul>
-      </div>
-
-
-
-      {/* =================== RECENT LEADS + ORDERS =================== */}
-      <div style={{ ...gridTwo, marginTop: 20 }}>
-        <Panel title="Recent Leads">
-          {recentLeads.length === 0 ? (
-            <div style={{ color: "#777" }}>No recent leads yet</div>
-          ) : (
-            recentLeads.map((l) => <Row key={l.id} label={l.label} value={l.date} />)
-          )}
-        </Panel>
-
-        <Panel title="Recent Orders">
-          {recentOrders.map((o) => (
-            <Row
-              key={o.id}
-              label={o.label}
-              value={`${o.date} — ${fmt(o.amount || 0)}`}
-            />
-          ))}
-        </Panel>
-      </div>
-
-      {/* =================== LEADERBOARD (kept) =================== */}
-      <Panel title="Top Partner Performance" style={{ marginTop: 20 }}>
-        <table style={tableStyle}>
-          <thead>
-            <tr>
-              <th style={thTd}>Partner</th>
-              <th style={thTd}>Orders</th>
-              <th style={thTd}>Revenue</th>
-            </tr>
-          </thead>
-          <tbody>
-            {partnerPerformance.map((p) => (
-              <tr key={p.partner_id}>
-                <td style={thTd}>{p.partner_id}</td>
-                <td style={thTd}>{p.orders}</td>
-                <td style={thTd}>{fmt(p.revenue)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Panel>
 
       {/* =================== SYSTEM HEALTH (leave it) =================== */}
       <Panel title="System Health" style={{ marginTop: 20 }}>

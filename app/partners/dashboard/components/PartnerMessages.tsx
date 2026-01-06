@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { notifyAdmin } from "@/lib/notifyAdmin";
+
 
 type Message = {
   id: string;
@@ -91,16 +93,35 @@ setMessages(data as Message[]);
 
     setSending(true);
 
-    const { error } = await supabase.from("partner_messages").insert({
-      partner_id: partnerId,
-      message: newMessage.trim(),
-      sender: isAdmin ? "admin" : "partner",
-    });
+    const sender = isAdmin ? "admin" : "partner";
 
-    if (!error) {
-      setNewMessage("");
-      loadMessages();
-    }
+const { data, error } = await supabase
+  .from("partner_messages")
+  .insert({
+    partner_id: partnerId,
+    message: newMessage.trim(),
+    sender,
+  })
+  .select()
+  .single();
+
+if (!error && data) {
+  setNewMessage("");
+  loadMessages();
+
+  // 🔔 ADMIN NOTIFICATION (ONLY FOR PARTNER MESSAGES)
+  if (sender === "partner") {
+    await notifyAdmin({
+      type: "partner_message",
+      title: "New Live Chat Message",
+      body: "A partner sent a new message",
+      entityType: "partner_message",
+      entityId: data.id,
+      companyId: data.company_id, // or your known companyId
+    });
+  }
+}
+
 
     setSending(false);
   }

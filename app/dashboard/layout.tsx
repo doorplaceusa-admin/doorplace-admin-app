@@ -52,6 +52,10 @@ export default function DashboardLayout({
 
   const [loading, setLoading] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [open, setOpen] = useState(false);
+
   const [onlineStats, setOnlineStats] = useState({
   partners: 0,
   admins: 0,
@@ -160,6 +164,27 @@ useEffect(() => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  async function loadNotifications() {
+  const { data } = await supabase
+    .from("notifications")
+    .select("id, title, type, created_at, is_read")
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (data) {
+    setNotifications(data);
+    setUnreadCount(data.filter(n => !n.is_read).length);
+  }
+}
+
+useEffect(() => {
+  loadNotifications();
+
+  const interval = setInterval(loadNotifications, 5000);
+  return () => clearInterval(interval);
+}, []);
+
+
   async function handleLogout() {
     await supabase.auth.signOut();
     router.replace("/login");
@@ -241,12 +266,58 @@ useEffect(() => {
 
           <span className="font-semibold">Admin Dashboard</span>
 
-          <button
-            onClick={() => alert("Notifications coming next")}
-            className="p-1 rounded hover:bg-gray-100"
-          >
-            <Bell size={22} />
-          </button>
+
+<div className="relative">
+  <button
+    onClick={() => setOpen(o => !o)}
+    className="relative p-2"
+  >
+    <Bell className="h-5 w-5 text-gray-700" />
+
+    {unreadCount > 0 && (
+      <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full px-1">
+        {unreadCount}
+      </span>
+    )}
+  </button>
+
+  {open && (
+    <div className="absolute right-0 mt-2 w-80 bg-white border rounded shadow z-50">
+      <div className="p-2 text-sm font-semibold border-b">
+        Notifications
+      </div>
+
+      {notifications.length === 0 && (
+        <div className="p-3 text-xs text-gray-500">
+          No notifications
+        </div>
+      )}
+
+      {notifications.map(n => (
+        <button
+          key={n.id}
+          onClick={async () => {
+            await supabase
+              .from("notifications")
+              .update({ is_read: true })
+              .eq("id", n.id);
+
+            loadNotifications();
+          }}
+          className={`w-full text-left px-3 py-2 text-sm border-b hover:bg-gray-50 ${
+            !n.is_read ? "bg-red-50" : ""
+          }`}
+        >
+          <div className="font-medium">{n.title}</div>
+          <div className="text-xs text-gray-500">
+            {new Date(n.created_at).toLocaleString()}
+          </div>
+        </button>
+      ))}
+    </div>
+  )}
+</div>
+
         </header>
 
         {/* ===== PAGE CONTENT ===== */}

@@ -5,6 +5,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendAdminNotification } from "@/lib/sendAdminNotification";
 import nodemailer from "nodemailer";
+import { notifyAdmin } from "@/lib/notifyAdmin";
+
 
 
 
@@ -221,6 +223,18 @@ const { data: leadData, error: leadError } = await supabase
   .single();
 
 if (leadError || !leadData) {
+  // ===============================
+// ADMIN IN-APP NOTIFICATION (OPTION 1)
+// ===============================
+await notifyAdmin({
+  type: "lead_created",
+  title: "New Lead / Order Received",
+  body: "A new entry was added to the leads table",
+  entityType: "lead",
+  entityId: leadData.id,          // internal UUID
+  companyId: leadData.company_id, // keep multi-company safe
+});
+
   console.error("Lead insert error:", leadError);
   return new NextResponse("Internal Server Error", { status: 500 });
 }

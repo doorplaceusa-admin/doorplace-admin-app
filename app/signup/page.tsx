@@ -2,11 +2,18 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useAppViewTracker } from "@/lib/useAppViewTracker";
+
 
 import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const router = useRouter();
+  useAppViewTracker({
+  role: "unknown", // or "admin" | "partner"
+  companyId: null,
+});
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");

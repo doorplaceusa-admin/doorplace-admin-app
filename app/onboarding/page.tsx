@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useAppViewTracker } from "@/lib/useAppViewTracker";
+
 
 export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string>("");
   const [err, setErr] = useState<string>("");
+  useAppViewTracker({
+  role: "unknown", // or "admin" | "partner"
+  companyId: null,
+});
+
 
   const [form, setForm] = useState({
     first_name: "",

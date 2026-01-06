@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import nodemailer from "nodemailer";
+import crypto from "crypto";
+
 
 // IMPORTANT: Nodemailer requires Node runtime
 export const runtime = "nodejs";
@@ -173,6 +175,8 @@ async function sendPartnerEmail(partner: any) {
 
 
 
+
+
   return transporter.sendMail({
     from: SMTP_FROM,
     to: partner.email_address,
@@ -182,69 +186,9 @@ async function sendPartnerEmail(partner: any) {
   });
 }
 
-async function syncShopifyContactInfo(partner: any) {
-  const SHOPIFY_STORE = requireEnv("SHOPIFY_STORE");
-  const SHOPIFY_API_VERSION = requireEnv("SHOPIFY_API_VERSION");
-  const SHOPIFY_ACCESS_TOKEN = requireEnv("SHOPIFY_ACCESS_TOKEN");
 
-  const headers = {
-    "X-Shopify-Access-Token": SHOPIFY_ACCESS_TOKEN,
-    "Content-Type": "application/json",
-  };
 
-  // Find Shopify customer by email
-  const searchRes = await fetch(
-    `https://${SHOPIFY_STORE}.myshopify.com/admin/api/${SHOPIFY_API_VERSION}/customers/search.json?query=email:${encodeURIComponent(
-      partner.email_address
-    )}`,
-    { headers }
-  );
 
-  const searchJson = await searchRes.json();
-  if (!searchJson.customers || searchJson.customers.length === 0) return;
-
-  const customer = searchJson.customers[0];
-
-  const update: any = { id: customer.id };
-
-  // Phone
-  if (partner.cell_phone_number) {
-    update.phone = partner.cell_phone_number.replace(/[^\d+]/g, "");
-
-  }
-
-  // Address (safe — only fills what exists)
-  if (
-    partner.street_address ||
-    partner.city ||
-    partner.state ||
-    partner.zip_code
-  ) {
-    update.addresses = [
-  {
-    address1: partner.street_address || "",
-    city: partner.city || "",
-    province_code: partner.state || "",
-    zip: partner.zip_code || "",
-    country_code: "US",
-    default: true,
-  },
-];
-
-  }
-
-  // Nothing to update → exit quietly
-  if (Object.keys(update).length === 1) return;
-
-  await fetch(
-    `https://${SHOPIFY_STORE}.myshopify.com/admin/api/${SHOPIFY_API_VERSION}/customers/${customer.id}.json`,
-    {
-      method: "PUT",
-      headers,
-      body: JSON.stringify({ customer: update }),
-    }
-  );
-}
 
 
 /* ======================================================
@@ -356,6 +300,88 @@ if (action === "send_welcome_email") {
   return NextResponse.json({ status: "welcome_email_sent" });
 }
 
+async function sendConfirmationEmail(
+  email: string,
+  email_verify_token: string
+) {
+  const SMTP_HOST = requireEnv("SMTP_HOST");
+  const SMTP_PORT = Number(requireEnv("SMTP_PORT"));
+  const SMTP_USER = requireEnv("SMTP_USER");
+  const SMTP_PASS = requireEnv("SMTP_PASS");
+  const SMTP_FROM = requireEnv("SMTP_FROM");
+
+  const transporter = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: false,
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
+  });
+
+  return transporter.sendMail({
+    from: SMTP_FROM,
+    to: email,
+    subject: "Confirm your Doorplace USA partner account (TradePilot)",
+    html: `
+<p>This email is being sent to confirm your Doorplace USA partner account.
+
+</p>
+
+<p>Please confirm your email address:</p>
+
+<p>
+  <a
+    href="https://tradepilot.doorplaceusa.com/api/partners/verify-email?token=${email_verify_token}"
+    style="display:inline-block;padding:12px 20px;background:#b80d0d;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;"
+  >
+    Confirm Email
+  </a>
+</p>
+
+<p style="font-size:12px;color:#777;margin-top:30px;">
+  TradePilot • Built by Doorplace USA
+</p>
+`,
+    replyTo: "partners@doorplaceusa.com",
+  });
+}
+
+
+/* ===============================
+   SEND CONFIRMATION EMAIL (RESEND)
+=============================== */
+if (action === "send_confirmation_email") {
+  const { data: partner, error } = await supabaseAdmin
+    .from("partners")
+    .select("*")
+    .eq("partner_id", partner_id)
+    .single();
+
+  if (error || !partner) {
+    return NextResponse.json({ error: "Partner not found" }, { status: 404 });
+  }
+
+  // generate new verification token
+  const email_verify_token = crypto.randomUUID();
+
+  // store token + mark resend
+  await supabaseAdmin
+    .from("partners")
+    .update({
+      email_verify_token,
+      email_verify_sent_at: new Date().toISOString(),
+      confirmation_email_recent: true,
+    })
+    .eq("partner_id", partner_id);
+
+  // send confirmation email (reuses SMTP config)
+  await sendConfirmationEmail(
+    partner.email_address,
+    email_verify_token
+  );
+
+  return NextResponse.json({ status: "confirmation_email_resent" });
+}
+
 
 
     /* ===============================
@@ -411,8 +437,6 @@ if (action === "send_welcome_email") {
         partner.email_address,
         partner.partner_id
       );
-
-      await syncShopifyContactInfo(partner);
 
 
       await supabaseAdmin

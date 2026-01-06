@@ -1,6 +1,12 @@
+import { useAppViewTracker } from "@/lib/useAppViewTracker";
 export const dynamic = "force-dynamic";
 
 export default function PartnerTermsPage() {
+  useAppViewTracker({
+  role: "unknown", // or "admin" | "partner"
+  companyId: null,
+});
+
   return (
     <div
       className="

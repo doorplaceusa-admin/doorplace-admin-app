@@ -4,13 +4,25 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { useAppViewTracker } from "@/lib/useAppViewTracker";
+
+
+
+
 
 export default function LoginPage() {
   const router = useRouter();
 
+  useAppViewTracker({
+    role: "unknown",
+    companyId: null,
+  });
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+
 
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");

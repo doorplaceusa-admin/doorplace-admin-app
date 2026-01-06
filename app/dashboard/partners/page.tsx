@@ -6,9 +6,8 @@ import { supabase } from "@/lib/supabaseClient";
 import AdminTable from "../../components/ui/admintable";
 
 /* ===============================
-   TYPES (PARTNER DATA ONLY)
+   TYPES
 ================================ */
-
 
 type Partner = {
   id: string;
@@ -22,7 +21,10 @@ type Partner = {
   status: "pending" | "active";
   email_verified: boolean;
   welcome_email_sent: boolean;
-  created_at: string; //Joined Date
+  confirmation_email_recent?: boolean;
+  agreed_to_partner_terms?: boolean;
+
+  created_at: string;
 
   business_name?: string;
   coverage_area?: string;
@@ -35,17 +37,6 @@ type Partner = {
   zip_code?: string;
 };
 
-
-
-type BulkRepairResponse = {
-  success: boolean;
-  repaired?: number;
-  emailsSent?: number;
-  alreadyClean?: number;
-  skipped?: number;
-  logs?: string[];
-};
-
 function formatDate(dateString?: string) {
   if (!dateString) return "—";
   const d = new Date(dateString);
@@ -56,10 +47,10 @@ function formatDate(dateString?: string) {
   });
 }
 
-
 /* ===============================
    PAGE
 ================================ */
+
 export default function PartnersPage() {
   const [rows, setRows] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,88 +58,64 @@ export default function PartnersPage() {
   const [search, setSearch] = useState("");
   const [viewItem, setViewItem] = useState<Partner | null>(null);
   const [editItem, setEditItem] = useState<Partner | null>(null);
-  const [viewProfileOpen, setViewProfileOpen] = useState(false);
-  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [layout, setLayout] = useState<"cards" | "table">("cards");
+  
+
+
 
   const [sort, setSort] = useState<
-  | "newest"
-  | "oldest"
-  | "name"
-  | "login_users"
-  | "no_login"
-  | "email_not_verified"
-  | "ready_for_activation"
-  | "welcome_email_not_sent_login"
-  | "pending"
-  | "active"
->("newest");
+    | "newest"
+    | "oldest"
+    | "name"
+    | "login_users"
+    | "no_login"
+    | "email_not_verified"
+    | "ready_for_activation"
+    | "welcome_email_not_sent_login"
+    | "pending"
+    | "active"
+  >("newest");
 
 
 
 
-  /* ===== BULK REPAIR ===== */
-  const [repairRunning, setRepairRunning] = useState(false);
-  const [repairDryRun, setRepairDryRun] = useState(false);
-  const [repairResult, setRepairResult] = useState<BulkRepairResponse | null>(null);
-  const [repairLogs, setRepairLogs] = useState<string[]>([]);
+
 
   async function loadRows() {
-  setLoading(true);
+    setLoading(true);
 
-  let query = supabase.from("partners").select("*");
+    let query = supabase.from("partners").select("*");
 
-  // ordering
-  if (sort === "oldest") {
-    query = query.order("created_at", { ascending: true });
-  } else {
-    query = query.order("created_at", { ascending: false });
+    if (sort === "oldest") query = query.order("created_at", { ascending: true });
+    else query = query.order("created_at", { ascending: false });
+
+    if (sort === "login_users") query = query.not("auth_user_id", "is", null);
+    if (sort === "no_login") query = query.is("auth_user_id", null);
+    if (sort === "email_not_verified") query = query.eq("email_verified", false);
+    if (sort === "pending") query = query.eq("status", "pending");
+    if (sort === "active") query = query.eq("status", "active");
+
+    if (sort === "ready_for_activation") {
+      query = query
+        .not("auth_user_id", "is", null)
+        .eq("email_verified", true)
+        .eq("status", "pending");
+    }
+
+    if (sort === "welcome_email_not_sent_login") {
+      query = query
+        .not("auth_user_id", "is", null)
+        .eq("status", "pending")
+        .eq("welcome_email_sent", false);
+    }
+
+    const { data } = await query;
+    setRows(data || []);
+    setLoading(false);
   }
-
-  // filters
-  if (sort === "login_users") {
-    query = query.not("auth_user_id", "is", null);
-  }
-
-  if (sort === "no_login") {
-    query = query.is("auth_user_id", null);
-  }
-
-  if (sort === "email_not_verified") {
-    query = query.eq("email_verified", false);
-  }
-
-  if (sort === "pending") {
-    query = query.eq("status", "pending");
-  }
-
-  if (sort === "active") {
-    query = query.eq("status", "active");
-  }
-
-  if (sort === "ready_for_activation") {
-    query = query
-      .not("auth_user_id", "is", null)
-      .eq("email_verified", true)
-      .eq("status", "pending");
-  }
-
-  if (sort === "welcome_email_not_sent_login") {
-    query = query
-      .not("auth_user_id", "is", null)
-      .eq("status", "pending")
-      .eq("welcome_email_sent", false);
-  }
-
-  const { data } = await query;
-
-  setRows(data || []);
-  setLoading(false);
-}
-
 
   useEffect(() => {
     loadRows();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sort]);
 
   const filteredRows = useMemo(() => {
@@ -165,7 +132,9 @@ export default function PartnersPage() {
 
     if (sort === "name") {
       list.sort((a, b) =>
-        `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
+        `${a.first_name} ${a.last_name}`.localeCompare(
+          `${b.first_name} ${b.last_name}`
+        )
       );
     }
 
@@ -173,7 +142,11 @@ export default function PartnersPage() {
   }, [rows, search, sort]);
 
   async function runAction(
-    action: "regenerate_partner_id" | "send_welcome_email"|"delete_partner",
+    action:
+      | "regenerate_partner_id"
+      | "send_welcome_email"
+      | "send_confirmation_email"
+      | "delete_partner",
     partner: Partner
   ) {
     if (!confirm(`Run ${action.replaceAll("_", " ")} for ${partner.email_address}?`)) return;
@@ -183,7 +156,7 @@ export default function PartnersPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action,
-        id: partner.id, 
+        id: partner.id,
         partner_id: partner.partner_id,
         email_address: partner.email_address,
       }),
@@ -192,122 +165,53 @@ export default function PartnersPage() {
     loadRows();
   }
 
-  async function saveEdit() {
-    if (!editItem) return;
-
-    await supabase
-      .from("partners")
-  .update({
-    first_name: editItem.first_name,
-    last_name: editItem.last_name,
-    email_address: editItem.email_address,
-    cell_phone_number: editItem.cell_phone_number,
-
-    business_name: editItem.business_name,
-    coverage_area: editItem.coverage_area,
-    preferred_contact_method: editItem.preferred_contact_method,
-    sales_experience: editItem.sales_experience,
-
-    street_address: editItem.street_address,
-    city: editItem.city,
-    state: editItem.state,
-    zip_code: editItem.zip_code,
-  })
-  .eq("id", editItem.id);
-
-
-    setEditItem(null);
+  async function updatePartnerStatus(
+    partnerId: string,
+    status: "active" | "pending"
+  ) {
+    await supabase.from("partners").update({ status }).eq("id", partnerId);
     loadRows();
   }
-
-async function updatePartnerStatus(
-  partnerId: string,
-  status: "active" | "pending"
-) {
-  await supabase
-    .from("partners")
-    .update({ status })
-    .eq("id", partnerId);
-
-  loadRows();
-}
-
 
   if (loading) return <div className="p-6">Loading partners…</div>;
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto overflow-x-hidden px-6 pb-6 space-y-4">
-      {/* HEADER */}
+    <div className="h-[calc(100vh-64px)] overflow-y-auto px-6 pb-6 space-y-4">
       <div className="sticky top-0 bg-white z-30 border-b pb-4">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-red-700">Partners</h1>
           <span className="text-sm text-gray-600">Total: {filteredRows.length}</span>
         </div>
 
-        <p className="text-sm text-gray-500 mb-3">Doorplace USA — Partner Control Panel</p>
+        <p className="text-sm text-gray-500 mb-3">
+          Doorplace USA — Partner Control Panel
+        </p>
+<div className="flex items-center gap-2">
+  <span className="text-xs text-gray-500">Layout</span>
 
-        {/* BULK REPAIR */}
-        <div className="flex gap-3 items-center flex-wrap mb-3">
-          <label className="flex items-center gap-2 text-xs">
-            <input
-              type="checkbox"
-              checked={repairDryRun}
-              onChange={(e) => setRepairDryRun(e.target.checked)}
-            />
-            Dry Run
-          </label>
+  <button
+    className={`px-3 py-1 rounded text-xs border ${
+      layout === "cards"
+        ? "bg-black text-white"
+        : "bg-white text-gray-700"
+    }`}
+    onClick={() => setLayout("cards")}
+  >
+    Cards
+  </button>
 
-          <button
-            className="bg-black text-white px-4 py-1 rounded text-sm"
-            onClick={async () => {
-              if (repairRunning) return;
-              if (!confirm("Run bulk repair + sync for ALL partners?")) return;
-
-              setRepairRunning(true);
-              setRepairResult(null);
-              setRepairLogs([]);
-
-              const res = await fetch("/api/partners/bulk-repair", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ dryRun: repairDryRun }),
-              });
-
-              const json = await res.json();
-              setRepairResult(json);
-              setRepairLogs(json.logs || []);
-              setRepairRunning(false);
-              loadRows();
-            }}
-          >
-            {repairRunning ? "Running…" : "Repair / Sync All Partners"}
-          </button>
-        </div>
-
-        {/* RESULTS */}
-        {repairResult?.success && (
-          <div className="bg-gray-100 border rounded p-3 text-xs space-y-1">
-            <div>
-              <b>Bulk Repair Results</b>
-            </div>
-            <div>Repaired: {repairResult.repaired ?? 0}</div>
-            <div>Emails Sent: {repairResult.emailsSent ?? 0}</div>
-            <div>Already Clean: {repairResult.alreadyClean ?? 0}</div>
-            <div>Skipped: {repairResult.skipped ?? 0}</div>
-          </div>
-        )}
-
-        {/* LOGS */}
-        {repairLogs.length > 0 && (
-          <div className="mt-2 bg-black text-green-400 font-mono text-xs rounded p-3 max-h-40 overflow-y-auto">
-            {repairLogs.map((l, i) => (
-              <div key={i}>{l}</div>
-            ))}
-          </div>
-        )}
-
-        {/* SEARCH / SORT */}
-        <div className="flex gap-2 mt-2 flex-wrap">
+  <button
+    className={`px-3 py-1 rounded text-xs border ${
+      layout === "table"
+        ? "bg-black text-white"
+        : "bg-white text-gray-700"
+    }`}
+    onClick={() => setLayout("table")}
+  >
+    Table
+  </button>
+</div>
+        <div className="flex gap-2 flex-wrap">
           <input
             className="border rounded px-3 py-2 w-full md:max-w-sm"
             placeholder="Search name, email, or Partner ID"
@@ -315,388 +219,286 @@ async function updatePartnerStatus(
             onChange={(e) => setSearch(e.target.value)}
           />
 
+
           <select
-  className="border rounded px-3 py-2 w-full md:w-auto"
-  value={sort}
-  onChange={(e) => setSort(e.target.value as any)}
->
-  <option value="newest">Newest</option>
-  <option value="oldest">Oldest</option>
-  <option value="name">Name A–Z</option>
-
-  <option value="login_users">Login Users</option>
-  <option value="no_login">No Login Yet</option>
-  <option value="email_not_verified">Email Not Verified</option>
-  <option value="ready_for_activation">Ready for Activation</option>
-  <option value="welcome_email_not_sent_login">
-    Welcome Email Not Sent (Login Users)
-  </option>
-  <option value="pending">Pending Approval</option>
-  <option value="active">Active Partners</option>
-</select>
-
+            className="border rounded px-3 py-2 w-full md:w-auto"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as any)}
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="name">Name A–Z</option>
+            <option value="login_users">Login Users</option>
+            <option value="no_login">No Login Yet</option>
+            <option value="email_not_verified">Email Not Verified</option>
+            <option value="ready_for_activation">Ready for Activation</option>
+            <option value="welcome_email_not_sent_login">Welcome Email Not Sent</option>
+            <option value="pending">Pending</option>
+            <option value="active">Active</option>
+          </select>
         </div>
       </div>
 
-    {/* TABLE */}
-<AdminTable<Partner>
-  columns={[
-    { key: "name", label: "Name" },
-    { key: "status", label: "Status" },
-    { key: "actions", label: "Actions" },
-  ]}
-  rows={filteredRows}
-  rowKey={(p) => p.id}
-  renderCell={(p, key) => {
-    switch (key) {
-      case "name":
-        return (
-          <span className="font-medium">
-            {p.first_name} {p.last_name}
-          </span>
-        );
 
-      case "status":
-  return (
-    <select
-      className={`text-xs font-semibold border rounded px-2 py-1 ${
-        p.status === "active"
-          ? "text-green-700"
-          : p.status === "pending"
-          ? "text-orange-700"
-          : "text-gray-500"
-      }`}
-      value={p.status}
-      onChange={(e) =>
-        updatePartnerStatus(
-          p.id,
-          e.target.value as "active" | "pending"
-        )
-      }
-    >
-      <option value="pending">● Pending</option>
-      <option value="active">● Active</option>
-    </select>
-  );
+{layout === "cards" && (
+  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    {filteredRows.map((p) => (
+      <div
+        key={p.id}
+        className="border rounded-lg p-4 shadow-sm bg-white space-y-2"
+      >
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="font-semibold text-lg">
+              {p.first_name} {p.last_name}
+            </div>
+            <div className="text-xs text-gray-500">
+              {p.email_address}
+            </div>
+          </div>
 
-
-
-      case "actions":
-        return (
           <select
-            className="border rounded px-2 py-1 text-xs w-full max-w-[140px]"
+            className={`text-xs font-semibold border rounded px-2 py-1 ${
+              p.status === "active"
+                ? "text-green-700"
+                : "text-orange-700"
+            }`}
+            value={p.status}
+            onChange={(e) =>
+              updatePartnerStatus(
+                p.id,
+                e.target.value as "active" | "pending"
+              )
+            }
+          >
+            <option value="pending">● Pending</option>
+            <option value="active">● Active</option>
+          </select>
+        </div>
+
+        <div className="text-xs text-gray-600 space-y-1">
+          <div><b>Partner ID:</b> {p.partner_id}</div>
+          <div><b>Joined:</b> {formatDate(p.created_at)}</div>
+          <div><b>Email Verified:</b> {p.email_verified ? "Yes" : "No"}</div>
+          <div><b>Welcome Email:</b> {p.welcome_email_sent ? "Sent" : "Not Sent"}</div>
+        </div>
+
+        <div className="flex gap-2 pt-2">
+          <button
+            className="text-xs border px-2 py-1 rounded"
+            onClick={() => setViewItem(p)}
+          >
+            View
+          </button>
+
+          <button
+            className="text-xs border px-2 py-1 rounded"
+            onClick={() => setEditItem(p)}
+          >
+            Edit
+          </button>
+
+          <select
+            className="text-xs border px-2 py-1 rounded flex-1"
             onChange={(e) => {
               const v = e.target.value;
               e.target.value = "";
-              if (v === "view") setViewItem(p);
-              if (v === "edit") setEditItem(p);
               if (v === "welcome") runAction("send_welcome_email", p);
+              if (v === "confirm") runAction("send_confirmation_email", p);
               if (v === "regen") runAction("regenerate_partner_id", p);
               if (v === "delete") runAction("delete_partner", p);
             }}
           >
-            <option value="">Select</option>
-            <option value="view">View</option>
-            <option value="edit">Edit</option>
+            <option value="">Actions</option>
             <option value="welcome">Send Welcome Email</option>
+            <option value="confirm">Send Confirmation Email</option>
             <option value="regen">Regenerate ID</option>
             <option value="delete">Delete</option>
           </select>
-        );
-    }
-  }}
-/>
-
-{/* ===============================
-    VIEW MODAL — PARTNER PROFILE
-================================ */}
-{viewItem && (
-  <div
-    className="fixed inset-0 bg-black/40 flex items-start justify-center z-50 p-4"
-    onClick={() => setViewItem(null)}
-  >
-    {/* MODAL CONTAINER */}
-    <div
-      className="bg-white rounded max-w-2xl w-full max-h-[77vh] flex flex-col shadow-lg"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* HEADER */}
-      <div className="p-6 border-b">
-        <h2 className="text-xl font-bold">Partner Profile</h2>
+        </div>
       </div>
-
-      {/* SCROLLABLE CONTENT */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
-
-        {/* BASIC INFO */}
-        <div>
-          <h3 className="font-semibold mb-1">Basic Information</h3>
-          <p><b>Name:</b> {viewItem.first_name} {viewItem.last_name}</p>
-          <p><b>Email:</b> {viewItem.email_address}</p>
-          <p><b>Phone:</b> {viewItem.cell_phone_number}</p>
-          <p><b>Partner ID:</b> {viewItem.partner_id}</p>
-          <p><b>Joined Date:</b> {formatDate(viewItem.created_at)}</p>
-
-        </div>
-
-        {/* BUSINESS INFO */}
-        <div>
-          <h3 className="font-semibold mb-1">Business Information</h3>
-          <p><b>Business Name:</b> {viewItem.business_name || "—"}</p>
-          <p><b>Coverage Area:</b> {viewItem.coverage_area || "—"}</p>
-          <p><b>Preferred Contact:</b> {viewItem.preferred_contact_method || "—"}</p>
-          <p><b>Sales Experience:</b> {viewItem.sales_experience || "—"}</p>
-        </div>
-
-        {/* ADDRESS */}
-        <div>
-          <h3 className="font-semibold mb-1">Address</h3>
-          <p><b>Street:</b> {viewItem.street_address || "—"}</p>
-          <p><b>City:</b> {viewItem.city || "—"}</p>
-          <p><b>State:</b> {viewItem.state || "—"}</p>
-          <p><b>Zip:</b> {viewItem.zip_code || "—"}</p>
-        </div>
-
-        {/* SYSTEM STATUS */}
-        <div>
-  <h3 className="font-semibold mb-1">System Status</h3>
-
-  <p>
-    <b>Partner Status:</b>{" "}
-    <span
-      className={
-        viewItem.status === "active"
-          ? "text-green-700 font-semibold"
-          : viewItem.status === "pending"
-          ? "text-orange-700 font-semibold"
-          : "text-gray-500 font-semibold"
-      }
-    >
-      {viewItem.status}
-    </span>
-  </p>
-
-  <p>
-    <b>Account Email Confirmed:</b>{" "}
-    {viewItem.email_verified ? "Yes" : "No"}
-  </p>
-  <p>
-  <b>Welcome Email Sent:</b>{" "}
-  {viewItem.welcome_email_sent ? "Yes" : "No"}
-</p>
-</div>
-
-
-
-
-        {/* TRACKING LINK */}
-        <div>
-          <h3 className="font-semibold mb-1">Partner Tracking Link</h3>
-
-          {viewItem.tracking_link ? (
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                readOnly
-                value={viewItem.tracking_link}
-                className="w-full border px-2 py-1 rounded text-sm bg-gray-50"
-              />
-              <button
-                className="bg-black text-white px-3 py-1 rounded text-sm"
-                onClick={() => {
-                  navigator.clipboard.writeText(viewItem.tracking_link);
-                  alert("Tracking link copied!");
-                }}
-              >
-                Copy
-              </button>
-            </div>
-          ) : (
-            <p className="text-gray-500 text-sm">—</p>
-          )}
-        </div>
-
-      </div>
-
-      {/* FIXED FOOTER */}
-      <div className="p-4 border-t bg-white">
-        <button
-          className="bg-black text-white px-4 py-2 rounded w-full"
-          onClick={() => setViewItem(null)}
-        >
-          Close
-        </button>
-      </div>
-    </div>
+    ))}
   </div>
 )}
 
 
+{layout === "table" && (
+  <AdminTable<Partner>
+    columns={[
+      { key: "name", label: "Name" },
+      { key: "status", label: "Status" },
+      { key: "actions", label: "Actions" },
+    ]}
+    rows={filteredRows}
+    rowKey={(p) => p.id}
+    renderCell={(p, key) => {
+      switch (key) {
+        case "name":
+          return (
+            <span className="font-medium">
+              {p.first_name} {p.last_name}
+            </span>
+          );
+
+        case "status":
+          return (
+            <select
+              className={`text-xs font-semibold border rounded px-2 py-1 ${
+                p.status === "active"
+                  ? "text-green-700"
+                  : "text-orange-700"
+              }`}
+              value={p.status}
+              onChange={(e) =>
+                updatePartnerStatus(
+                  p.id,
+                  e.target.value as "active" | "pending"
+                )
+              }
+            >
+              <option value="pending">● Pending</option>
+              <option value="active">● Active</option>
+            </select>
+          );
+
+        case "actions":
+          return (
+            <select
+              className="border rounded px-2 py-1 text-xs w-full max-w-[140px]"
+              onChange={(e) => {
+                const v = e.target.value;
+                e.target.value = "";
+                if (v === "view") setViewItem(p);
+                if (v === "edit") setEditItem(p);
+                if (v === "welcome") runAction("send_welcome_email", p);
+                if (v === "confirm") runAction("send_confirmation_email", p);
+                if (v === "regen") runAction("regenerate_partner_id", p);
+                if (v === "delete") runAction("delete_partner", p);
+              }}
+            >
+              <option value="">Select</option>
+              <option value="view">View</option>
+              <option value="edit">Edit</option>
+              <option value="welcome">Send Welcome Email</option>
+              <option value="confirm">Send Confirmation Email</option>
+              <option value="regen">Regenerate ID</option>
+              <option value="delete">Delete</option>
+            </select>
+          );
+      }
+    }}
+  />
+)}
+
+
+
+
+      {/* VIEW MODAL */}
+      {viewItem && (
+        <div className="fixed inset-0 bg-black/40 flex items-start justify-center z-50 p-4" onClick={() => setViewItem(null)}>
+          <div className="bg-white rounded max-w-2xl w-full max-h-[77vh] flex flex-col shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-bold">Partner Profile</h2>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div>
+                <h3 className="font-semibold mb-1">Basic Information</h3>
+                <p><b>Name:</b> {viewItem.first_name} {viewItem.last_name}</p>
+                <p><b>Email:</b> {viewItem.email_address}</p>
+                <p><b>Phone:</b> {viewItem.cell_phone_number}</p>
+                <p><b>Partner ID:</b> {viewItem.partner_id}</p>
+                <p><b>Joined Date:</b> {formatDate(viewItem.created_at)}</p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-1">Business Information</h3>
+                <p><b>Business Name:</b> {viewItem.business_name || "—"}</p>
+                <p><b>Coverage Area:</b> {viewItem.coverage_area || "—"}</p>
+                <p><b>Preferred Contact:</b> {viewItem.preferred_contact_method || "—"}</p>
+                <p><b>Sales Experience:</b> {viewItem.sales_experience || "—"}</p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-1">Address</h3>
+                <p><b>Street:</b> {viewItem.street_address || "—"}</p>
+                <p><b>City:</b> {viewItem.city || "—"}</p>
+                <p><b>State:</b> {viewItem.state || "—"}</p>
+                <p><b>Zip:</b> {viewItem.zip_code || "—"}</p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-1">System Status</h3>
+                <p><b>Status:</b> {viewItem.status}</p>
+                <p><b>Email Verified:</b> {viewItem.email_verified ? "Yes" : "No"}</p>
+                <p><b>Welcome Email Sent:</b> {viewItem.welcome_email_sent ? "Yes" : "No"}</p>
+                <p><b>Recent Confirmation:</b> {viewItem.confirmation_email_recent ? "Yes" : "No"}</p>
+                <p><b>Terms Accepted:</b> {viewItem.agreed_to_partner_terms ? "Yes" : "No"}</p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-1">Tracking Link</h3>
+                <input readOnly value={viewItem.tracking_link} className="w-full border px-2 py-1 rounded text-sm bg-gray-50" />
+              </div>
+            </div>
+
+            <div className="p-4 border-t">
+              <button className="bg-black text-white px-4 py-2 rounded w-full" onClick={() => setViewItem(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* EDIT MODAL */}
       {editItem && (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-    <div className="bg-white p-6 rounded max-w-2xl w-full max-h-[75vh] overflow-y-auto">
-      <h2 className="text-xl font-bold mb-4">Edit Partner</h2>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setEditItem(null)}>
+          <div className="bg-white p-6 rounded max-w-2xl w-full max-h-[75vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-xl font-bold mb-4">Edit Partner</h2>
 
-      {/* BASIC INFO */}
-      <input
-        className="border w-full mb-2 px-3 py-2"
-        placeholder="First Name"
-        value={editItem.first_name}
-        onChange={(e) =>
-          setEditItem({ ...editItem, first_name: e.target.value })
-        }
-      />
+            {[
+              ["First Name", "first_name"],
+              ["Last Name", "last_name"],
+              ["Email", "email_address"],
+              ["Phone", "cell_phone_number"],
+              ["Business Name", "business_name"],
+              ["Coverage Area", "coverage_area"],
+              ["Preferred Contact", "preferred_contact_method"],
+              ["Sales Experience", "sales_experience"],
+              ["Street Address", "street_address"],
+              ["City", "city"],
+              ["State", "state"],
+              ["Zip Code", "zip_code"],
+            ].map(([label, key]) => (
+              <input
+                key={key}
+                className="border w-full mb-2 px-3 py-2"
+                placeholder={label}
+                value={(editItem as any)[key] || ""}
+                onChange={(e) =>
+                  setEditItem({ ...editItem, [key]: e.target.value })
+                }
+              />
+            ))}
 
-      <input
-        className="border w-full mb-2 px-3 py-2"
-        placeholder="Last Name"
-        value={editItem.last_name}
-        onChange={(e) =>
-          setEditItem({ ...editItem, last_name: e.target.value })
-        }
-      />
+            <div className="flex gap-2 mt-4">
+              <button
+                className="bg-red-700 text-white px-4 py-2 rounded flex-1"
+                onClick={async () => {
+                  await supabase.from("partners").update(editItem).eq("id", editItem.id);
+                  setEditItem(null);
+                  loadRows();
+                }}
+              >
+                Save
+              </button>
 
-      <input
-        className="border w-full mb-2 px-3 py-2"
-        placeholder="Email Address"
-        value={editItem.email_address}
-        onChange={(e) =>
-          setEditItem({ ...editItem, email_address: e.target.value })
-        }
-      />
-
-      <input
-        className="border w-full mb-4 px-3 py-2"
-        placeholder="Phone Number"
-        value={editItem.cell_phone_number}
-        onChange={(e) =>
-          setEditItem({ ...editItem, cell_phone_number: e.target.value })
-        }
-      />
-
-      {/* BUSINESS INFO */}
-      <input
-        className="border w-full mb-2 px-3 py-2"
-        placeholder="Business Name"
-        value={editItem.business_name || ""}
-        onChange={(e) =>
-          setEditItem({ ...editItem, business_name: e.target.value })
-        }
-      />
-
-      <input
-        className="border w-full mb-2 px-3 py-2"
-        placeholder="Coverage Area"
-        value={editItem.coverage_area || ""}
-        onChange={(e) =>
-          setEditItem({ ...editItem, coverage_area: e.target.value })
-        }
-      />
-
-      <input
-        className="border w-full mb-2 px-3 py-2"
-        placeholder="Preferred Contact Method"
-        value={editItem.preferred_contact_method || ""}
-        onChange={(e) =>
-          setEditItem({
-            ...editItem,
-            preferred_contact_method: e.target.value,
-          })
-        }
-      />
-
-      <input
-        className="border w-full mb-4 px-3 py-2"
-        placeholder="Sales Experience"
-        value={editItem.sales_experience || ""}
-        onChange={(e) =>
-          setEditItem({ ...editItem, sales_experience: e.target.value })
-        }
-      />
-
-      {/* ADDRESS */}
-      <input
-        className="border w-full mb-2 px-3 py-2"
-        placeholder="Street Address"
-        value={editItem.street_address || ""}
-        onChange={(e) =>
-          setEditItem({ ...editItem, street_address: e.target.value })
-        }
-      />
-
-      <input
-        className="border w-full mb-2 px-3 py-2"
-        placeholder="City"
-        value={editItem.city || ""}
-        onChange={(e) =>
-          setEditItem({ ...editItem, city: e.target.value })
-        }
-      />
-
-      <input
-        className="border w-full mb-2 px-3 py-2"
-        placeholder="State"
-        value={editItem.state || ""}
-        onChange={(e) =>
-          setEditItem({ ...editItem, state: e.target.value })
-        }
-      />
-
-      <input
-        className="border w-full mb-4 px-3 py-2"
-        placeholder="Zip Code"
-        value={editItem.zip_code || ""}
-        onChange={(e) =>
-          setEditItem({ ...editItem, zip_code: e.target.value })
-        }
-      />
-
-      {/* READ-ONLY INFO */}
-      {/* READ-ONLY INFO */}
-<div className="text-xs text-gray-500 mb-4 space-y-1">
-  <div>
-    <b>Partner ID:</b> {editItem.partner_id}
-  </div>
-
-  <div>
-    <b>Partner Status:</b>{" "}
-    <span
-      className={
-        editItem.status === "active"
-          ? "text-green-700 font-semibold"
-          : editItem.status === "pending"
-          ? "text-orange-700 font-semibold"
-          : "text-gray-500 font-semibold"
-      }
-    >
-      {editItem.status}
-    </span>
-  </div>
-
-  <div>
-    <b>Account Email Confirmed:</b>{" "}
-    {editItem.email_verified ? "Yes" : "No"}
-  </div>
-</div>
-
-
-      {/* ACTIONS */}
-      <div className="flex gap-2">
-        <button
-          className="bg-red-700 text-white px-4 py-2 rounded flex-1"
-          onClick={saveEdit}
-        >
-          Save
-        </button>
-
-        <button
-          className="bg-gray-300 px-4 py-2 rounded flex-1"
-          onClick={() => setEditItem(null)}
-        >
-          Cancel
-
+              <button
+                className="bg-gray-300 px-4 py-2 rounded flex-1"
+                onClick={() => setEditItem(null)}
+              >
+                Cancel
               </button>
             </div>
           </div>

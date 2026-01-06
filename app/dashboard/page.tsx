@@ -12,12 +12,17 @@ const brandRed = "#b80d0d";
 type DashboardStats = {
   totalLeads: number;
   totalOrders: number;
-  totalRevenue: number; // (kept in type to avoid breaking anything else; card removed)
+  totalRevenue: number;
   pendingCommissions: number;
-  paidCommissions: number; // (kept; card still present below)
+  paidCommissions: number;
   activePartners: number;
-  conversionRate: number; // (kept in type; card removed)
+  conversionRate: number;
+
+  // ✅ NEW
+  totalAppViews: number;
+  uniqueSessions: number;
 };
+
 
 type RecentItem = {
   id: string;
@@ -30,14 +35,19 @@ type RecentItem = {
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
-    totalLeads: 0,
-    totalOrders: 0,
-    totalRevenue: 0,
-    pendingCommissions: 0,
-    paidCommissions: 0,
-    activePartners: 0,
-    conversionRate: 0,
-  });
+  totalLeads: 0,
+  totalOrders: 0,
+  totalRevenue: 0,
+  pendingCommissions: 0,
+  paidCommissions: 0,
+  activePartners: 0,
+  conversionRate: 0,
+
+  // ✅ NEW
+  totalAppViews: 0,
+  uniqueSessions: 0,
+});
+
   const [partnerSnapshot, setPartnerSnapshot] = useState({
   total: 0,
   activated: 0,
@@ -96,12 +106,6 @@ setPartnerSnapshot({
 });
 
 
-  
-  
-
-
-
-
       // ================= TOTAL LEADS (WIRE THIS) =================
       // Assumes your leads table is named "leads"
       const { count: leadCount } = await supabase
@@ -145,16 +149,38 @@ const { count: orderCount } = await supabase
         };
       });
 
+      // ================= APP VIEW STATS (CDStats) =================
+
+// Total App Views
+const { count: totalAppViews } = await supabase
+  .from("app_view_logs")
+  .select("*", { count: "exact", head: true });
+
+// Unique Sessions
+const { data: sessionRows } = await supabase
+  .from("app_view_logs")
+  .select("session_id");
+
+const uniqueSessions = new Set(
+  (sessionRows || []).map((r: any) => r.session_id)
+).size;
+
+
       // ✅ Keep your existing placeholders for now where you haven’t wired yet
       setStats({
-        totalLeads: leadCount || 0,
-        totalOrders: orderCount || 0,
-        totalRevenue: 0,
-        pendingCommissions: 0,
-        paidCommissions: 0,
-        activePartners: activatedPartnersCount || 0,
-        conversionRate: 0,
-      });
+  totalLeads: leadCount || 0,
+  totalOrders: orderCount || 0,
+  totalRevenue: 0,
+  pendingCommissions: 0,
+  paidCommissions: 0,
+  activePartners: activatedPartnersCount || 0,
+  conversionRate: 0,
+
+  // ✅ REQUIRED BY TYPE
+  totalAppViews: totalAppViews || 0,
+  uniqueSessions: uniqueSessions || 0,
+});
+
 
       setRecentLeads(mappedRecentLeads);
 
@@ -201,29 +227,34 @@ const { count: orderCount } = await supabase
 
       {/* =================== SUMMARY CARDS =================== */}
       <div style={gridThree}>
-        
-        
-        <div
-          onClick={() => (window.location.href = "/dashboard/leads")}
-          style={{ cursor: "pointer" }}
-        >
-          <StatCard title="Total Leads" value={stats.totalLeads} />
-        </div>
 
-        <div
-          onClick={() => (window.location.href = "/dashboard/orders")}
-          style={{ cursor: "pointer" }}
-        >
-          <StatCard title="Total Orders" value={stats.totalOrders} />
-        </div>
+  <div
+    onClick={() => (window.location.href = "/dashboard/leads")}
+    style={{ cursor: "pointer" }}
+  >
+    <StatCard title="Total Leads" value={stats.totalLeads} />
+  </div>
 
-        <div>
-        <StatCard title="Pending Commissions" value={fmt(stats.pendingCommissions)} />
-        </div>
+  <div
+    onClick={() => (window.location.href = "/dashboard/orders")}
+    style={{ cursor: "pointer" }}
+  >
+    <StatCard title="Total Orders" value={stats.totalOrders} />
+  </div>
 
-        
+  <StatCard title="Pending Commissions" value={fmt(stats.pendingCommissions)} />
 
-      </div>
+  <StatCard title="Total App Views" value={stats.totalAppViews} />
+
+  <StatCard title="Unique Sessions" value={stats.uniqueSessions} />
+
+  <StatCard title="Partners Online" value={partners} />
+
+  <StatCard title="Admins Online" value={admins} />
+
+  <StatCard title="Total Online" value={total} />
+
+</div>
 
        {/* =================== PARTNER FUNNEL SNAPSHOT =================== */}
 <div className="bg-white p-4 rounded shadow mb-6">
@@ -260,22 +291,7 @@ const { count: orderCount } = await supabase
   </div>
 </div>
 
-<div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-  <div className="border rounded p-4 bg-white">
-    <div className="text-xs text-gray-500">Partners Online</div>
-    <div className="text-2xl font-bold text-green-600">{partners}</div>
-  </div>
 
-  <div className="border rounded p-4 bg-white">
-    <div className="text-xs text-gray-500">Admins Online</div>
-    <div className="text-2xl font-bold text-blue-600">{admins}</div>
-  </div>
-
-  <div className="border rounded p-4 bg-white">
-    <div className="text-xs text-gray-500">Total Online</div>
-    <div className="text-2xl font-bold">{total}</div>
-  </div>
-</div>
 
 
       {/* 🟡 TASKS REQUIRING ATTENTION (kept) */}

@@ -3,11 +3,18 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { useAppViewTracker } from "@/lib/useAppViewTracker";
+
 
 const REDIRECT_DELAY_MS = 5000;
 
 export default function CreateAccountPage() {
   const router = useRouter();
+  
+ useAppViewTracker({
+    role: "unknown",
+    companyId: null,
+  });
 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");

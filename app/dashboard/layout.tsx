@@ -5,6 +5,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AdminPresenceProvider } from "@/app/components/presence/AdminPresenceContext";
+import { useAppViewTracker } from "@/lib/useAppViewTracker";
+
 
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -17,11 +19,20 @@ import {
   DollarSign,
   Building2,
   Settings,
+  Mail,
   Bell,
   User,
   LogOut,
   PersonStanding,
+  Receipt,
+  UploadCloud,
+  FileText,
+  Phone,
+  BookOpen,
+  MessageSquare,
 } from "lucide-react";
+
+
 
 /* ======================
    DASHBOARD LAYOUT (ADMIN ONLY)
@@ -34,6 +45,10 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  useAppViewTracker({
+  role: "admin",
+  companyId: null,
+});
 
   const [loading, setLoading] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -177,6 +192,7 @@ useEffect(() => {
           <NavLink href="/dashboard/chat" icon={<Building2 size={18} />} label="Chat" />
           <NavLink href="/dashboard/partner-uploads" icon={<Building2 size={18} />} label="Partner Uploads" />
           <NavLink href="/dashboard/invoices" icon={<Building2 size={18} />} label="Invoices" />
+          <NavLink href="/dashboard/email" icon={<Building2 size={18} />} label="Email" />
           <NavLink href="/dashboard/iplum" icon={<Building2 size={18} />} label="Iplum" />
           <NavLink
             href="/dashboard/admin-partner-resources"
@@ -191,7 +207,8 @@ useEffect(() => {
       {/* ===== MAIN CONTENT ===== */}
       <div className="flex-1 flex flex-col">
         {/* ===== TOP BAR ===== */}
-        <header className="flex items-center justify-between px-4 py-3 bg-white shadow md:px-6">
+        <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-white border-b md:px-6">
+
           {/* PROFILE */}
           <div className="relative" ref={profileRef}>
             <button
@@ -234,7 +251,8 @@ useEffect(() => {
 
         {/* ===== PAGE CONTENT ===== */}
        <AdminPresenceProvider value={onlineStats}>
-  <main className="flex-1 w-full flex justify-center pb-24 md:pb-6 overflow-x-hidden">
+  <main className="flex-1 w-full overflow-y-auto overflow-x-hidden flex justify-center pb-24 md:pb-6">
+
     <div className="w-full max-w-6xl px-2 md:px-6">
       {children}
     </div>
@@ -261,13 +279,33 @@ function MobileBottomNav() {
 
   return (
     <>
+      {/* ===== MAIN BOTTOM NAV ===== */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 z-50">
-        <MobileNavItem href="/dashboard" icon={<LayoutGrid size={20} />} label="Dashboard" />
-        <MobileNavItem href="/dashboard/leads" icon={<ClipboardList size={20} />} label="Leads" />
-        <MobileNavItem href="/dashboard/orders" icon={<Package size={20} />} label="Orders" />
-        <MobileNavItem href="/dashboard/partners" icon={<Handshake size={20} />} label="Partners" />
-        <MobileNavItem href="/dashboard/chat" icon={<PersonStanding size={20} />} label="Chat" />
-        
+        <MobileNavItem
+          href="/dashboard"
+          icon={<LayoutGrid size={20} />}
+          label="Dashboard"
+        />
+        <MobileNavItem
+          href="/dashboard/leads"
+          icon={<ClipboardList size={20} />}
+          label="Leads"
+        />
+        <MobileNavItem
+          href="/dashboard/orders"
+          icon={<Package size={20} />}
+          label="Orders"
+        />
+        <MobileNavItem
+          href="/dashboard/partners"
+          icon={<Handshake size={20} />}
+          label="Partners"
+        />
+        <MobileNavItem
+          href="/dashboard/chat"
+          icon={<MessageSquare size={20} />}
+          label="Chat"
+        />
 
         <button
           onClick={() => setShowMore(true)}
@@ -278,75 +316,128 @@ function MobileBottomNav() {
         </button>
       </nav>
 
+      {/* ===== MORE OVERLAY ===== */}
       {showMore && (
         <div
           className="md:hidden fixed inset-0 bg-black/40 z-50"
           onClick={() => setShowMore(false)}
         >
           <div
-            className="absolute bottom-16 left-2 right-2 bg-white rounded-lg shadow-lg p-2"
+            className="absolute bottom-16 left-2 right-2 bg-white rounded-2xl shadow-xl border"
             onClick={(e) => e.stopPropagation()}
           >
-            <MobileNavItem
-              href="/dashboard/commissions"
-              icon={<DollarSign size={20} />}
-              label="Comm1"
-              onClick={() => setShowMore(false)}
-            />
-            <MobileNavItem
-              href="/dashboard/receipts"
-              icon={<DollarSign size={20} />}
-              label="Receipts"
-              onClick={() => setShowMore(false)}
-            />
-            <MobileNavItem
-              href="/dashboard/partner-uploads"
-              icon={<DollarSign size={20} />}
-              label="Partner Uploads"
-              onClick={() => setShowMore(false)}
-            />
-            <MobileNavItem
-              href="/dashboard/partners/commissions"
-              icon={<DollarSign size={20} />}
-              label="Comm2"
-              onClick={() => setShowMore(false)}
-            />
-            <MobileNavItem
-              href="/dashboard/invoices"
-              icon={<DollarSign size={20} />}
-              label="Invoices"
-              onClick={() => setShowMore(false)}
-            />
-            <MobileNavItem
-              href="/dashboard/companies"
-              icon={<Building2 size={20} />}
-              label="Companies"
-              onClick={() => setShowMore(false)}
-            />
-            <MobileNavItem
-              href="/dashboard/iplum"
-              icon={<Building2 size={20} />}
-              label="Iplum"
-              onClick={() => setShowMore(false)}
-            />
-            <MobileNavItem
-              href="/dashboard/admin-partner-resources"
-              icon={<Building2 size={20} />}
-              label="Partner Resource Panel"
-              onClick={() => setShowMore(false)}
-            />
-            <MobileNavItem
-              href="/dashboard/settings"
-              icon={<Settings size={20} />}
-              label="Settings"
-              onClick={() => setShowMore(false)}
-            />
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <span className="font-semibold text-sm">More</span>
+              <button
+                onClick={() => setShowMore(false)}
+                className="text-xs px-3 py-1 rounded-full border"
+              >
+                Close
+              </button>
+            </div>
+
+            {/* Icon Grid */}
+            <div className="p-3 grid grid-cols-3 gap-3">
+              <MoreTile
+                href="/dashboard/email"
+                icon={<Mail size={20} />}
+                label="Email"
+                onClick={() => setShowMore(false)}
+              />
+              <MoreTile
+                href="/dashboard/commissions"
+                icon={<DollarSign size={20} />}
+                label="Commissions"
+                onClick={() => setShowMore(false)}
+              />
+              <MoreTile
+                href="/dashboard/receipts"
+                icon={<Receipt size={20} />}
+                label="Receipts"
+                onClick={() => setShowMore(false)}
+              />
+              <MoreTile
+                href="/dashboard/partner-uploads"
+                icon={<UploadCloud size={20} />}
+                label="Uploads"
+                onClick={() => setShowMore(false)}
+              />
+              <MoreTile
+                href="/dashboard/invoices"
+                icon={<FileText size={20} />}
+                label="Invoices"
+                onClick={() => setShowMore(false)}
+              />
+              <MoreTile
+                href="/dashboard/companies"
+                icon={<Building2 size={20} />}
+                label="Companies"
+                onClick={() => setShowMore(false)}
+              />
+              <MoreTile
+                href="/dashboard/iplum"
+                icon={<Phone size={20} />}
+                label="iPlum"
+                onClick={() => setShowMore(false)}
+              />
+              <MoreTile
+                href="/dashboard/admin-partner-resources"
+                icon={<BookOpen size={20} />}
+                label="Resources"
+                onClick={() => setShowMore(false)}
+              />
+              <MoreTile
+                href="/dashboard/settings"
+                icon={<Settings size={20} />}
+                label="Settings"
+                onClick={() => setShowMore(false)}
+              />
+            </div>
           </div>
         </div>
       )}
     </>
   );
 }
+
+function MoreTile({
+  href,
+  icon,
+  label,
+  onClick,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+}) {
+  const pathname = usePathname();
+  const isActive = pathname === href || pathname.startsWith(href + "/");
+
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`rounded-xl border p-3 flex flex-col items-center justify-center gap-2 text-xs font-medium
+        ${
+          isActive
+            ? "bg-red-50 text-red-700 border-red-200"
+            : "bg-white text-gray-700 hover:bg-gray-50"
+        }`}
+    >
+      <div
+        className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+          isActive ? "bg-red-100" : "bg-gray-100"
+        }`}
+      >
+        {icon}
+      </div>
+      <span>{label}</span>
+    </Link>
+  );
+}
+
 
 /* ===== DESKTOP NAV LINK ===== */
 function NavLink({

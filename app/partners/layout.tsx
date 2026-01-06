@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import PartnerMessages from "./dashboard/components/PartnerMessages";
+import { useAppViewTracker } from "@/lib/useAppViewTracker";
+
 
 import { supabase } from "@/lib/supabaseClient";
 import {
@@ -21,6 +23,9 @@ import {
   UserRoundPenIcon,
 } from "lucide-react";
 
+
+
+
 /* ======================
    PARTNER DASHBOARD LAYOUT
 ====================== */
@@ -32,6 +37,10 @@ export default function PartnerLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  useAppViewTracker({
+  role: "partner",
+  companyId: null,
+});
 
   const [loading, setLoading] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);

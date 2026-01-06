@@ -204,29 +204,41 @@ useEffect(() => {
         </h1>
 
         <nav className="flex flex-col gap-4 text-sm">
-          <NavLink href="/dashboard" icon={<LayoutGrid size={18} />} label="Dashboard" />
-          <NavLink href="/dashboard/leads" icon={<ClipboardList size={18} />} label="Leads" />
-          <NavLink href="/dashboard/orders" icon={<Package size={18} />} label="Orders" />
-          <NavLink href="/dashboard/partners" icon={<Handshake size={18} />} label="Partners" />
-          <NavLink
-            href="/dashboard/commissions"
-            icon={<DollarSign size={18} />}
-            label="Commissions"
-          />
-          <NavLink href="/dashboard/receipts" icon={<Building2 size={18} />} label="Receipts" />
-          <NavLink href="/dashboard/chat" icon={<Building2 size={18} />} label="Chat" />
-          <NavLink href="/dashboard/partner-uploads" icon={<Building2 size={18} />} label="Partner Uploads" />
-          <NavLink href="/dashboard/invoices" icon={<Building2 size={18} />} label="Invoices" />
-          <NavLink href="/dashboard/email" icon={<Building2 size={18} />} label="Email" />
-          <NavLink href="/dashboard/iplum" icon={<Building2 size={18} />} label="Iplum" />
-          <NavLink
-            href="/dashboard/admin-partner-resources"
-            icon={<Building2 size={18} />}
-            label="Partner Resource Panel"
-          />
-          <NavLink href="/dashboard/companies" icon={<Building2 size={18} />} label="Companies" />
-          <NavLink href="/dashboard/settings" icon={<Settings size={18} />} label="Settings" />
-        </nav>
+  {/* CORE */}
+  <NavLink href="/dashboard" icon={<LayoutGrid size={18} />} label="Dashboard" />
+  <NavLink href="/dashboard/leads" icon={<ClipboardList size={18} />} label="Leads" />
+  <NavLink href="/dashboard/orders" icon={<Package size={18} />} label="Orders" />
+
+  {/* PEOPLE */}
+  <NavLink href="/dashboard/partners" icon={<Handshake size={18} />} label="Partners" />
+  <NavLink href="/dashboard/companies" icon={<Building2 size={18} />} label="Companies" />
+
+  {/* MONEY */}
+  <NavLink href="/dashboard/commissions" icon={<DollarSign size={18} />} label="Commissions" />
+  <NavLink href="/dashboard/invoices" icon={<FileText size={18} />} label="Invoices" />
+  <NavLink href="/dashboard/receipts" icon={<Receipt size={18} />} label="Receipts" />
+
+  {/* COMMUNICATION */}
+  <NavLink href="/dashboard/chat" icon={<MessageSquare size={18} />} label="Chat" />
+  <NavLink href="/dashboard/email" icon={<Mail size={18} />} label="Email" />
+  <NavLink href="/dashboard/iplum" icon={<Phone size={18} />} label="iPlum" />
+
+  {/* RESOURCES */}
+  <NavLink
+    href="/dashboard/partner-uploads"
+    icon={<UploadCloud size={18} />}
+    label="Partner Uploads"
+  />
+  <NavLink
+    href="/dashboard/admin-partner-resources"
+    icon={<BookOpen size={18} />}
+    label="Partner Resource Panel"
+  />
+
+  {/* SYSTEM */}
+  <NavLink href="/dashboard/settings" icon={<Settings size={18} />} label="Settings" />
+</nav>
+
       </aside>
 
       {/* ===== MAIN CONTENT ===== */}
@@ -322,9 +334,10 @@ useEffect(() => {
 
         {/* ===== PAGE CONTENT ===== */}
        <AdminPresenceProvider value={onlineStats}>
-  <main className="flex-1 w-full overflow-y-auto overflow-x-hidden flex justify-center pb-24 md:pb-6">
+  <main className="flex-1 w-full overflow-y-auto overflow-x-hidden pb-24 md:pb-6">
 
-    <div className="w-full max-w-6xl px-2 md:px-6">
+
+    <div className="w-full px-2 md:px-6">
       {children}
     </div>
   </main>

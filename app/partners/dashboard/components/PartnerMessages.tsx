@@ -141,12 +141,6 @@ if (!error && data) {
     };
   }, [partnerId]);
 
-  /* ===============================
-     AUTO SCROLL
-  =============================== */
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   /* ===============================
      UI

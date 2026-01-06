@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import PartnerMessages from "./components/PartnerMessages";
+import PartnerSocialShareCard from "./components/PartnerSocialShareCard";
+
 
 
 
@@ -42,6 +44,8 @@ export default function PartnerDashboardPage() {
   const router = useRouter();
 
 
+
+
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [editProfileItem, setEditProfileItem] = useState<Partner | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -54,9 +58,6 @@ const [uploadMessage, setUploadMessage] = useState<string | null>(null);
 const [showUploads, setShowUploads] = useState(false);
 const [selectedFile, setSelectedFile] = useState<File | null>(null);
 const [showMessages, setShowMessages] = useState(false);
-
-
-
 
 
   const [stats, setStats] = useState({
@@ -86,6 +87,8 @@ const [showMessages, setShowMessages] = useState(false);
      LOAD PARTNER  ✅ (THIS IS THE WORKING PART)
   =============================== */
   useEffect(() => {
+
+    
     async function loadPartner() {
       setLoading(true);
       setLoadError(null);
@@ -106,6 +109,7 @@ const [showMessages, setShowMessages] = useState(false);
         setLoading(false);
         return;
       }
+
 
       const { data, error } = await supabase
   .from("partners")
@@ -184,6 +188,7 @@ async function handlePartnerUpload() {
 
 
 
+
   /* ===============================
      LOAD DASHBOARD STATS ✅ (NO "partner possibly null")
   =============================== */
@@ -234,6 +239,8 @@ async function handlePartnerUpload() {
 
   loadDashboardStats();
 }, [partner]);
+
+
 
 
   /* ===============================
@@ -366,6 +373,7 @@ if (showLegalGate && partner) {
 }
 
 
+
   /* ===============================
      RENDER
   =============================== */
@@ -401,15 +409,23 @@ if (showLegalGate && partner) {
 
 
 
+
+
       {/* WELCOME VIDEO */}
       <div className="border rounded overflow-hidden">
         <button
-          onClick={() => setShowVideo(!showVideo)}
-          className="w-full flex justify-between items-center bg-gray-400 text-white px-4 py-3 font-bold"
-        >
-          <span>Welcome Video</span>
-          <span className="text-xl">{showVideo ? "−" : "+"}</span>
-        </button>
+  onClick={() => setShowVideo(!showVideo)}
+  className="relative w-full bg-red-700 text-white px-4 py-4 font-bold rounded flex items-center justify-center"
+>
+  {/* CENTERED TITLE */}
+  <span className="text-lg">Click Here to Start</span>
+
+  {/* RIGHT ICON */}
+  <span className="absolute right-4 text-2xl">
+    {showVideo ? "−" : "+"}
+  </span>
+</button>
+
 
         {showVideo && (
           <div className="p-4 bg-white space-y-4">
@@ -429,6 +445,8 @@ if (showLegalGate && partner) {
           </div>
         )}
       </div>
+
+<PartnerSocialShareCard partnerId={partner.partner_id!} />
 
       {/* TRACKING LINK */}
       <div className="border rounded overflow-hidden">

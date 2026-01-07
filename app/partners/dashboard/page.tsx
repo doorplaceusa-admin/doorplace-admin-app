@@ -45,6 +45,8 @@ export default function PartnerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
   const router = useRouter();
+  const [linkViews, setLinkViews] = useState<number>(0);
+
 
 
 
@@ -243,6 +245,25 @@ async function handlePartnerUpload() {
   loadDashboardStats();
 }, [partner]);
 
+useEffect(() => {
+  const partnerId = partner?.partner_id;
+  if (!partnerId) return;
+
+  async function loadLinkViews() {
+    const { count, error } = await supabase
+      .from("page_view_events")
+      .select("*", { count: "exact", head: true })
+      .eq("partner_id", partnerId)
+      .eq("page_key", "swing-partner-lead");
+
+    if (!error && typeof count === "number") {
+      setLinkViews(count);
+    }
+  }
+
+  loadLinkViews();
+}, [partner]);
+
 
 
 
@@ -391,11 +412,11 @@ if (showLegalGate && partner) {
       </div>
 
       {/* STATS */}
-<div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-  {/* LINK VIEWS — COMING SOON */}
-  <div className="border rounded p-4 bg-gray-100">
-    <div className="text-xs text-gray-500">Link Views</div>
-    <div className="text-lg font-bold text-gray-400">Coming Soon</div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="border rounded p-4 bg-gray-100">
+      <div className="text-xs text-gray-500">Tracking Link Views</div>
+      <div className="text-lg font-bold">{linkViews}</div>
+
     
   </div>
 

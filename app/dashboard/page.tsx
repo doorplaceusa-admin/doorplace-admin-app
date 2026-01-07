@@ -18,10 +18,11 @@ type DashboardStats = {
   paidCommissions: number;
   activePartners: number;
   conversionRate: number;
-
-  // ✅ NEW
   totalAppViews: number;
   uniqueSessions: number;
+  totalSiteViews: number;
+  partnerTrackingViews: number;
+
 };
 
 
@@ -44,10 +45,10 @@ export default function DashboardPage() {
   paidCommissions: 0,
   activePartners: 0,
   conversionRate: 0,
-
-  // ✅ NEW
   totalAppViews: 0,
   uniqueSessions: 0,
+  totalSiteViews: 0,
+  partnerTrackingViews: 0,
 });
 
   const [partnerSnapshot, setPartnerSnapshot] = useState({
@@ -92,6 +93,23 @@ const { count: activePartners } = await supabase
   .from("partners")
   .select("*", { count: "exact", head: true })
   .eq("status", "active");
+
+  // ================= PARTNER TRACKING LINK VIEWS =================
+const { count: partnerTrackingViews } = await supabase
+  .from("page_view_events")
+  .select("*", { count: "exact", head: true })
+  .eq("page_key", "swing-partner-lead")
+  .not("partner_id", "is", null);
+
+
+  // ================= TOTAL SITE VIEWS (DOORPLACE USA) =================
+const { count: totalSiteViews } = await supabase
+  .from("page_view_events")
+  .select("*", { count: "exact", head: true });
+
+  
+
+
 
 
 setStats((prev) => ({
@@ -177,10 +195,10 @@ const uniqueSessions = new Set(
   paidCommissions: 0,
   activePartners: activatedPartnersCount || 0,
   conversionRate: 0,
-
-  // ✅ REQUIRED BY TYPE
   totalAppViews: totalAppViews || 0,
   uniqueSessions: uniqueSessions || 0,
+  totalSiteViews: totalSiteViews || 0,
+  partnerTrackingViews: partnerTrackingViews || 0,
 });
 
 
@@ -244,11 +262,13 @@ const uniqueSessions = new Set(
     <StatCard title="Total Orders" value={stats.totalOrders} />
   </div>
 
-  <StatCard title="Pending Commissions" value={fmt(stats.pendingCommissions)} />
+  <StatCard title="Doorplace Site Views" value={stats.totalSiteViews} />
 
   <StatCard title="Total App Views" value={stats.totalAppViews} />
 
   <StatCard title="Unique Sessions" value={stats.uniqueSessions} />
+
+  <StatCard title="Partner Tracking Link Views" value={stats.partnerTrackingViews} />
 
   <StatCard title="Partners Online" value={partners} />
 

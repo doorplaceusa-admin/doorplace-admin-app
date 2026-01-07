@@ -1,4 +1,7 @@
-import { supabase } from "@/lib/supabaseClient";
+import { createSupabaseServerClient } from "@/lib/supabaseServer";
+
+const supabase = createSupabaseServerClient();
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

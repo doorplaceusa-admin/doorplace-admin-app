@@ -43,9 +43,15 @@ type Partner = {
 export default function PartnerDashboardPage() {
   const [partner, setPartner] = useState<Partner | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showVideo, setShowVideo] = useState(false);
+  const [showVideo, setShowVideo] = useState(true);
   const router = useRouter();
   const [linkViews, setLinkViews] = useState<number>(0);
+  const [showPayouts, setShowPayouts] = useState(false);
+
+
+
+
+
 
 
 
@@ -314,7 +320,8 @@ useEffect(() => {
 
 if (showLegalGate && partner) {
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4">
+
       <div className="bg-white rounded-lg w-full max-w-3xl max-h-[70vh] flex flex-col shadow-xl">
 
         {/* HEADER */}
@@ -442,7 +449,7 @@ if (showLegalGate && partner) {
   className="relative w-full bg-red-700 text-white px-4 py-4 font-bold rounded flex items-center justify-center"
 >
   {/* CENTERED TITLE */}
-  <span className="text-lg">Click Here to Start</span>
+  <span className="text-lg">Step 1: Watch Welcome Video </span>
 
   {/* RIGHT ICON */}
   <span className="absolute right-4 text-2xl">
@@ -474,31 +481,6 @@ if (showLegalGate && partner) {
 <PartnerQRCode trackingLink={swingTrackingLink} />
 
 
-      {/* TRACKING LINK */}
-      <div className="border rounded overflow-hidden">
-        <div className="bg-gray-600 text-white px-4 py-3 font-bold">Your Swing Tracking Link</div>
-
-        <div className="p-4 space-y-4">
-          <input readOnly value={swingTrackingLink} className="w-full border rounded px-3 py-2 text-sm" />
-
-          <button onClick={copyTrackingLink} className="w-full bg-black text-white py-3 rounded font-bold">
-            Copy Link
-          </button>
-
-          <div className="bg-gray-100 p-3 rounded text-sm text-red-700 font-semibold text-center">
-            Earn $100 commission + $50 bonus for every lead that becomes an order
-          </div>
-
-          <ul className="text-sm text-gray-600 list-disc pl-5 space-y-1">
-            <li>Share this link anywhere — Facebook, Instagram, TikTok, text, flyers.</li>
-            <li>Leads submitted through this link are tracked to your Partner ID.</li>
-            <li>If a swing is purchased, you earn a tracking-link commission.</li>
-            <li>Track all activity in your Commission Tracker.</li>
-            <li>You’ll receive an email notification when a form is submitted.</li>
-          </ul>
-        </div>
-      </div>
-
       {/* FUTURE DOOR TRACKING LEADS (COMING SOON) */}
 <div className="border rounded overflow-hidden">
   <div className="bg-gray-300 text-white px-4 py-3 font-bold">
@@ -526,68 +508,81 @@ if (showLegalGate && partner) {
 </div>
 
 
-      {/* PAYOUTS / DIRECT DEPOSIT */}
+     {/* PAYOUTS / DIRECT DEPOSIT */}
 <div className="border rounded overflow-hidden">
-  <div className="bg-gray-400 text-white px-4 py-3 font-bold">
-    Payouts & Direct Deposit
-  </div>
+  
+  {/* TOGGLE HEADER */}
+  <button
+    onClick={() => setShowPayouts(!showPayouts)}
+    className="w-full flex justify-between items-center bg-gray-400 text-white px-4 py-3 font-bold"
+  >
+    <span>Payouts & Direct Deposit</span>
+    <span className="text-xl">{showPayouts ? "−" : "+"}</span>
+  </button>
 
-  <div className="p-4 space-y-3 bg-white">
+  {/* COLLAPSIBLE CONTENT */}
+  {showPayouts && (
+    <div className="p-4 space-y-3 bg-white">
 
-    {/* STATUS */}
-    {!stats.totalOrders ? (
-      <>
-        <div className="text-sm font-semibold text-gray-700">
-          Direct Deposit: Not Available Yet
-        </div>
+      {/* STATUS */}
+      {!stats.totalOrders ? (
+        <>
+          <div className="text-sm font-semibold text-gray-700">
+            Direct Deposit: Not Available Yet
+          </div>
 
-        <p className="text-sm text-gray-600">
-          Direct deposit will be available after your first completed sale.
-        </p>
+          <p className="text-sm text-gray-600">
+            Direct deposit will be available after your first completed sale.
+          </p>
 
-        <button
-          disabled
-          className="w-full py-3 rounded font-bold bg-gray-400 text-white cursor-not-allowed"
-        >
-          Set Up Direct Deposit (Available after first sale)
-        </button>
-      </>
-    ) : (
-      <>
-        <div className="text-sm font-semibold text-gray-700">
-          Direct Deposit: Setup Required
-        </div>
+          <button
+            disabled
+            className="w-full py-3 rounded font-bold bg-gray-400 text-white cursor-not-allowed"
+          >
+            Set Up Direct Deposit (Available after first sale)
+          </button>
+        </>
+      ) : (
+        <>
+          <div className="text-sm font-semibold text-gray-700">
+            Direct Deposit: Setup Required
+          </div>
 
-        <p className="text-sm text-gray-600">
-          When your first payout is ready, you’ll receive a secure email from
-          our payment partner to set up direct deposit.
-        </p>
+          <p className="text-sm text-gray-600">
+            When your first payout is ready, you’ll receive a secure email from
+            our payment partner to set up direct deposit.
+          </p>
 
-        <button
-          className="w-full py-3 rounded font-bold bg-black text-white"
-          onClick={() =>
-            alert(
-              "Direct deposit setup is sent when your first payout is issued."
-            )
-          }
-        >
-          Set Up Direct Deposit
-        </button>
-      </>
-    )}
-  </div>
+          <button
+            className="w-full py-3 rounded font-bold bg-black text-white"
+            onClick={() =>
+              alert(
+                "Direct deposit setup is sent when your first payout is issued."
+              )
+            }
+          >
+            Set Up Direct Deposit
+          </button>
+        </>
+      )}
+    </div>
+  )}
 </div>
 
 
-      {/* ACTIONS */}
-      <div className="grid grid-cols-2 gap-4">
-        <ActionButton href="/partners/orders/new" label="Submit Swing Order" />
-        <ActionButton href="/partners/commissions" label="Commissions" />
-        <ActionButton href="/partners/resources" label="Swing Resources" />
-        <ActionButton href="/partners/orders" label="My Orders" />
-        <ActionButton href="/partners/leads" label="My Leads" />
-        
-      </div>
+
+ <ActionButton
+  href="/partners/resources"
+  label="Partner Resources"
+  className="bg-black text-white text-lg"
+  />
+  <ActionButton
+  href="/partners/orders/new"
+  label="Submit Swing Order"
+  className="bg-black text-red-700 text-lg"
+  />
+
+      
 
       
 {/* PARTNER UPLOADS */}
@@ -937,10 +932,22 @@ function Card({ label, value }: any) {
   );
 }
 
-function ActionButton({ href, label }: any) {
+function ActionButton({
+  href,
+  label,
+  className = "",
+}: {
+  href: string;
+  label: string;
+  className?: string;
+}) {
   return (
-    <a href={href} className="block text-center bg-gray-400 text-white py-3 rounded font-bold">
+    <a
+      href={href}
+      className={`block text-center py-3 rounded font-bold ${className}`}
+    >
       {label}
     </a>
   );
 }
+

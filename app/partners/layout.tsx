@@ -431,14 +431,13 @@ function PartnerBottomNav() {
           icon={<UserRoundPenIcon size={20} />}
           label="Leads"
         />
+        <MobileNavItem
+          href="/partners/resources"
+          icon={<BookOpen size={20} />}
+          label="Resources"
+        />
 
-        <button
-          onClick={() => setShowMore(true)}
-          className="flex flex-col items-center text-xs text-gray-600"
-        >
-          <MoreHorizontal size={20} />
-          <span>More</span>
-        </button>
+    
       </nav>
 
       {showMore && (

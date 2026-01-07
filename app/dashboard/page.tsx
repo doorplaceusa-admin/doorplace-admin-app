@@ -291,21 +291,15 @@ const uniqueSessions = new Set(
     </div>
 
     <div>
-      <div className="text-gray-500">Activated</div>
+      <div className="text-gray-500">UserPass</div>
       <div className="text-xl font-bold text-green-700">
         {partnerSnapshot.activated}
       </div>
     </div>
 
-    <div>
-      <div className="text-gray-500">Pending</div>
-      <div className="text-xl font-bold text-orange-700">
-        {partnerSnapshot.pending}
-      </div>
-    </div>
 
     <div>
-      <div className="text-gray-500">Active</div>
+      <div className="text-gray-500">Active Partners</div>
       <div className="text-xl font-bold text-green-700">
         {partnerSnapshot.active}
       </div>

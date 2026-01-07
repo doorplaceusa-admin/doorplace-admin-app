@@ -1,3 +1,5 @@
+"use client";
+
 import { useAppViewTracker } from "@/lib/useAppViewTracker";
 export const dynamic = "force-dynamic";
 
@@ -272,16 +274,6 @@ export default function PartnerTermsPage() {
         Watauga, Texas · partners@doorplaceusa.com
       </div>
 
-<div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-40">
-  <label className="flex items-center gap-2 text-sm">
-    <input type="checkbox" />
-    I agree to the Legal, Privacy & Partner Terms
-  </label>
-
-  <button className="mt-3 w-full bg-red-700 text-white py-2 rounded">
-    Continue
-  </button>
-</div>
 
 
     </div>

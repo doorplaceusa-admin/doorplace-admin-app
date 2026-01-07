@@ -19,7 +19,7 @@ export default function ResetPasswordPage() {
       (_event, session) => {
         if (!session) {
           // Not coming from a valid recovery link
-          router.replace("/app/login");
+          router.replace("/login");
         } else {
           setLoading(false);
         }
@@ -57,7 +57,7 @@ export default function ResetPasswordPage() {
 
     // ✅ Redirect after success
     setTimeout(() => {
-      router.replace("/app/dashboard");
+      router.replace("/login");
     }, 2000);
   };
 

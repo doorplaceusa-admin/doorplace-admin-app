@@ -19,7 +19,7 @@ export default function IPlumPage() {
   }, []);
 
   return (
-    <div style={{ padding: 24 }}>
+    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-[1500px] w-full mx-auto">
       <h1>📞 iPlum Dashboard</h1>
 
       {error && <p style={{ color: "red" }}>{error}</p>}

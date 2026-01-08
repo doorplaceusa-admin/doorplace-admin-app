@@ -876,7 +876,7 @@ function Field({
   disabled?: boolean;
 }) {
   return (
-    <div className="space-y-1">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-[1500px] w-full mx-auto">
       <label className="text-xs font-medium text-gray-500">{label}</label>
       <input
         className={`border w-full px-3 py-2 rounded ${

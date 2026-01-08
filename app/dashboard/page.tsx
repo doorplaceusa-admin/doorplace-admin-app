@@ -230,7 +230,7 @@ const uniqueSessions = new Set(
     sessionEmail === "thomas@doorplaceusa.com";
 
   return (
-  <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4">
+  <div className="h-[calc(100vh-80px)] flex flex-col bg-gray-50 overflow-x-hidden max-w-[1500px] w-full mx-auto">
     <div className="px-4 md:px-6 space-y-4">
 
         <h1 className="text-3xl font-bold" style={{ color: brandRed }}>

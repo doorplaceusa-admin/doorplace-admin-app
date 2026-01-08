@@ -234,6 +234,16 @@ useEffect(() => {
     icon={<BookOpen size={18} />}
     label="Partner Resource Panel"
   />
+<NavLink
+    href="/dashboard/analytics"
+    icon={<BookOpen size={18} />}
+    label="Analytics"
+  />
+
+
+
+
+
 
   {/* SYSTEM */}
   <NavLink href="/dashboard/settings" icon={<Settings size={18} />} label="Settings" />
@@ -334,13 +344,12 @@ useEffect(() => {
 
         {/* ===== PAGE CONTENT ===== */}
        <AdminPresenceProvider value={onlineStats}>
-  <main className="flex-1 w-full overflow-y-auto overflow-x-hidden pb-24 md:pb-6">
+  <main className="flex-1 overflow-y-auto overflow-x-hidden pb-24 md:pb-6">
+  <div className="max-w-[100vw] w-full px-2 md:px-3 overflow-x-hidden">
+    {children}
+  </div>
+</main>
 
-
-    <div className="w-full px-2 md:px-6">
-      {children}
-    </div>
-  </main>
 </AdminPresenceProvider>
 
 
@@ -423,6 +432,12 @@ function MobileBottomNav() {
 
             {/* Icon Grid */}
             <div className="p-3 grid grid-cols-3 gap-3">
+              <MoreTile
+                href="/dashboard/analytics"
+                icon={<Mail size={20} />}
+                label="Analytics"
+                onClick={() => setShowMore(false)}
+              />
               <MoreTile
                 href="/dashboard/email"
                 icon={<Mail size={20} />}

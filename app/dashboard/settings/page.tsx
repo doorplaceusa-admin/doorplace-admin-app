@@ -4,7 +4,7 @@ import SendPasswordReset from "./components/SendPasswordReset";
 
 export default function Page() {
   return (
-    <div className="space-y-8">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-[1500px] w-full mx-auto">
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>

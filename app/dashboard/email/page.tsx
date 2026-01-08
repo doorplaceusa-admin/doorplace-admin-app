@@ -168,7 +168,7 @@ export default function EmailDashboardPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto px-6 pb-6 space-y-6">
+    <div className="h-[calc(100vh-80px)] flex flex-col bg-gray-50 overflow-x-hidden max-w-[1500px] w-full mx-auto">
       <div className="sticky top-0 bg-white z-30 border-b pb-4">
         <h1 className="text-3xl font-bold text-red-700">Email</h1>
         <p className="text-sm text-gray-500">TradePilot — Partner Email System</p>

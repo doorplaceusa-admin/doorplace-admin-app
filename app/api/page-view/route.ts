@@ -1,7 +1,10 @@
+export const runtime = "nodejs";
+
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
+// @ts-ignore
+import geoip from "geoip-lite";
 
 const supabase = createSupabaseServerClient();
-
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,6 +37,29 @@ export async function POST(req: Request) {
       });
     }
 
+    // ===============================
+    // 🌍 IP RESOLUTION (CRITICAL PART)
+    // ===============================
+    const forwardedFor = req.headers.get("x-forwarded-for");
+    const realIp = req.headers.get("x-real-ip");
+
+    const ip =
+      forwardedFor?.split(",")[0]?.trim() ||
+      realIp ||
+      "";
+
+    // 🔍 TEMP DEBUG LOG (REMOVE AFTER CONFIRMATION)
+    console.log("IP DEBUG", {
+      forwardedFor,
+      realIp,
+      resolvedIp: ip,
+    });
+
+    const geo = ip ? geoip.lookup(ip) : null;
+
+    // ===============================
+    // 📦 INSERT PAGE VIEW EVENT
+    // ===============================
     const { error } = await supabase
       .from("page_view_events")
       .insert({
@@ -41,6 +67,12 @@ export async function POST(req: Request) {
         page_url,
         partner_id,
         source,
+
+        country: geo?.country || null,
+        state: geo?.region || null,
+        city: geo?.city || null,
+        latitude: geo?.ll?.[0] || null,
+        longitude: geo?.ll?.[1] || null,
       });
 
     if (error) {

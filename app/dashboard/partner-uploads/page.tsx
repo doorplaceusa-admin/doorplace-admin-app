@@ -91,7 +91,7 @@ export default function PartnerUploadsAdminPage() {
   if (loading) return <div className="p-6">Loading uploads…</div>;
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto overflow-x-hidden px-6 pb-6 space-y-4">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-[1500px] w-full mx-auto">
       {/* HEADER */}
       <div className="sticky top-0 bg-white z-30 border-b pb-4">
         <h1 className="text-3xl font-bold text-red-700">

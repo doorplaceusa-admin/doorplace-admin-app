@@ -108,7 +108,7 @@ export default function AdminResourcesPage() {
   }
   if (loading) return <div style={{ padding: 30 }}>Loading admin resources…</div>;
   return (
-    <div style={{ padding: 30, maxWidth: 980 }}>
+    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-[1500px] w-full mx-auto">
       <h1 style={{ fontSize: 28, marginBottom: 14 }}>Partner Resource Panel</h1>
       {/* ADD NEW */}
       <div

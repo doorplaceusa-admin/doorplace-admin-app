@@ -1,8 +1,10 @@
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 // @ts-ignore
 import geoip from "geoip-lite";
+
 
 const supabase = createSupabaseServerClient();
 

@@ -2,9 +2,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
-// @ts-ignore
-import geoip from "geoip-lite";
-
 
 const supabase = createSupabaseServerClient();
 
@@ -39,29 +36,16 @@ export async function POST(req: Request) {
       });
     }
 
-    // ===============================
-    // 🌍 IP RESOLUTION (CRITICAL PART)
-    // ===============================
+    // ✅ Resolve IP
     const forwardedFor = req.headers.get("x-forwarded-for");
     const realIp = req.headers.get("x-real-ip");
+    const ip = forwardedFor?.split(",")[0]?.trim() || realIp || "";
 
-    const ip =
-      forwardedFor?.split(",")[0]?.trim() ||
-      realIp ||
-      "";
-
-    // 🔍 TEMP DEBUG LOG (REMOVE AFTER CONFIRMATION)
-    console.log("IP DEBUG", {
-      forwardedFor,
-      realIp,
-      resolvedIp: ip,
-    });
-
+    // ✅ Load geoip-lite at REQUEST TIME (not build time)
+    // @ts-ignore
+    const geoip = (await import("geoip-lite")).default;
     const geo = ip ? geoip.lookup(ip) : null;
 
-    // ===============================
-    // 📦 INSERT PAGE VIEW EVENT
-    // ===============================
     const { error } = await supabase
       .from("page_view_events")
       .insert({

@@ -1,6 +1,3 @@
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 
 const supabase = createSupabaseServerClient();
@@ -19,32 +16,26 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: Request) {
+  console.log("🔥 PAGE VIEW ROUTE HIT (LIVE)");
+
   try {
     const body = await req.json();
+    console.log("📦 BODY RECEIVED:", body);
 
     const {
       page_key,
       page_url,
       partner_id = null,
-      source = "shopify",
+      source = "unknown",
     } = body;
 
     if (!page_key || !page_url) {
+      console.error("❌ INVALID PAYLOAD");
       return new Response("Invalid payload", {
         status: 400,
         headers: corsHeaders,
       });
     }
-
-    // ✅ Resolve IP
-    const forwardedFor = req.headers.get("x-forwarded-for");
-    const realIp = req.headers.get("x-real-ip");
-    const ip = forwardedFor?.split(",")[0]?.trim() || realIp || "";
-
-    // ✅ Load geoip-lite at REQUEST TIME (not build time)
-    // @ts-ignore
-    const geoip = (await import("geoip-lite")).default;
-    const geo = ip ? geoip.lookup(ip) : null;
 
     const { error } = await supabase
       .from("page_view_events")
@@ -53,28 +44,24 @@ export async function POST(req: Request) {
         page_url,
         partner_id,
         source,
-
-        country: geo?.country || null,
-        state: geo?.region || null,
-        city: geo?.city || null,
-        latitude: geo?.ll?.[0] || null,
-        longitude: geo?.ll?.[1] || null,
       });
 
     if (error) {
-      console.error("Insert error:", error);
+      console.error("❌ SUPABASE INSERT ERROR:", error);
       return new Response("Insert failed", {
         status: 500,
         headers: corsHeaders,
       });
     }
 
+    console.log("✅ PAGE VIEW INSERTED");
+
     return new Response("OK", {
       status: 200,
       headers: corsHeaders,
     });
   } catch (err) {
-    console.error("API error:", err);
+    console.error("❌ ROUTE CRASH:", err);
     return new Response("Server error", {
       status: 500,
       headers: corsHeaders,

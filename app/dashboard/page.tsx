@@ -75,6 +75,35 @@ const totalOnline = partners + admins + others;
 
   useEffect(() => {
     async function load() {
+
+      const { data: sessionData } = await supabase.auth.getSession();
+const userId = sessionData.session?.user.id;
+
+if (!userId) return;
+
+const { data: profile, error } = await supabase
+  .from("profiles")
+  .select("active_company_id, role")
+  .eq("id", userId)
+  .single();
+
+
+
+
+
+
+
+if (error || !profile?.active_company_id) {
+  console.error("NO COMPANY ID", error, profile);
+  setLoading(false);
+  return;
+}
+
+
+const companyId = profile.active_company_id;
+const role = profile.role;
+
+
       const { data } = await supabase.auth.getSession();
       setSessionEmail(data.session?.user.email || "");
 
@@ -102,14 +131,18 @@ const { count: activePartners } = await supabase
 const { count: partnerTrackingViews } = await supabase
   .from("page_view_events")
   .select("*", { count: "exact", head: true })
+  .eq("company_id", companyId)
   .eq("page_key", "swing-partner-lead")
   .not("partner_id", "is", null);
+
 
 
   // ================= TOTAL SITE VIEWS (DOORPLACE USA) =================
 const { count: totalSiteViews } = await supabase
   .from("page_view_events")
-  .select("*", { count: "exact", head: true });
+  .select("*", { count: "exact", head: true })
+  .eq("company_id", companyId);
+
 
   
 
@@ -135,26 +168,32 @@ setPartnerSnapshot({
       const { count: leadCount } = await supabase
   .from("leads")
   .select("*", { count: "exact", head: true })
+  .eq("company_id", companyId)
   .neq("submission_type", "partner_order");
+
 
 
         // ================= TOTAL ORDERS (WIRED HERE) =================
 const { count: orderCount } = await supabase
   .from("leads")
   .select("*", { count: "exact", head: true })
+  .eq("company_id", companyId)
   .eq("submission_type", "partner_order");
+
 
 
 
       // ================= RECENT LEADS (WIRE THIS) =================
       // Tries common column names; adjust if your table uses different field names
       const { data: leadsData } = await supabase
-        .from("leads")
-        .select(
-          "id, created_at, customer_name, name, full_name, interest_type, product_interest"
-        )
-        .order("created_at", { ascending: false })
-        .limit(3);
+  .from("leads")
+  .select(
+    "id, created_at, customer_name, name, full_name, interest_type, product_interest"
+  )
+  .eq("company_id", companyId)
+  .order("created_at", { ascending: false })
+  .limit(3);
+
 
       const mappedRecentLeads: RecentItem[] = (leadsData || []).map((l: any) => {
         const who =
@@ -178,12 +217,16 @@ const { count: orderCount } = await supabase
 // Total App Views
 const { count: totalAppViews } = await supabase
   .from("app_view_logs")
-  .select("*", { count: "exact", head: true });
+  .select("*", { count: "exact", head: true })
+  .eq("company_id", companyId);
+
 
 // Unique Sessions
 const { data: sessionRows } = await supabase
   .from("app_view_logs")
-  .select("session_id");
+  .select("session_id")
+  .eq("company_id", companyId);
+
 
 const uniqueSessions = new Set(
   (sessionRows || []).map((r: any) => r.session_id)

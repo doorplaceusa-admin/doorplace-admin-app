@@ -1,175 +1,287 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import GlobalCompaniesGuard from "@/app/components/GlobalCompaniesGuard";
+import CompanySwitcher from "@/app/components/CompanySwitcher";
 
+type Role = "owner" | "admin" | "manager" | "viewer";
 
 type Company = {
   id: string;
   name: string;
   status: string | null;
-  owner_id: string;
-  owner_email: string | null;
   created_at: string | null;
+  role: Role;
+};
+
+type CompanyUser = {
+  id: string;
+  email: string;
+  role: Role;
 };
 
 export default function CompaniesPage() {
+  return (
+    <GlobalCompaniesGuard>
+      <CompaniesPageInner />
+    </GlobalCompaniesGuard>
+  );
+}
 
+function CompaniesPageInner() {
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [newName, setNewName] = useState<string>("");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [users, setUsers] = useState<CompanyUser[]>([]);
+  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(null);
+  const [newCompanyName, setNewCompanyName] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<Role>("manager");
+  const [loading, setLoading] = useState(true);
+
+  /* ================= LOAD ================= */
 
   useEffect(() => {
     loadCompanies();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadActiveCompany();
   }, []);
+
+  async function loadActiveCompany() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("active_company_id")
+      .eq("id", user.id)
+      .single();
+
+    setActiveCompanyId(data?.active_company_id || null);
+    if (data?.active_company_id) {
+      loadCompanyUsers(data.active_company_id);
+    }
+  }
 
   async function loadCompanies() {
     setLoading(true);
-    setErrorMessage(null);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-    const { data: authData, error: authError } =
-      await supabase.auth.getUser();
+    const { data } = await supabase
+      .from("company_users")
+      .select(`
+        role,
+        companies (
+          id,
+          name,
+          status,
+          created_at
+        )
+      `)
+      .eq("auth_user_id", user.id);
 
-    if (authError || !authData?.user) {
-      setErrorMessage("Not logged in.");
-      setLoading(false);
-      return;
-    }
-
-    const user = authData.user;
-
-    const { data, error } = await supabase
-      .from("companies")
-      .select("*")
-      .eq("owner_id", user.id)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      setErrorMessage(error.message);
-      setCompanies([]);
-    } else {
-      setCompanies((data || []) as Company[]);
-    }
+    setCompanies(
+      data?.map((row: any) => ({
+        ...row.companies,
+        role: row.role,
+      })) || []
+    );
 
     setLoading(false);
   }
 
-  async function addCompany() {
-    if (!newName.trim()) {
-      alert("Company name is required.");
-      return;
-    }
+  async function loadCompanyUsers(companyId: string) {
+    const { data } = await supabase
+      .from("company_users")
+      .select("id, email, role")
+      .eq("company_id", companyId);
 
-    const { data: authData, error: authError } =
-      await supabase.auth.getUser();
+    setUsers(data || []);
+  }
 
-    if (authError || !authData?.user) {
-      alert("Not logged in.");
-      return;
-    }
+  /* ================= CREATE COMPANY ================= */
 
-    const user = authData.user;
+  async function createCompany() {
+    if (!newCompanyName.trim()) return;
 
-    const { error } = await supabase.from("companies").insert([
-      {
-        name: newName.trim(),
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: company } = await supabase
+      .from("companies")
+      .insert({
+        name: newCompanyName.trim(),
         owner_id: user.id,
         owner_email: user.email,
         status: "active",
-      },
-    ]);
+      })
+      .select()
+      .single();
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
+    if (!company) return;
 
-    setNewName("");
+    await supabase.from("company_users").insert({
+      company_id: company.id,
+      auth_user_id: user.id,
+      email: user.email,
+      role: "owner",
+    });
+
+    setNewCompanyName("");
     loadCompanies();
   }
 
-  async function deleteCompany(id: string) {
-    const { error } = await supabase
-      .from("companies")
-      .delete()
-      .eq("id", id);
+  /* ================= SWITCH COMPANY ================= */
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
+  async function switchCompany(companyId: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-    setCompanies((prev) => prev.filter((c) => c.id !== id));
+    await supabase
+      .from("profiles")
+      .update({ active_company_id: companyId })
+      .eq("id", user.id);
+
+    window.location.href = "/dashboard";
   }
 
+  /* ================= INVITE USER ================= */
+
+  async function inviteUser() {
+    if (!inviteEmail || !activeCompanyId) return;
+
+    await supabase.from("company_users").insert({
+      company_id: activeCompanyId,
+      email: inviteEmail,
+      role: inviteRole,
+    });
+
+    setInviteEmail("");
+    loadCompanyUsers(activeCompanyId);
+  }
+
+  async function updateUserRole(id: string, role: Role) {
+    await supabase
+      .from("company_users")
+      .update({ role })
+      .eq("id", id);
+
+    if (activeCompanyId) loadCompanyUsers(activeCompanyId);
+  }
+
+  async function removeUser(id: string) {
+    await supabase.from("company_users").delete().eq("id", id);
+    if (activeCompanyId) loadCompanyUsers(activeCompanyId);
+  }
+
+  /* ================= UI ================= */
+
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold">Companies</h1>
-      <p className="text-gray-600 mt-2">
-        Manage all your companies here.
-      </p>
+    <div className="max-w-6xl mx-auto p-8">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">Companies</h1>
+          <p className="text-gray-600">Enterprise company management</p>
+        </div>
+        <CompanySwitcher />
+      </div>
 
-      {errorMessage && (
-        <p className="text-red-600 mt-4">{errorMessage}</p>
-      )}
-
-      {/* Add Company */}
-      <div className="mt-6 p-4 border rounded bg-gray-50">
-        <h2 className="font-semibold mb-2">Add a Company</h2>
-
+      {/* CREATE COMPANY */}
+      <div className="p-4 border rounded bg-gray-50 mb-10">
+        <h2 className="font-semibold mb-3">Create Company</h2>
         <input
-          type="text"
+          value={newCompanyName}
+          onChange={(e) => setNewCompanyName(e.target.value)}
           placeholder="Company name"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
           className="border p-2 rounded w-full mb-3"
         />
-
         <button
-          onClick={addCompany}
-          className="px-4 py-2 rounded text-white"
+          onClick={createCompany}
+          className="px-4 py-2 text-white rounded"
           style={{ backgroundColor: "#b80d0d" }}
         >
-          Add Company
+          Create Company
         </button>
       </div>
 
-      {/* Company List */}
-      <div className="mt-10">
-        <h2 className="font-semibold mb-3">Your Companies</h2>
-
-        {loading ? (
-          <p>Loading...</p>
-        ) : companies.length === 0 ? (
-          <p className="text-gray-500">No companies found.</p>
-        ) : (
-          <ul className="space-y-3">
-            {companies.map((c) => (
-              <li
-                key={c.id}
-                className="p-4 border rounded flex justify-between items-center bg-white"
+      {/* YOUR COMPANIES */}
+      <h2 className="font-semibold mb-4">Your Companies</h2>
+      {loading ? (
+        <p>Loading...</p>
+      ) : (
+        <ul className="space-y-3 mb-10">
+          {companies.map((c) => (
+            <li key={c.id} className="p-4 border rounded flex justify-between">
+              <div>
+                <p className="font-semibold">{c.name}</p>
+                <p className="text-sm text-gray-500">Role: {c.role}</p>
+              </div>
+              <button
+                onClick={() => switchCompany(c.id)}
+                className="px-3 py-1 rounded text-white"
+                style={{ backgroundColor: "#b80d0d" }}
               >
-                <div>
-                  <p className="font-semibold">{c.name}</p>
-                  <p className="text-sm text-gray-500">
-                    Status: {c.status || "unknown"}
-                  </p>
-                </div>
+                Open
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
-                <button
-                  onClick={() => deleteCompany(c.id)}
-                  className="px-3 py-1 rounded text-white"
-                  style={{ backgroundColor: "#b80d0d" }}
-                >
-                  Delete
-                </button>
+      {/* USERS & ROLES */}
+      {activeCompanyId && (
+        <>
+          <h2 className="font-semibold mb-3">Manage Users & Roles</h2>
+
+          <div className="p-4 border rounded bg-gray-50 mb-6">
+            <input
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              placeholder="user@email.com"
+              className="border p-2 rounded w-full mb-2"
+            />
+            <select
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value as Role)}
+              className="border p-2 rounded w-full mb-3"
+            >
+              <option value="admin">Admin</option>
+              <option value="manager">Manager</option>
+              <option value="viewer">Viewer</option>
+            </select>
+            <button
+              onClick={inviteUser}
+              className="px-4 py-2 text-white rounded"
+              style={{ backgroundColor: "#b80d0d" }}
+            >
+              Invite User
+            </button>
+          </div>
+
+          <ul className="space-y-3">
+            {users.map((u) => (
+              <li key={u.id} className="p-3 border rounded flex justify-between">
+                <span>{u.email}</span>
+                <div className="flex gap-2">
+                  <select
+                    value={u.role}
+                    onChange={(e) => updateUserRole(u.id, e.target.value as Role)}
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                  <button
+                    onClick={() => removeUser(u.id)}
+                    className="text-red-600 text-sm"
+                  >
+                    Remove
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }

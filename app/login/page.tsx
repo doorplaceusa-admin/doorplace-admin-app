@@ -1,5 +1,6 @@
 "use client";
 
+import { useUnknownPresence } from "@/lib/useUnknownPresence";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -7,11 +8,24 @@ import { supabase } from "@/lib/supabaseClient";
 import { useAppViewTracker } from "@/lib/useAppViewTracker";
 
 
-
-
+/* =====================================================
+   SAFARI / IOS SAFE UUID POLYFILL
+===================================================== */
+if (typeof window !== "undefined") {
+  if (!crypto.randomUUID) {
+    // @ts-ignore
+    crypto.randomUUID = () =>
+      "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+  }
+}
 
 export default function LoginPage() {
   const router = useRouter();
+useUnknownPresence("login");
 
   useAppViewTracker({
     role: "unknown",
@@ -22,14 +36,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-
-
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [recovering, setRecovering] = useState(false);
 
- 
+  const [year, setYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    setYear(new Date().getFullYear());
+  }, []);
 
   /* ===============================
      LOGIN
@@ -139,7 +155,7 @@ export default function LoginPage() {
 
         {!recovering && (
           <>
-            {/* PASSWORD + TOGGLE */}
+            {/* PASSWORD */}
             <div className="relative mb-4">
               <input
                 className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-red-600 pr-12"
@@ -166,7 +182,7 @@ export default function LoginPage() {
               {loading ? "Signing in…" : "Log In"}
             </button>
 
-            {/* FORGOT PASSWORD */}
+            {/* FORGOT */}
             <button
               onClick={() => setRecovering(true)}
               className="mt-4 text-sm text-red-700 hover:underline w-full text-center"
@@ -207,8 +223,11 @@ export default function LoginPage() {
         </div>
 
         {/* FOOTER */}
-        <div className="mt-8 text-center text-xs text-gray-400">
-          © {new Date().getFullYear()} TradePilot — Built by Doorplace USA
+        <div
+          className="mt-8 text-center text-xs text-gray-400"
+          suppressHydrationWarning
+        >
+          © {year ?? ""} TradePilot — Built by Doorplace USA
         </div>
 
       </div>

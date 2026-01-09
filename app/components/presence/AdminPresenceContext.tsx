@@ -4,7 +4,8 @@ import { createContext, useContext } from "react";
 
 type OnlineStats = {
   partners: number;
-  admins: number;
+  admins: number
+  others: number;
   total: number;
 };
 

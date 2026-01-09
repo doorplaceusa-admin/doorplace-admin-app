@@ -1,15 +1,19 @@
 "use client";
 
+import { useUnknownPresence } from "@/lib/useUnknownPresence";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useAppViewTracker } from "@/lib/useAppViewTracker";
 
 
+
 const REDIRECT_DELAY_MS = 5000;
 
 export default function CreateAccountPage() {
   const router = useRouter();
+  useUnknownPresence("create-account");
+
   
  useAppViewTracker({
     role: "unknown",

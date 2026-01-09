@@ -58,7 +58,11 @@ export default function DashboardPage() {
   active: 0,
 });
 
-const { partners, admins, total } = useAdminPresence();
+   const { partners, admins, others } = useAdminPresence();
+
+const totalOnline = partners + admins + others;
+
+
 
 
   const [recentLeads, setRecentLeads] = useState<RecentItem[]>([]);
@@ -274,7 +278,9 @@ const uniqueSessions = new Set(
 
   <StatCard title="Admins Online" value={admins} />
 
-  <StatCard title="Total Online" value={total} />
+  <StatCard title="Others" value={others} />
+
+  <StatCard title="Total Online" value={totalOnline} />
 
 </div>
 

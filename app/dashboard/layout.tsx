@@ -6,6 +6,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AdminPresenceProvider } from "@/app/components/presence/AdminPresenceContext";
 import { useAppViewTracker } from "@/lib/useAppViewTracker";
+import { getLiveSessionCount } from "@/lib/getLiveSessionCount";
+
 
 
 import { useEffect, useState, useRef } from "react";
@@ -59,6 +61,7 @@ export default function DashboardLayout({
   const [onlineStats, setOnlineStats] = useState({
   partners: 0,
   admins: 0,
+  others: 0,
   total: 0,
 });
 
@@ -82,19 +85,24 @@ useEffect(() => {
       },
     });
 
-    channel.on("presence", { event: "sync" }, () => {
-      const state = channel.presenceState();
-      const users = Object.values(state).flat() as any[];
+    channel.on("presence", { event: "sync" }, async () => {
+  const state = channel.presenceState();
+  const users = Object.values(state).flat() as any[];
 
-      const partners = users.filter((u) => u.role === "partner").length;
-      const admins = users.filter((u) => u.role === "admin").length;
+  const partners = users.filter((u) => u.role === "partner").length;
+  const admins = users.filter((u) => u.role === "admin").length;
 
-      setOnlineStats({
-        partners,
-        admins,
-        total: users.length,
-      });
-    });
+  const liveTotal = await getLiveSessionCount();
+  const others = Math.max(liveTotal - (partners + admins), 0);
+
+  setOnlineStats({
+    partners,
+    admins,
+    others,
+    total: liveTotal,
+  });
+});
+
 
     channel.subscribe(async (status: string) => {
       if (status === "SUBSCRIBED") {
@@ -239,9 +247,6 @@ useEffect(() => {
     icon={<BookOpen size={18} />}
     label="Analytics"
   />
-
-
-
 
 
 

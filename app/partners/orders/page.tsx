@@ -12,8 +12,8 @@ type Row = {
   lead_id: string;
   submission_type: string;
   partner_id?: string;
-  customer_first_name?: string;
-  customer_last_name?: string;
+  first_name?: string;
+  last_name?: string;
   swing_price?: number | string;
   accessory_price?: number | string;
   order_status?: string;
@@ -145,7 +145,7 @@ export default function PartnerOrdersPage() {
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Customer</span>
               <span className="font-medium">
-                {o.customer_first_name} {o.customer_last_name}
+                {o.first_name} {o.last_name}
               </span>
             </div>
 
@@ -193,6 +193,13 @@ export default function PartnerOrdersPage() {
         ))}
       </div>
 
+<ActionButton
+  href="/partners/orders/new"
+  label="Submit Swing Order"
+  className="bg-black text-red-700 text-lg"
+  />
+
+
       {/* BACK */}
       <div className="pt-4 text-center">
         <a
@@ -203,5 +210,23 @@ export default function PartnerOrdersPage() {
         </a>
       </div>
     </div>
+  );
+}
+function ActionButton({
+  href,
+  label,
+  className = "",
+}: {
+  href: string;
+  label: string;
+  className?: string;
+}) {
+  return (
+    <a
+      href={href}
+      className={`block text-center py-3 rounded font-bold ${className}`}
+    >
+      {label}
+    </a>
   );
 }

@@ -275,7 +275,8 @@ useEffect(() => {
   <div className="absolute left-0 mt-2 w-48 bg-white border rounded shadow z-50">
     <button
   onClick={() => {
-    window.dispatchEvent(new Event("open-profile"));
+    setViewProfileOpen(true);
+
     setProfileOpen(false);
   }}
   className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
@@ -382,18 +383,283 @@ useEffect(() => {
     isLegalPage ? "pb-[140px]" : "pb-24 md:pb-6"
   }`}
 >
+  <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-[1300px] w-full mx-auto">
+    {children}
+  </div>
+</main>
 
-
-          {children}
-        </main>
 
         {/* ===== MOBILE BOTTOM NAV ===== */}
         {!isLegalPage && <PartnerBottomNav />}
+
+      {/* ===============================
+   GLOBAL PARTNER PROFILE MODAL
+================================ */}
+{viewProfileOpen && profilePartner && (
+  <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <div className="bg-white rounded max-w-2xl w-full max-h-[75vh] flex flex-col shadow-lg">
+
+      {/* HEADER */}
+      <div className="sticky top-0 bg-white z-10 border-b p-5">
+        <h2 className="text-xl font-bold">My Profile</h2>
+        <p className="text-sm text-gray-500">
+          Partner ID:{" "}
+          <span className="font-mono">{profilePartner.partner_id}</span>
+        </p>
+      </div>
+
+      {/* CONTENT */}
+      <div className="flex-1 overflow-y-auto p-5 text-sm space-y-6">
+
+  {/* BASIC INFORMATION */}
+  <section>
+    <h3 className="font-bold text-base mb-3">Basic Information</h3>
+
+    <p><b>Name:</b> {profilePartner.first_name} {profilePartner.last_name}</p>
+    <p><b>Email:</b> {profilePartner.email_address}</p>
+    <p><b>Phone:</b> {profilePartner.phone}</p>
+    <p><b>Partner ID:</b> {profilePartner.partner_id}</p>
+    <p>
+      <b>Joined Date:</b>{" "}
+      {profilePartner.created_at
+        ? new Date(profilePartner.created_at).toLocaleDateString()
+        : "—"}
+    </p>
+  </section>
+
+  {/* BUSINESS INFORMATION */}
+  <section>
+    <h3 className="font-bold text-base mb-3">Business Information</h3>
+
+    <p><b>Business Name:</b> {profilePartner.business_name || "—"}</p>
+    <p><b>Coverage Area:</b> {profilePartner.coverage_area || "—"}</p>
+    <p><b>Preferred Contact:</b> {profilePartner.preferred_contact_method || "—"}</p>
+    <p><b>Sales Experience:</b> {profilePartner.sales_experience || "—"}</p>
+  </section>
+
+  {/* ADDRESS */}
+  <section>
+    <h3 className="font-bold text-base mb-3">Address</h3>
+
+    <p><b>Street:</b> {profilePartner.street_address || "—"}</p>
+    <p><b>City:</b> {profilePartner.city || "—"}</p>
+    <p><b>State:</b> {profilePartner.state || "—"}</p>
+    <p><b>Zip:</b> {profilePartner.zip || "—"}</p>
+  </section>
+
+</div>
+
+
+      {/* FOOTER */}
+      <div className="border-t p-4 flex gap-3">
+        <button
+          className="bg-black text-white px-4 py-2 rounded flex-1"
+          onClick={() => setViewProfileOpen(false)}
+        >
+          Close
+        </button>
+
+        <button
+          className="bg-red-700 text-white px-4 py-2 rounded flex-1"
+          onClick={() => {
+            setViewProfileOpen(false);
+            setEditProfileOpen(true);
+          }}
+        >
+          Edit Profile
+        </button>
+      </div>
+      
+
+    </div>
+  </div>
+)}
+
+{editProfileOpen && profilePartner && (
+  <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <div className="bg-white rounded w-full max-w-[92vw] sm:max-w-2xl max-h-[75vh] flex flex-col shadow-lg">
+
+
+      {/* HEADER */}
+      <div className="sticky top-0 bg-white z-10 border-b p-5">
+        <h2 className="text-xl font-bold">Edit Profile</h2>
+        <p className="text-sm text-gray-500">
+          Partner ID: <span className="font-mono">{profilePartner.partner_id}</span>
+        </p>
+      </div>
+
+      {/* CONTENT */}
+      <div className="flex-1 overflow-y-auto p-5 text-sm space-y-6">
+
+        {/* BASIC INFORMATION */}
+        <section>
+          <h3 className="font-bold text-base mb-3">Basic Information</h3>
+
+          <Input
+            label="First Name"
+            value={profilePartner.first_name}
+            onChange={(v) =>
+              setProfilePartner({ ...profilePartner, first_name: v })
+            }
+          />
+
+          <Input
+            label="Last Name"
+            value={profilePartner.last_name}
+            onChange={(v) =>
+              setProfilePartner({ ...profilePartner, last_name: v })
+            }
+          />
+
+          <Input
+            label="Email"
+            value={profilePartner.email_address}
+            disabled
+          />
+
+          <Input
+            label="Phone"
+            value={profilePartner.phone}
+            onChange={(v) =>
+              setProfilePartner({ ...profilePartner, phone: v })
+            }
+          />
+        </section>
+
+        {/* BUSINESS INFORMATION */}
+        <section>
+          <h3 className="font-bold text-base mb-3">Business Information</h3>
+
+          <Input
+            label="Business Name"
+            value={profilePartner.business_name}
+            onChange={(v) =>
+              setProfilePartner({ ...profilePartner, business_name: v })
+            }
+          />
+
+          <Input
+            label="Coverage Area"
+            value={profilePartner.coverage_area}
+            onChange={(v) =>
+              setProfilePartner({ ...profilePartner, coverage_area: v })
+            }
+          />
+
+          <Input
+            label="Preferred Contact"
+            value={profilePartner.preferred_contact_method}
+            onChange={(v) =>
+              setProfilePartner({
+                ...profilePartner,
+                preferred_contact_method: v,
+              })
+            }
+          />
+
+          <Input
+            label="Sales Experience"
+            value={profilePartner.sales_experience}
+            onChange={(v) =>
+              setProfilePartner({
+                ...profilePartner,
+                sales_experience: v,
+              })
+            }
+          />
+        </section>
+
+        {/* ADDRESS */}
+        <section>
+          <h3 className="font-bold text-base mb-3">Address</h3>
+
+          <Input
+            label="Street"
+            value={profilePartner.street_address}
+            onChange={(v) =>
+              setProfilePartner({ ...profilePartner, street_address: v })
+            }
+          />
+
+          <Input
+            label="City"
+            value={profilePartner.city}
+            onChange={(v) =>
+              setProfilePartner({ ...profilePartner, city: v })
+            }
+          />
+
+          <Input
+            label="State"
+            value={profilePartner.state}
+            onChange={(v) =>
+              setProfilePartner({ ...profilePartner, state: v })
+            }
+          />
+
+          <Input
+            label="Zip"
+            value={profilePartner.zip}
+            onChange={(v) =>
+              setProfilePartner({ ...profilePartner, zip: v })
+            }
+          />
+        </section>
+
+      </div>
+
+      {/* FOOTER */}
+      <div className="border-t p-4 flex gap-3">
+        <button
+          className="bg-gray-300 px-4 py-2 rounded flex-1"
+          onClick={() => setEditProfileOpen(false)}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="bg-red-700 text-white px-4 py-2 rounded flex-1"
+          onClick={async () => {
+            await supabase
+              .from("partners")
+              .update({
+                first_name: profilePartner.first_name,
+                last_name: profilePartner.last_name,
+                phone: profilePartner.phone,
+                business_name: profilePartner.business_name,
+                coverage_area: profilePartner.coverage_area,
+                preferred_contact_method: profilePartner.preferred_contact_method,
+                sales_experience: profilePartner.sales_experience,
+                street_address: profilePartner.street_address,
+                city: profilePartner.city,
+                state: profilePartner.state,
+                zip: profilePartner.zip,
+              })
+              .eq("id", profilePartner.id);
+
+            setEditProfileOpen(false);
+          }}
+        >
+          Save Changes
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
+
+
+
+
+
+
 
       </div>
     </div>
   );
 }
+
+
 
 /* ======================
    MOBILE BOTTOM NAV
@@ -510,5 +776,31 @@ function MobileNavItem({
       {icon}
       <span className="mt-1">{label}</span>
     </Link>
+  );
+}
+
+function Input({
+  label,
+  value,
+  onChange,
+  disabled = false,
+}: {
+  label: string;
+  value?: string | null;
+  onChange?: (v: string) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="space-y-1">
+      <label className="text-xs font-medium text-gray-500">{label}</label>
+      <input
+        className={`border w-full px-3 py-2 rounded ${
+          disabled ? "bg-gray-100 text-gray-600 cursor-not-allowed" : ""
+        }`}
+        value={value ?? ""}
+        disabled={disabled}
+        onChange={(e) => onChange?.(e.target.value)}
+      />
+    </div>
   );
 }

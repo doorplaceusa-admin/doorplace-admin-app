@@ -99,7 +99,7 @@ export default function AdminAnalyticsPage() {
   const maxLine = Math.max(...timeline.map((t) => t.count), 1);
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-[1000px] w-full mx-auto">
       <h1 className="text-2xl font-bold">Page Analytics</h1>
 
       {/* Last Page Viewed */}
@@ -163,7 +163,7 @@ export default function AdminAnalyticsPage() {
       {/* Rankings */}
       <div className="border rounded p-4">
         <h2 className="font-semibold mb-2">Top Pages</h2>
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed">
           <thead>
             <tr className="border-b">
               <th className="text-left py-1">Page URL</th>

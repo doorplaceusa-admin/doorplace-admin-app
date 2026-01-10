@@ -88,6 +88,8 @@ useEffect(() => {
 }, [profilePartner?.partner_id, chatOpen]);
 
 
+
+
 useEffect(() => {
   let channel: any;
 
@@ -167,6 +169,7 @@ useEffect(() => {
 }, [router]);
 
 
+
 useEffect(() => {
   async function loadPartnerProfile() {
     const { data: sessionData } = await supabase.auth.getSession();
@@ -211,9 +214,8 @@ useEffect(() => {
   if (loading) return null;
 
   return (
-<div
-  className={`${isLegalPage ? "" : "min-h-screen"} bg-gray-100 flex max-w-full overflow-x-hidden`}
->
+<div className="min-h-[100dvh] bg-gray-100 flex flex-col max-w-full overflow-hidden">
+
 
       {/* ===== DESKTOP SIDEBAR ===== */}
       <aside className="hidden md:flex w-64 bg-white shadow flex-col p-6">
@@ -379,12 +381,29 @@ useEffect(() => {
 
         {/* ===== PAGE CONTENT ===== */}
 <main
-  className={`flex-1 overflow-y-auto overflow-x-hidden px-1 md:px-6 ${
-    isLegalPage ? "pb-[140px]" : "pb-24 md:pb-6"
+  className={`flex-1 overflow-x-hidden px-1 md:px-6 ${
+    isLegalPage ? "pb-[1500px]" : "pb-1 md:pb-1"
   }`}
 >
-  <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-[1300px] w-full mx-auto">
+
+  <div className="min-h-[400dvh] overflow-y-auto space-y-4 max-w-[1300px] w-full mx-auto">
     {children}
+    {/* ===== TINY LEGAL FOOTER ===== */}
+<footer className="w-full text-center text-[50x] opacity-60 py-2">
+  <Link href="/legal/terms" className="mx-1 hover:underline">
+    Terms
+  </Link>
+  •
+  <Link href="/legal/privacy" className="mx-1 hover:underline">
+    Privacy
+  </Link>
+  •
+  <Link href="/legal/commissions" className="mx-1 hover:underline">
+    Commission Terms
+  </Link>
+</footer>
+
+
   </div>
 </main>
 
@@ -642,14 +661,14 @@ useEffect(() => {
         >
           Save Changes
         </button>
-      </div>
 
+        
+      </div>
+      
     </div>
+    
   </div>
 )}
-
-
-
 
 
 
@@ -804,3 +823,4 @@ function Input({
     </div>
   );
 }
+

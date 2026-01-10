@@ -32,6 +32,9 @@ import {
   Phone,
   BookOpen,
   MessageSquare,
+  FishingHookIcon,
+  DatabaseIcon,
+  Database,
 } from "lucide-react";
 
 
@@ -244,8 +247,13 @@ useEffect(() => {
   />
 <NavLink
     href="/dashboard/analytics"
-    icon={<BookOpen size={18} />}
+    icon={<DatabaseIcon size={18} />}
     label="Analytics"
+  />
+  <NavLink
+    href="/dashboard/page-generator"
+    icon={<FishingHookIcon size={18} />}
+    label="Fishing Hooks"
   />
 
 
@@ -439,8 +447,14 @@ function MobileBottomNav() {
             <div className="p-3 grid grid-cols-3 gap-3">
               <MoreTile
                 href="/dashboard/analytics"
-                icon={<Mail size={20} />}
+                icon={<Database size={20} />}
                 label="Analytics"
+                onClick={() => setShowMore(false)}
+              />
+              <MoreTile
+                href="/dashboard/page-generator"
+                icon={<FishingHookIcon size={20} />}
+                label="Fishing Hooks"
                 onClick={() => setShowMore(false)}
               />
               <MoreTile

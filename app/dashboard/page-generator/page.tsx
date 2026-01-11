@@ -38,8 +38,10 @@ const brandRed = "#b80d0d";
 
 const TEMPLATE_OPTIONS = [
   { value: "porch_swing_city", label: "Porch Swing City Page" },
+  { value: "porch_swing_delivery", label: "Porch Swing Delivery Page" }, // ← ADD THIS
   { value: "door_city", label: "Door City Page" },
 ];
+
 
 export default function PageGeneratorAdminPage() {
   const [loadingStates, setLoadingStates] = useState(false);

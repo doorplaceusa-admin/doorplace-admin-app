@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { notFound } from "next/navigation";
 import PorchSwingCityTemplate from "@/app/preview/templates/porchSwingCity";
+import PorchSwingDeliveryCityTemplate from "@/app/preview/templates/porchSwingDeliveryCity";
 
 type PageProps = {
   params: Promise<{
@@ -9,7 +10,7 @@ type PageProps = {
 };
 
 export default async function PreviewGeneratedPage({ params }: PageProps) {
-  // ✅ REQUIRED IN NEXT 15
+  // Required in Next 15
   const { id } = await params;
 
   if (!id) notFound();
@@ -54,7 +55,15 @@ export default async function PreviewGeneratedPage({ params }: PageProps) {
     ? location.us_states[0]
     : location?.us_states;
 
-  // ✅ Porch Swing City template
+  if (!location || !state) {
+    notFound();
+  }
+
+  /* ------------------------------
+     Template router
+  ------------------------------ */
+
+  // City pages
   if (data.page_template === "porch_swing_city") {
     return (
       <PorchSwingCityTemplate
@@ -65,6 +74,17 @@ export default async function PreviewGeneratedPage({ params }: PageProps) {
     );
   }
 
-  // ❌ Unknown template
+  // Delivery pages
+  if (data.page_template === "porch_swing_delivery") {
+    return (
+      <PorchSwingDeliveryCityTemplate
+        page={data}
+        location={location}
+        state={state}
+      />
+    );
+  }
+
+  // Unknown template
   notFound();
 }

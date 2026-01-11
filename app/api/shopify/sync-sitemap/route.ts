@@ -2,11 +2,8 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 /*
-  This version pulls directly from your sitemap_pages_1.xml
-  (the URL you provided) and stores all the page URLs in Supabase.
-
-  You can call it in the browser, like:
-    https://tradepilot.doorplaceusa.com/api/shopify/sync-sitemap
+  Syncs all existing Shopify /pages/ URLs into Supabase
+  so we never generate or push duplicates.
 */
 
 export async function GET() {
@@ -19,41 +16,46 @@ export async function POST() {
 
 async function run() {
   try {
-    // Fetch the actual pages sitemap
-    const sitemapUrl = "https://doorplaceusa.com/sitemap_pages_1.xml?from=81369595985&to=704516751441";
+    const sitemapUrl =
+      "https://doorplaceusa.com/sitemap_pages_1.xml?from=81369595985&to=704516751441";
+
     const res = await fetch(sitemapUrl, { cache: "no-store" });
 
     if (!res.ok) {
-      throw new Error(`Failed to fetch sitemap: ${res.status}`);
+      throw new Error(`Failed to fetch sitemap (${res.status})`);
     }
 
     const xml = await res.text();
 
-    // Extract all <loc> URLs
+    // Extract all <loc> values
     const matches = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)];
     const urls = matches.map(m => m[1]);
 
-    // Filter only the /pages/ URLs
+    // Only keep Shopify Pages
     const pageUrls = urls.filter(u => u.includes("/pages/"));
 
     if (pageUrls.length === 0) {
       return NextResponse.json({
         success: false,
-        error: "No /pages/ URLs found in that sitemap",
+        error: "No /pages/ URLs found in sitemap"
       });
     }
 
+    const now = new Date().toISOString();
+
     const rows = pageUrls.map(url => {
-      const slug = url.split("/pages/")[1];
+      const slug = url
+        .split("/pages/")[1]
+        .replace(/\/$/, ""); // remove trailing slash if present
+
       return {
         slug,
         url,
         source: "shopify",
-        last_seen: new Date().toISOString(),
+        last_seen: now
       };
     });
 
-    // Upsert into Supabase (prevents duplicates)
     const { error } = await supabaseAdmin
       .from("existing_shopify_pages")
       .upsert(rows, { onConflict: "slug" });
@@ -62,7 +64,7 @@ async function run() {
 
     return NextResponse.json({
       success: true,
-      total_pages_found: pageUrls.length,
+      total_pages_found: rows.length
     });
   } catch (e: any) {
     return NextResponse.json(
@@ -71,4 +73,3 @@ async function run() {
     );
   }
 }
-

@@ -25,8 +25,8 @@ export function renderPorchSwingDeliveryCityHTML({
     heroImageUrl
       ? `
     <div style="text-align:center;margin-bottom:25px;">
-      <img src="${heroImageUrl}" 
-           alt="Porch Swing Delivery in ${city}, ${stateCode}" 
+      <img src="${heroImageUrl}"
+           alt="Porch Swings in ${city}, ${stateCode}"
            style="width:100%;max-width:850px;border-radius:6px;" />
     </div>
     `
@@ -34,13 +34,19 @@ export function renderPorchSwingDeliveryCityHTML({
   }
 
   <h1 style="color:#b80d0d;font-size:34px;margin-bottom:10px;">
-    Porch Swing Delivery in ${city}, ${stateCode}
+    Custom Porch Swings in ${city}, ${stateCode}
   </h1>
 
   <p style="font-size:18px;line-height:1.8;">
-    Looking for <strong>porch swing delivery in ${city}, ${stateCode}</strong>?  
-    Doorplace USA builds and ships heavy-duty wooden porch swings directly to homes in ${city} and across ${state}.
-    Every swing is handcrafted, reinforced, and built for real outdoor living.
+    Looking for a <strong>custom porch swing in ${city}, ${stateCode}</strong>?  
+    Doorplace USA builds heavy-duty solid-wood porch swings for Texas homes — built for heat, humidity,
+    storms, and everyday outdoor use.
+  </p>
+
+  <p style="font-size:17px;line-height:1.8;">
+    Unlike mass-produced furniture, our porch swings are handcrafted, reinforced for weight,
+    and finished with outdoor-grade stains designed to hold up in Texas weather.
+    Whether you live in North Texas, Central Texas, or the Gulf Coast, your swing is built to last.
   </p>
 
   <div style="border:2px solid #b80d0d;padding:18px;background:#fdf6f6;margin:28px 0;border-radius:6px;">
@@ -51,28 +57,52 @@ export function renderPorchSwingDeliveryCityHTML({
     </a>
   </div>
 
-  <h2 style="color:#b80d0d;">Why ${city} Customers Choose Doorplace USA</h2>
+  <h2 style="color:#b80d0d;">Why ${city}, Texas Homeowners Choose Doorplace USA</h2>
   <ul style="line-height:1.9;font-size:16px;">
-    <li>Built-to-order solid wood porch swings</li>
-    <li>Nationwide shipping with careful packaging</li>
-    <li>Weather-ready stains designed for ${state}</li>
-    <li>Crib, Twin, and Full swing sizes</li>
-    <li>Real support & live chat — no call centers</li>
+    <li>Solid wood porch swings — never cheap imports</li>
+    <li>Reinforced frames for adults and family seating</li>
+    <li>Weather-sealed finishes designed for Texas climates</li>
+    <li>Multiple sizes for porches, patios, pergolas, and decks</li>
+    <li>Nationwide freight delivery with protective packaging</li>
+    <li>Real support with live chat — no call centers</li>
   </ul>
 
-  <h2 style="color:#b80d0d;">Porch Swing Sizes We Deliver</h2>
-  <ul style="line-height:1.9;font-size:16px;">
-    <li><strong>Crib:</strong> 30” × 57”</li>
-    <li><strong>Twin:</strong> 40” × 81”</li>
-    <li><strong>Full:</strong> 57” × 81”</li>
-  </ul>
-  <p style="font-size:14px;color:#555;">* Dimensions may vary slightly by design.</p>
-
-  <h2 style="color:#b80d0d;">Shipping & Delivery to ${city}</h2>
+  <h2 style="color:#b80d0d;">Porch Swings Built for Texas Homes</h2>
   <p style="font-size:16px;line-height:1.8;">
-    Doorplace USA ships porch swings to homes in ${city} and throughout ${state}.  
-    Swings are carefully packed and delivered ready for installation, with guidance on
-    beam spacing, hanging height, and hardware selection.
+    From front porches in ${city} to backyard patios, ranch homes, lake houses,
+    pergolas, and covered decks across Texas, Doorplace USA designs swings that fit
+    the way Texans actually use their outdoor space.
+  </p>
+
+  <p style="font-size:16px;line-height:1.8;">
+    Our swings are commonly installed on:
+  </p>
+  <ul style="line-height:1.9;font-size:16px;">
+    <li>Covered porches</li>
+    <li>Backyard patios</li>
+    <li>Pergolas and A-frames</li>
+    <li>Decks and balcony beams</li>
+    <li>Gazebos and outdoor pavilions</li>
+  </ul>
+
+  <h2 style="color:#b80d0d;">Porch Swing Sizes</h2>
+  <ul style="line-height:1.9;font-size:16px;">
+    <li><strong>Crib:</strong> 30” × 57” — compact patios and smaller porches</li>
+    <li><strong>Twin:</strong> 40” × 81” — our most popular everyday size</li>
+    <li><strong>Full:</strong> 57” × 81” — family seating and wide porches</li>
+  </ul>
+  <p style="font-size:14px;color:#555;">* Sizes may vary slightly by design and model.</p>
+
+  <h2 style="color:#b80d0d;">Texas Shipping & Delivery</h2>
+  <p style="font-size:16px;line-height:1.8;">
+    Doorplace USA ships porch swings to ${city} and throughout Texas using professional
+    freight carriers. Each swing is carefully packed and delivered ready for installation.
+    We provide guidance on beam spacing, hanging height, and hardware selection.
+  </p>
+
+  <p style="font-size:16px;line-height:1.8;">
+    Your swing is built in our shop and shipped directly to your home — no big-box stores,
+    no cheap overseas furniture.
   </p>
 
   <h2 style="color:#b80d0d;">Helpful Resources</h2>
@@ -84,8 +114,9 @@ export function renderPorchSwingDeliveryCityHTML({
   </ul>
 
   <p style="margin-top:30px;font-size:16px;line-height:1.8;">
-    Whether you live in <strong>${city}</strong> or anywhere in ${state},  
-    Doorplace USA provides professional-grade porch swing delivery nationwide.
+    If you're searching for <strong>custom porch swings in ${city}, TX</strong>,
+    Doorplace USA provides professional-grade craftsmanship, Texas-ready materials,
+    and nationwide delivery backed by real support.
   </p>
 
   <div style="margin-top:40px;text-align:center;">

@@ -19,7 +19,7 @@ type DashboardStats = {
   activePartners: number;
   conversionRate: number;
   totalAppViews: number;
-  uniqueSessions: number;
+  
   totalSiteViews: number;
   partnerTrackingViews: number;
 
@@ -46,7 +46,7 @@ export default function DashboardPage() {
   activePartners: 0,
   conversionRate: 0,
   totalAppViews: 0,
-  uniqueSessions: 0,
+ 
   totalSiteViews: 0,
   partnerTrackingViews: 0,
 });
@@ -131,9 +131,9 @@ const { count: activePartners } = await supabase
 const { count: partnerTrackingViews } = await supabase
   .from("page_view_events")
   .select("*", { count: "exact", head: true })
-  .eq("company_id", companyId)
-  .eq("page_key", "swing-partner-lead")
-  .not("partner_id", "is", null);
+  .not("partner_id", "is", null)
+  .or(`company_id.eq.${companyId},company_id.is.null`);
+
 
 
 
@@ -141,7 +141,8 @@ const { count: partnerTrackingViews } = await supabase
 const { count: totalSiteViews } = await supabase
   .from("page_view_events")
   .select("*", { count: "exact", head: true })
-  .eq("company_id", companyId);
+  .or(`company_id.eq.${companyId},company_id.is.null`);
+
 
 
   
@@ -218,19 +219,10 @@ const { count: orderCount } = await supabase
 const { count: totalAppViews } = await supabase
   .from("app_view_logs")
   .select("*", { count: "exact", head: true })
-  .eq("company_id", companyId);
+  .or(`company_id.eq.${companyId},company_id.is.null`);
 
 
-// Unique Sessions
-const { data: sessionRows } = await supabase
-  .from("app_view_logs")
-  .select("session_id")
-  .eq("company_id", companyId);
 
-
-const uniqueSessions = new Set(
-  (sessionRows || []).map((r: any) => r.session_id)
-).size;
 
 
       // ✅ Keep your existing placeholders for now where you haven’t wired yet
@@ -243,7 +235,7 @@ const uniqueSessions = new Set(
   activePartners: activatedPartnersCount || 0,
   conversionRate: 0,
   totalAppViews: totalAppViews || 0,
-  uniqueSessions: uniqueSessions || 0,
+ 
   totalSiteViews: totalSiteViews || 0,
   partnerTrackingViews: partnerTrackingViews || 0,
 });
@@ -313,13 +305,11 @@ const uniqueSessions = new Set(
 
   <StatCard title="Total App Views" value={stats.totalAppViews} />
 
-  <StatCard title="Unique Sessions" value={stats.uniqueSessions} />
 
   <StatCard title="Partner Tracking Link Views" value={stats.partnerTrackingViews} />
 
   <StatCard title="Partners Online" value={partners} />
 
-  <StatCard title="Admins Online" value={admins} />
 
   <StatCard title="Others" value={others} />
 

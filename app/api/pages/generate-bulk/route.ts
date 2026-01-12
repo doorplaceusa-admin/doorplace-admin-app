@@ -3,6 +3,9 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+/* =============================
+   VALID PAGE TEMPLATES
+============================= */
 const VALID_TEMPLATES = [
   "porch_swing_city",
   "porch_swing_delivery",
@@ -46,7 +49,10 @@ export async function POST(req: Request) {
       .eq("state_id", state_id);
 
     if (error || !cities) {
-      return NextResponse.json({ error: error?.message || "City load failed" }, { status: 500 });
+      return NextResponse.json(
+        { error: error?.message || "City load failed" },
+        { status: 500 }
+      );
     }
 
     const results: string[] = [];
@@ -58,16 +64,24 @@ export async function POST(req: Request) {
         const st = Array.isArray(l.us_states) ? l.us_states[0] : l.us_states;
         const stateCode = st?.state_code?.toLowerCase() || "";
 
+        /* ----------------------------
+           Slug Logic (locked to template)
+        ----------------------------- */
         const baseSlug = isDelivery
           ? `porch-swing-delivery-${l.slug}-${stateCode}`
-          : `porch-swings-${l.slug}-${stateCode}`;
+          : `porch-swing-city-${l.slug}-${stateCode}`;
+
+        /* ----------------------------
+           Title Logic (locked to template)
+        ----------------------------- */
+        const title = isDelivery
+          ? `Porch Swing Delivery in ${l.city_name}, ${stateCode.toUpperCase()}`
+          : `Porch Swing City in ${l.city_name}, ${stateCode.toUpperCase()}`;
 
         return {
           location_id: l.id,
           state_id: l.state_id,
-          title: isDelivery
-            ? `Porch Swing Delivery in ${l.city_name}, ${st.state_code}`
-            : `Porch Swings in ${l.city_name}, ${st.state_code}`,
+          title,
           slug: baseSlug,
           status,
           page_type: "city",
@@ -102,6 +116,9 @@ export async function POST(req: Request) {
       page_template,
     });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message || "Server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: e?.message || "Server error" },
+      { status: 500 }
+    );
   }
 }

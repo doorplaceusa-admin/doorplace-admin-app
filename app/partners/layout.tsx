@@ -214,7 +214,8 @@ useEffect(() => {
   if (loading) return null;
 
   return (
-<div className="min-h-[100dvh] bg-gray-100 flex flex-col max-w-full overflow-hidden">
+<div className="h-[100dvh] bg-gray-100 flex max-w-full overflow-hidden">
+
 
 
       {/* ===== DESKTOP SIDEBAR ===== */}
@@ -258,7 +259,8 @@ useEffect(() => {
       {/* ===== MAIN CONTENT ===== */}
 <div
   className={`flex-1 flex flex-col max-w-full overflow-x-hidden ${
-    isLegalPage ? "h-auto overflow-y-auto" : "h-screen overflow-hidden"
+    isLegalPage ? "h-auto overflow-y-auto" : "h-full overflow-hidden"
+
   }`}
 >
 

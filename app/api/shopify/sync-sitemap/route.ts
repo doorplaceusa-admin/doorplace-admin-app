@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 /*
-  Syncs all existing Shopify /pages/ URLs into Supabase
-  so we never generate or push duplicates.
+  Hard-coded Shopify sitemap sync.
+  Uses ONLY the provided sitemap_pages_1.xml URL.
 */
 
 export async function GET() {
@@ -14,39 +14,42 @@ export async function POST() {
   return run();
 }
 
+async function fetchXml(url: string): Promise<string> {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Failed to fetch sitemap (${res.status})`);
+  return res.text();
+}
+
+function stripNamespaces(xml: string) {
+  return xml
+    .replace(/xmlns(:\w+)?="[^"]*"/g, "")
+    .replace(/<\/?\w+:/g, "<")
+    .replace(/<\/\w+:/g, "</");
+}
+
+function extractLocs(xml: string): string[] {
+  const clean = stripNamespaces(xml);
+  return [...clean.matchAll(/<loc>(.*?)<\/loc>/g)].map(m => m[1].trim());
+}
+
 async function run() {
   try {
     const sitemapUrl =
-      "https://doorplaceusa.com/sitemap_pages_1.xml?from=81369595985&to=704516751441";
+      "https://doorplaceusa.com/sitemap_pages_1.xml?from=81369595985&to=704635895889";
 
-    const res = await fetch(sitemapUrl, { cache: "no-store" });
+    const xml = await fetchXml(sitemapUrl);
+    const urls = extractLocs(xml);
 
-    if (!res.ok) {
-      throw new Error(`Failed to fetch sitemap (${res.status})`);
-    }
-
-    const xml = await res.text();
-
-    // Extract all <loc> values
-    const matches = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)];
-    const urls = matches.map(m => m[1]);
-
-    // Only keep Shopify Pages
-    const pageUrls = urls.filter(u => u.includes("/pages/"));
-
-    if (pageUrls.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: "No /pages/ URLs found in sitemap"
-      });
+    if (!urls.length) {
+      throw new Error("No URLs found in sitemap");
     }
 
     const now = new Date().toISOString();
 
-    const rows = pageUrls.map(url => {
+    const rows = urls.map(url => {
       const slug = url
-        .split("/pages/")[1]
-        .replace(/\/$/, ""); // remove trailing slash if present
+        .replace("https://doorplaceusa.com/pages/", "")
+        .replace(/\/$/, "");
 
       return {
         slug,
@@ -66,6 +69,7 @@ async function run() {
       success: true,
       total_pages_found: rows.length
     });
+
   } catch (e: any) {
     return NextResponse.json(
       { success: false, error: e.message },

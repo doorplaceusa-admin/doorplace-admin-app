@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 type PageRank = {
@@ -24,47 +24,60 @@ type TimelinePoint = {
   count: number;
 };
 
+const MAX_TIMELINE_POINTS = 60;
+const REFRESH_INTERVAL = 10000;
+
+type SortKey = "views" | "last" | "url";
+
 export default function AdminAnalyticsPage() {
   const [rankings, setRankings] = useState<PageRank[]>([]);
   const [lastView, setLastView] = useState<LastView | null>(null);
   const [heatmap, setHeatmap] = useState<HeatmapRow[]>([]);
   const [timeline, setTimeline] = useState<TimelinePoint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("views");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const inflight = useRef(false);
+
+  async function loadAll() {
+    if (inflight.current) return;
+    inflight.current = true;
+
+    try {
+      const [{ data: rankingData }, { data: lastData }, { data: heatData }] =
+        await Promise.all([
+          supabase
+            .from("analytics_page_rankings")
+            .select("*")
+            .limit(500),
+          supabase.from("analytics_last_page_view").select("*").single(),
+          supabase.from("analytics_hourly_heatmap").select("*"),
+        ]);
+
+      if (rankingData) setRankings(rankingData);
+      if (lastData) setLastView(lastData);
+      if (heatData) setHeatmap(heatData);
+    } finally {
+      inflight.current = false;
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     loadAll();
+    const i = setInterval(loadAll, REFRESH_INTERVAL);
+    return () => clearInterval(i);
   }, []);
 
-  async function loadAll() {
-    const [{ data: rankingData }, { data: lastData }, { data: heatData }] =
-      await Promise.all([
-        supabase.from("analytics_page_rankings").select("*"),
-        supabase
-          .from("analytics_last_page_view")
-          .select("*")
-          .single(),
-        supabase.from("analytics_hourly_heatmap").select("*"),
-      ]);
-
-    if (rankingData) setRankings(rankingData);
-    if (lastData) setLastView(lastData);
-    if (heatData) setHeatmap(heatData);
-  }
-
-  // realtime subscription
   useEffect(() => {
     const channel = supabase
-      .channel("page-view-events-live")
+      .channel("page-view-stream")
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "page_view_events",
-        },
-        async () => {
-          await loadAll();
-          addTimelinePoint();
-        }
+        { event: "INSERT", schema: "public", table: "page_view_events" },
+        () => addTimelinePoint()
       )
       .subscribe();
 
@@ -73,7 +86,6 @@ export default function AdminAnalyticsPage() {
     };
   }, []);
 
-  // timeline logic (last 30 minutes)
   function addTimelinePoint() {
     const now = new Date();
     const label = now.toLocaleTimeString([], {
@@ -91,49 +103,104 @@ export default function AdminAnalyticsPage() {
       }
 
       copy.push({ minute: label, count: 1 });
-      return copy.slice(-30);
+      return copy.slice(-MAX_TIMELINE_POINTS);
     });
   }
+
+  const filteredSortedRankings = useMemo(() => {
+    const filtered = rankings.filter((r) =>
+      r.page_url.toLowerCase().includes(search.toLowerCase())
+    );
+
+    const sorted = [...filtered].sort((a, b) => {
+      let aVal: any;
+      let bVal: any;
+
+      if (sortKey === "views") {
+        aVal = a.total_views;
+        bVal = b.total_views;
+      } else if (sortKey === "last") {
+        aVal = new Date(a.last_viewed_at).getTime();
+        bVal = new Date(b.last_viewed_at).getTime();
+      } else {
+        aVal = a.page_url.toLowerCase();
+        bVal = b.page_url.toLowerCase();
+      }
+
+      if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    return sorted.slice(0, 500);
+  }, [rankings, search, sortKey, sortDir]);
 
   const maxHeat = Math.max(...heatmap.map((h) => h.total_views), 1);
   const maxLine = Math.max(...timeline.map((t) => t.count), 1);
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-[1000px] w-full mx-auto">
-      <h1 className="text-2xl font-bold">Page Analytics</h1>
+    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-6 max-w-[1400px] w-full mx-auto">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
 
-      {/* Last Page Viewed */}
-      <div className="border rounded p-4">
-        <h2 className="font-semibold mb-1">Last Page Viewed</h2>
-        {lastView && (
-          <>
-            <div className="text-sm">{lastView.page_url}</div>
-            <div className="text-xs text-gray-500">
-              {new Date(lastView.created_at).toLocaleString()}
-            </div>
-          </>
-        )}
-      </div>
+        <div className="flex gap-2">
+          <input
+            className="border rounded px-3 py-2 text-sm w-64"
+            placeholder="Search pages..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-      {/* Live Graph */}
-      <div className="border rounded p-4">
-        <h2 className="font-semibold mb-3">Live Page Views</h2>
-        <div className="flex items-end gap-1 h-32">
-          {timeline.map((p, i) => (
-            <div
-              key={i}
-              className="bg-blue-600 w-3"
-              style={{
-                height: `${(p.count / maxLine) * 100}%`,
-              }}
-              title={`${p.minute} – ${p.count}`}
-            />
-          ))}
+          <select
+            className="border rounded px-3 py-2 text-sm"
+            value={sortKey}
+            onChange={(e) => setSortKey(e.target.value as SortKey)}
+          >
+            <option value="views">Sort by Views</option>
+            <option value="last">Sort by Last Viewed</option>
+            <option value="url">Sort by URL</option>
+          </select>
+
+          <select
+            className="border rounded px-3 py-2 text-sm"
+            value={sortDir}
+            onChange={(e) => setSortDir(e.target.value as "asc" | "desc")}
+          >
+            <option value="desc">Descending</option>
+            <option value="asc">Ascending</option>
+          </select>
         </div>
       </div>
 
-      {/* Heatmap */}
-      <div className="border rounded p-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="border rounded p-4 bg-white shadow">
+          <h2 className="font-semibold mb-1">Last Page Viewed</h2>
+          {lastView && (
+            <>
+              <div className="text-sm truncate">{lastView.page_url}</div>
+              <div className="text-xs text-gray-500">
+                {new Date(lastView.created_at).toLocaleString()}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="border rounded p-4 bg-white shadow md:col-span-2">
+          <h2 className="font-semibold mb-3">Live Traffic (Last 60 min)</h2>
+          <div className="flex items-end gap-1 h-40">
+            {timeline.map((p, i) => (
+              <div
+                key={i}
+                className="bg-blue-600 w-2 rounded-t"
+                style={{ height: `${(p.count / maxLine) * 100}%` }}
+                title={`${p.minute} – ${p.count}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="border rounded p-4 bg-white shadow">
         <h2 className="font-semibold mb-3">Hourly Heatmap</h2>
         <div className="grid grid-cols-12 gap-2 text-xs">
           {Array.from({ length: 24 }).map((_, hour) => {
@@ -144,12 +211,9 @@ export default function AdminAnalyticsPage() {
             return (
               <div
                 key={hour}
-                className="h-12 flex items-center justify-center rounded text-white"
+                className="h-12 flex items-center justify-center rounded text-white font-medium"
                 style={{
-                  backgroundColor: `rgba(220,38,38,${Math.max(
-                    intensity,
-                    0.05
-                  )})`,
+                  backgroundColor: `rgba(220,38,38,${Math.max(intensity, 0.08)})`,
                 }}
                 title={`${hour}:00 – ${count} views`}
               >
@@ -160,29 +224,38 @@ export default function AdminAnalyticsPage() {
         </div>
       </div>
 
-      {/* Rankings */}
-      <div className="border rounded p-4">
+      <div className="border rounded p-4 bg-white shadow">
         <h2 className="font-semibold mb-2">Top Pages</h2>
-        <table className="w-full text-sm table-fixed">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-1">Page URL</th>
-              <th className="text-right py-1">Views</th>
-              <th className="text-right py-1">Last Viewed</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rankings.map((r) => (
-              <tr key={r.page_url} className="border-b">
-                <td className="py-1">{r.page_url}</td>
-                <td className="py-1 text-right">{r.total_views}</td>
-                <td className="py-1 text-right">
-                  {new Date(r.last_viewed_at).toLocaleString()}
-                </td>
+
+        {loading && <div className="text-sm text-gray-500">Loading…</div>}
+
+        <div className="max-h-[500px] overflow-y-auto">
+          <table className="w-full text-sm table-fixed">
+            <thead className="sticky top-0 bg-white border-b">
+              <tr>
+                <th className="text-left py-2">Page URL</th>
+                <th className="text-right py-2">Views</th>
+                <th className="text-right py-2">Last Viewed</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredSortedRankings.map((r) => (
+                <tr
+                  key={r.page_url}
+                  className="border-b hover:bg-gray-50"
+                >
+                  <td className="py-2 truncate">{r.page_url}</td>
+                  <td className="py-2 text-right font-medium">
+                    {r.total_views.toLocaleString()}
+                  </td>
+                  <td className="py-2 text-right">
+                    {new Date(r.last_viewed_at).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

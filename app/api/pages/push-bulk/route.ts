@@ -1,6 +1,9 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { renderPorchSwingCityHTML } from "@/lib/templates/renderPorchSwingCityHTML";
+import { renderPorchSwingDeliveryCityHTML } from "@/lib/templates/renderPorchSwingDeliveryCityHTML";
 import { pushPageToShopify } from "@/lib/shopify/pushPageToShopify";
 
 export async function POST(req: Request) {
@@ -11,22 +14,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "page_ids required" }, { status: 400 });
     }
 
-    let pushed = 0;
-    let failed: string[] = [];
+    const results: any[] = [];
 
     for (const page_id of page_ids) {
       try {
-        /* ------------------------------------
-           Load page + hero image + location
-        ------------------------------------ */
+        /* -------------------------
+           Load generated page
+        ------------------------- */
         const { data: page, error } = await supabaseAdmin
           .from("generated_pages")
-          .select(
-            `
+          .select(`
             id,
             title,
             slug,
             page_type,
+            page_template,
             hero_image_url,
             us_locations (
               id,
@@ -39,15 +41,17 @@ export async function POST(req: Request) {
               state_name,
               state_code
             )
-          `
-          )
+          `)
           .eq("id", page_id)
           .single();
 
         if (error || !page) {
-          throw new Error("Page not found");
+          throw new Error("Generated page not found");
         }
 
+        /* -------------------------
+           Normalize joins
+        ------------------------- */
         const location = Array.isArray(page.us_locations)
           ? page.us_locations[0]
           : page.us_locations;
@@ -57,24 +61,50 @@ export async function POST(req: Request) {
           : page.us_states;
 
         if (!location || !state) {
-          throw new Error("Location/state missing");
+          throw new Error("Location or state missing");
         }
 
-        /* ------------------------------------
-           Render HTML (WITH hero image)
-        ------------------------------------ */
-        const html = renderPorchSwingCityHTML({
-          city: location.city_name,
-          state: state.state_name,
-          stateCode: state.state_code,
-          slug: page.slug,
-          nearbyCities: [],
-          heroImageUrl: page.hero_image_url,
-        });
+        /* -------------------------
+           Fetch nearby cities
+        ------------------------- */
+        const { data: nearbyCities } = await supabaseAdmin
+          .from("us_locations")
+          .select("city_name, slug")
+          .eq("state_id", location.state_id)
+          .neq("id", location.id)
+          .limit(6);
 
-        /* ------------------------------------
+        /* -------------------------
+           Render HTML (EXACT SAME AS SINGLE PUSH)
+        ------------------------- */
+        let html = "";
+
+        if (page.page_template === "porch_swing_delivery") {
+          html = renderPorchSwingDeliveryCityHTML({
+            city: location.city_name,
+            state: state.state_name,
+            stateCode: state.state_code,
+            slug: page.slug,
+            heroImageUrl: page.hero_image_url,
+          });
+        } else {
+          html = renderPorchSwingCityHTML({
+            city: location.city_name,
+            state: state.state_name,
+            stateCode: state.state_code,
+            slug: page.slug,
+            heroImageUrl: page.hero_image_url,
+            nearbyCities:
+              nearbyCities?.map((c) => ({
+                city: c.city_name,
+                slug: `porch-swings-${c.slug}`,
+              })) || [],
+          });
+        }
+
+        /* -------------------------
            Push to Shopify
-        ------------------------------------ */
+        ------------------------- */
         const shopifyPageId = await pushPageToShopify({
           page_id: page.id,
           title: page.title,
@@ -85,9 +115,9 @@ export async function POST(req: Request) {
           page_type: page.page_type,
         });
 
-        /* ------------------------------------
-           Mark as published
-        ------------------------------------ */
+        /* -------------------------
+           Save Shopify ID
+        ------------------------- */
         await supabaseAdmin
           .from("generated_pages")
           .update({
@@ -96,20 +126,27 @@ export async function POST(req: Request) {
           })
           .eq("id", page.id);
 
-        pushed++;
-      } catch (err) {
+        results.push({
+          page_id,
+          status: "pushed",
+          shopifyPageId,
+        });
+      } catch (err: any) {
         console.error("Bulk push failed:", page_id, err);
-        failed.push(page_id);
+        results.push({
+          page_id,
+          status: "failed",
+          error: err?.message || "Unknown error",
+        });
       }
     }
 
     return NextResponse.json({
       success: true,
-      pushed,
-      failed,
+      results,
     });
   } catch (err: any) {
-    console.error("push-bulk error:", err);
+    console.error("bulk-push error:", err);
     return NextResponse.json(
       { error: err.message || "Internal error" },
       { status: 500 }

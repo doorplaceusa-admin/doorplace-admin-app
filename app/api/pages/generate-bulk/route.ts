@@ -1,91 +1,107 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+
+const VALID_TEMPLATES = [
+  "porch_swing_city",
+  "porch_swing_delivery",
+] as const;
+
+type PageTemplate = (typeof VALID_TEMPLATES)[number];
+
+const CHUNK_SIZE = 500;
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const location_ids: string[] = body.location_ids ?? body.city_ids ?? [];
-    const page_template: string = body.page_template || "porch_swing_city";
-    const page_type: string = body.page_type || "city";
-    const status: string = body.status || "draft";
+    const state_id: string | null = body.state_id || null;
+    const page_template: PageTemplate = body.page_template || "porch_swing_city";
+    const status = body.status || "draft";
     const hero_image_url: string | null = body.hero_image_url || null;
 
-    if (!Array.isArray(location_ids) || location_ids.length === 0) {
-      return NextResponse.json({ error: "location_ids required" }, { status: 400 });
+    if (!state_id) {
+      return NextResponse.json({ error: "state_id required" }, { status: 400 });
     }
 
-    // Load cities + states
-    const { data: locs, error: locErr } = await supabaseAdmin
+    if (!VALID_TEMPLATES.includes(page_template)) {
+      return NextResponse.json({ error: "Invalid template" }, { status: 400 });
+    }
+
+    const isDelivery = page_template === "porch_swing_delivery";
+
+    /* ---------------------------------
+       Load all cities for the state
+    ---------------------------------- */
+    const { data: cities, error } = await supabaseAdmin
       .from("us_locations")
       .select(`
         id,
         city_name,
         slug,
         state_id,
-        us_states:state_id (
-          state_name,
-          state_code
-        )
+        us_states:state_id ( state_code )
       `)
-      .in("id", location_ids);
+      .eq("state_id", state_id);
 
-    if (locErr || !locs) {
-      return NextResponse.json(
-        { error: locErr?.message || "Location load failed" },
-        { status: 500 }
-      );
+    if (error || !cities) {
+      return NextResponse.json({ error: error?.message || "City load failed" }, { status: 500 });
     }
 
-    const isDelivery = (tpl: string) => tpl === "porch_swing_delivery";
+    const results: string[] = [];
 
-    // Build inserts with correct title + slug PER TEMPLATE
-    const inserts = locs.map((l: any) => {
-      const st = Array.isArray(l.us_states) ? l.us_states[0] : l.us_states;
-      const stateCodeLower = (st?.state_code || "").toLowerCase();
+    for (let i = 0; i < cities.length; i += CHUNK_SIZE) {
+      const batch = cities.slice(i, i + CHUNK_SIZE);
 
-      const title = isDelivery(page_template)
-        ? `Porch Swing Delivery in ${l.city_name}, ${st.state_code}`
-        : `Porch Swings in ${l.city_name}, ${st.state_code}`;
+      const inserts = batch.map((l) => {
+        const st = Array.isArray(l.us_states) ? l.us_states[0] : l.us_states;
+        const stateCode = st?.state_code?.toLowerCase() || "";
 
-      const slug = isDelivery(page_template)
-        ? `porch-swing-delivery-${l.slug}-${stateCodeLower}`
-        : `porch-swings-${l.slug}-${stateCodeLower}`;
+        const baseSlug = isDelivery
+          ? `porch-swing-delivery-${l.slug}-${stateCode}`
+          : `porch-swings-${l.slug}-${stateCode}`;
 
-      return {
-        location_id: l.id,
-        state_id: l.state_id,
-        title,
-        slug,
-        status,
-        page_type,
-        page_template,     // <-- THIS is what push-to-shopify reads
-        hero_image_url,
-      };
-    });
+        return {
+          location_id: l.id,
+          state_id: l.state_id,
+          title: isDelivery
+            ? `Porch Swing Delivery in ${l.city_name}, ${st.state_code}`
+            : `Porch Swings in ${l.city_name}, ${st.state_code}`,
+          slug: baseSlug,
+          status,
+          page_type: "city",
+          page_template,
+          hero_image_url,
+          shopify_pushed: false,
+        };
+      });
 
-    // Upsert pages (template-specific uniqueness)
-    const { data: pages, error: insErr } = await supabaseAdmin
-      .from("generated_pages")
-      .upsert(inserts, { onConflict: "location_id,page_template" })
-      .select("id,page_template");
+      const { data: pages, error: insertErr } = await supabaseAdmin
+        .from("generated_pages")
+        .upsert(inserts, {
+          onConflict: "slug",
+          ignoreDuplicates: true,
+        })
+        .select("id");
 
-    if (insErr) {
-      return NextResponse.json({ error: insErr.message }, { status: 500 });
+      if (insertErr) {
+        return NextResponse.json({ error: insertErr.message }, { status: 500 });
+      }
+
+      if (pages) {
+        results.push(...pages.map((p) => p.id));
+      }
     }
-
-    const pageIds = (pages ?? []).map((p: any) => p.id);
 
     return NextResponse.json({
       success: true,
-      page_ids: pageIds,
-      page_template_used: page_template, // quick debug visibility
-      created_count: pageIds.length,
+      created: results.length,
+      page_ids: results,
+      state_id,
+      page_template,
     });
   } catch (e: any) {
-    return NextResponse.json(
-      { error: e?.message || "Server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: e?.message || "Server error" }, { status: 500 });
   }
 }

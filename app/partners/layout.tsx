@@ -54,6 +54,12 @@ export default function PartnerLayout({
   const [hasUnread, setHasUnread] = useState(false);
   const isLegalPage = pathname.includes("/legal");
   const lastAdminMessageRef = useRef<string | null>(null);
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+const [newPassword, setNewPassword] = useState("");
+const [confirmPassword, setConfirmPassword] = useState("");
+const [passwordLoading, setPasswordLoading] = useState(false);
+const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
+
 
 
 
@@ -288,6 +294,16 @@ useEffect(() => {
   My Profile
 </button>
 
+<button
+  onClick={() => {
+    setProfileOpen(false);
+    setChangePasswordOpen(true);
+  }}
+  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+>
+  Reset Password
+</button>
+
 
 
     <button
@@ -472,7 +488,19 @@ useEffect(() => {
 
 
       {/* FOOTER */}
-      <div className="border-t p-4 flex gap-3">
+      <div className="border-t p-4 flex gap-3 flex-wrap">
+
+        <button
+  className="bg-gray-800 text-white px-4 py-2 rounded flex-1"
+  onClick={() => {
+    setViewProfileOpen(false);
+    setChangePasswordOpen(true);
+  }}
+>
+  Change Password
+</button>
+
+
         <button
           className="bg-black text-white px-4 py-2 rounded flex-1"
           onClick={() => setViewProfileOpen(false)}
@@ -672,6 +700,81 @@ useEffect(() => {
   </div>
 )}
 
+{changePasswordOpen && (
+  <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <div className="bg-white rounded max-w-md w-full p-6 space-y-4 shadow-lg">
+      <h2 className="text-lg font-bold">Reset Password</h2>
+
+      <Input
+        label="New Password"
+        value={newPassword}
+        onChange={setNewPassword}
+      />
+
+      <Input
+        label="Confirm Password"
+        value={confirmPassword}
+        onChange={setConfirmPassword}
+      />
+
+      {passwordMessage && (
+        <p className="text-sm text-red-600">{passwordMessage}</p>
+      )}
+
+      <div className="flex gap-3 pt-3">
+        <button
+          className="bg-gray-300 px-4 py-2 rounded flex-1"
+          onClick={() => {
+            setChangePasswordOpen(false);
+            setPasswordMessage(null);
+            setNewPassword("");
+            setConfirmPassword("");
+          }}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="bg-red-700 text-white px-4 py-2 rounded flex-1"
+          disabled={passwordLoading}
+          onClick={async () => {
+            if (newPassword.length < 6) {
+              setPasswordMessage("Password must be at least 6 characters");
+              return;
+            }
+
+            if (newPassword !== confirmPassword) {
+              setPasswordMessage("Passwords do not match");
+              return;
+            }
+
+            setPasswordLoading(true);
+            setPasswordMessage(null);
+
+            const { error } = await supabase.auth.updateUser({
+              password: newPassword,
+            });
+
+            if (error) {
+              setPasswordMessage(error.message);
+            } else {
+              setPasswordMessage("Password updated successfully");
+              setTimeout(() => {
+                setChangePasswordOpen(false);
+                setNewPassword("");
+                setConfirmPassword("");
+              }, 1200);
+            }
+
+            setPasswordLoading(false);
+          }}
+        >
+          {passwordLoading ? "Updating..." : "Update Password"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
 
 
@@ -679,6 +782,9 @@ useEffect(() => {
     </div>
   );
 }
+
+
+
 
 
 

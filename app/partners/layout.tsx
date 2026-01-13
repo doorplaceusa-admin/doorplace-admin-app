@@ -186,7 +186,7 @@ useEffect(() => {
     const { data, error } = await supabase
       .from("partners")
       .select("*")
-      .eq("id", userId)
+      .eq("auth_user_id", userId)   // ✅ CORRECT
       .single();
 
     if (!error && data) {

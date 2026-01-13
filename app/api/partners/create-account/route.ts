@@ -5,6 +5,11 @@ import crypto from "crypto";
 
 export const runtime = "nodejs";
 
+/* ============================================================
+   DOORPLACE USA COMPANY ID (Multi-Tenant Anchor)
+============================================================ */
+const DOORPLACE_COMPANY_ID = "88c22910-7bd1-42fc-bc81-8144a50d7b41";
+
 /**
  * Generate Doorplace USA Partner ID
  * Format: DP####### (7 digits)
@@ -41,35 +46,32 @@ export async function POST(req: Request) {
       );
     }
 
-    // CHECK IF PARTNER EXISTS BY EMAIL
-const { data: existingPartner } = await supabaseAdmin
-  .from("partners")
-  .select("id, auth_user_id")
-  .eq("email_address", email_address)
-  .maybeSingle();
+    /* ============================================================
+       CHECK IF PARTNER ALREADY EXISTS
+    ============================================================ */
+    const { data: existingPartner } = await supabaseAdmin
+      .from("partners")
+      .select("id, auth_user_id")
+      .eq("email_address", email_address)
+      .maybeSingle();
 
-// CASE 1: Existing partner, NOT linked yet → LINK ACCOUNT
-if (existingPartner && !existingPartner.auth_user_id) {
-  await supabaseAdmin
-    .from("partners")
-    .update({
-      auth_user_id,
-      email_verify_sent_at: new Date().toISOString(),
-    })
-    .eq("id", existingPartner.id);
+    // CASE 1 — Exists but not linked → Link account
+    if (existingPartner && !existingPartner.auth_user_id) {
+      const email_verify_token = crypto.randomUUID();
 
-  // send verification email (reuse your existing email logic)
-  const email_verify_token = crypto.randomUUID();
+      await supabaseAdmin
+        .from("partners")
+        .update({
+          auth_user_id,
+          email_verify_token,
+          email_verify_sent_at: new Date().toISOString(),
+        })
+        .eq("id", existingPartner.id);
 
-  await supabaseAdmin
-    .from("partners")
-    .update({ email_verify_token })
-    .eq("id", existingPartner.id);
-
-  await sendEmail({
-    to: email_address,
-    subject: "Confirm your Doorplace USA partner account (TradePilot)",
-    html: `
+      await sendEmail({
+        to: email_address,
+        subject: "Confirm your Doorplace USA partner account (TradePilot)",
+        html: `
 <p>Your TradePilot login has been linked to your existing Doorplace USA partner profile.</p>
 
 <p>Please confirm your email to activate access:</p>
@@ -83,24 +85,25 @@ if (existingPartner && !existingPartner.auth_user_id) {
   </a>
 </p>
 `,
-  });
+      });
 
-  return NextResponse.json({
-    success: true,
-    linked_existing_partner: true,
-  });
-}
+      return NextResponse.json({
+        success: true,
+        linked_existing_partner: true,
+      });
+    }
 
-// CASE 2: Existing partner already linked → STOP
-if (existingPartner?.auth_user_id) {
-  return NextResponse.json(
-    { error: "Account already exists. Please log in." },
-    { status: 409 }
-  );
-}
+    // CASE 2 — Already linked
+    if (existingPartner?.auth_user_id) {
+      return NextResponse.json(
+        { error: "Account already exists. Please log in." },
+        { status: 409 }
+      );
+    }
 
-
-    // GENERATE UNIQUE PARTNER ID
+    /* ============================================================
+       GENERATE UNIQUE PARTNER ID
+    ============================================================ */
     let partner_id: string | null = null;
 
     for (let i = 0; i < 5; i++) {
@@ -125,17 +128,20 @@ if (existingPartner?.auth_user_id) {
       );
     }
 
-    // ✅ AUTO-CREATE TRACKING LINK
-    const tracking_link =
-      `https://doorplaceusa.com/pages/swing-partner-lead?partner_id=${partner_id}`;
-
-    // EMAIL VERIFICATION TOKEN
+    /* ============================================================
+       BUILD TRACKING LINK + VERIFY TOKEN
+    ============================================================ */
+    const tracking_link = `https://doorplaceusa.com/pages/swing-partner-lead?partner_id=${partner_id}`;
     const email_verify_token = crypto.randomUUID();
 
-    // INSERT PARTNER (WITH TRACKING LINK)
+    /* ============================================================
+       CREATE PARTNER (WITH COMPANY_ID FIX)
+    ============================================================ */
     const { data: partner, error } = await supabaseAdmin
       .from("partners")
       .insert({
+        company_id: DOORPLACE_COMPANY_ID, // 🔥 FIXED
+
         auth_user_id,
         partner_id,
         tracking_link,
@@ -171,7 +177,9 @@ if (existingPartner?.auth_user_id) {
       );
     }
 
-    // SEND VERIFICATION EMAIL
+    /* ============================================================
+       SEND VERIFICATION EMAIL
+    ============================================================ */
     await sendEmail({
       to: email_address,
       subject: "Confirm your Doorplace USA partner account (TradePilot)",

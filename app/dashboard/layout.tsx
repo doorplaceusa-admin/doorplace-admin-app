@@ -177,10 +177,12 @@ useEffect(() => {
 
   async function loadNotifications() {
   const { data } = await supabase
-    .from("notifications")
-    .select("id, title, type, created_at, is_read")
-    .order("created_at", { ascending: false })
-    .limit(10);
+  .from("notifications")
+  .select("id, title, type, created_at, is_read")
+  .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+  .order("created_at", { ascending: false })
+  .limit(10);
+
 
   if (data) {
     setNotifications(data);
@@ -191,9 +193,26 @@ useEffect(() => {
 useEffect(() => {
   loadNotifications();
 
-  const interval = setInterval(loadNotifications, 5000);
-  return () => clearInterval(interval);
+  const channel = supabase
+    .channel("notifications-stream")
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "notifications",
+      },
+      () => {
+        loadNotifications();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }, []);
+
 
 
   async function handleLogout() {

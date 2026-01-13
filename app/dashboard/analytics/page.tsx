@@ -48,10 +48,7 @@ export default function AdminAnalyticsPage() {
     try {
       const [{ data: rankingData }, { data: lastData }, { data: heatData }] =
         await Promise.all([
-          supabase
-            .from("analytics_page_rankings")
-            .select("*")
-            .limit(500),
+          supabase.from("analytics_page_rankings").select("*").limit(500),
           supabase.from("analytics_last_page_view").select("*").single(),
           supabase.from("analytics_hourly_heatmap").select("*"),
         ]);
@@ -140,19 +137,20 @@ export default function AdminAnalyticsPage() {
 
   return (
     <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-6 max-w-[1400px] w-full mx-auto">
+      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col md:flex-row gap-2 md:items-center w-full max-w-full overflow-x-hidden">
           <input
-            className="border rounded px-3 py-2 text-sm w-64"
             placeholder="Search pages..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            className="border rounded px-3 py-2 text-sm w-full md:max-w-xs"
           />
 
           <select
-            className="border rounded px-3 py-2 text-sm"
+            className="border rounded px-3 py-2 text-sm w-full md:w-auto"
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value as SortKey)}
           >
@@ -162,7 +160,7 @@ export default function AdminAnalyticsPage() {
           </select>
 
           <select
-            className="border rounded px-3 py-2 text-sm"
+            className="border rounded px-3 py-2 text-sm w-full md:w-auto"
             value={sortDir}
             onChange={(e) => setSortDir(e.target.value as "asc" | "desc")}
           >
@@ -172,12 +170,13 @@ export default function AdminAnalyticsPage() {
         </div>
       </div>
 
+      {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="border rounded p-4 bg-white shadow">
           <h2 className="font-semibold mb-1">Last Page Viewed</h2>
           {lastView && (
             <>
-              <div className="text-sm truncate">{lastView.page_url}</div>
+              <div className="text-sm break-all">{lastView.page_url}</div>
               <div className="text-xs text-gray-500">
                 {new Date(lastView.created_at).toLocaleString()}
               </div>
@@ -200,6 +199,7 @@ export default function AdminAnalyticsPage() {
         </div>
       </div>
 
+      {/* Heatmap */}
       <div className="border rounded p-4 bg-white shadow">
         <h2 className="font-semibold mb-3">Hourly Heatmap</h2>
         <div className="grid grid-cols-12 gap-2 text-xs">
@@ -224,31 +224,40 @@ export default function AdminAnalyticsPage() {
         </div>
       </div>
 
+      {/* Top Pages */}
       <div className="border rounded p-4 bg-white shadow">
         <h2 className="font-semibold mb-2">Top Pages</h2>
-
         {loading && <div className="text-sm text-gray-500">Loading…</div>}
 
         <div className="max-h-[500px] overflow-y-auto">
-          <table className="w-full text-sm table-fixed">
-            <thead className="sticky top-0 bg-white border-b">
+          <table className="w-full text-sm">
+            <thead className="sticky top-0 bg-white border-b hidden md:table-header-group">
               <tr>
                 <th className="text-left py-2">Page URL</th>
                 <th className="text-right py-2">Views</th>
                 <th className="text-right py-2">Last Viewed</th>
               </tr>
             </thead>
+
             <tbody>
               {filteredSortedRankings.map((r) => (
                 <tr
                   key={r.page_url}
-                  className="border-b hover:bg-gray-50"
+                  className="border-b hover:bg-gray-50 block md:table-row p-2 md:p-0"
                 >
-                  <td className="py-2 truncate">{r.page_url}</td>
-                  <td className="py-2 text-right font-medium">
+                  <td className="block md:table-cell py-1 md:py-2">
+                    <div className="font-mono text-xs break-all whitespace-normal">
+                      {r.page_url}
+                    </div>
+                  </td>
+
+                  <td className="block md:table-cell py-1 md:py-2 text-right font-medium">
+                    <span className="md:hidden font-semibold mr-1">Views:</span>
                     {r.total_views.toLocaleString()}
                   </td>
-                  <td className="py-2 text-right">
+
+                  <td className="block md:table-cell py-1 md:py-2 text-right">
+                    <span className="md:hidden font-semibold mr-1">Last:</span>
                     {new Date(r.last_viewed_at).toLocaleString()}
                   </td>
                 </tr>

@@ -116,11 +116,24 @@ export default function PartnerMessages({
     }
 
     const sender = isAdmin ? "admin" : "partner";
+    const { data: partner } = await supabase
+  .from("partners")
+  .select("company_id")
+  .eq("partner_id", partnerId)
+  .single();
+
+if (!partner?.company_id) {
+  alert("Partner is not linked to a company.");
+  setSending(false);
+  return;
+}
+
 
     const { data, error } = await supabase
       .from("partner_messages")
       .insert({
         partner_id: partnerId,
+        company_id: partner.company_id,
         sender,
         message: newMessage.trim() || null,
         image_url: imageUrl,

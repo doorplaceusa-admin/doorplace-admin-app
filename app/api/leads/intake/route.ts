@@ -226,6 +226,10 @@ if (leadError || !leadData) {
   // ===============================
 // ADMIN IN-APP NOTIFICATION (OPTION 1)
 // ===============================
+
+  console.error("Lead insert error:", leadError);
+  return new NextResponse("Internal Server Error", { status: 500 });
+}
 await notifyAdmin({
   type: "lead_created",
   title: "New Lead / Order Received",
@@ -234,10 +238,6 @@ await notifyAdmin({
   entityId: leadData.id,          // internal UUID
   companyId: leadData.company_id, // keep multi-company safe
 });
-
-  console.error("Lead insert error:", leadError);
-  return new NextResponse("Internal Server Error", { status: 500 });
-}
 
 // ===============================
 // ADMIN EMAIL ALERT FOR LEADS (FINAL)

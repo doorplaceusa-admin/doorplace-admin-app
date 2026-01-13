@@ -160,7 +160,7 @@ if (partnerId) {
        3. INSERT LEAD (FULLY ALIGNED)
     =============================== */
     // INSERT LEAD
-const { data: leadData, error: leadError } = await supabase
+const { data: leadData, error: leadError } = await supabaseAdmin
   .from("leads")
 .insert([
   {

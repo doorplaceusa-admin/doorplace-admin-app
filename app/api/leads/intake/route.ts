@@ -139,19 +139,21 @@ const zip =
 
 
 let partnerName: string | null = null;
-
+let companyId: string | null = null;
 
 if (partnerId) {
   const { data: partner } = await supabase
     .from("partners")
-    .select("first_name, last_name")
+    .select("first_name, last_name, company_id")
     .eq("partner_id", partnerId)
     .single();
 
   if (partner) {
     partnerName = `${partner.first_name ?? ""} ${partner.last_name ?? ""}`.trim();
+    companyId = partner.company_id;
   }
 }
+
 
 
     /* ===============================
@@ -160,11 +162,13 @@ if (partnerId) {
     // INSERT LEAD
 const { data: leadData, error: leadError } = await supabase
   .from("leads")
-  .insert([
-    {
-      lead_id,
-      partner_id: partnerId,
-      partner_name: partnerName,
+.insert([
+  {
+    lead_id,
+    company_id: companyId ?? "e2c4a13d-4b92-4c6e-bb91-acde8823b11f",
+    partner_id: partnerId,
+    partner_name: partnerName,
+
 
       submission_type: submissionType,
       quote_type: formData.get("quote_type"),

@@ -188,30 +188,42 @@ const { count: orderCount } = await supabase
       // Tries common column names; adjust if your table uses different field names
       const { data: leadsData } = await supabase
   .from("leads")
-  .select(
-    "id, created_at, customer_name, name, full_name, interest_type, product_interest"
-  )
+  .select(`
+  lead_id,
+  created_at,
+  customer_first_name,
+  customer_last_name,
+  email,
+  phone,
+  product_type,
+  swing_size,
+  city,
+  state
+`)
+
   .eq("company_id", companyId)
   .order("created_at", { ascending: false })
   .limit(3);
 
 
-      const mappedRecentLeads: RecentItem[] = (leadsData || []).map((l: any) => {
-        const who =
-          l.customer_name || l.full_name || l.name || "Lead";
-        const what =
-          l.interest_type || l.product_interest || "Request";
-        const date =
-          l.created_at
-            ? new Date(l.created_at).toISOString().split("T")[0]
-            : "";
 
-        return {
-          id: String(l.id),
-          label: `${who} – ${what}`,
-          date,
-        };
-      });
+      const mappedRecentLeads: RecentItem[] = (leadsData || []).map((l: any) => {
+  const who =
+    l.customer_name || l.full_name || l.name || "Lead";
+  const what =
+    l.interest_type || l.product_interest || "Request";
+  const date =
+    l.created_at
+      ? new Date(l.created_at).toISOString().split("T")[0]
+      : "";
+
+  return {
+    id: String(l.lead_id),   // ✅ correct
+    label: `${who} – ${what}`,
+    date,
+  };
+});
+
 
       // ================= APP VIEW STATS (CDStats) =================
 

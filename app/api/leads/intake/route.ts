@@ -287,18 +287,7 @@ if (submissionType === "partner_order") {
 
 
 
-    /* ===============================
-       4. ADMIN ALERT
-    =============================== */
-    await supabase.from("admin_alerts").insert([
-      {
-        type: "new_lead",
-        reference_id: lead_id,
-        title: "New Lead Submitted",
-        message: `New lead from ${firstName ?? ""} ${lastName ?? ""}`,
-        read: false,
-      },
-    ]);
+ 
 
    /* ===============================
    5. THANK-YOU RESPONSE (FINAL)

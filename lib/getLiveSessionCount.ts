@@ -1,11 +1,13 @@
 import { supabase } from "@/lib/supabaseClient";
 
 export async function getLiveSessionCount(): Promise<number> {
-  const { data, error } = await supabase
-    .from("live_session_count")
-    .select("total_live")
-    .single();
+  const cutoff = new Date(Date.now() - 30000).toISOString(); // 30s heartbeat
 
-  if (error || !data) return 0;
-  return data.total_live ?? 0;
+  const { count, error } = await supabase
+    .from("live_sessions")
+    .select("*", { count: "exact", head: true })
+    .gte("last_seen", cutoff);
+
+  if (error) return 0;
+  return count ?? 0;
 }

@@ -22,7 +22,8 @@ export function useAppViewTracker(options: {
 
       let sessionId = sessionStorage.getItem(SESSION_KEY);
       if (!sessionId) {
-        sessionId = crypto.randomUUID();
+        // Safari-safe session id
+        sessionId = Math.random().toString(36).slice(2) + Date.now();
         sessionStorage.setItem(SESSION_KEY, sessionId);
       }
 
@@ -37,3 +38,4 @@ export function useAppViewTracker(options: {
     trackView();
   }, [pathname]);
 }
+

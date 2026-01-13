@@ -176,18 +176,26 @@ useEffect(() => {
   }, []);
 
   async function loadNotifications() {
-  const { data } = await supabase
-  .from("notifications")
-  .select("id, title, type, created_at, is_read")
-  .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
-  .order("created_at", { ascending: false })
-  .limit(10);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
 
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("id, title, type, created_at, is_read")
+    .eq("recipient_user_id", user.id)   // ✅ correct column
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("Notification load error:", error);
+    return;
+  }
 
   if (data) {
     setNotifications(data);
     setUnreadCount(data.filter(n => !n.is_read).length);
   }
+
 }
 
 useEffect(() => {
@@ -207,7 +215,8 @@ useEffect(() => {
           event: "INSERT",
           schema: "public",
           table: "notifications",
-          filter: `user_id=eq.${user.id}`,
+          filter: `recipient_user_id=eq.${user.id}`,
+
         },
         payload => {
           setNotifications(prev => [payload.new, ...prev].slice(0, 10));

@@ -60,6 +60,10 @@ export default function DashboardLayout({
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
+  const [ready, setReady] = useState(false);
+const [userId, setUserId] = useState<string | null>(null);
+const [companyId, setCompanyId] = useState<string | null>(null);
+
 
   const [onlineStats, setOnlineStats] = useState({
   partners: 0,
@@ -130,36 +134,44 @@ useEffect(() => {
 }, [onlineStats]);
 
 
-  useEffect(() => {
-    async function checkAccess() {
-      // 1. Get session
-      const { data: sessionData } = await supabase.auth.getSession();
+  
 
-      if (!sessionData.session) {
-        router.replace("/login");
-        return;
-      }
 
-      const user = sessionData.session.user;
 
-      // 2. Fetch role from profiles
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      // 3. Block non-admins
-      if (error || !profile || profile.role !== "admin") {
-        router.replace("/partners/dashboard");
-        return;
-      }
-
-      setLoading(false);
+useEffect(() => {
+  const checkAccess = async () => {
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      router.replace("/login");
+      return;
     }
 
-    checkAccess();
-  }, [router]);
+    const user = sessionData.session.user;
+
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("role, active_company_id")
+      .eq("id", user.id)
+      .single();
+
+    if (error || !profile || profile.role !== "admin") {
+      router.replace("/partners/dashboard");
+      return;
+    }
+
+    setUserId(user.id);
+    setCompanyId(profile.active_company_id);
+    setReady(true);
+    setLoading(false);
+  };
+
+  checkAccess();
+}, [router]);
+
+
+
+
+
 
   // close profile dropdown when clicking outside
   useEffect(() => {
@@ -176,62 +188,58 @@ useEffect(() => {
   }, []);
 
   async function loadNotifications() {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!userId || !companyId) return;
 
   const { data, error } = await supabase
     .from("notifications")
     .select("id, title, type, created_at, is_read")
-    .eq("recipient_user_id", user.id)   // ✅ correct column
+    .eq("recipient_user_id", userId)
+    .eq("company_id", companyId)
     .order("created_at", { ascending: false })
     .limit(10);
 
-  if (error) {
-    console.error("Notification load error:", error);
-    return;
-  }
-
-  if (data) {
+  if (!error && data) {
     setNotifications(data);
     setUnreadCount(data.filter(n => !n.is_read).length);
   }
-
 }
 
+
+
 useEffect(() => {
-  let channel: any;
+  if (!ready || !userId || !companyId) return;
 
-  const start = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+  loadNotifications();
 
-    await loadNotifications();
+ const channel = supabase
+  .channel(`notifications-${userId}`)
+  .on(
+    "postgres_changes",
+    {
+      event: "INSERT",
+      schema: "public",
+      table: "notifications",
+      filter: `recipient_user_id=eq.${userId}`,
+    },
+    payload => {
+      if (payload.new.company_id !== companyId) return;
 
-    channel = supabase
-      .channel("notifications-stream")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `recipient_user_id=eq.${user.id}`,
+      setNotifications(prev => {
+        const next = [payload.new, ...prev].slice(0, 10);
+        setUnreadCount(next.filter(n => !n.is_read).length);
+        return next;
+      });
+    }
+  )
+  .subscribe();
 
-        },
-        payload => {
-          setNotifications(prev => [payload.new, ...prev].slice(0, 10));
-          setUnreadCount(prev => prev + 1);
-        }
-      )
-      .subscribe();
-  };
 
-  start();
 
   return () => {
-    if (channel) supabase.removeChannel(channel);
+    supabase.removeChannel(channel);
   };
-}, []);
+}, [ready, userId, companyId]);
+
 
 
 

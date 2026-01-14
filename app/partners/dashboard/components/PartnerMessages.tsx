@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { notifyAdmin } from "@/lib/notifyAdmin";
+
 
 /* ===============================
    TYPES
@@ -147,16 +147,7 @@ if (!partner?.company_id) {
       setPreviewUrl(null);
       loadMessages();
 
-      if (sender === "partner") {
-        await notifyAdmin({
-          type: "partner_message",
-          title: "New Live Chat Message",
-          body: "A partner sent a new message",
-          entityType: "partner_message",
-          entityId: data.id,
-          companyId: data.company_id,
-        });
-      }
+     
     }
 
     setSending(false);

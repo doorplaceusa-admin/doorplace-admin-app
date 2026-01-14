@@ -367,6 +367,14 @@ async function saveEdit() {
         {/* ORDER STATUS */}
         <Section title="Order Status">
           <Row label="Status" value={viewItem.order_status} />
+          <Row
+            label="Order Date"
+            value={
+              viewItem.created_at
+                ? new Date(viewItem.created_at).toLocaleString()
+                : "—"
+            }
+          />
         </Section>
 
         {/* SWING DETAILS */}
@@ -379,7 +387,6 @@ async function saveEdit() {
 
         {/* PRICING + COMMISSION */}
         {(() => {
-          // ✅ HARD FALLBACKS (fixes admin-mapped alias fields)
           const swing = toNum(viewItem.swing_price);
           const accessories = toNum((viewItem as any).accessory_price ?? (viewItem as any).accessory_total);
           const install = toNum(viewItem.installation_fee);
@@ -450,13 +457,12 @@ async function saveEdit() {
           onClick={() => setViewItem(null)}
         >
           Close
-
-
         </button>
       </div>
     </div>
   </div>
 )}
+
 
 
       {/* EDIT MODAL */}

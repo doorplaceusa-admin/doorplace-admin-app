@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-
 /* ===============================
    TYPES
 =============================== */
@@ -116,18 +115,18 @@ export default function PartnerMessages({
     }
 
     const sender = isAdmin ? "admin" : "partner";
+
     const { data: partner } = await supabase
-  .from("partners")
-  .select("company_id")
-  .eq("partner_id", partnerId)
-  .single();
+      .from("partners")
+      .select("company_id")
+      .eq("partner_id", partnerId)
+      .single();
 
-if (!partner?.company_id) {
-  alert("Partner is not linked to a company.");
-  setSending(false);
-  return;
-}
-
+    if (!partner?.company_id) {
+      alert("Partner is not linked to a company.");
+      setSending(false);
+      return;
+    }
 
     const { data, error } = await supabase
       .from("partner_messages")
@@ -147,7 +146,18 @@ if (!partner?.company_id) {
       setPreviewUrl(null);
       loadMessages();
 
-     
+      /* ===============================
+         🔔 NOTIFY ALL ADMINS (FIX)
+      =============================== */
+      if (sender === "partner") {
+        const { data: admins } = await supabase
+          .from("company_users")
+          .select("user_id")
+          .eq("company_id", partner.company_id)
+          .eq("role", "admin");
+
+        
+      }
     }
 
     setSending(false);

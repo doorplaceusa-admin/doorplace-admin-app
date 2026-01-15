@@ -248,21 +248,25 @@ const { data: leadData, error: leadError } = await supabaseAdmin
 
 
 if (leadError || !leadData) {
-  // ===============================
-// ADMIN IN-APP NOTIFICATION (OPTION 1)
-// ===============================
-
   console.error("Lead insert error:", leadError);
   return new NextResponse("Internal Server Error", { status: 500 });
 }
-await notifyAdmin({
-  type: "lead_created",
-  title: "New Lead / Order Received",
-  body: "A new entry was added to the leads table",
-  entityType: "lead",
-  entityId: leadData.id,          // internal UUID
-  companyId: leadData.company_id, // keep multi-company safe
-});
+
+// ===============================
+// ADMIN UI NOTIFICATION (LEADS)
+// ===============================
+try {
+  await supabaseAdmin.from("notifications").insert({
+    type: "lead",
+    title: "New Lead / Order Received",
+    message: `New lead from ${leadData.first_name ?? ""} ${leadData.last_name ?? ""}`,
+    entity_type: "lead",
+    entity_id: leadData.id,
+    company_id: leadData.company_id,
+  });
+} catch (err) {
+  console.error("Lead admin notification failed (non-fatal):", err);
+}
 
 
 // ===============================

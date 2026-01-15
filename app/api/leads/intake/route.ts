@@ -4,6 +4,7 @@ export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { notifyAdmin } from "@/lib/notifyAdmin";
 
 export async function POST(req: Request) {
   try {
@@ -11,7 +12,7 @@ export async function POST(req: Request) {
     const lead_id = `LD-${Date.now()}`;
 
     /* ===============================
-       PARTNER LOOKUP (NEW BLOCK)
+       PARTNER LOOKUP
     ================================ */
     const url = new URL(req.url);
     const partnerId =
@@ -22,15 +23,11 @@ export async function POST(req: Request) {
     let companyId: string | null = null;
 
     if (partnerId) {
-      const { data: partner, error } = await supabaseAdmin
+      const { data: partner } = await supabaseAdmin
         .from("partners")
         .select("first_name, last_name, company_id")
         .eq("partner_id", partnerId)
         .single();
-
-      if (error) {
-        console.error("Partner lookup failed:", error);
-      }
 
       if (partner) {
         partnerName = `${partner.first_name ?? ""} ${partner.last_name ?? ""}`.trim();
@@ -39,24 +36,40 @@ export async function POST(req: Request) {
     }
 
     /* ===============================
-       INSERT LEAD (CORE + PARTNER)
+       INSERT LEAD
     ================================ */
-    const { error } = await supabaseAdmin.from("leads").insert({
-      lead_id,
-      partner_id: partnerId,
-      partner_name: partnerName,
-      company_id: companyId ?? "88c22910-7bd1-42fc-bc81-8144a50d7b41",
-      lead_status: "new",
-      source: "website",
-    });
+    const { data: lead, error } = await supabaseAdmin
+      .from("leads")
+      .insert({
+        lead_id,
+        partner_id: partnerId,
+        partner_name: partnerName,
+        company_id: companyId ?? "88c22910-7bd1-42fc-bc81-8144a50d7b41",
+        lead_status: "new",
+        source: "website",
+      })
+      .select()
+      .single();
 
-    if (error) {
+    if (error || !lead) {
       console.error("Insert failed:", error);
       return new NextResponse("Insert failed", { status: 500 });
     }
 
     /* ===============================
-       REDIRECT (CONFIRMED WORKING)
+       ADMIN IN-APP NOTIFICATION (NEW)
+    ================================ */
+    await notifyAdmin({
+      type: "lead_created",
+      title: "New Lead / Order Received",
+      body: "A new entry was added to the leads table",
+      entityType: "lead",
+      entityId: lead.id,
+      companyId: lead.company_id,
+    });
+
+    /* ===============================
+       REDIRECT
     ================================ */
     return NextResponse.redirect(
       "https://doorplaceusa.com/pages/thank-you",

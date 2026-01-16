@@ -1,10 +1,4 @@
 
-
-
-
-
-
-
 import "./globals.css";
 import type { Metadata } from "next";
 import ClientRoot from "./ClientRoot";
@@ -20,8 +14,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-  <body className="bg-gray-100" suppressHydrationWarning>
+  <html lang="en" suppressHydrationWarning>
+    <head>
+      <link rel="manifest" href="/manifest.json" />
+      <meta name="theme-color" content="#0b0b0b" />
+    </head>
+    <body className="bg-gray-100" suppressHydrationWarning>
+
 
         <ClientRoot>
           {children}

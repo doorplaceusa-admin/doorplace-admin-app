@@ -63,6 +63,11 @@ export default function DashboardLayout({
   const [ready, setReady] = useState(false);
 const [userId, setUserId] = useState<string | null>(null);
 const [companyId, setCompanyId] = useState<string | null>(null);
+const [aiOpen, setAiOpen] = useState(false);
+const [aiQuestion, setAiQuestion] = useState("");
+const [aiAnswer, setAiAnswer] = useState("");
+const [aiLoading, setAiLoading] = useState(false);
+
 
 
   const [onlineStats, setOnlineStats] = useState({
@@ -251,6 +256,45 @@ useEffect(() => {
 
 
 
+
+
+async function askAdminAI() {
+  if (!aiQuestion.trim()) return;
+
+  setAiLoading(true);
+  setAiAnswer("");
+
+  try {
+    const res = await fetch("/api/admin/ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        question: aiQuestion,
+        tables: [
+          "generated_pages",
+          "page_view_events",
+          "us_locations",
+          "leads",
+          "orders",
+          "existing_shopify_pages",
+          "partners",
+          "commissions",
+        ],
+      }),
+    });
+
+    const data = await res.json();
+    setAiAnswer(data.answer || "No response");
+  } catch (err) {
+    setAiAnswer("AI error — check server logs.");
+  } finally {
+    setAiLoading(false);
+  }
+}
+
+
+
+
   async function handleLogout() {
     await supabase.auth.signOut();
     router.replace("/login");
@@ -356,6 +400,13 @@ useEffect(() => {
 
           <span className="font-semibold">Admin Dashboard</span>
 
+<button
+  onClick={() => setAiOpen(true)}
+  className="ml-2 px-3 py-1.5 text-sm font-semibold rounded bg-black text-white hover:bg-gray-800"
+>
+  AI
+</button>
+
 
 <div className="relative">
   <button
@@ -433,6 +484,49 @@ useEffect(() => {
 
 </AdminPresenceProvider>
 
+{aiOpen && (
+  <div className="fixed inset-0 z-50 flex">
+    {/* Overlay */}
+    <div
+      className="flex-1 bg-black/40"
+      onClick={() => setAiOpen(false)}
+    />
+
+    {/* Panel */}
+    <div className="w-full max-w-md bg-white shadow-xl flex flex-col">
+      <div className="p-4 border-b flex items-center justify-between">
+        <span className="font-semibold">Admin AI</span>
+        <button
+          onClick={() => setAiOpen(false)}
+          className="text-sm px-2 py-1 border rounded"
+        >
+          Close
+        </button>
+      </div>
+
+      <div className="p-4 flex flex-col gap-3 flex-1">
+        <textarea
+          value={aiQuestion}
+          onChange={(e) => setAiQuestion(e.target.value)}
+          placeholder="Ask anything about the system, data, pages, or performance..."
+          className="w-full h-28 border rounded p-2 text-sm"
+        />
+
+        <button
+          onClick={askAdminAI}
+          disabled={aiLoading}
+          className="bg-red-700 text-white py-2 rounded text-sm font-semibold hover:bg-red-800 disabled:opacity-60"
+        >
+          {aiLoading ? "Thinking..." : "Ask AI"}
+        </button>
+
+        <div className="flex-1 overflow-y-auto bg-gray-900 text-green-400 text-xs rounded p-3 whitespace-pre-wrap">
+          {aiAnswer || "AI ready."}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
 
 

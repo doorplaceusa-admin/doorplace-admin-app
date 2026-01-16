@@ -116,14 +116,14 @@ useUnknownPresence("login");
         {/* LOGO */}
         <div className="flex justify-center mb-4">
           <img
-            src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_8361.jpg?v=1767366750"
+            src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/161945ED-CD28-4DF8-A054-344B43F09E83.png?v=1768519505"
             alt="Doorplace USA"
-            className="h-14 object-contain"
+            className="h-30 object-contain"
           />
         </div>
 
         {/* TITLE */}
-        <h1 className="text-3xl font-bold text-center text-gray-900">
+        <h1 className="text-5xl font-bold text-center text-gray-900">
           TradePilot
         </h1>
         <p className="text-center text-sm text-gray-500 mb-6">
@@ -211,23 +211,21 @@ useUnknownPresence("login");
           </>
         )}
 
-        {/* CREATE ACCOUNT */}
-        <div className="text-center mt-6 text-sm">
-          <span className="text-gray-500">Don’t have an account?</span>{" "}
-          <Link
-            href="https://doorplaceusa.com/pages/become-a-partner"
-            className="text-red-700 font-semibold hover:underline"
-          >
-            Create an account
-          </Link>
-        </div>
-
+        
         {/* FOOTER */}
         <div
           className="mt-8 text-center text-xs text-gray-400"
           suppressHydrationWarning
         >
-          © {year ?? ""} TradePilot — Built by Doorplace USA
+          © {year ?? ""} TradePilot
+        </div>
+        {/* LOGO */}
+        <div className="flex justify-center mb-4">
+          <img
+            src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_8361.jpg?v=1767366750"
+            alt="Doorplace USA"
+            className="h-10 object-contain"
+          />
         </div>
 
       </div>

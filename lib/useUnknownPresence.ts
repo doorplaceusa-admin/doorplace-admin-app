@@ -5,10 +5,10 @@ import { supabase } from "@/lib/supabaseClient";
 
 export function useUnknownPresence(page: string) {
   useEffect(() => {
-    const channel = supabase.channel("tradepilot-presence",{
+    const channel = supabase.channel("tradepilot-presence", {
       config: {
         presence: {
-          key: crypto.randomUUID(),
+          key: `${Date.now()}-${Math.random()}`, // ✅ iOS-safe
         },
       },
     });

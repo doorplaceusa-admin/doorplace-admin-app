@@ -8,9 +8,10 @@ type RenderProps = {
   state: string;
   stateCode: string;
   slug: string;
-  nearbyCities: CityLink[]; // not used anymore but kept for compatibility
+  nearbyCities?: CityLink[];
   heroImageUrl?: string | null;
 };
+
 
 export function renderPorchSwingCityHTML({
   city,

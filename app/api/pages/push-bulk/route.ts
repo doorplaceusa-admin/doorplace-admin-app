@@ -2,8 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { renderPorchSwingCityHTML } from "@/lib/templates/renderPorchSwingCityHTML";
-import { renderPorchSwingDeliveryCityHTML } from "@/lib/templates/renderPorchSwingDeliveryCityHTML";
+import { renderPageTemplateHTML } from "@/lib/renderers/renderPageTemplateHTML";
+
 import { pushPageToShopify } from "@/lib/shopify/pushPageToShopify";
 
 export async function POST(req: Request) {
@@ -11,7 +11,10 @@ export async function POST(req: Request) {
     const { page_ids } = await req.json();
 
     if (!Array.isArray(page_ids) || page_ids.length === 0) {
-      return NextResponse.json({ error: "page_ids required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "page_ids required" },
+        { status: 400 }
+      );
     }
 
     const results: any[] = [];
@@ -65,42 +68,18 @@ export async function POST(req: Request) {
         }
 
         /* -------------------------
-           Fetch nearby cities
+           Render HTML via CENTRAL TEMPLATE LIB
         ------------------------- */
-        const { data: nearbyCities } = await supabaseAdmin
-          .from("us_locations")
-          .select("city_name, slug")
-          .eq("state_id", location.state_id)
-          .neq("id", location.id)
-          .limit(6);
+        const html = renderPageTemplateHTML({
+          page_template: page.page_template,
 
-        /* -------------------------
-           Render HTML (EXACT SAME AS SINGLE PUSH)
-        ------------------------- */
-        let html = "";
+          city: location.city_name,
+          state: state.state_name,
+          stateCode: state.state_code,
+          slug: page.slug,
 
-        if (page.page_template === "porch_swing_delivery") {
-          html = renderPorchSwingDeliveryCityHTML({
-            city: location.city_name,
-            state: state.state_name,
-            stateCode: state.state_code,
-            slug: page.slug,
-            heroImageUrl: page.hero_image_url,
-          });
-        } else {
-          html = renderPorchSwingCityHTML({
-            city: location.city_name,
-            state: state.state_name,
-            stateCode: state.state_code,
-            slug: page.slug,
-            heroImageUrl: page.hero_image_url,
-            nearbyCities:
-              nearbyCities?.map((c) => ({
-                city: c.city_name,
-                slug: `porch-swings-${c.slug}`,
-              })) || [],
-          });
-        }
+          heroImageUrl: page.hero_image_url,
+        });
 
         /* -------------------------
            Push to Shopify

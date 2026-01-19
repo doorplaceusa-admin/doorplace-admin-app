@@ -1,11 +1,21 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import ClientRoot from "./ClientRoot";
 
+/* ============================
+   Viewport (FIXES WARNING)
+============================ */
+export const viewport: Viewport = {
+  colorScheme: "light",
+  themeColor: "#0b0b0b",
+};
+
+/* ============================
+   Metadata
+============================ */
 export const metadata: Metadata = {
   title: "TradePilot – Doorplace USA",
   description: "Partner & Operations Control Panel",
-  colorScheme: "light", // ✅ force light mode globally
 };
 
 export default function RootLayout({
@@ -17,11 +27,10 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      style={{ colorScheme: "light" }} // ✅ stop iOS dark-mode override
+      style={{ colorScheme: "light" }} // ✅ prevents iOS dark-mode override
     >
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#0b0b0b" />
       </head>
 
       <body className="bg-gray-100" suppressHydrationWarning>

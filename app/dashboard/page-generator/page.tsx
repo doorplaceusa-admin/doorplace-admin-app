@@ -76,7 +76,6 @@ export default function PageGeneratorAdminPage() {
   const [bulkGeneratedIds, setBulkGeneratedIds] = useState<string[]>([]);
   const [selectedSwingSize, setSelectedSwingSize] = useState("crib");
   const [lastGeneratedPageId, setLastGeneratedPageId] = useState<string | null>(null);
-  const [previewData, setPreviewData] = useState<any | null>(null);
 
 
 
@@ -107,6 +106,27 @@ export default function PageGeneratorAdminPage() {
     type: "success" | "error" | "info";
     msg: string;
   } | null>(null);
+
+const getTemplateParams = () => {
+  switch (selectedTemplate) {
+    case "porch_swing_size_city":
+      return { size: selectedSwingSize };
+
+    case "porch_swing_usecase_city":
+      return { usecase: "porch" }; // or later add UI dropdown
+
+    case "porch_swing_material_city":
+      return { material: "cedar" }; // or later add UI dropdown
+
+    case "porch_swing_style_city":
+      return { style: "modern" }; // or later add UI dropdown
+
+    default:
+      return {};
+  }
+};
+
+
 
   function haversineMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
     const R = 3958.8;
@@ -451,15 +471,17 @@ export default function PageGeneratorAdminPage() {
                   setIsGenerating(true);
                   try {
                     const res = await fetch("/api/pages/generate-single", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        state_id: selectedStateId,
-                        location_id: firstSelectedCityId,
-                        page_template: selectedTemplate,
-                        hero_image_url: heroImageUrl || null,
-                      }),
-                    });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    state_id: selectedStateId,
+    location_id: firstSelectedCityId,
+    page_template: selectedTemplate,
+    hero_image_url: heroImageUrl || null,
+    ...getTemplateParams(),
+  }),
+});
+
 
                     const json = await res.json();
 if (!res.ok) throw new Error(json.error);
@@ -479,17 +501,33 @@ showToast("success", "Draft page created");
                 Generate 1 Page
               </button>
 
+{lastGeneratedPageId && (
+  <button
+    onClick={async () => {
+      try {
+        const res = await fetch("/api/pages/push-bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            page_ids: [lastGeneratedPageId],
+          }),
+        });
 
-              {lastGeneratedPageId && (
-  <a
-    href={`/preview/page/${lastGeneratedPageId}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="bg-blue-600 text-white px-4 py-2 rounded text-center"
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error);
+
+        showToast("success", "Page pushed to Shopify");
+      } catch (e: any) {
+        showToast("error", e.message);
+      }
+    }}
+    className="bg-green-600 text-white px-4 py-2 rounded"
   >
-    Preview Page
-  </a>
+    Push This Page to Shopify
+  </button>
 )}
+
+          
 
 
 
@@ -502,15 +540,17 @@ showToast("success", "Draft page created");
                   setIsGenerating(true);
                   try {
                     const res = await fetch("/api/pages/generate-bulk", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        state_id: selectedStateId,
-                        city_ids: Array.from(selectedCityIds),
-                        page_template: selectedTemplate,
-                        hero_image_url: heroImageUrl || null,
-                      }),
-                    });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    state_id: selectedStateId,
+    city_ids: Array.from(selectedCityIds),
+    page_template: selectedTemplate,
+    hero_image_url: heroImageUrl || null,
+    ...getTemplateParams(),
+  }),
+});
+
 
                     const json = await res.json();
                     if (!res.ok) throw new Error(json.error);

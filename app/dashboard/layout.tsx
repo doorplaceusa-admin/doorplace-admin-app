@@ -7,6 +7,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { AdminPresenceProvider } from "@/app/components/presence/AdminPresenceContext";
 import { useAppViewTracker } from "@/lib/useAppViewTracker";
 import { getLiveSessionCount } from "@/lib/getLiveSessionCount";
+import { useRealtimeAdminVoice } from "@/lib/ai/useRealtimeAdminVoice";
+
 
 
 
@@ -35,6 +37,9 @@ import {
   FishingHookIcon,
   DatabaseIcon,
   Database,
+  MapIcon,
+  ScanLine,
+  ScanLineIcon,
 } from "lucide-react";
 
 
@@ -67,6 +72,12 @@ const [aiOpen, setAiOpen] = useState(false);
 const [aiQuestion, setAiQuestion] = useState("");
 const [aiAnswer, setAiAnswer] = useState("");
 const [aiLoading, setAiLoading] = useState(false);
+const aiTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+const [aiTone, setAiTone] = useState<
+  "neutral" | "direct" | "technical" | "sales"
+>("neutral");
+const realtimeVoice = useRealtimeAdminVoice(aiTone);
 
 
 
@@ -80,6 +91,7 @@ const [aiLoading, setAiLoading] = useState(false);
 
   const profileRef = useRef<HTMLDivElement>(null);
 
+  
 
 useEffect(() => {
   let channel: any;
@@ -177,6 +189,21 @@ useEffect(() => {
 
 
 
+useEffect(() => {
+  function onKey(e: KeyboardEvent) {
+    if (!aiOpen) return;
+    if (e.code === "KeyV") {
+      e.preventDefault();
+      realtimeVoice.connected
+        ? realtimeVoice.stop()
+        : realtimeVoice.start();
+    }
+  }
+
+  window.addEventListener("keydown", onKey);
+  return () => window.removeEventListener("keydown", onKey);
+}, [aiOpen, realtimeVoice]);
+
 
   // close profile dropdown when clicking outside
   useEffect(() => {
@@ -208,6 +235,13 @@ useEffect(() => {
     setUnreadCount(data.filter(n => !n.is_read).length);
   }
 }
+
+
+useEffect(() => {
+  if (!realtimeVoice.finalTranscript) return;
+
+  setAiQuestion(realtimeVoice.finalTranscript);
+}, [realtimeVoice.finalTranscript]);
 
 
 
@@ -252,14 +286,10 @@ useEffect(() => {
 }, [open]);
 
 
-
-
-
-
-
-
 async function askAdminAI() {
   if (!aiQuestion.trim()) return;
+
+  aiTextareaRef.current?.blur();
 
   setAiLoading(true);
   setAiAnswer("");
@@ -270,6 +300,7 @@ async function askAdminAI() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         question: aiQuestion,
+        tone: aiTone,
         tables: [
           "generated_pages",
           "page_view_events",
@@ -285,14 +316,12 @@ async function askAdminAI() {
 
     const data = await res.json();
     setAiAnswer(data.answer || "No response");
-  } catch (err) {
+  } catch {
     setAiAnswer("AI error — check server logs.");
   } finally {
     setAiLoading(false);
   }
 }
-
-
 
 
   async function handleLogout() {
@@ -354,6 +383,17 @@ async function askAdminAI() {
     icon={<FishingHookIcon size={18} />}
     label="Fishing Hooks"
   />
+   <NavLink
+    href="/dashboard/sitemap"
+    icon={<MapIcon size={18} />}
+    label="Sitemap"
+  />
+  <NavLink
+    href="/dashboard/page-scanner"
+    icon={<ScanLineIcon size={18} />}
+    label="Page Scanner"
+  />
+  
 
 
 
@@ -485,7 +525,14 @@ async function askAdminAI() {
 </AdminPresenceProvider>
 
 {aiOpen && (
+
+  
   <div className="fixed inset-0 z-50 flex">
+
+    
+  {realtimeVoice.connected ? "■ End Live Voice" : "🎙 Start Live Voice"}
+
+
     {/* Overlay */}
     <div
       className="flex-1 bg-black/40"
@@ -504,13 +551,57 @@ async function askAdminAI() {
         </button>
       </div>
 
-      <div className="p-4 flex flex-col gap-3 flex-1">
-        <textarea
-          value={aiQuestion}
-          onChange={(e) => setAiQuestion(e.target.value)}
-          placeholder="Ask anything about the system, data, pages, or performance..."
-          className="w-full h-28 border rounded p-2 text-sm"
-        />
+
+<select
+  value={aiTone}
+  onChange={(e) => setAiTone(e.target.value as any)}
+  className="w-full border rounded p-1 text-xs mb-2"
+>
+  <option value="neutral">Neutral</option>
+  <option value="direct">Direct / Blunt</option>
+  <option value="technical">Technical</option>
+  <option value="sales">Sales / Persuasive</option>
+</select>
+
+
+
+      <div className="relative">
+  <textarea
+    ref={aiTextareaRef}
+    value={aiQuestion}
+    onChange={(e) => setAiQuestion(e.target.value)}
+    placeholder={
+      realtimeVoice.connected
+        ? "Listening… speak now"
+        : "Ask anything about the system, data, pages, or performance…"
+    }
+    className="w-full h-28 border rounded p-2 text-base pr-12 focus:outline-none"
+    inputMode="text"
+    autoCorrect="off"
+    autoCapitalize="off"
+    spellCheck={false}
+  />
+
+  <button
+    onClick={() => {
+      if (!realtimeVoice.supported) {
+        alert("Live voice is not supported on this browser.");
+        return;
+      }
+
+      realtimeVoice.connected
+        ? realtimeVoice.stop()
+        : realtimeVoice.start();
+    }}
+    className={`absolute bottom-2 right-2 w-10 h-10 rounded-full flex items-center justify-center text-white
+      ${realtimeVoice.connected ? "bg-red-700" : "bg-gray-900"}`}
+  >
+    🎙
+  </button>
+</div>
+
+
+
 
         <button
           onClick={askAdminAI}
@@ -520,14 +611,19 @@ async function askAdminAI() {
           {aiLoading ? "Thinking..." : "Ask AI"}
         </button>
 
-        <div className="flex-1 overflow-y-auto bg-gray-900 text-green-400 text-xs rounded p-3 whitespace-pre-wrap">
-          {aiAnswer || "AI ready."}
-        </div>
+        <div
+  className="bg-gray-900 text-green-400 text-xs rounded p-3 whitespace-pre-wrap overflow-y-auto"
+  style={{
+    maxHeight: "45vh",
+  }}
+>
+  {aiAnswer || "AI ready."}
+</div>
+
       </div>
     </div>
-  </div>
+  
 )}
-
 
 
         {/* ===== MOBILE BOTTOM NAV ===== */}
@@ -617,6 +713,18 @@ function MobileBottomNav() {
                 href="/dashboard/page-generator"
                 icon={<FishingHookIcon size={20} />}
                 label="Fishing Hooks"
+                onClick={() => setShowMore(false)}
+              />
+              <MoreTile
+                href="/dashboard/sitemap"
+                icon={<MapIcon size={20} />}
+                label="Sitemap"
+                onClick={() => setShowMore(false)}
+              />
+              <MoreTile
+                href="/dashboard/page-scanner"
+                icon={<ScanLine size={20} />}
+                label="Page Scanner"
                 onClick={() => setShowMore(false)}
               />
               <MoreTile

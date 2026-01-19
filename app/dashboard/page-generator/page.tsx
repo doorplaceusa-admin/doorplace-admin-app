@@ -44,17 +44,47 @@ const FishOnHookIcon = ({ size = 28 }: { size?: number }) => (
   </svg>
 );
 
-const TEMPLATE_OPTIONS = [
-  { value: "porch_swing_city", label: "Porch Swing City Page" },
-  { value: "porch_swing_delivery", label: "Porch Swing Delivery Page" },
-  { value: "door_city", label: "Door City Page" },
+const SWING_SIZE_OPTIONS = [
+  { value: "crib", label: "Crib Size" },
+  { value: "twin", label: "Twin Size" },
+  { value: "full", label: "Full Size" },
+  { value: "custom", label: "Custom Size" },
 ];
+
+
+const TEMPLATE_OPTIONS = [
+  // Core swing pages
+  { value: "porch_swing_city", label: "Porch Swing – City" },
+  { value: "porch_swing_delivery", label: "Porch Swing – Delivery (City)" },
+
+  // 🔥 Variant swing pages
+  { value: "porch_swing_size_city", label: "Porch Swing – Size (City)" },
+  { value: "porch_swing_usecase_city", label: "Porch Swing – Use Case (City)" },
+  { value: "porch_swing_material_city", label: "Porch Swing – Material (City)" },
+  { value: "porch_swing_style_city", label: "Porch Swing – Style (City)" },
+
+  // Doors (DFW only)
+  { value: "door_city", label: "Door – City (DFW)" },
+];
+
+
 
 export default function PageGeneratorAdminPage() {
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [bulkGeneratedIds, setBulkGeneratedIds] = useState<string[]>([]);
+  const [selectedSwingSize, setSelectedSwingSize] = useState("crib");
+  const [lastGeneratedPageId, setLastGeneratedPageId] = useState<string | null>(null);
+  const [previewData, setPreviewData] = useState<any | null>(null);
+
+
+
+
+
+
+
+
 
   const [states, setStates] = useState<StateRow[]>([]);
   const [cities, setCities] = useState<CityRow[]>([]);
@@ -270,20 +300,41 @@ export default function PageGeneratorAdminPage() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold mb-2">Template</label>
-              <select
-                value={selectedTemplate}
-                onChange={(e) => setSelectedTemplate(e.target.value)}
-                className="w-full rounded-lg border px-3 py-2 text-sm"
-              >
-                {TEMPLATE_OPTIONS.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+           <div>
+  <label className="block text-sm font-semibold mb-2">Template</label>
+  <select
+    value={selectedTemplate}
+    onChange={(e) => setSelectedTemplate(e.target.value)}
+    className="w-full rounded-lg border px-3 py-2 text-sm"
+  >
+    {TEMPLATE_OPTIONS.map((t) => (
+      <option key={t.value} value={t.value}>
+        {t.label}
+      </option>
+    ))}
+  </select>
+</div>
+
+{/* 🔥 CONDITIONAL SWING SIZE DROPDOWN */}
+{selectedTemplate === "porch_swing_size_city" && (
+  <div>
+    <label className="block text-sm font-semibold mb-2">
+      Swing Size
+    </label>
+    <select
+      value={selectedSwingSize}
+      onChange={(e) => setSelectedSwingSize(e.target.value)}
+      className="w-full rounded-lg border px-3 py-2 text-sm"
+    >
+      {SWING_SIZE_OPTIONS.map((s) => (
+        <option key={s.value} value={s.value}>
+          {s.label}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+
 
             <div>
               <label className="block text-sm font-semibold mb-2">
@@ -411,9 +462,12 @@ export default function PageGeneratorAdminPage() {
                     });
 
                     const json = await res.json();
-                    if (!res.ok) throw new Error(json.error);
+if (!res.ok) throw new Error(json.error);
 
-                    showToast("success", "Draft page created");
+setLastGeneratedPageId(json.page.id);
+showToast("success", "Draft page created");
+
+
                   } catch (e: any) {
                     showToast("error", e.message);
                   } finally {
@@ -424,6 +478,20 @@ export default function PageGeneratorAdminPage() {
               >
                 Generate 1 Page
               </button>
+
+
+              {lastGeneratedPageId && (
+  <a
+    href={`/preview/page/${lastGeneratedPageId}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="bg-blue-600 text-white px-4 py-2 rounded text-center"
+  >
+    Preview Page
+  </a>
+)}
+
+
 
               <button
                 onClick={async () => {

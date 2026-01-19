@@ -19,7 +19,8 @@ export default function PartnerQRCode({ trackingLink }: Props) {
   };
 
   return (
-    <div className="border rounded p-4 bg-white space-y-3">
+    <div className="bg-white border rounded-xl shadow-sm p-5 space-y-4">
+
       {/* TITLE */}
       <h3 className="font-bold text-lg">Your QR Code</h3>
 

@@ -220,7 +220,9 @@ useEffect(() => {
   if (loading) return null;
 
   return (
-<div className="h-[100dvh] bg-gray-100 flex max-w-full overflow-hidden">
+<div className="min-h-[100dvh] bg-gray-100 text-gray-900 flex max-w-full">
+
+
 
 
 
@@ -263,12 +265,8 @@ useEffect(() => {
       </aside>
 
       {/* ===== MAIN CONTENT ===== */}
-<div
-  className={`flex-1 flex flex-col max-w-full overflow-x-hidden ${
-    isLegalPage ? "h-auto overflow-y-auto" : "h-full overflow-hidden"
+<div className="flex-1 flex flex-col max-w-full overflow-x-hidden">
 
-  }`}
->
 
         {/* ===== TOP BAR ===== */}
 <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 bg-white border-b md:px-6">
@@ -329,6 +327,7 @@ useEffect(() => {
            </div>
 
 
+
           
 
           <div className="flex flex-col items-center">
@@ -355,6 +354,14 @@ useEffect(() => {
     <span className="absolute -top-1 -right-2 h-2 w-2 bg-red-600 rounded-full" />
   )}
 </button>
+<button
+  onClick={() => window.location.reload()}
+  className="text-sm text-gray-500 hover:text-black"
+>
+  ↻ Refresh
+</button>
+
+
 
 
 
@@ -399,12 +406,16 @@ useEffect(() => {
 
         {/* ===== PAGE CONTENT ===== */}
 <main
-  className={`flex-1 overflow-x-hidden px-1 md:px-6 ${
-    isLegalPage ? "pb-[1500px]" : "pb-1 md:pb-1"
-  }`}
+  className="flex-1 overflow-y-auto overflow-x-hidden px-1 md:px-6"
+  style={{
+    paddingBottom: "calc(env(safe-area-inset-bottom) + 96px)",
+  }}
 >
 
-  <div className="min-h-[400dvh] overflow-y-auto space-y-4 max-w-[1300px] w-full mx-auto">
+
+
+  <div className="space-y-4 max-w-[1300px] w-full mx-auto">
+
     {children}
     {/* ===== TINY LEGAL FOOTER ===== */}
 <footer className="w-full text-center text-[50x] opacity-60 py-2">

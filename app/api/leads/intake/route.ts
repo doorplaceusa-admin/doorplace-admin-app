@@ -277,7 +277,7 @@ console.log("🔥 ADMIN LEAD EMAIL TRIGGERED");
 
 await sendAdminNotification({
   type: "lead",
-  title: "New Lead Submitted",
+  title: "New Lead | Order Submitted",
   details: {
     lead_id: leadData.lead_id,
     name: `${leadData.first_name ?? ""} ${leadData.last_name ?? ""}`,

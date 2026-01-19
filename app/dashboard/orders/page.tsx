@@ -72,6 +72,8 @@ export default function OrdersPage() {
   const [search, setSearch] = useState("");
   const [viewItem, setViewItem] = useState<Order | null>(null);
   const [editItem, setEditItem] = useState<Order | null>(null);
+  const [layout, setLayout] = useState<"cards" | "table">("cards");
+
 
   /* ===============================
      LOAD
@@ -259,6 +261,32 @@ async function saveEdit() {
         </div>
 
         <p className="text-sm text-gray-500 mb-3">Order Management</p>
+        <div className="flex items-center gap-2 mb-2">
+  <span className="text-xs text-gray-500">Layout</span>
+
+  <button
+    className={`px-3 py-1 rounded text-xs border ${
+      layout === "cards"
+        ? "bg-black text-white"
+        : "bg-white text-gray-700"
+    }`}
+    onClick={() => setLayout("cards")}
+  >
+    Cards
+  </button>
+
+  <button
+    className={`px-3 py-1 rounded text-xs border ${
+      layout === "table"
+        ? "bg-black text-white"
+        : "bg-white text-gray-700"
+    }`}
+    onClick={() => setLayout("table")}
+  >
+    Table
+  </button>
+</div>
+
 
         <div className="flex gap-2 items-center flex-wrap">
           <input
@@ -270,58 +298,129 @@ async function saveEdit() {
         </div>
       </div>
 
-      {/* TABLE (3 columns) */}
-      <AdminTable<Order>
-        columns={[
-          { key: "order", label: "Order" },
-          { key: "status", label: "Status" },
-          { key: "actions", label: "Actions" },
-        ]}
-        rows={filteredRows}
-        rowKey={(o) => o.id}
-        renderCell={(o, key) => {
-          switch (key) {
-            case "order":
-              return (
-                <div className="min-w-0">
-                  <div className="font-medium truncate">
-                    
-                  </div>
-                  <div className="text-xs text-gray-500 truncate">
-                  {o.partner_id ? `(${o.partner_id})` : ""}
-                  </div>
+
+
+{layout === "cards" && (
+  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    {filteredRows.map((o) => (
+      <div
+        key={o.id}
+        className="border rounded-lg p-4 shadow-sm bg-white space-y-2"
+      >
+        {/* HEADER */}
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="font-semibold text-lg">
+              Order {o.order_id || "—"}
+            </div>
+            <div className="text-xs text-gray-500">
+              {o.customer_first_name} {o.customer_last_name}
+            </div>
+          </div>
+
+          <span className="text-xs font-semibold">
+            {o.order_status || "—"}
+          </span>
+        </div>
+
+        {/* META */}
+        <div className="text-xs text-gray-600 space-y-1">
+          <div>
+            <b>Partner:</b>{" "}
+            {o.partner_name || o.partner_id || "—"}
+          </div>
+
+          <div>
+            <b>Email:</b> {o.customer_email || "—"}
+          </div>
+
+          <div>
+            <b>Date:</b>{" "}
+            {o.created_at
+              ? new Date(o.created_at).toLocaleDateString()
+              : "—"}
+          </div>
+        </div>
+
+        {/* ACTIONS */}
+        <div className="flex gap-2 pt-2">
+          <button
+            className="text-xs border px-2 py-1 rounded"
+            onClick={() => setViewItem(o)}
+          >
+            View
+          </button>
+
+          <button
+            className="text-xs border px-2 py-1 rounded"
+            onClick={() => setEditItem(o)}
+          >
+            Edit
+          </button>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+
+
+      {layout === "table" && (
+  <>
+    {/* TABLE (3 columns) */}
+    <AdminTable<Order>
+      columns={[
+        { key: "order", label: "Order" },
+        { key: "status", label: "Status" },
+        { key: "actions", label: "Actions" },
+      ]}
+      rows={filteredRows}
+      rowKey={(o) => o.id}
+      renderCell={(o, key) => {
+        switch (key) {
+          case "order":
+            return (
+              <div className="min-w-0">
+                <div className="font-medium truncate">
+                 
                 </div>
-              );
+                <div className="text-xs text-gray-500 truncate">
+                {o.partner_id ? `(${o.partner_id})` : ""}
+                </div>
+              </div>
+            );
 
-            case "status":
-              return (
-                <span className="text-xs font-semibold">
-                  {o.order_status?.trim() ? o.order_status : "—"}
-                </span>
-              );
+          case "status":
+            return (
+              <span className="text-xs font-semibold">
+                {o.order_status?.trim() ? o.order_status : "—"}
+              </span>
+            );
 
-            case "actions":
-              return (
-                <select
-                  className="border rounded px-2 py-1 text-xs w-full max-w-[140px]"
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    e.target.value = "";
-                    if (v === "view") setViewItem(o);
-                    if (v === "edit") setEditItem(o);
-                  }}
-                >
-                  <option value="">Select</option>
-                  <option value="view">View</option>
-                  <option value="edit">Edit</option>
-                </select>
-              );
+          case "actions":
+            return (
+              <select
+                className="border rounded px-2 py-1 text-xs w-full max-w-[140px]"
+                onChange={(e) => {
+                  const v = e.target.value;
+                  e.target.value = "";
+                  if (v === "view") setViewItem(o);
+                  if (v === "edit") setEditItem(o);
+                }}
+              >
+                <option value="">Select</option>
+                <option value="view">View</option>
+                <option value="edit">Edit</option>
+              </select>
+            );
 
-            default:
-              return null;
-          }
-        }}
-      />
+          default:
+            return null;
+        }
+      }}
+    />
+  </>
+)}
+
 
 {/* ===============================
     VIEW MODAL — ORDER DETAILS

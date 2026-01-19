@@ -193,11 +193,18 @@ export default function PartnerOrdersPage() {
         ))}
       </div>
 
-<ActionButton
+<a
   href="/partners/orders/new"
-  label="Submit Swing Order"
-  className="bg-black text-red-700 text-lg"
-  />
+  className="block w-full bg-black text-white rounded-xl px-6 py-5 text-center shadow-sm hover:opacity-90 transition"
+>
+  <div className="text-sm text-gray-300 font-medium">
+    Primary Action
+  </div>
+  <div className="text-xl font-bold">
+    Submit Swing Order
+  </div>
+</a>
+
 
 
       {/* BACK */}

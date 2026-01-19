@@ -26,18 +26,23 @@ export default function PartnerResourcesPage() {
   }
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
-      <h1 className="text-3xl font-bold text-red-700">
-        Partner Resources
-      </h1>
+      <div className="space-y-1">
+  <h1 className="text-3xl font-bold">Partner Resources</h1>
+  <p className="text-sm text-gray-500">
+    Training, tools, links, and documents to help you sell and earn faster
+  </p>
+</div>
+
       {resources.length === 0 && (
         <p className="text-gray-500">No resources available.</p>
       )}
-      <div className="grid gap-4">
+      <div className="space-y-4">
         {resources.map(resource => (
           <div
-            key={resource.id}
-            className="border rounded-lg p-4 bg-white flex justify-between items-center"
-          >
+  key={resource.id}
+  className="border rounded-xl p-5 bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+>
+
             <div>
               <h3 className="font-bold text-lg">
                 {resource.title}
@@ -52,12 +57,13 @@ export default function PartnerResourcesPage() {
               </p>
             </div>
             <a
-              href={resource.resource_url}
-              target="_blank"
-              className="bg-black text-white px-4 py-2 rounded hover:opacity-90"
-            >
-              Open
-            </a>
+  href={resource.resource_url}
+  target="_blank"
+  className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-black text-white font-semibold text-sm hover:opacity-90 transition"
+>
+  View Resource →
+</a>
+
           </div>
         ))}
       </div>

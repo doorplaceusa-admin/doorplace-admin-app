@@ -93,6 +93,19 @@ const [showMessages, setShowMessages] = useState(false);
 }, [partner]);
 
 
+useEffect(() => {
+  const onFocus = () => {
+    window.location.reload();
+  };
+
+  window.addEventListener("focus", onFocus);
+
+  return () => {
+    window.removeEventListener("focus", onFocus);
+  };
+}, []);
+
+
 
   /* ===============================
      LOAD PARTNER  ✅ (THIS IS THE WORKING PART)
@@ -104,10 +117,15 @@ const [showMessages, setShowMessages] = useState(false);
       setLoading(true);
       setLoadError(null);
 
-      const {
-        data: { user },
-        error: userErr,
-      } = await supabase.auth.getUser();
+      const { data: authData, error: userErr } = await supabase.auth.getUser();
+
+const user = authData?.user ?? null;
+
+if (!user) {
+  router.push("/login");
+  return;
+}
+
 
       if (userErr) {
         setLoadError(userErr.message);
@@ -419,142 +437,196 @@ if (showLegalGate && partner) {
       </div>
 
       {/* STATS */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-      <div className="border rounded p-4 bg-gray-100">
-      <div className="text-xs text-gray-500">Tracking Link Views</div>
-      <div className="text-lg font-bold">{linkViews}</div>
+<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
 
-    
+  {/* LINK VIEWS */}
+  <div className="bg-white border rounded-xl p-5 shadow-sm">
+    <div className="text-xs uppercase tracking-wide text-gray-400">
+      Tracking Link Views
+    </div>
+    <div className="mt-1 text-2xl font-bold text-gray-900">
+      {linkViews}
+    </div>
   </div>
 
-  <Card label="Total Leads" value={stats.totalLeads} />
-  <Card label="Total Orders" value={stats.totalOrders} />
-  <Card
-    label="Total Commission"
-    value={stats.totalCommission.toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-    })}
-  />
+  {/* TOTAL LEADS */}
+  <div className="bg-white border rounded-xl p-5 shadow-sm">
+    <div className="text-xs uppercase tracking-wide text-gray-400">
+      Total Leads
+    </div>
+    <div className="mt-1 text-2xl font-bold text-gray-900">
+      {stats.totalLeads}
+    </div>
+  </div>
+
+  {/* TOTAL ORDERS */}
+  <div className="bg-white border rounded-xl p-5 shadow-sm">
+    <div className="text-xs uppercase tracking-wide text-gray-400">
+      Total Orders
+    </div>
+    <div className="mt-1 text-2xl font-bold text-gray-900">
+      {stats.totalOrders}
+    </div>
+  </div>
+
+  {/* TOTAL COMMISSION */}
+  <div className="bg-white border rounded-xl p-5 shadow-sm">
+    <div className="text-xs uppercase tracking-wide text-gray-400">
+      Total Commission
+    </div>
+    <div className="mt-1 text-2xl font-bold text-gray-900">
+      {stats.totalCommission.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      })}
+    </div>
+  </div>
+
 </div>
+
 
 
 
 
 
       {/* WELCOME VIDEO */}
-      <div className="border rounded overflow-hidden">
-        <button
-  onClick={() => setShowVideo(!showVideo)}
-  className="relative w-full bg-red-700 text-white px-4 py-4 font-bold rounded flex items-center justify-center"
->
-  {/* CENTERED TITLE */}
-  <span className="text-lg">Step 1: Watch Welcome Video </span>
+<div className="bg-white border rounded-xl shadow-sm overflow-hidden">
 
-  {/* RIGHT ICON */}
-  <span className="absolute right-4 text-2xl">
-    {showVideo ? "−" : "+"}
-  </span>
-</button>
-
-
-        {showVideo && (
-          <div className="p-4 bg-white space-y-4">
-            <div className="aspect-video bg-black rounded overflow-hidden">
-              <video
-                src="https://cdn.shopify.com/videos/c/o/v/aab639df1f4b4ce0937e18ae88b5e3b0.mp4"
-                controls
-                playsInline
-                preload="metadata"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <p className="text-sm text-gray-600">
-              This video explains how to earn commissions, how to use your tracking link, and which partner
-              path is best for you.
-            </p>
-          </div>
-        )}
+  {/* HEADER */}
+  <button
+    onClick={() => setShowVideo(!showVideo)}
+    className="w-full flex items-center justify-between px-5 py-4 text-left"
+  >
+    <div>
+      <div className="text-sm text-gray-500 font-medium">
+        Step 1
       </div>
+      <div className="text-lg font-bold text-gray-900">
+        Watch Welcome Video
+      </div>
+    </div>
+
+    <div className="text-2xl text-gray-400">
+      {showVideo ? "−" : "+"}
+    </div>
+  </button>
+
+  {/* CONTENT */}
+  {showVideo && (
+    <div className="px-5 pb-5 space-y-4">
+      <div className="aspect-video bg-black rounded-lg overflow-hidden">
+        <video
+          src="https://cdn.shopify.com/videos/c/o/v/aab639df1f4b4ce0937e18ae88b5e3b0.mp4"
+          controls
+          playsInline
+          preload="metadata"
+          className="w-full h-full object-contain"
+        />
+      </div>
+
+      <p className="text-sm text-gray-600 leading-relaxed">
+        This video explains how to earn commissions, how to use your tracking link, and which partner
+        path is best for you.
+      </p>
+    </div>
+  )}
+</div>
+
 
 <PartnerSocialShareCard partnerId={partner.partner_id!} />
 <PartnerQRCode trackingLink={swingTrackingLink} />
 
 
-      {/* FUTURE DOOR TRACKING LEADS (COMING SOON) */}
-<div className="border rounded overflow-hidden">
-  <div className="bg-gray-300 text-white px-4 py-3 font-bold">
-    Future Door Tracking Leads — Coming Soon
-  </div>
+      {/* FUTURE DOOR TRACKING LEADS */}
+<div className="bg-white border rounded-xl shadow-sm p-5 space-y-4">
 
-  <div className="p-4 space-y-3 bg-white">
-    <p className="text-sm text-gray-700 leading-relaxed">
-      We’re actively building a door tracking system similar to your swing
-      tracking link. Once released, you’ll be able to share select Doorplace USA
-      door pages and earn commissions when those leads turn into completed door
-      projects.
-    </p>
-
-    <p className="text-sm text-gray-600 leading-relaxed">
-      This will include interior doors, exterior doors, custom designs, and
-      specialty projects — all tracked back to your Partner ID automatically.
-    </p>
-
-    <div className="bg-gray-100 p-3 rounded text-sm text-gray-700 font-semibold text-center">
-      Door tracking links are not active yet. This feature will unlock in a
-      future update.
+  <div>
+    <div className="text-sm text-gray-500 font-medium">
+      Coming Soon
+    </div>
+    <div className="text-lg font-bold text-gray-900">
+      Door Tracking Leads
     </div>
   </div>
+
+  <p className="text-sm text-gray-700 leading-relaxed">
+    We’re actively building a door tracking system similar to your swing
+    tracking link. Once released, you’ll be able to share select Doorplace USA
+    door pages and earn commissions when those leads turn into completed door
+    projects.
+  </p>
+
+  <p className="text-sm text-gray-600 leading-relaxed">
+    This will include interior doors, exterior doors, custom designs, and
+    specialty projects — all tracked back to your Partner ID automatically.
+  </p>
+
+  <div className="bg-gray-50 border rounded-lg p-3 text-sm text-gray-600 font-medium text-center">
+    Door tracking links are not active yet. This feature will unlock in a
+    future update.
+  </div>
+
 </div>
 
 
+
      {/* PAYOUTS / DIRECT DEPOSIT */}
-<div className="border rounded overflow-hidden">
-  
-  {/* TOGGLE HEADER */}
+<div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+
+  {/* HEADER */}
   <button
     onClick={() => setShowPayouts(!showPayouts)}
-    className="w-full flex justify-between items-center bg-gray-400 text-white px-4 py-3 font-bold"
+    className="w-full flex items-center justify-between px-5 py-4 text-left"
   >
-    <span>Payouts & Direct Deposit</span>
-    <span className="text-xl">{showPayouts ? "−" : "+"}</span>
+    <div>
+      <div className="text-sm text-gray-500 font-medium">
+        Payouts
+      </div>
+      <div className="text-lg font-bold text-gray-900">
+        Direct Deposit
+      </div>
+    </div>
+
+    <div className="text-2xl text-gray-400">
+      {showPayouts ? "−" : "+"}
+    </div>
   </button>
 
-  {/* COLLAPSIBLE CONTENT */}
+  {/* CONTENT */}
   {showPayouts && (
-    <div className="p-4 space-y-3 bg-white">
+    <div className="px-5 pb-5 space-y-4">
 
-      {/* STATUS */}
       {!stats.totalOrders ? (
         <>
-          <div className="text-sm font-semibold text-gray-700">
+          <div className="text-sm font-semibold text-gray-800">
             Direct Deposit: Not Available Yet
           </div>
 
-          <p className="text-sm text-gray-600">
-            Direct deposit will be available after your first completed sale.
+          <p className="text-sm text-gray-600 leading-relaxed">
+            Direct deposit becomes available after your first completed sale.
+            Payouts are processed securely through <b>Melio</b>.
           </p>
 
           <button
             disabled
-            className="w-full py-3 rounded font-bold bg-gray-400 text-white cursor-not-allowed"
+            className="w-full py-3 rounded-lg font-semibold bg-gray-300 text-gray-600 cursor-not-allowed"
           >
             Set Up Direct Deposit (Available after first sale)
           </button>
         </>
       ) : (
         <>
-          <div className="text-sm font-semibold text-gray-700">
+          <div className="text-sm font-semibold text-gray-800">
             Direct Deposit: Setup Required
           </div>
 
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 leading-relaxed">
             When your first payout is ready, you’ll receive a secure email from
-            our payment partner to set up direct deposit.
+            <b> Melio</b> with instructions to set up your direct deposit.
           </p>
 
           <button
-            className="w-full py-3 rounded font-bold bg-black text-white"
+            className="w-full py-3 rounded-lg font-semibold bg-black text-white"
             onClick={() =>
               alert(
                 "Direct deposit setup is sent when your first payout is issued."
@@ -565,38 +637,74 @@ if (showLegalGate && partner) {
           </button>
         </>
       )}
+
     </div>
   )}
 </div>
 
 
 
- <ActionButton
-  href="/partners/resources"
-  label="Partner Resources"
-  className="bg-black text-white text-lg"
-  />
-  <ActionButton
-  href="/partners/orders/new"
-  label="Submit Swing Order"
-  className="bg-black text-red-700 text-lg"
-  />
+
+ {/* PRIMARY ACTIONS */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+  {/* SUBMIT ORDER */}
+  <a
+    href="/partners/orders/new"
+    className="block bg-black text-white rounded-xl px-6 py-5 text-center shadow-sm hover:opacity-90 transition"
+  >
+    <div className="text-sm text-gray-300 font-medium">
+      Primary Action
+    </div>
+    <div className="text-xl font-bold">
+      Submit Swing Order
+    </div>
+  </a>
+
+  {/* RESOURCES */}
+  <a
+    href="/partners/resources"
+    className="block bg-white border rounded-xl px-6 py-5 text-center shadow-sm hover:bg-gray-50 transition"
+  >
+    <div className="text-sm text-gray-500 font-medium">
+      Tools & Training
+    </div>
+    <div className="text-xl font-bold text-gray-900">
+      Partner Resources
+    </div>
+  </a>
+
+</div>
+
 
       
 
       
 {/* PARTNER UPLOADS */}
-<div className="border rounded overflow-hidden">
+<div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+
+  {/* HEADER */}
   <button
     onClick={() => setShowUploads(!showUploads)}
-    className="w-full flex justify-between items-center bg-gray-300 text-white px-4 py-3 font-bold"
+    className="w-full flex items-center justify-between px-5 py-4 text-left"
   >
-    <span>Upload Files</span>
-    <span className="text-xl">{showUploads ? "−" : "+"}</span>
+    <div>
+      <div className="text-sm text-gray-500 font-medium">
+        Files
+      </div>
+      <div className="text-lg font-bold text-gray-900">
+        Upload Documents & Media
+      </div>
+    </div>
+
+    <div className="text-2xl text-gray-400">
+      {showUploads ? "−" : "+"}
+    </div>
   </button>
 
+  {/* CONTENT */}
   {showUploads && (
-    <div className="p-4 space-y-4 bg-white">
+    <div className="px-5 pb-5 space-y-4">
 
       {/* FILE INPUT */}
       <div>
@@ -606,7 +714,7 @@ if (showLegalGate && partner) {
 
         <input
           type="file"
-          className="block w-full text-sm border rounded px-3 py-2"
+          className="block w-full text-sm border rounded-lg px-3 py-2"
           onChange={(e) => {
             const file = e.target.files?.[0] || null;
             setSelectedFile(file);
@@ -615,7 +723,7 @@ if (showLegalGate && partner) {
         />
       </div>
 
-      {/* SELECTED FILE NAME */}
+      {/* SELECTED FILE */}
       {selectedFile && (
         <p className="text-sm text-gray-600">
           Selected file: <b>{selectedFile.name}</b>
@@ -626,10 +734,10 @@ if (showLegalGate && partner) {
       <button
         onClick={handlePartnerUpload}
         disabled={!selectedFile || uploading}
-        className={`w-full py-3 rounded font-bold text-white ${
+        className={`w-full py-3 rounded-lg font-semibold text-white ${
           !selectedFile || uploading
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-black"
+            ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+            : "bg-black hover:opacity-90"
         }`}
       >
         {uploading ? "Uploading…" : "Submit Upload"}
@@ -643,14 +751,15 @@ if (showLegalGate && partner) {
       )}
 
       {/* DESCRIPTION */}
-      <div className="text-xs text-gray-500 leading-relaxed">
+      <p className="text-xs text-gray-500 leading-relaxed">
         Upload swing photos, door photos, customer videos, installation photos,
         signed documents, or any supporting files requested by Doorplace USA.
-      </div>
+      </p>
 
     </div>
   )}
 </div>
+
 
 
       

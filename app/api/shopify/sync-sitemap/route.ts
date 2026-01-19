@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 /*
-  Hard-coded Shopify sitemap sync.
-  Uses ONLY the provided sitemap_pages_1.xml URL.
+  Shopify Sitemap FULL Sync
+  - Reads sitemap index
+  - Loops all child sitemaps
+  - Deduplicates URLs
+  - Matches Google Search Console counts
 */
 
 export async function GET() {
@@ -13,6 +16,8 @@ export async function GET() {
 export async function POST() {
   return run();
 }
+
+const ROOT_SITEMAP = "https://doorplaceusa.com/sitemap.xml";
 
 async function fetchXml(url: string): Promise<string> {
   const res = await fetch(url, { cache: "no-store" });
@@ -34,21 +39,44 @@ function extractLocs(xml: string): string[] {
 
 async function run() {
   try {
-    const sitemapUrl =
-      "https://doorplaceusa.com/sitemap_pages_1.xml?from=81369595985&to=704635895889";
+    /* -----------------------------------------
+       1. Fetch sitemap index
+    ------------------------------------------ */
+    const indexXml = await fetchXml(ROOT_SITEMAP);
+    const sitemapUrls = extractLocs(indexXml);
 
-    const xml = await fetchXml(sitemapUrl);
-    const urls = extractLocs(xml);
-
-    if (!urls.length) {
-      throw new Error("No URLs found in sitemap");
+    if (!sitemapUrls.length) {
+      throw new Error("No child sitemaps found in sitemap index");
     }
 
+    /* -----------------------------------------
+       2. Fetch ALL child sitemaps
+    ------------------------------------------ */
+    let allUrls: string[] = [];
+
+    for (const sitemapUrl of sitemapUrls) {
+      const xml = await fetchXml(sitemapUrl);
+      const urls = extractLocs(xml);
+      allUrls.push(...urls);
+    }
+
+    /* -----------------------------------------
+       3. Deduplicate URLs
+    ------------------------------------------ */
+    allUrls = Array.from(new Set(allUrls));
+
+    if (!allUrls.length) {
+      throw new Error("No URLs found across all sitemaps");
+    }
+
+    /* -----------------------------------------
+       4. Prepare rows for Supabase
+    ------------------------------------------ */
     const now = new Date().toISOString();
 
-    const rows = urls.map(url => {
+    const rows = allUrls.map(url => {
       const slug = url
-        .replace("https://doorplaceusa.com/pages/", "")
+        .replace("https://doorplaceusa.com/", "")
         .replace(/\/$/, "");
 
       return {
@@ -59,14 +87,21 @@ async function run() {
       };
     });
 
+    /* -----------------------------------------
+       5. Upsert into Supabase
+    ------------------------------------------ */
     const { error } = await supabaseAdmin
       .from("existing_shopify_pages")
       .upsert(rows, { onConflict: "slug" });
 
     if (error) throw error;
 
+    /* -----------------------------------------
+       6. Success response
+    ------------------------------------------ */
     return NextResponse.json({
       success: true,
+      sitemaps_found: sitemapUrls.length,
       total_pages_found: rows.length
     });
 

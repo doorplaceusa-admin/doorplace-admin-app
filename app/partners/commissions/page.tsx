@@ -238,27 +238,26 @@ export default function PartnerCommissionsPage() {
       <div className="flex justify-between items-center flex-wrap gap-2">
         <h1 className="text-2xl font-bold">Commissions</h1>
 
-        <div className="flex gap-2">
-          <select
-            className="border rounded px-3 py-2 text-sm"
-            value={dateRange}
-            onChange={(e) =>
-              setDateRange(e.target.value as any)
-            }
-          >
-            <option value="all">All Time</option>
-            <option value="30">Last 30 Days</option>
-            <option value="60">Last 60 Days</option>
-            <option value="90">Last 90 Days</option>
-          </select>
+        <div className="flex flex-wrap gap-2 bg-white border rounded-xl p-2 shadow-sm">
+  <select
+    className="px-3 py-2 rounded-lg text-sm border bg-white"
+    value={dateRange}
+    onChange={(e) => setDateRange(e.target.value as any)}
+  >
+    <option value="all">All Time</option>
+    <option value="30">Last 30 Days</option>
+    <option value="60">Last 60 Days</option>
+    <option value="90">Last 90 Days</option>
+  </select>
 
-          <button
-            onClick={exportCSV}
-            className="border rounded px-3 py-2 text-sm"
-          >
-            Export CSV
-          </button>
-        </div>
+  <button
+    onClick={exportCSV}
+    className="px-4 py-2 rounded-lg text-sm font-semibold bg-black text-white hover:opacity-90"
+  >
+    Export CSV
+  </button>
+</div>
+
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -267,14 +266,30 @@ export default function PartnerCommissionsPage() {
         <Card label="Total Commission" value={money(totals.totalCommission)} />
       </div>
 
-      <div className="flex gap-2">
-        <Tab active={activeTab === "orders"} onClick={() => setActiveTab("orders")}>
-          Orders
-        </Tab>
-        <Tab active={activeTab === "leads"} onClick={() => setActiveTab("leads")}>
-          Leads
-        </Tab>
-      </div>
+      <div className="inline-flex bg-gray-100 rounded-xl p-1">
+  <button
+    onClick={() => setActiveTab("orders")}
+    className={`px-5 py-2 rounded-lg text-sm font-semibold transition ${
+      activeTab === "orders"
+        ? "bg-white shadow text-gray-900"
+        : "text-gray-500 hover:text-gray-800"
+    }`}
+  >
+    Orders
+  </button>
+
+  <button
+    onClick={() => setActiveTab("leads")}
+    className={`px-5 py-2 rounded-lg text-sm font-semibold transition ${
+      activeTab === "leads"
+        ? "bg-white shadow text-gray-900"
+        : "text-gray-500 hover:text-gray-800"
+    }`}
+  >
+    Leads
+  </button>
+</div>
+
 
       {activeTab === "orders" && (
   <div className="space-y-4">
@@ -437,12 +452,17 @@ export default function PartnerCommissionsPage() {
 ================================ */
 function Card({ label, value }: any) {
   return (
-    <div className="border rounded p-4">
-      <div className="text-xs text-gray-500">{label}</div>
-      <div className="text-xl font-bold">{value}</div>
+    <div className="bg-white border rounded-xl p-5 shadow-sm">
+      <div className="text-xs uppercase tracking-wide text-gray-400">
+        {label}
+      </div>
+      <div className="mt-1 text-2xl font-bold text-gray-900">
+        {value}
+      </div>
     </div>
   );
 }
+
 
 function Tab({ active, children, onClick }: any) {
   return (

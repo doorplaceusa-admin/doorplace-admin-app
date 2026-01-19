@@ -106,11 +106,8 @@ export default function PartnerMessages({
         .upload(path, pendingImage);
 
       if (!error) {
-        const { data } = await supabase.storage
-          .from("chat-uploads")
-          .createSignedUrl(path, 60 * 60 * 24 * 30);
+        imageUrl = path; // STORE ONLY PATH
 
-        imageUrl = data?.signedUrl || null;
       }
     }
 
@@ -225,7 +222,7 @@ export default function PartnerMessages({
         {messages.map((m) => (
           <div
             key={m.id}
-            className={`max-w-[80%] p-2 rounded text-sm ${
+            className={`max-w-[80%] p-2 rounded text-sm overflow-hidden ${
               m.sender === "partner"
                 ? "ml-auto bg-gray-300 black-white"
                 : m.sender === "system"
@@ -233,15 +230,29 @@ export default function PartnerMessages({
                 : "bg-white border"
             }`}
           >
-            {m.image_url && (
-              <img
-                src={m.image_url}
-                alt="upload"
-                className="max-w-[260px] max-h-[320px] object-contain rounded border mb-1"
-              />
-            )}
+            {m.image_url && <ChatImage path={m.image_url} />}
 
-            {m.message && <div>{m.message}</div>}
+
+           {m.message && (
+
+
+
+
+
+  <div
+    className="whitespace-pre-wrap break-words max-w-full"
+    style={{
+      overflowWrap: "anywhere",
+      wordBreak: "break-word",
+    }}
+  >
+    {m.message}
+  </div>
+)}
+
+
+
+
 
             <div className="text-[10px] opacity-70 mt-1">
               {new Date(m.created_at).toLocaleString()}
@@ -312,5 +323,34 @@ export default function PartnerMessages({
         </button>
       </div>
     </div>
+  );
+}
+
+function ChatImage({ path }: { path: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    supabase.storage
+      .from("chat-uploads")
+      .createSignedUrl(path, 60 * 10) // 10 minutes
+      .then(({ data }) => {
+        if (active) setUrl(data?.signedUrl ?? null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [path]);
+
+  if (!url) return null;
+
+  return (
+    <img
+      src={url}
+      alt="upload"
+      className="max-w-[260px] max-h-[320px] object-contain rounded border mb-1"
+    />
   );
 }

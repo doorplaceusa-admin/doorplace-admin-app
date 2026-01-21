@@ -1,0 +1,1598 @@
+[2026-01-20T17:35:48.538Z] === RESTORE STARTED ===
+[2026-01-20T17:35:48.962Z] 🔥 FATAL ERROR
+[2026-01-20T17:35:48.968Z] Expected ',' or '}' after property value in JSON at position 1006 (line 10 column 739)
+[2026-01-20T17:37:11.502Z] === RESTORE STARTED ===
+[2026-01-20T17:37:11.757Z] 🔥 FATAL ERROR
+[2026-01-20T17:37:11.759Z] Expected ',' or '}' after property value in JSON at position 1006 (line 10 column 739)
+[2026-01-20T17:39:52.420Z] === RESTORE STARTED ===
+[2026-01-20T17:39:52.423Z] 📂 Reading backup file from disk
+[2026-01-20T17:39:52.658Z] 📄 Pages found: 4197
+[2026-01-20T17:39:52.710Z] 🚀 Restoring: About Us
+[2026-01-20T17:39:53.152Z] 🚀 Restoring: Addison, North Dallas, Carrollton, Farmers Branch, Plano, Richardson, Bent Tree, Prestonwood, Brookhaven
+[2026-01-20T17:39:53.480Z] 🚀 Restoring: Barndominium & Garage Doors
+[2026-01-20T17:39:53.746Z] 🚀 Restoring: Become a Partner
+[2026-01-20T17:39:54.029Z] 🚀 Restoring: Bifold Door Photo Gallery
+[2026-01-20T17:39:54.256Z] 🚀 Restoring: Bypassing Doors Photo Gallery
+[2026-01-20T17:39:54.458Z] 🚀 Restoring: Complete Photo Gallery - Swings & Doors
+[2026-01-20T17:39:54.756Z] 🚀 Restoring: Contact Us | Get a Quote
+[2026-01-20T17:39:54.986Z] 🚀 Restoring: Contractor Downloads
+[2026-01-20T17:39:55.197Z] 🚀 Restoring: Custom Doors & Sliding Barn Doors | Doorplace USA
+[2026-01-20T17:39:55.483Z] 🚀 Restoring: Custom gates / Dog gates
+[2026-01-20T17:39:55.699Z] 🚀 Restoring: Custom Porch Swings
+[2026-01-20T17:39:55.954Z] 🚀 Restoring: Dallas–Fort Worth Door Installation Services
+[2026-01-20T17:39:56.177Z] 🚀 Restoring: Dallas–Fort Worth Porch Swing Installation Services
+[2026-01-20T17:39:56.386Z] 🚀 Restoring: Door Installation & Repair Services
+[2026-01-20T17:39:56.595Z] 🚀 Restoring: Door Installation in Addison, Texas
+[2026-01-20T17:39:56.806Z] 🚀 Restoring: Door Installation in Allen, Texas
+[2026-01-20T17:39:57.027Z] 🚀 Restoring: Door Installation in Argyle, Texas
+[2026-01-20T17:39:57.237Z] 🚀 Restoring: Door Installation in Arlington, Texas
+[2026-01-20T17:39:57.482Z] 🚀 Restoring: Door Installation in Bedford, Texas
+[2026-01-20T17:39:57.676Z] 🚀 Restoring: Door Installation in Carrollton, Texas
+[2026-01-20T17:39:57.888Z] 🚀 Restoring: Door Installation in Colleyville, Texas
+[2026-01-20T17:39:58.119Z] 🚀 Restoring: Door Installation in Coppell, Texas
+[2026-01-20T17:39:58.327Z] 🚀 Restoring: Door Installation in Denton, Texas
+[2026-01-20T17:39:58.534Z] 🚀 Restoring: Door Installation in Euless, Texas
+[2026-01-20T17:39:58.745Z] 🚀 Restoring: Door Installation in Flower Mound, Texas
+[2026-01-20T17:39:58.969Z] 🚀 Restoring: Door Installation in Fort Worth, Texas
+[2026-01-20T17:39:59.228Z] 🚀 Restoring: Door Installation in Frisco, Texas
+[2026-01-20T17:39:59.444Z] 🚀 Restoring: Door Installation in Garland, Texas
+[2026-01-20T17:39:59.652Z] 🚀 Restoring: Door Installation in Grand Prairie, Texas
+[2026-01-20T17:39:59.881Z] 🚀 Restoring: Door Installation in Grapevine, Texas
+[2026-01-20T17:40:00.088Z] 🚀 Restoring: Door Installation in Hurst, Texas
+[2026-01-20T17:40:00.301Z] 🚀 Restoring: Door Installation in Irving, Texas
+[2026-01-20T17:40:00.531Z] 🚀 Restoring: Door Installation in Justin, Texas
+[2026-01-20T17:40:00.734Z] 🚀 Restoring: Door Installation in Keller, Texas
+[2026-01-20T17:40:00.989Z] 🚀 Restoring: Door Installation in Lake Worth, Texas
+[2026-01-20T17:40:01.180Z] 🚀 Restoring: Door Installation in Lewisville, Texas
+[2026-01-20T17:40:01.377Z] 🚀 Restoring: Door Installation in Little Elm, Texas
+[2026-01-20T17:40:01.591Z] 🚀 Restoring: Door Installation in Mansfield, Texas
+[2026-01-20T17:40:01.803Z] 🚀 Restoring: Door Installation in McKinney, Texas
+[2026-01-20T17:40:01.997Z] 🚀 Restoring: Door Installation in Mesquite, Texas
+[2026-01-20T17:40:02.261Z] 🚀 Restoring: Door Installation in North Richland Hills, Texas
+[2026-01-20T17:40:02.497Z] 🚀 Restoring: Door Installation in Northlake, Texas
+[2026-01-20T17:40:02.700Z] 🚀 Restoring: Door Installation in Plano, Texas
+[2026-01-20T17:40:02.915Z] 🚀 Restoring: Door Installation in Prosper, Texas
+[2026-01-20T17:40:03.143Z] 🚀 Restoring: Door Installation in Richardson, Texas
+[2026-01-20T17:40:03.348Z] 🚀 Restoring: Door Installation in Roanoke, Texas
+[2026-01-20T17:40:03.584Z] 🚀 Restoring: Door Installation in Saginaw, Texas
+[2026-01-20T17:40:03.809Z] 🚀 Restoring: Door Installation in Southlake, Texas
+[2026-01-20T17:40:04.020Z] 🚀 Restoring: Door Installation in The Colony, Texas
+[2026-01-20T17:40:04.233Z] 🚀 Restoring: Door Installation in Trophy Club, Texas
+[2026-01-20T17:40:04.478Z] 🚀 Restoring: Door Installation in Watauga, Texas
+[2026-01-20T17:40:04.713Z] 🚀 Restoring: Doorplace USA Cushion Guide - Cushions & Mattress Sizes for Porch Swings
+[2026-01-20T17:40:04.966Z] 🚀 Restoring: Doorplace USA Stain Guide - Stain Colors for Doors & Porch Swings
+[2026-01-20T17:40:05.171Z] 🚀 Restoring: Double Door Photo Gallery
+[2026-01-20T17:40:05.377Z] 🚀 Restoring: Financing Options
+[2026-01-20T17:40:05.609Z] 🚀 Restoring: Frequently Asked Questions
+[2026-01-20T17:40:05.836Z] 🚀 Restoring: Hidden Doors
+[2026-01-20T17:40:06.050Z] 🚀 Restoring: How to Install a Porch Swing - Complete Hanging Guide
+[2026-01-20T17:40:06.248Z] 🚀 Restoring: How To Measure For A Barn Door
+[2026-01-20T17:40:06.469Z] 🚀 Restoring: Mirror & Glass Doors Photo Gallery
+[2026-01-20T17:40:06.685Z] 🚀 Restoring: Page Under Construction
+[2026-01-20T17:40:06.903Z] 🚀 Restoring: Porch Swing City in Abbott, TX
+[2026-01-20T17:40:07.135Z] 🚀 Restoring: Porch Swing City in Abram, TX
+[2026-01-20T17:40:07.324Z] 🚀 Restoring: Porch Swing City in Acala, TX
+[2026-01-20T17:40:07.530Z] 🚀 Restoring: Porch Swing City in Ackerly, TX
+[2026-01-20T17:40:07.730Z] 🚀 Restoring: Porch Swing City in Addison, TX
+[2026-01-20T17:40:07.958Z] 🚀 Restoring: Porch Swing City in Adrian, TX
+[2026-01-20T17:40:08.184Z] 🚀 Restoring: Porch Swing City in Agua Dulce, TX
+[2026-01-20T17:40:08.388Z] 🚀 Restoring: Porch Swing City in Agua Dulce, TX
+[2026-01-20T17:40:08.600Z] 🚀 Restoring: Porch Swing City in Aguilares, TX
+[2026-01-20T17:40:08.829Z] 🚀 Restoring: Porch Swing City in Airport Heights, TX
+[2026-01-20T17:40:08.986Z] ❌ FAILED: Porch Swing City in Airport Heights, TX
+[2026-01-20T17:40:08.990Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:08.993Z] 🚀 Restoring: Porch Swing City in Airport Road Addition, TX
+[2026-01-20T17:40:09.240Z] 🚀 Restoring: Porch Swing City in Alamo Beach, TX
+[2026-01-20T17:40:09.381Z] ❌ FAILED: Porch Swing City in Alamo Beach, TX
+[2026-01-20T17:40:09.386Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:09.389Z] 🚀 Restoring: Porch Swing City in Alanreed, TX
+[2026-01-20T17:40:09.614Z] 🚀 Restoring: Porch Swing City in Alba, TX
+[2026-01-20T17:40:09.814Z] ❌ FAILED: Porch Swing City in Alba, TX
+[2026-01-20T17:40:09.817Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:09.820Z] 🚀 Restoring: Porch Swing City in Aldine, TX
+[2026-01-20T17:40:09.973Z] ❌ FAILED: Porch Swing City in Aldine, TX
+[2026-01-20T17:40:09.975Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:09.976Z] 🚀 Restoring: Porch Swing City in Alfred, TX
+[2026-01-20T17:40:10.176Z] 🚀 Restoring: Porch Swing City in Alice Acres, TX
+[2026-01-20T17:40:10.332Z] ❌ FAILED: Porch Swing City in Alice Acres, TX
+[2026-01-20T17:40:10.335Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:10.338Z] 🚀 Restoring: Porch Swing City in Allison, TX
+[2026-01-20T17:40:10.485Z] ❌ FAILED: Porch Swing City in Allison, TX
+[2026-01-20T17:40:10.488Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:10.491Z] 🚀 Restoring: Porch Swing City in Alma, TX
+[2026-01-20T17:40:10.720Z] 🚀 Restoring: Porch Swing City in Alto Bonito Heights, TX
+[2026-01-20T17:40:10.859Z] ❌ FAILED: Porch Swing City in Alto Bonito Heights, TX
+[2026-01-20T17:40:10.862Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:10.866Z] 🚀 Restoring: Porch Swing City in Alto, TX
+[2026-01-20T17:40:11.021Z] ❌ FAILED: Porch Swing City in Alto, TX
+[2026-01-20T17:40:11.023Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:11.024Z] 🚀 Restoring: Porch Swing City in Alvord, TX
+[2026-01-20T17:40:11.229Z] 🚀 Restoring: Porch Swing City in Amada Acres, TX
+[2026-01-20T17:40:11.371Z] ❌ FAILED: Porch Swing City in Amada Acres, TX
+[2026-01-20T17:40:11.374Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:11.378Z] 🚀 Restoring: Porch Swing City in Amargosa, TX
+[2026-01-20T17:40:11.609Z] 🚀 Restoring: Porch Swing City in Amaya, TX
+[2026-01-20T17:40:11.752Z] ❌ FAILED: Porch Swing City in Amaya, TX
+[2026-01-20T17:40:11.755Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:11.759Z] 🚀 Restoring: Porch Swing City in Ames, TX
+[2026-01-20T17:40:11.898Z] ❌ FAILED: Porch Swing City in Ames, TX
+[2026-01-20T17:40:11.901Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:11.905Z] 🚀 Restoring: Porch Swing City in Amistad, TX
+[2026-01-20T17:40:12.119Z] 🚀 Restoring: Porch Swing City in Anacua, TX
+[2026-01-20T17:40:12.274Z] ❌ FAILED: Porch Swing City in Anacua, TX
+[2026-01-20T17:40:12.277Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:12.280Z] 🚀 Restoring: Porch Swing City in Anderson, TX
+[2026-01-20T17:40:12.429Z] ❌ FAILED: Porch Swing City in Anderson, TX
+[2026-01-20T17:40:12.432Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:12.435Z] 🚀 Restoring: Porch Swing City in Angus, TX
+[2026-01-20T17:40:12.674Z] 🚀 Restoring: Porch Swing City in Annetta North, TX
+[2026-01-20T17:40:12.850Z] ❌ FAILED: Porch Swing City in Annetta North, TX
+[2026-01-20T17:40:12.853Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:12.856Z] 🚀 Restoring: Porch Swing City in Annetta South, TX
+[2026-01-20T17:40:13.001Z] ❌ FAILED: Porch Swing City in Annetta South, TX
+[2026-01-20T17:40:13.005Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:13.008Z] 🚀 Restoring: Porch Swing City in Annetta, TX
+[2026-01-20T17:40:13.248Z] 🚀 Restoring: Porch Swing City in Annona, TX
+[2026-01-20T17:40:13.397Z] ❌ FAILED: Porch Swing City in Annona, TX
+[2026-01-20T17:40:13.400Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:13.404Z] 🚀 Restoring: Porch Swing City in Anthony, TX
+[2026-01-20T17:40:13.623Z] 🚀 Restoring: Porch Swing City in Appleby, TX
+[2026-01-20T17:40:13.765Z] ❌ FAILED: Porch Swing City in Appleby, TX
+[2026-01-20T17:40:13.768Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:13.772Z] 🚀 Restoring: Porch Swing City in Aquilla, TX
+[2026-01-20T17:40:13.921Z] ❌ FAILED: Porch Swing City in Aquilla, TX
+[2026-01-20T17:40:13.925Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:13.928Z] 🚀 Restoring: Porch Swing City in Arroyo Colorado Estates, TX
+[2026-01-20T17:40:14.115Z] 🚀 Restoring: Porch Swing City in Arroyo Gardens, TX
+[2026-01-20T17:40:14.262Z] ❌ FAILED: Porch Swing City in Arroyo Gardens, TX
+[2026-01-20T17:40:14.263Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:14.265Z] 🚀 Restoring: Porch Swing City in Asherton, TX
+[2026-01-20T17:40:14.399Z] ❌ FAILED: Porch Swing City in Asherton, TX
+[2026-01-20T17:40:14.402Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:14.405Z] 🚀 Restoring: Porch Swing City in Aspermont, TX
+[2026-01-20T17:40:14.630Z] 🚀 Restoring: Porch Swing City in Atascocita, TX
+[2026-01-20T17:40:14.782Z] ❌ FAILED: Porch Swing City in Atascocita, TX
+[2026-01-20T17:40:14.785Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:14.789Z] 🚀 Restoring: Porch Swing City in Austwell, TX
+[2026-01-20T17:40:14.940Z] ❌ FAILED: Porch Swing City in Austwell, TX
+[2026-01-20T17:40:14.944Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:14.947Z] 🚀 Restoring: Porch Swing City in Avery, TX
+[2026-01-20T17:40:15.151Z] 🚀 Restoring: Porch Swing City in Avinger, TX
+[2026-01-20T17:40:15.295Z] ❌ FAILED: Porch Swing City in Avinger, TX
+[2026-01-20T17:40:15.299Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:15.302Z] 🚀 Restoring: Porch Swing City in B and E, TX
+[2026-01-20T17:40:15.455Z] ❌ FAILED: Porch Swing City in B and E, TX
+[2026-01-20T17:40:15.459Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:15.462Z] 🚀 Restoring: Porch Swing City in Bacliff, TX
+[2026-01-20T17:40:15.677Z] 🚀 Restoring: Porch Swing City in Bailey's Prairie, TX
+[2026-01-20T17:40:15.815Z] ❌ FAILED: Porch Swing City in Bailey's Prairie, TX
+[2026-01-20T17:40:15.817Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:15.818Z] 🚀 Restoring: Porch Swing City in Bailey, TX
+[2026-01-20T17:40:15.953Z] ❌ FAILED: Porch Swing City in Bailey, TX
+[2026-01-20T17:40:15.956Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:15.961Z] 🚀 Restoring: Porch Swing City in Balmorhea, TX
+[2026-01-20T17:40:16.175Z] 🚀 Restoring: Porch Swing City in Bandera, TX
+[2026-01-20T17:40:16.325Z] ❌ FAILED: Porch Swing City in Bandera, TX
+[2026-01-20T17:40:16.328Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:16.331Z] 🚀 Restoring: Porch Swing City in Banquete, TX
+[2026-01-20T17:40:16.473Z] ❌ FAILED: Porch Swing City in Banquete, TX
+[2026-01-20T17:40:16.477Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:16.480Z] 🚀 Restoring: Porch Swing City in Bardwell, TX
+[2026-01-20T17:40:16.689Z] 🚀 Restoring: Porch Swing City in Barksdale, TX
+[2026-01-20T17:40:16.922Z] ❌ FAILED: Porch Swing City in Barksdale, TX
+[2026-01-20T17:40:16.926Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:16.929Z] 🚀 Restoring: Porch Swing City in Barrera, TX
+[2026-01-20T17:40:17.130Z] 🚀 Restoring: Porch Swing City in Barrett, TX
+[2026-01-20T17:40:17.297Z] ❌ FAILED: Porch Swing City in Barrett, TX
+[2026-01-20T17:40:17.300Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:17.303Z] 🚀 Restoring: Porch Swing City in Barry, TX
+[2026-01-20T17:40:17.530Z] ❌ FAILED: Porch Swing City in Barry, TX
+[2026-01-20T17:40:17.534Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:17.537Z] 🚀 Restoring: Porch Swing City in Barstow, TX
+[2026-01-20T17:40:17.764Z] 🚀 Restoring: Porch Swing City in Barton Creek, TX
+[2026-01-20T17:40:17.924Z] ❌ FAILED: Porch Swing City in Barton Creek, TX
+[2026-01-20T17:40:17.926Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:17.928Z] 🚀 Restoring: Porch Swing City in Bartonville, TX
+[2026-01-20T17:40:18.131Z] 🚀 Restoring: Porch Swing City in Batesville, TX
+[2026-01-20T17:40:18.294Z] ❌ FAILED: Porch Swing City in Batesville, TX
+[2026-01-20T17:40:18.297Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:18.300Z] 🚀 Restoring: Porch Swing City in Bayside, TX
+[2026-01-20T17:40:18.447Z] ❌ FAILED: Porch Swing City in Bayside, TX
+[2026-01-20T17:40:18.448Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:18.450Z] 🚀 Restoring: Porch Swing City in Bayview, TX
+[2026-01-20T17:40:18.641Z] 🚀 Restoring: Porch Swing City in Bear Creek Ranch, TX
+[2026-01-20T17:40:18.787Z] ❌ FAILED: Porch Swing City in Bear Creek Ranch, TX
+[2026-01-20T17:40:18.791Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:18.795Z] 🚀 Restoring: Porch Swing City in Bear Creek, TX
+[2026-01-20T17:40:18.958Z] ❌ FAILED: Porch Swing City in Bear Creek, TX
+[2026-01-20T17:40:18.960Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:18.961Z] 🚀 Restoring: Porch Swing City in Beasley, TX
+[2026-01-20T17:40:19.149Z] 🚀 Restoring: Porch Swing City in Beauxart Gardens, TX
+[2026-01-20T17:40:19.381Z] ❌ FAILED: Porch Swing City in Beauxart Gardens, TX
+[2026-01-20T17:40:19.384Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:19.387Z] 🚀 Restoring: Porch Swing City in Beaver Creek, TX
+[2026-01-20T17:40:19.621Z] 🚀 Restoring: Porch Swing City in Beckville, TX
+[2026-01-20T17:40:19.770Z] ❌ FAILED: Porch Swing City in Beckville, TX
+[2026-01-20T17:40:19.773Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:19.778Z] 🚀 Restoring: Porch Swing City in Bedias, TX
+[2026-01-20T17:40:19.952Z] ❌ FAILED: Porch Swing City in Bedias, TX
+[2026-01-20T17:40:19.955Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:19.959Z] 🚀 Restoring: Porch Swing City in Bellevue, TX
+[2026-01-20T17:40:20.190Z] 🚀 Restoring: Porch Swing City in Bells, TX
+[2026-01-20T17:40:20.334Z] ❌ FAILED: Porch Swing City in Bells, TX
+[2026-01-20T17:40:20.337Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:20.341Z] 🚀 Restoring: Porch Swing City in Belterra, TX
+[2026-01-20T17:40:20.491Z] ❌ FAILED: Porch Swing City in Belterra, TX
+[2026-01-20T17:40:20.494Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:20.498Z] 🚀 Restoring: Porch Swing City in Ben Arnold, TX
+[2026-01-20T17:40:20.793Z] 🚀 Restoring: Porch Swing City in Ben Bolt, TX
+[2026-01-20T17:40:20.954Z] ❌ FAILED: Porch Swing City in Ben Bolt, TX
+[2026-01-20T17:40:20.958Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:20.962Z] 🚀 Restoring: Porch Swing City in Ben Wheeler, TX
+[2026-01-20T17:40:21.189Z] 🚀 Restoring: Porch Swing City in Benjamin Perez, TX
+[2026-01-20T17:40:21.338Z] ❌ FAILED: Porch Swing City in Benjamin Perez, TX
+[2026-01-20T17:40:21.341Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:21.344Z] 🚀 Restoring: Porch Swing City in Benjamin, TX
+[2026-01-20T17:40:21.493Z] ❌ FAILED: Porch Swing City in Benjamin, TX
+[2026-01-20T17:40:21.497Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:21.500Z] 🚀 Restoring: Porch Swing City in Berryville, TX
+[2026-01-20T17:40:21.734Z] 🚀 Restoring: Porch Swing City in Big Sandy, TX
+[2026-01-20T17:40:21.880Z] ❌ FAILED: Porch Swing City in Big Sandy, TX
+[2026-01-20T17:40:21.885Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:21.888Z] 🚀 Restoring: Porch Swing City in Big Thicket Lake Estates, TX
+[2026-01-20T17:40:22.135Z] 🚀 Restoring: Porch Swing City in Big Wells, TX
+[2026-01-20T17:40:22.274Z] ❌ FAILED: Porch Swing City in Big Wells, TX
+[2026-01-20T17:40:22.278Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:22.282Z] 🚀 Restoring: Porch Swing City in Bigfoot, TX
+[2026-01-20T17:40:22.427Z] ❌ FAILED: Porch Swing City in Bigfoot, TX
+[2026-01-20T17:40:22.431Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:22.434Z] 🚀 Restoring: Porch Swing City in Birmingham, Alabama
+[2026-01-20T17:40:22.663Z] 🚀 Restoring: Porch Swing City in Bishop Hills, TX
+[2026-01-20T17:40:22.815Z] ❌ FAILED: Porch Swing City in Bishop Hills, TX
+[2026-01-20T17:40:22.816Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:22.818Z] 🚀 Restoring: Porch Swing City in Bivins, TX
+[2026-01-20T17:40:22.995Z] ❌ FAILED: Porch Swing City in Bivins, TX
+[2026-01-20T17:40:22.998Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:23.001Z] 🚀 Restoring: Porch Swing City in Bixby, TX
+[2026-01-20T17:40:23.230Z] 🚀 Restoring: Porch Swing City in Blackwell, TX
+[2026-01-20T17:40:23.383Z] ❌ FAILED: Porch Swing City in Blackwell, TX
+[2026-01-20T17:40:23.387Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:23.392Z] 🚀 Restoring: Porch Swing City in Blanket, TX
+[2026-01-20T17:40:23.630Z] 🚀 Restoring: Porch Swing City in Bledsoe, TX
+[2026-01-20T17:40:23.790Z] ❌ FAILED: Porch Swing City in Bledsoe, TX
+[2026-01-20T17:40:23.793Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:23.797Z] 🚀 Restoring: Porch Swing City in Blessing, TX
+[2026-01-20T17:40:23.955Z] ❌ FAILED: Porch Swing City in Blessing, TX
+[2026-01-20T17:40:23.958Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:23.962Z] 🚀 Restoring: Porch Swing City in Bloomburg, TX
+[2026-01-20T17:40:24.164Z] 🚀 Restoring: Porch Swing City in Blooming Grove, TX
+[2026-01-20T17:40:24.349Z] ❌ FAILED: Porch Swing City in Blooming Grove, TX
+[2026-01-20T17:40:24.352Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:24.357Z] 🚀 Restoring: Porch Swing City in Bloomington, TX
+[2026-01-20T17:40:24.502Z] ❌ FAILED: Porch Swing City in Bloomington, TX
+[2026-01-20T17:40:24.505Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:24.509Z] 🚀 Restoring: Porch Swing City in Blue Berry Hill, TX
+[2026-01-20T17:40:24.756Z] 🚀 Restoring: Porch Swing City in Blue Ridge, TX
+[2026-01-20T17:40:24.927Z] ❌ FAILED: Porch Swing City in Blue Ridge, TX
+[2026-01-20T17:40:24.931Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:24.935Z] 🚀 Restoring: Porch Swing City in Bluetown, TX
+[2026-01-20T17:40:25.180Z] 🚀 Restoring: Porch Swing City in Bluff Dale, TX
+[2026-01-20T17:40:25.328Z] ❌ FAILED: Porch Swing City in Bluff Dale, TX
+[2026-01-20T17:40:25.332Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:25.335Z] 🚀 Restoring: Porch Swing City in Blum, TX
+[2026-01-20T17:40:25.494Z] ❌ FAILED: Porch Swing City in Blum, TX
+[2026-01-20T17:40:25.497Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:25.500Z] 🚀 Restoring: Porch Swing City in Boling, TX
+[2026-01-20T17:40:25.710Z] 🚀 Restoring: Porch Swing City in Bolivar Peninsula, TX
+[2026-01-20T17:40:25.859Z] ❌ FAILED: Porch Swing City in Bolivar Peninsula, TX
+[2026-01-20T17:40:25.860Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:25.862Z] 🚀 Restoring: Porch Swing City in Bonanza Hills, TX
+[2026-01-20T17:40:26.007Z] ❌ FAILED: Porch Swing City in Bonanza Hills, TX
+[2026-01-20T17:40:26.010Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:26.015Z] 🚀 Restoring: Porch Swing City in Bonney, TX
+[2026-01-20T17:40:26.240Z] 🚀 Restoring: Porch Swing City in Booker, TX
+[2026-01-20T17:40:26.415Z] ❌ FAILED: Porch Swing City in Booker, TX
+[2026-01-20T17:40:26.416Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:26.418Z] 🚀 Restoring: Porch Swing City in Botines, TX
+[2026-01-20T17:40:26.640Z] 🚀 Restoring: Porch Swing City in Box Canyon, TX
+[2026-01-20T17:40:26.792Z] ❌ FAILED: Porch Swing City in Box Canyon, TX
+[2026-01-20T17:40:26.795Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:26.799Z] 🚀 Restoring: Porch Swing City in Boyd, TX
+[2026-01-20T17:40:26.961Z] ❌ FAILED: Porch Swing City in Boyd, TX
+[2026-01-20T17:40:26.965Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:26.968Z] 🚀 Restoring: Porch Swing City in Boys Ranch, TX
+[2026-01-20T17:40:27.162Z] 🚀 Restoring: Porch Swing City in Brazos Country, TX
+[2026-01-20T17:40:27.315Z] ❌ FAILED: Porch Swing City in Brazos Country, TX
+[2026-01-20T17:40:27.318Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:27.322Z] 🚀 Restoring: Porch Swing City in Brazos, TX
+[2026-01-20T17:40:27.479Z] ❌ FAILED: Porch Swing City in Brazos, TX
+[2026-01-20T17:40:27.482Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:27.485Z] 🚀 Restoring: Porch Swing City in Bremond, TX
+[2026-01-20T17:40:27.688Z] 🚀 Restoring: Porch Swing City in Briar, TX
+[2026-01-20T17:40:27.834Z] ❌ FAILED: Porch Swing City in Briar, TX
+[2026-01-20T17:40:27.838Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:27.841Z] 🚀 Restoring: Porch Swing City in Briarcliff, TX
+[2026-01-20T17:40:28.002Z] ❌ FAILED: Porch Swing City in Briarcliff, TX
+[2026-01-20T17:40:28.004Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:28.007Z] 🚀 Restoring: Porch Swing City in Briaroaks, TX
+[2026-01-20T17:40:28.234Z] 🚀 Restoring: Porch Swing City in Briggs, TX
+[2026-01-20T17:40:28.385Z] ❌ FAILED: Porch Swing City in Briggs, TX
+[2026-01-20T17:40:28.388Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:28.392Z] 🚀 Restoring: Porch Swing City in Bristol, TX
+[2026-01-20T17:40:28.604Z] 🚀 Restoring: Porch Swing City in Broaddus, TX
+[2026-01-20T17:40:28.768Z] ❌ FAILED: Porch Swing City in Broaddus, TX
+[2026-01-20T17:40:28.771Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:28.775Z] 🚀 Restoring: Porch Swing City in Bronte, TX
+[2026-01-20T17:40:28.942Z] ❌ FAILED: Porch Swing City in Bronte, TX
+[2026-01-20T17:40:28.944Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:28.946Z] 🚀 Restoring: Porch Swing City in Brookston, TX
+[2026-01-20T17:40:29.147Z] 🚀 Restoring: Porch Swing City in Browndell, TX
+[2026-01-20T17:40:29.302Z] ❌ FAILED: Porch Swing City in Browndell, TX
+[2026-01-20T17:40:29.306Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:29.309Z] 🚀 Restoring: Porch Swing City in Brundage, TX
+[2026-01-20T17:40:29.444Z] ❌ FAILED: Porch Swing City in Brundage, TX
+[2026-01-20T17:40:29.448Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:29.453Z] 🚀 Restoring: Porch Swing City in Bruni, TX
+[2026-01-20T17:40:29.683Z] 🚀 Restoring: Porch Swing City in Brushy Creek, TX
+[2026-01-20T17:40:29.839Z] ❌ FAILED: Porch Swing City in Brushy Creek, TX
+[2026-01-20T17:40:29.842Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:29.846Z] 🚀 Restoring: Porch Swing City in Bryson, TX
+[2026-01-20T17:40:29.987Z] ❌ FAILED: Porch Swing City in Bryson, TX
+[2026-01-20T17:40:29.991Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:29.994Z] 🚀 Restoring: Porch Swing City in Buchanan Dam, TX
+[2026-01-20T17:40:30.214Z] 🚀 Restoring: Porch Swing City in Buchanan Lake Village, TX
+[2026-01-20T17:40:30.503Z] ❌ FAILED: Porch Swing City in Buchanan Lake Village, TX
+[2026-01-20T17:40:30.506Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:30.509Z] 🚀 Restoring: Porch Swing City in Buckholts, TX
+[2026-01-20T17:40:30.727Z] 🚀 Restoring: Porch Swing City in Buena Vista, TX
+[2026-01-20T17:40:30.859Z] ❌ FAILED: Porch Swing City in Buena Vista, TX
+[2026-01-20T17:40:30.860Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:30.862Z] 🚀 Restoring: Porch Swing City in Buffalo Gap, TX
+[2026-01-20T17:40:31.012Z] ❌ FAILED: Porch Swing City in Buffalo Gap, TX
+[2026-01-20T17:40:31.015Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:31.019Z] 🚀 Restoring: Porch Swing City in Buffalo Springs, TX
+[2026-01-20T17:40:31.224Z] 🚀 Restoring: Porch Swing City in Bullard, TX
+[2026-01-20T17:40:31.373Z] ❌ FAILED: Porch Swing City in Bullard, TX
+[2026-01-20T17:40:31.376Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:31.379Z] 🚀 Restoring: Porch Swing City in Buna, TX
+[2026-01-20T17:40:31.525Z] ❌ FAILED: Porch Swing City in Buna, TX
+[2026-01-20T17:40:31.529Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:31.533Z] 🚀 Restoring: Porch Swing City in Burbank, California
+[2026-01-20T17:40:31.749Z] 🚀 Restoring: Porch Swing City in Burke, TX
+[2026-01-20T17:40:31.882Z] ❌ FAILED: Porch Swing City in Burke, TX
+[2026-01-20T17:40:31.886Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:31.889Z] 🚀 Restoring: Porch Swing City in Burlington, TX
+[2026-01-20T17:40:32.116Z] 🚀 Restoring: Porch Swing City in Burton, TX
+[2026-01-20T17:40:32.277Z] ❌ FAILED: Porch Swing City in Burton, TX
+[2026-01-20T17:40:32.282Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:32.287Z] 🚀 Restoring: Porch Swing City in Bushland, TX
+[2026-01-20T17:40:32.452Z] ❌ FAILED: Porch Swing City in Bushland, TX
+[2026-01-20T17:40:32.454Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:32.455Z] 🚀 Restoring: Porch Swing City in Butterfield, TX
+[2026-01-20T17:40:32.668Z] 🚀 Restoring: Porch Swing City in Byers, TX
+[2026-01-20T17:40:32.809Z] ❌ FAILED: Porch Swing City in Byers, TX
+[2026-01-20T17:40:32.813Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:32.816Z] 🚀 Restoring: Porch Swing City in Bynum, TX
+[2026-01-20T17:40:32.971Z] ❌ FAILED: Porch Swing City in Bynum, TX
+[2026-01-20T17:40:32.976Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:32.979Z] 🚀 Restoring: Porch Swing City in Cade Lakes, TX
+[2026-01-20T17:40:33.183Z] 🚀 Restoring: Porch Swing City in Callender Lake, TX
+[2026-01-20T17:40:33.321Z] ❌ FAILED: Porch Swing City in Callender Lake, TX
+[2026-01-20T17:40:33.324Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:33.328Z] 🚀 Restoring: Porch Swing City in Callisburg, TX
+[2026-01-20T17:40:33.475Z] ❌ FAILED: Porch Swing City in Callisburg, TX
+[2026-01-20T17:40:33.479Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:33.482Z] 🚀 Restoring: Porch Swing City in Calvert, TX
+[2026-01-20T17:40:33.682Z] 🚀 Restoring: Porch Swing City in Camargito, TX
+[2026-01-20T17:40:33.832Z] ❌ FAILED: Porch Swing City in Camargito, TX
+[2026-01-20T17:40:33.836Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:33.839Z] 🚀 Restoring: Porch Swing City in Cameron Park, TX
+[2026-01-20T17:40:33.997Z] ❌ FAILED: Porch Swing City in Cameron Park, TX
+[2026-01-20T17:40:34.001Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:34.004Z] 🚀 Restoring: Porch Swing City in Camp Swift, TX
+[2026-01-20T17:40:34.197Z] 🚀 Restoring: Porch Swing City in Camp Wood, TX
+[2026-01-20T17:40:34.343Z] ❌ FAILED: Porch Swing City in Camp Wood, TX
+[2026-01-20T17:40:34.346Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:34.349Z] 🚀 Restoring: Porch Swing City in Campbell, TX
+[2026-01-20T17:40:34.641Z] 🚀 Restoring: Porch Swing City in Campo Verde, TX
+[2026-01-20T17:40:34.799Z] ❌ FAILED: Porch Swing City in Campo Verde, TX
+[2026-01-20T17:40:34.805Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:34.808Z] 🚀 Restoring: Porch Swing City in Caney City, TX
+[2026-01-20T17:40:34.956Z] ❌ FAILED: Porch Swing City in Caney City, TX
+[2026-01-20T17:40:34.961Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:34.964Z] 🚀 Restoring: Porch Swing City in Cantu Addition, TX
+[2026-01-20T17:40:35.203Z] 🚀 Restoring: Porch Swing City in Canutillo, TX
+[2026-01-20T17:40:35.349Z] ❌ FAILED: Porch Swing City in Canutillo, TX
+[2026-01-20T17:40:35.351Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:35.354Z] 🚀 Restoring: Porch Swing City in Canyon Creek, TX
+[2026-01-20T17:40:35.502Z] ❌ FAILED: Porch Swing City in Canyon Creek, TX
+[2026-01-20T17:40:35.505Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:35.508Z] 🚀 Restoring: Porch Swing City in Canyon Lake, TX
+[2026-01-20T17:40:35.725Z] 🚀 Restoring: Porch Swing City in Cape Royale, TX
+[2026-01-20T17:40:35.884Z] ❌ FAILED: Porch Swing City in Cape Royale, TX
+[2026-01-20T17:40:35.887Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:35.890Z] 🚀 Restoring: Porch Swing City in Carbon, TX
+[2026-01-20T17:40:36.120Z] 🚀 Restoring: Porch Swing City in Carl's Corner, TX
+[2026-01-20T17:40:36.289Z] ❌ FAILED: Porch Swing City in Carl's Corner, TX
+[2026-01-20T17:40:36.292Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:36.296Z] 🚀 Restoring: Porch Swing City in Carlsbad, TX
+[2026-01-20T17:40:36.438Z] ❌ FAILED: Porch Swing City in Carlsbad, TX
+[2026-01-20T17:40:36.439Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:36.441Z] 🚀 Restoring: Porch Swing City in Carlton, TX
+[2026-01-20T17:40:36.654Z] 🚀 Restoring: Porch Swing City in Carmine, TX
+[2026-01-20T17:40:36.816Z] ❌ FAILED: Porch Swing City in Carmine, TX
+[2026-01-20T17:40:36.819Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:36.822Z] 🚀 Restoring: Porch Swing City in Carrizo Hill, TX
+[2026-01-20T17:40:36.967Z] ❌ FAILED: Porch Swing City in Carrizo Hill, TX
+[2026-01-20T17:40:36.970Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:36.974Z] 🚀 Restoring: Porch Swing City in Carter, TX
+[2026-01-20T17:40:37.210Z] 🚀 Restoring: Porch Swing City in Casa Blanca, TX
+[2026-01-20T17:40:37.366Z] ❌ FAILED: Porch Swing City in Casa Blanca, TX
+[2026-01-20T17:40:37.369Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:37.372Z] 🚀 Restoring: Porch Swing City in Casas, TX
+[2026-01-20T17:40:37.511Z] ❌ FAILED: Porch Swing City in Casas, TX
+[2026-01-20T17:40:37.514Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:37.517Z] 🚀 Restoring: Porch Swing City in Cashion Community, TX
+[2026-01-20T17:40:37.735Z] 🚀 Restoring: Porch Swing City in Catarina, TX
+[2026-01-20T17:40:37.883Z] ❌ FAILED: Porch Swing City in Catarina, TX
+[2026-01-20T17:40:37.886Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:37.889Z] 🚀 Restoring: Porch Swing City in Cedar Creek, TX
+[2026-01-20T17:40:38.096Z] 🚀 Restoring: Porch Swing City in Cedar Point, TX
+[2026-01-20T17:40:38.250Z] ❌ FAILED: Porch Swing City in Cedar Point, TX
+[2026-01-20T17:40:38.254Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:38.257Z] 🚀 Restoring: Porch Swing City in Celeste, TX
+[2026-01-20T17:40:38.406Z] ❌ FAILED: Porch Swing City in Celeste, TX
+[2026-01-20T17:40:38.410Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:38.416Z] 🚀 Restoring: Porch Swing City in Center Point, TX
+[2026-01-20T17:40:38.698Z] 🚀 Restoring: Porch Swing City in Central Gardens, TX
+[2026-01-20T17:40:38.842Z] ❌ FAILED: Porch Swing City in Central Gardens, TX
+[2026-01-20T17:40:38.846Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:38.849Z] 🚀 Restoring: Porch Swing City in César Chávez, TX
+[2026-01-20T17:40:39.003Z] ❌ FAILED: Porch Swing City in César Chávez, TX
+[2026-01-20T17:40:39.007Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:39.011Z] 🚀 Restoring: Porch Swing City in Chandler, Arizona
+[2026-01-20T17:40:39.256Z] 🚀 Restoring: Porch Swing City in Channelview, TX
+[2026-01-20T17:40:39.409Z] ❌ FAILED: Porch Swing City in Channelview, TX
+[2026-01-20T17:40:39.412Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:39.418Z] 🚀 Restoring: Porch Swing City in Channing, TX
+[2026-01-20T17:40:39.631Z] 🚀 Restoring: Porch Swing City in Chaparrito, TX
+[2026-01-20T17:40:39.768Z] ❌ FAILED: Porch Swing City in Chaparrito, TX
+[2026-01-20T17:40:39.772Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:39.779Z] 🚀 Restoring: Porch Swing City in Chapeno, TX
+[2026-01-20T17:40:39.919Z] ❌ FAILED: Porch Swing City in Chapeno, TX
+[2026-01-20T17:40:39.923Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:39.926Z] 🚀 Restoring: Porch Swing City in Chester, TX
+[2026-01-20T17:40:40.119Z] 🚀 Restoring: Porch Swing City in Chillicothe, TX
+[2026-01-20T17:40:40.274Z] ❌ FAILED: Porch Swing City in Chillicothe, TX
+[2026-01-20T17:40:40.277Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:40.280Z] 🚀 Restoring: Porch Swing City in Chilton, TX
+[2026-01-20T17:40:40.435Z] ❌ FAILED: Porch Swing City in Chilton, TX
+[2026-01-20T17:40:40.438Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:40.443Z] 🚀 Restoring: Porch Swing City in China Grove, TX
+[2026-01-20T17:40:40.655Z] 🚀 Restoring: Porch Swing City in China Spring, TX
+[2026-01-20T17:40:40.807Z] ❌ FAILED: Porch Swing City in China Spring, TX
+[2026-01-20T17:40:40.826Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:40.829Z] 🚀 Restoring: Porch Swing City in Chireno, TX
+[2026-01-20T17:40:40.991Z] ❌ FAILED: Porch Swing City in Chireno, TX
+[2026-01-20T17:40:40.994Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:40.998Z] 🚀 Restoring: Porch Swing City in Christine, TX
+[2026-01-20T17:40:41.212Z] 🚀 Restoring: Porch Swing City in Christoval, TX
+[2026-01-20T17:40:41.411Z] ❌ FAILED: Porch Swing City in Christoval, TX
+[2026-01-20T17:40:41.415Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:41.418Z] 🚀 Restoring: Porch Swing City in Chula Vista, TX
+[2026-01-20T17:40:41.609Z] 🚀 Restoring: Porch Swing City in Chula Vista, TX
+[2026-01-20T17:40:41.755Z] ❌ FAILED: Porch Swing City in Chula Vista, TX
+[2026-01-20T17:40:41.759Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:41.762Z] 🚀 Restoring: Porch Swing City in Chula Vista, TX
+[2026-01-20T17:40:41.961Z] ❌ FAILED: Porch Swing City in Chula Vista, TX
+[2026-01-20T17:40:41.964Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:41.969Z] 🚀 Restoring: Porch Swing City in Cienegas Terrace, TX
+[2026-01-20T17:40:42.163Z] 🚀 Restoring: Porch Swing City in Cinco Ranch, TX
+[2026-01-20T17:40:42.320Z] ❌ FAILED: Porch Swing City in Cinco Ranch, TX
+[2026-01-20T17:40:42.323Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:42.325Z] 🚀 Restoring: Porch Swing City in Circle D-KC Estates, TX
+[2026-01-20T17:40:42.483Z] ❌ FAILED: Porch Swing City in Circle D-KC Estates, TX
+[2026-01-20T17:40:42.485Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:42.487Z] 🚀 Restoring: Porch Swing City in Citrus City, TX
+[2026-01-20T17:40:42.689Z] 🚀 Restoring: Porch Swing City in Clay, TX
+[2026-01-20T17:40:42.835Z] ❌ FAILED: Porch Swing City in Clay, TX
+[2026-01-20T17:40:42.841Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:42.846Z] 🚀 Restoring: Porch Swing City in Clint, TX
+[2026-01-20T17:40:42.992Z] ❌ FAILED: Porch Swing City in Clint, TX
+[2026-01-20T17:40:42.994Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:42.996Z] 🚀 Restoring: Porch Swing City in Cloverleaf, TX
+[2026-01-20T17:40:43.211Z] 🚀 Restoring: Porch Swing City in Coahoma, TX
+[2026-01-20T17:40:43.359Z] ❌ FAILED: Porch Swing City in Coahoma, TX
+[2026-01-20T17:40:43.363Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:43.366Z] 🚀 Restoring: Porch Swing City in Coffee City, TX
+[2026-01-20T17:40:43.525Z] ❌ FAILED: Porch Swing City in Coffee City, TX
+[2026-01-20T17:40:43.527Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:43.528Z] 🚀 Restoring: Porch Swing City in Collinsville, TX
+[2026-01-20T17:40:43.743Z] 🚀 Restoring: Porch Swing City in Colmesneil, TX
+[2026-01-20T17:40:43.894Z] ❌ FAILED: Porch Swing City in Colmesneil, TX
+[2026-01-20T17:40:43.898Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:43.903Z] 🚀 Restoring: Porch Swing City in Colorado Acres, TX
+[2026-01-20T17:40:44.163Z] 🚀 Restoring: Porch Swing City in Combes, TX
+[2026-01-20T17:40:44.321Z] ❌ FAILED: Porch Swing City in Combes, TX
+[2026-01-20T17:40:44.322Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:44.324Z] 🚀 Restoring: Porch Swing City in Comfort, TX
+[2026-01-20T17:40:44.473Z] ❌ FAILED: Porch Swing City in Comfort, TX
+[2026-01-20T17:40:44.476Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:44.479Z] 🚀 Restoring: Porch Swing City in Como, TX
+[2026-01-20T17:40:44.714Z] 🚀 Restoring: Porch Swing City in Concepcion, TX
+[2026-01-20T17:40:44.861Z] ❌ FAILED: Porch Swing City in Concepcion, TX
+[2026-01-20T17:40:44.865Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:44.871Z] 🚀 Restoring: Porch Swing City in Cool, TX
+[2026-01-20T17:40:45.020Z] ❌ FAILED: Porch Swing City in Cool, TX
+[2026-01-20T17:40:45.023Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:45.025Z] 🚀 Restoring: Porch Swing City in Coolidge, TX
+[2026-01-20T17:40:45.246Z] 🚀 Restoring: Porch Swing City in Copper Canyon, TX
+[2026-01-20T17:40:45.386Z] ❌ FAILED: Porch Swing City in Copper Canyon, TX
+[2026-01-20T17:40:45.387Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:45.389Z] 🚀 Restoring: Porch Swing City in Corrigan, TX
+[2026-01-20T17:40:45.630Z] 🚀 Restoring: Porch Swing City in Cottonwood, TX
+[2026-01-20T17:40:45.777Z] ❌ FAILED: Porch Swing City in Cottonwood, TX
+[2026-01-20T17:40:45.782Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:45.790Z] 🚀 Restoring: Porch Swing City in Coupland, TX
+[2026-01-20T17:40:45.939Z] ❌ FAILED: Porch Swing City in Coupland, TX
+[2026-01-20T17:40:45.943Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:45.948Z] 🚀 Restoring: Porch Swing City in Cove, TX
+[2026-01-20T17:40:46.204Z] 🚀 Restoring: Porch Swing City in Covington, TX
+[2026-01-20T17:40:46.354Z] ❌ FAILED: Porch Swing City in Covington, TX
+[2026-01-20T17:40:46.355Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:46.357Z] 🚀 Restoring: Porch Swing City in Coyanosa, TX
+[2026-01-20T17:40:46.630Z] ❌ FAILED: Porch Swing City in Coyanosa, TX
+[2026-01-20T17:40:46.636Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:46.647Z] 🚀 Restoring: Porch Swing City in Coyote Acres, TX
+[2026-01-20T17:40:46.879Z] 🚀 Restoring: Porch Swing City in Coyote Flats, TX
+[2026-01-20T17:40:47.016Z] ❌ FAILED: Porch Swing City in Coyote Flats, TX
+[2026-01-20T17:40:47.018Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:47.020Z] 🚀 Restoring: Porch Swing City in Cranfills Gap, TX
+[2026-01-20T17:40:47.231Z] 🚀 Restoring: Porch Swing City in Crawford, TX
+[2026-01-20T17:40:47.370Z] ❌ FAILED: Porch Swing City in Crawford, TX
+[2026-01-20T17:40:47.375Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:47.380Z] 🚀 Restoring: Porch Swing City in Creedmoor, TX
+[2026-01-20T17:40:47.590Z] 🚀 Restoring: Porch Swing City in Crosby, TX
+[2026-01-20T17:40:47.733Z] ❌ FAILED: Porch Swing City in Crosby, TX
+[2026-01-20T17:40:47.736Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:47.740Z] 🚀 Restoring: Porch Swing City in Cross Mountain, TX
+[2026-01-20T17:40:47.885Z] ❌ FAILED: Porch Swing City in Cross Mountain, TX
+[2026-01-20T17:40:47.889Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:47.893Z] 🚀 Restoring: Porch Swing City in Cross Plains, TX
+[2026-01-20T17:40:48.101Z] 🚀 Restoring: Porch Swing City in Cross Roads, TX
+[2026-01-20T17:40:48.243Z] ❌ FAILED: Porch Swing City in Cross Roads, TX
+[2026-01-20T17:40:48.246Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:48.248Z] 🚀 Restoring: Porch Swing City in Cross Timber, TX
+[2026-01-20T17:40:48.412Z] ❌ FAILED: Porch Swing City in Cross Timber, TX
+[2026-01-20T17:40:48.414Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:48.416Z] 🚀 Restoring: Porch Swing City in Crowell, TX
+[2026-01-20T17:40:48.620Z] 🚀 Restoring: Porch Swing City in Cuevitas, TX
+[2026-01-20T17:40:48.759Z] ❌ FAILED: Porch Swing City in Cuevitas, TX
+[2026-01-20T17:40:48.761Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:48.764Z] 🚀 Restoring: Porch Swing City in Cumby, TX
+[2026-01-20T17:40:48.905Z] ❌ FAILED: Porch Swing City in Cumby, TX
+[2026-01-20T17:40:48.908Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:48.914Z] 🚀 Restoring: Porch Swing City in Cumings, TX
+[2026-01-20T17:40:49.133Z] 🚀 Restoring: Porch Swing City in Cuney, TX
+[2026-01-20T17:40:49.276Z] ❌ FAILED: Porch Swing City in Cuney, TX
+[2026-01-20T17:40:49.279Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:49.282Z] 🚀 Restoring: Porch Swing City in Cushing, TX
+[2026-01-20T17:40:49.438Z] ❌ FAILED: Porch Swing City in Cushing, TX
+[2026-01-20T17:40:49.442Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:49.446Z] 🚀 Restoring: Porch Swing City in D'Hanis, TX
+[2026-01-20T17:40:49.651Z] 🚀 Restoring: Porch Swing City in Damon, TX
+[2026-01-20T17:40:49.786Z] ❌ FAILED: Porch Swing City in Damon, TX
+[2026-01-20T17:40:49.790Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:49.796Z] 🚀 Restoring: Porch Swing City in Darrouzett, TX
+[2026-01-20T17:40:49.956Z] ❌ FAILED: Porch Swing City in Darrouzett, TX
+[2026-01-20T17:40:49.960Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:49.965Z] 🚀 Restoring: Porch Swing City in Dawson, TX
+[2026-01-20T17:40:50.201Z] 🚀 Restoring: Porch Swing City in Dayton Lakes, TX
+[2026-01-20T17:40:50.349Z] ❌ FAILED: Porch Swing City in Dayton Lakes, TX
+[2026-01-20T17:40:50.354Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:50.362Z] 🚀 Restoring: Porch Swing City in Dean, TX
+[2026-01-20T17:40:50.511Z] ❌ FAILED: Porch Swing City in Dean, TX
+[2026-01-20T17:40:50.514Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:50.519Z] 🚀 Restoring: Porch Swing City in Deanville, TX
+[2026-01-20T17:40:50.757Z] 🚀 Restoring: Porch Swing City in Deerwood, TX
+[2026-01-20T17:40:50.914Z] ❌ FAILED: Porch Swing City in Deerwood, TX
+[2026-01-20T17:40:50.920Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:50.926Z] 🚀 Restoring: Porch Swing City in Del Mar Heights, TX
+[2026-01-20T17:40:51.178Z] 🚀 Restoring: Porch Swing City in Del Sol, TX
+[2026-01-20T17:40:51.327Z] ❌ FAILED: Porch Swing City in Del Sol, TX
+[2026-01-20T17:40:51.333Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:51.342Z] 🚀 Restoring: Porch Swing City in Dell City, TX
+[2026-01-20T17:40:51.484Z] ❌ FAILED: Porch Swing City in Dell City, TX
+[2026-01-20T17:40:51.486Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:51.488Z] 🚀 Restoring: Porch Swing City in Delmita, TX
+[2026-01-20T17:40:51.701Z] 🚀 Restoring: Porch Swing City in Dennis, TX
+[2026-01-20T17:40:51.869Z] ❌ FAILED: Porch Swing City in Dennis, TX
+[2026-01-20T17:40:51.876Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:51.881Z] 🚀 Restoring: Porch Swing City in Denver City, TX
+[2026-01-20T17:40:52.110Z] 🚀 Restoring: Porch Swing City in Deport, TX
+[2026-01-20T17:40:52.253Z] ❌ FAILED: Porch Swing City in Deport, TX
+[2026-01-20T17:40:52.257Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:52.261Z] 🚀 Restoring: Porch Swing City in Detroit, TX
+[2026-01-20T17:40:52.410Z] ❌ FAILED: Porch Swing City in Detroit, TX
+[2026-01-20T17:40:52.411Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:52.413Z] 🚀 Restoring: Porch Swing City in Devers, TX
+[2026-01-20T17:40:52.642Z] 🚀 Restoring: Porch Swing City in Deweyville, TX
+[2026-01-20T17:40:52.795Z] ❌ FAILED: Porch Swing City in Deweyville, TX
+[2026-01-20T17:40:52.799Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:52.803Z] 🚀 Restoring: Porch Swing City in Dickens, TX
+[2026-01-20T17:40:52.951Z] ❌ FAILED: Porch Swing City in Dickens, TX
+[2026-01-20T17:40:52.955Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:52.959Z] 🚀 Restoring: Porch Swing City in Dime Box, TX
+[2026-01-20T17:40:53.167Z] 🚀 Restoring: Porch Swing City in DISH, TX
+[2026-01-20T17:40:53.327Z] ❌ FAILED: Porch Swing City in DISH, TX
+[2026-01-20T17:40:53.330Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:53.334Z] 🚀 Restoring: Porch Swing City in Dodd City, TX
+[2026-01-20T17:40:53.476Z] ❌ FAILED: Porch Swing City in Dodd City, TX
+[2026-01-20T17:40:53.480Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:53.484Z] 🚀 Restoring: Porch Swing City in Dodson, TX
+[2026-01-20T17:40:53.720Z] 🚀 Restoring: Porch Swing City in Doffing, TX
+[2026-01-20T17:40:53.866Z] ❌ FAILED: Porch Swing City in Doffing, TX
+[2026-01-20T17:40:53.870Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:53.874Z] 🚀 Restoring: Porch Swing City in Domino, TX
+[2026-01-20T17:40:54.018Z] ❌ FAILED: Porch Swing City in Domino, TX
+[2026-01-20T17:40:54.023Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:54.027Z] 🚀 Restoring: Porch Swing City in Doolittle, TX
+[2026-01-20T17:40:54.255Z] 🚀 Restoring: Porch Swing City in Dorchester, TX
+[2026-01-20T17:40:54.407Z] ❌ FAILED: Porch Swing City in Dorchester, TX
+[2026-01-20T17:40:54.411Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:54.415Z] 🚀 Restoring: Porch Swing City in Double Horn, TX
+[2026-01-20T17:40:54.733Z] 🚀 Restoring: Porch Swing City in Double Oak, TX
+[2026-01-20T17:40:54.877Z] ❌ FAILED: Porch Swing City in Double Oak, TX
+[2026-01-20T17:40:54.882Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:54.887Z] 🚀 Restoring: Porch Swing City in Douglassville, TX
+[2026-01-20T17:40:55.097Z] 🚀 Restoring: Porch Swing City in Driftwood, TX
+[2026-01-20T17:40:55.254Z] ❌ FAILED: Porch Swing City in Driftwood, TX
+[2026-01-20T17:40:55.258Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:55.263Z] 🚀 Restoring: Porch Swing City in Driscoll, TX
+[2026-01-20T17:40:55.419Z] ❌ FAILED: Porch Swing City in Driscoll, TX
+[2026-01-20T17:40:55.421Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:55.422Z] 🚀 Restoring: Porch Swing City in E. Lopez, TX
+[2026-01-20T17:40:55.654Z] 🚀 Restoring: Porch Swing City in Earth, TX
+[2026-01-20T17:40:55.794Z] ❌ FAILED: Porch Swing City in Earth, TX
+[2026-01-20T17:40:55.799Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:55.808Z] 🚀 Restoring: Porch Swing City in East Alto Bonito, TX
+[2026-01-20T17:40:55.957Z] ❌ FAILED: Porch Swing City in East Alto Bonito, TX
+[2026-01-20T17:40:55.962Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:55.966Z] 🚀 Restoring: Porch Swing City in East Columbia, TX
+[2026-01-20T17:40:56.214Z] 🚀 Restoring: Porch Swing City in East Mountain, TX
+[2026-01-20T17:40:56.367Z] ❌ FAILED: Porch Swing City in East Mountain, TX
+[2026-01-20T17:40:56.370Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:56.372Z] 🚀 Restoring: Porch Swing City in East Tawakoni, TX
+[2026-01-20T17:40:56.519Z] ❌ FAILED: Porch Swing City in East Tawakoni, TX
+[2026-01-20T17:40:56.524Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:56.528Z] 🚀 Restoring: Porch Swing City in Easton, TX
+[2026-01-20T17:40:56.735Z] 🚀 Restoring: Porch Swing City in Ector, TX
+[2026-01-20T17:40:56.906Z] ❌ FAILED: Porch Swing City in Ector, TX
+[2026-01-20T17:40:56.908Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:56.911Z] 🚀 Restoring: Porch Swing City in Edgecliff Village, TX
+[2026-01-20T17:40:57.125Z] 🚀 Restoring: Porch Swing City in Edgewater Estates, TX
+[2026-01-20T17:40:57.292Z] ❌ FAILED: Porch Swing City in Edgewater Estates, TX
+[2026-01-20T17:40:57.304Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:57.311Z] 🚀 Restoring: Porch Swing City in Edgewood, TX
+[2026-01-20T17:40:57.486Z] ❌ FAILED: Porch Swing City in Edgewood, TX
+[2026-01-20T17:40:57.488Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:57.489Z] 🚀 Restoring: Porch Swing City in Edmonson, TX
+[2026-01-20T17:40:57.691Z] 🚀 Restoring: Porch Swing City in Edom, TX
+[2026-01-20T17:40:57.835Z] ❌ FAILED: Porch Swing City in Edom, TX
+[2026-01-20T17:40:57.840Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:57.843Z] 🚀 Restoring: Porch Swing City in Edroy, TX
+[2026-01-20T17:40:58.015Z] ❌ FAILED: Porch Swing City in Edroy, TX
+[2026-01-20T17:40:58.018Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:58.021Z] 🚀 Restoring: Porch Swing City in Eidson Road, TX
+[2026-01-20T17:40:58.232Z] 🚀 Restoring: Porch Swing City in El Brazil, TX
+[2026-01-20T17:40:58.378Z] ❌ FAILED: Porch Swing City in El Brazil, TX
+[2026-01-20T17:40:58.382Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:58.386Z] 🚀 Restoring: Porch Swing City in El Camino Angosto, TX
+[2026-01-20T17:40:58.712Z] 🚀 Restoring: Porch Swing City in El Castillo, TX
+[2026-01-20T17:40:58.884Z] ❌ FAILED: Porch Swing City in El Castillo, TX
+[2026-01-20T17:40:58.889Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:58.893Z] 🚀 Restoring: Porch Swing City in El Chaparral, TX
+[2026-01-20T17:40:59.115Z] 🚀 Restoring: Porch Swing City in El Indio, TX
+[2026-01-20T17:40:59.264Z] ❌ FAILED: Porch Swing City in El Indio, TX
+[2026-01-20T17:40:59.268Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:59.271Z] 🚀 Restoring: Porch Swing City in El Mesquite, TX
+[2026-01-20T17:40:59.421Z] ❌ FAILED: Porch Swing City in El Mesquite, TX
+[2026-01-20T17:40:59.425Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:59.429Z] 🚀 Restoring: Porch Swing City in El Quiote, TX
+[2026-01-20T17:40:59.642Z] 🚀 Restoring: Porch Swing City in El Rancho Vela, TX
+[2026-01-20T17:40:59.796Z] ❌ FAILED: Porch Swing City in El Rancho Vela, TX
+[2026-01-20T17:40:59.799Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:59.803Z] 🚀 Restoring: Porch Swing City in El Refugio, TX
+[2026-01-20T17:40:59.949Z] ❌ FAILED: Porch Swing City in El Refugio, TX
+[2026-01-20T17:40:59.953Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:40:59.957Z] 🚀 Restoring: Porch Swing City in El Socio, TX
+[2026-01-20T17:41:00.181Z] 🚀 Restoring: Porch Swing City in Elbert, TX
+[2026-01-20T17:41:00.320Z] ❌ FAILED: Porch Swing City in Elbert, TX
+[2026-01-20T17:41:00.324Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:00.330Z] 🚀 Restoring: Porch Swing City in Elias-Fela Solis, TX
+[2026-01-20T17:41:00.467Z] ❌ FAILED: Porch Swing City in Elias-Fela Solis, TX
+[2026-01-20T17:41:00.468Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:00.470Z] 🚀 Restoring: Porch Swing City in Elkhart, TX
+[2026-01-20T17:41:00.688Z] 🚀 Restoring: Porch Swing City in Ellinger, TX
+[2026-01-20T17:41:00.836Z] ❌ FAILED: Porch Swing City in Ellinger, TX
+[2026-01-20T17:41:00.839Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:00.843Z] 🚀 Restoring: Porch Swing City in Elm Creek, TX
+[2026-01-20T17:41:00.990Z] ❌ FAILED: Porch Swing City in Elm Creek, TX
+[2026-01-20T17:41:00.992Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:00.996Z] 🚀 Restoring: Porch Swing City in Elmo, TX
+[2026-01-20T17:41:01.211Z] 🚀 Restoring: Porch Swing City in Emerald Bay, TX
+[2026-01-20T17:41:01.364Z] ❌ FAILED: Porch Swing City in Emerald Bay, TX
+[2026-01-20T17:41:01.374Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:01.380Z] 🚀 Restoring: Porch Swing City in Emhouse, TX
+[2026-01-20T17:41:01.530Z] ❌ FAILED: Porch Swing City in Emhouse, TX
+[2026-01-20T17:41:01.533Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:01.537Z] 🚀 Restoring: Porch Swing City in Encantada-Ranchito-El Calaboz, TX
+[2026-01-20T17:41:01.746Z] 🚀 Restoring: Porch Swing City in Enchanted Oaks, TX
+[2026-01-20T17:41:01.888Z] ❌ FAILED: Porch Swing City in Enchanted Oaks, TX
+[2026-01-20T17:41:01.891Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:01.896Z] 🚀 Restoring: Porch Swing City in Encino, TX
+[2026-01-20T17:41:02.137Z] 🚀 Restoring: Porch Swing City in Estelline, TX
+[2026-01-20T17:41:02.277Z] ❌ FAILED: Porch Swing City in Estelline, TX
+[2026-01-20T17:41:02.281Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:02.286Z] 🚀 Restoring: Porch Swing City in Eugenio Saenz, TX
+[2026-01-20T17:41:02.469Z] ❌ FAILED: Porch Swing City in Eugenio Saenz, TX
+[2026-01-20T17:41:02.474Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:02.477Z] 🚀 Restoring: Porch Swing City in Eureka, TX
+[2026-01-20T17:41:02.698Z] 🚀 Restoring: Porch Swing City in Evadale, TX
+[2026-01-20T17:41:02.840Z] ❌ FAILED: Porch Swing City in Evadale, TX
+[2026-01-20T17:41:02.844Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:02.847Z] 🚀 Restoring: Porch Swing City in Evant, TX
+[2026-01-20T17:41:03.001Z] ❌ FAILED: Porch Swing City in Evant, TX
+[2026-01-20T17:41:03.005Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:03.009Z] 🚀 Restoring: Porch Swing City in Evergreen, TX
+[2026-01-20T17:41:03.225Z] 🚀 Restoring: Porch Swing City in Fabens, TX
+[2026-01-20T17:41:03.385Z] ❌ FAILED: Porch Swing City in Fabens, TX
+[2026-01-20T17:41:03.389Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:03.392Z] 🚀 Restoring: Porch Swing City in Fabrica, TX
+[2026-01-20T17:41:03.530Z] ❌ FAILED: Porch Swing City in Fabrica, TX
+[2026-01-20T17:41:03.534Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:03.538Z] 🚀 Restoring: Porch Swing City in Fairchilds, TX
+[2026-01-20T17:41:03.747Z] 🚀 Restoring: Porch Swing City in Fairview, TX
+[2026-01-20T17:41:03.889Z] ❌ FAILED: Porch Swing City in Fairview, TX
+[2026-01-20T17:41:03.893Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:03.897Z] 🚀 Restoring: Porch Swing City in Falcon Heights, TX
+[2026-01-20T17:41:04.114Z] 🚀 Restoring: Porch Swing City in Falcon Lake Estates, TX
+[2026-01-20T17:41:04.263Z] ❌ FAILED: Porch Swing City in Falcon Lake Estates, TX
+[2026-01-20T17:41:04.265Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:04.268Z] 🚀 Restoring: Porch Swing City in Falcon Mesa, TX
+[2026-01-20T17:41:04.416Z] ❌ FAILED: Porch Swing City in Falcon Mesa, TX
+[2026-01-20T17:41:04.420Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:04.424Z] 🚀 Restoring: Porch Swing City in Falcon Village, TX
+[2026-01-20T17:41:04.632Z] 🚀 Restoring: Porch Swing City in Falconaire, TX
+[2026-01-20T17:41:04.793Z] ❌ FAILED: Porch Swing City in Falconaire, TX
+[2026-01-20T17:41:04.794Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:04.796Z] 🚀 Restoring: Porch Swing City in Falls City, TX
+[2026-01-20T17:41:04.927Z] ❌ FAILED: Porch Swing City in Falls City, TX
+[2026-01-20T17:41:04.931Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:04.935Z] 🚀 Restoring: Porch Swing City in Falman, TX
+[2026-01-20T17:41:05.138Z] 🚀 Restoring: Porch Swing City in Fannett, TX
+[2026-01-20T17:41:05.301Z] ❌ FAILED: Porch Swing City in Fannett, TX
+[2026-01-20T17:41:05.306Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:05.310Z] 🚀 Restoring: Porch Swing City in Farnsworth, TX
+[2026-01-20T17:41:05.457Z] ❌ FAILED: Porch Swing City in Farnsworth, TX
+[2026-01-20T17:41:05.462Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:05.463Z] 🚀 Restoring: Porch Swing City in Fayetteville, Arkansas
+[2026-01-20T17:41:05.646Z] 🚀 Restoring: Porch Swing City in Fayetteville, TX
+[2026-01-20T17:41:05.803Z] ❌ FAILED: Porch Swing City in Fayetteville, TX
+[2026-01-20T17:41:05.808Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:05.812Z] 🚀 Restoring: Porch Swing City in Fernando Salinas, TX
+[2026-01-20T17:41:05.951Z] ❌ FAILED: Porch Swing City in Fernando Salinas, TX
+[2026-01-20T17:41:05.953Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:05.954Z] 🚀 Restoring: Porch Swing City in Fifth Street, TX
+[2026-01-20T17:41:06.161Z] 🚀 Restoring: Porch Swing City in Flat, TX
+[2026-01-20T17:41:06.353Z] ❌ FAILED: Porch Swing City in Flat, TX
+[2026-01-20T17:41:06.357Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:06.362Z] 🚀 Restoring: Porch Swing City in Flatonia, TX
+[2026-01-20T17:41:06.671Z] 🚀 Restoring: Porch Swing City in Flor del Rio, TX
+[2026-01-20T17:41:06.830Z] ❌ FAILED: Porch Swing City in Flor del Rio, TX
+[2026-01-20T17:41:06.835Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:06.838Z] 🚀 Restoring: Porch Swing City in Flowella, TX
+[2026-01-20T17:41:06.980Z] ❌ FAILED: Porch Swing City in Flowella, TX
+[2026-01-20T17:41:06.984Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:06.988Z] 🚀 Restoring: Porch Swing City in Flower Mound, TX
+[2026-01-20T17:41:07.246Z] 🚀 Restoring: Porch Swing City in Fluvanna, TX
+[2026-01-20T17:41:07.399Z] ❌ FAILED: Porch Swing City in Fluvanna, TX
+[2026-01-20T17:41:07.403Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:07.409Z] 🚀 Restoring: Porch Swing City in Follett, TX
+[2026-01-20T17:41:07.631Z] 🚀 Restoring: Porch Swing City in Forest Heights, TX
+[2026-01-20T17:41:07.778Z] ❌ FAILED: Porch Swing City in Forest Heights, TX
+[2026-01-20T17:41:07.782Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:07.785Z] 🚀 Restoring: Porch Swing City in Forsan, TX
+[2026-01-20T17:41:07.932Z] ❌ FAILED: Porch Swing City in Forsan, TX
+[2026-01-20T17:41:07.937Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:07.941Z] 🚀 Restoring: Porch Swing City in Fort Bliss, TX
+[2026-01-20T17:41:08.179Z] 🚀 Restoring: Porch Swing City in Fort Clark Springs, TX
+[2026-01-20T17:41:08.330Z] ❌ FAILED: Porch Swing City in Fort Clark Springs, TX
+[2026-01-20T17:41:08.332Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:08.333Z] 🚀 Restoring: Porch Swing City in Fort Davis, TX
+[2026-01-20T17:41:08.483Z] ❌ FAILED: Porch Swing City in Fort Davis, TX
+[2026-01-20T17:41:08.485Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:08.487Z] 🚀 Restoring: Porch Swing City in Fort Hancock, TX
+[2026-01-20T17:41:08.699Z] 🚀 Restoring: Porch Swing City in Fort Hood, TX
+[2026-01-20T17:41:08.844Z] ❌ FAILED: Porch Swing City in Fort Hood, TX
+[2026-01-20T17:41:08.849Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:08.852Z] 🚀 Restoring: Porch Swing City in Fort Smith, Arkansas
+[2026-01-20T17:41:09.001Z] ❌ FAILED: Porch Swing City in Fort Smith, Arkansas
+[2026-01-20T17:41:09.005Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:09.009Z] 🚀 Restoring: Porch Swing City in Four Corners, TX
+[2026-01-20T17:41:09.233Z] 🚀 Restoring: Porch Swing City in Four Points, TX
+[2026-01-20T17:41:09.394Z] ❌ FAILED: Porch Swing City in Four Points, TX
+[2026-01-20T17:41:09.398Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:09.401Z] 🚀 Restoring: Porch Swing City in Fowlerton, TX
+[2026-01-20T17:41:09.619Z] 🚀 Restoring: Porch Swing City in Frankston, TX
+[2026-01-20T17:41:09.760Z] ❌ FAILED: Porch Swing City in Frankston, TX
+[2026-01-20T17:41:09.765Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:09.769Z] 🚀 Restoring: Porch Swing City in Fresno, California
+[2026-01-20T17:41:09.930Z] ❌ FAILED: Porch Swing City in Fresno, California
+[2026-01-20T17:41:09.934Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:09.938Z] 🚀 Restoring: Porch Swing City in Fresno, TX
+[2026-01-20T17:41:10.142Z] 🚀 Restoring: Porch Swing City in Fronton Ranchettes, TX
+[2026-01-20T17:41:10.286Z] ❌ FAILED: Porch Swing City in Fronton Ranchettes, TX
+[2026-01-20T17:41:10.289Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:10.298Z] 🚀 Restoring: Porch Swing City in Fronton, TX
+[2026-01-20T17:41:10.449Z] ❌ FAILED: Porch Swing City in Fronton, TX
+[2026-01-20T17:41:10.453Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:10.457Z] 🚀 Restoring: Porch Swing City in Frost, TX
+[2026-01-20T17:41:10.670Z] 🚀 Restoring: Porch Swing City in Fruitvale, TX
+[2026-01-20T17:41:10.824Z] ❌ FAILED: Porch Swing City in Fruitvale, TX
+[2026-01-20T17:41:10.828Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:10.832Z] 🚀 Restoring: Porch Swing City in Fulton, TX
+[2026-01-20T17:41:10.975Z] ❌ FAILED: Porch Swing City in Fulton, TX
+[2026-01-20T17:41:10.979Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:10.984Z] 🚀 Restoring: Porch Swing City in Gail, TX
+[2026-01-20T17:41:11.256Z] 🚀 Restoring: Porch Swing City in Gallatin, TX
+[2026-01-20T17:41:11.438Z] ❌ FAILED: Porch Swing City in Gallatin, TX
+[2026-01-20T17:41:11.441Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:11.443Z] 🚀 Restoring: Porch Swing City in Garceno, TX
+[2026-01-20T17:41:11.642Z] 🚀 Restoring: Porch Swing City in Garciasville, TX
+[2026-01-20T17:41:11.793Z] ❌ FAILED: Porch Swing City in Garciasville, TX
+[2026-01-20T17:41:11.797Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:11.806Z] 🚀 Restoring: Porch Swing City in Garden City, TX
+[2026-01-20T17:41:11.973Z] ❌ FAILED: Porch Swing City in Garden City, TX
+[2026-01-20T17:41:11.977Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:11.981Z] 🚀 Restoring: Porch Swing City in Gardendale, TX
+[2026-01-20T17:41:12.211Z] 🚀 Restoring: Porch Swing City in Garfield, TX
+[2026-01-20T17:41:12.357Z] ❌ FAILED: Porch Swing City in Garfield, TX
+[2026-01-20T17:41:12.362Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:12.365Z] 🚀 Restoring: Porch Swing City in Garner, TX
+[2026-01-20T17:41:12.528Z] ❌ FAILED: Porch Swing City in Garner, TX
+[2026-01-20T17:41:12.532Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:12.536Z] 🚀 Restoring: Porch Swing City in Garrett, TX
+[2026-01-20T17:41:12.782Z] 🚀 Restoring: Porch Swing City in Garrison, TX
+[2026-01-20T17:41:12.922Z] ❌ FAILED: Porch Swing City in Garrison, TX
+[2026-01-20T17:41:12.926Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:12.930Z] 🚀 Restoring: Porch Swing City in Garwood, TX
+[2026-01-20T17:41:13.166Z] 🚀 Restoring: Porch Swing City in Gary City, TX
+[2026-01-20T17:41:13.324Z] ❌ FAILED: Porch Swing City in Gary City, TX
+[2026-01-20T17:41:13.325Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:13.327Z] 🚀 Restoring: Porch Swing City in Garza-Salinas II, TX
+[2026-01-20T17:41:13.517Z] ❌ FAILED: Porch Swing City in Garza-Salinas II, TX
+[2026-01-20T17:41:13.521Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:13.524Z] 🚀 Restoring: Porch Swing City in Gause, TX
+[2026-01-20T17:41:13.757Z] 🚀 Restoring: Porch Swing City in Geronimo, TX
+[2026-01-20T17:41:13.908Z] ❌ FAILED: Porch Swing City in Geronimo, TX
+[2026-01-20T17:41:13.912Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:13.916Z] 🚀 Restoring: Porch Swing City in Girard, TX
+[2026-01-20T17:41:14.142Z] 🚀 Restoring: Porch Swing City in Glazier, TX
+[2026-01-20T17:41:14.300Z] ❌ FAILED: Porch Swing City in Glazier, TX
+[2026-01-20T17:41:14.301Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:14.303Z] 🚀 Restoring: Porch Swing City in Glendale, California
+[2026-01-20T17:41:14.442Z] ❌ FAILED: Porch Swing City in Glendale, California
+[2026-01-20T17:41:14.446Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:14.449Z] 🚀 Restoring: Porch Swing City in Glidden, TX
+[2026-01-20T17:41:14.668Z] 🚀 Restoring: Porch Swing City in Goldsmith, TX
+[2026-01-20T17:41:14.816Z] ❌ FAILED: Porch Swing City in Goldsmith, TX
+[2026-01-20T17:41:14.820Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:14.824Z] 🚀 Restoring: Porch Swing City in Golinda, TX
+[2026-01-20T17:41:14.985Z] ❌ FAILED: Porch Swing City in Golinda, TX
+[2026-01-20T17:41:14.989Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:14.992Z] 🚀 Restoring: Porch Swing City in Goodlow, TX
+[2026-01-20T17:41:15.204Z] 🚀 Restoring: Porch Swing City in Goodrich, TX
+[2026-01-20T17:41:15.343Z] ❌ FAILED: Porch Swing City in Goodrich, TX
+[2026-01-20T17:41:15.347Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:15.352Z] 🚀 Restoring: Porch Swing City in Gordon, TX
+[2026-01-20T17:41:15.496Z] ❌ FAILED: Porch Swing City in Gordon, TX
+[2026-01-20T17:41:15.499Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:15.503Z] 🚀 Restoring: Porch Swing City in Goree, TX
+[2026-01-20T17:41:15.701Z] 🚀 Restoring: Porch Swing City in Graford, TX
+[2026-01-20T17:41:15.869Z] ❌ FAILED: Porch Swing City in Graford, TX
+[2026-01-20T17:41:15.873Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:15.877Z] 🚀 Restoring: Porch Swing City in Grandfalls, TX
+[2026-01-20T17:41:16.016Z] ❌ FAILED: Porch Swing City in Grandfalls, TX
+[2026-01-20T17:41:16.020Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:16.025Z] 🚀 Restoring: Porch Swing City in Grangerland, TX
+[2026-01-20T17:41:16.243Z] 🚀 Restoring: Porch Swing City in Granjeno, TX
+[2026-01-20T17:41:16.394Z] ❌ FAILED: Porch Swing City in Granjeno, TX
+[2026-01-20T17:41:16.399Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:16.403Z] 🚀 Restoring: Porch Swing City in Grape Creek, TX
+[2026-01-20T17:41:16.636Z] 🚀 Restoring: Porch Swing City in Grays Prairie, TX
+[2026-01-20T17:41:16.784Z] ❌ FAILED: Porch Swing City in Grays Prairie, TX
+[2026-01-20T17:41:16.787Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:16.794Z] 🚀 Restoring: Porch Swing City in Green Valley Farms, TX
+[2026-01-20T17:41:16.955Z] ❌ FAILED: Porch Swing City in Green Valley Farms, TX
+[2026-01-20T17:41:16.957Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:16.958Z] 🚀 Restoring: Porch Swing City in Grey Forest, TX
+[2026-01-20T17:41:17.179Z] 🚀 Restoring: Porch Swing City in Groom, TX
+[2026-01-20T17:41:17.325Z] ❌ FAILED: Porch Swing City in Groom, TX
+[2026-01-20T17:41:17.330Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:17.334Z] 🚀 Restoring: Porch Swing City in Groveton, TX
+[2026-01-20T17:41:17.501Z] ❌ FAILED: Porch Swing City in Groveton, TX
+[2026-01-20T17:41:17.506Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:17.509Z] 🚀 Restoring: Porch Swing City in Guadalupe Guerra, TX
+[2026-01-20T17:41:17.742Z] 🚀 Restoring: Porch Swing City in Guerra, TX
+[2026-01-20T17:41:17.906Z] ❌ FAILED: Porch Swing City in Guerra, TX
+[2026-01-20T17:41:17.911Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:17.916Z] 🚀 Restoring: Porch Swing City in Gustine, TX
+[2026-01-20T17:41:18.145Z] 🚀 Restoring: Porch Swing City in Guthrie, TX
+[2026-01-20T17:41:18.288Z] ❌ FAILED: Porch Swing City in Guthrie, TX
+[2026-01-20T17:41:18.291Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:18.298Z] 🚀 Restoring: Porch Swing City in Gutierrez, TX
+[2026-01-20T17:41:18.436Z] ❌ FAILED: Porch Swing City in Gutierrez, TX
+[2026-01-20T17:41:18.441Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:18.445Z] 🚀 Restoring: Porch Swing City in H. Cuellar Estates, TX
+[2026-01-20T17:41:18.660Z] 🚀 Restoring: Porch Swing City in Hackberry, TX
+[2026-01-20T17:41:18.819Z] ❌ FAILED: Porch Swing City in Hackberry, TX
+[2026-01-20T17:41:18.822Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:18.826Z] 🚀 Restoring: Porch Swing City in Hallsburg, TX
+[2026-01-20T17:41:18.969Z] ❌ FAILED: Porch Swing City in Hallsburg, TX
+[2026-01-20T17:41:18.972Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:18.974Z] 🚀 Restoring: Porch Swing City in Haltom City, TX
+[2026-01-20T17:41:19.195Z] 🚀 Restoring: Porch Swing City in Hamshire, TX
+[2026-01-20T17:41:19.352Z] ❌ FAILED: Porch Swing City in Hamshire, TX
+[2026-01-20T17:41:19.356Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:19.360Z] 🚀 Restoring: Porch Swing City in Happy, TX
+[2026-01-20T17:41:19.519Z] ❌ FAILED: Porch Swing City in Happy, TX
+[2026-01-20T17:41:19.523Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:19.527Z] 🚀 Restoring: Porch Swing City in Hardin, TX
+[2026-01-20T17:41:19.732Z] 🚀 Restoring: Porch Swing City in Harding Gill Tract, TX
+[2026-01-20T17:41:19.881Z] ❌ FAILED: Porch Swing City in Harding Gill Tract, TX
+[2026-01-20T17:41:19.885Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:19.889Z] 🚀 Restoring: Porch Swing City in Hargill, TX
+[2026-01-20T17:41:20.108Z] 🚀 Restoring: Porch Swing City in Harper, TX
+[2026-01-20T17:41:20.264Z] ❌ FAILED: Porch Swing City in Harper, TX
+[2026-01-20T17:41:20.268Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:20.272Z] 🚀 Restoring: Porch Swing City in Harrold, TX
+[2026-01-20T17:41:20.424Z] ❌ FAILED: Porch Swing City in Harrold, TX
+[2026-01-20T17:41:20.426Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:20.428Z] 🚀 Restoring: Porch Swing City in Hartley, TX
+[2026-01-20T17:41:20.664Z] 🚀 Restoring: Porch Swing City in Havana, TX
+[2026-01-20T17:41:20.811Z] ❌ FAILED: Porch Swing City in Havana, TX
+[2026-01-20T17:41:20.814Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:20.821Z] 🚀 Restoring: Porch Swing City in Hawk Cove, TX
+[2026-01-20T17:41:20.969Z] ❌ FAILED: Porch Swing City in Hawk Cove, TX
+[2026-01-20T17:41:20.973Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:20.977Z] 🚀 Restoring: Porch Swing City in Hawley, TX
+[2026-01-20T17:41:21.207Z] 🚀 Restoring: Porch Swing City in Hays, TX
+[2026-01-20T17:41:21.357Z] ❌ FAILED: Porch Swing City in Hays, TX
+[2026-01-20T17:41:21.359Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:21.361Z] 🚀 Restoring: Porch Swing City in Heartland, TX
+[2026-01-20T17:41:21.503Z] ❌ FAILED: Porch Swing City in Heartland, TX
+[2026-01-20T17:41:21.506Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:21.508Z] 🚀 Restoring: Porch Swing City in Hebbronville, TX
+[2026-01-20T17:41:21.709Z] 🚀 Restoring: Porch Swing City in Hebron, TX
+[2026-01-20T17:41:21.863Z] ❌ FAILED: Porch Swing City in Hebron, TX
+[2026-01-20T17:41:21.867Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:21.870Z] 🚀 Restoring: Porch Swing City in Hedley, TX
+[2026-01-20T17:41:22.094Z] 🚀 Restoring: Porch Swing City in Heidelberg, TX
+[2026-01-20T17:41:22.240Z] ❌ FAILED: Porch Swing City in Heidelberg, TX
+[2026-01-20T17:41:22.244Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:22.249Z] 🚀 Restoring: Porch Swing City in Hermleigh, TX
+[2026-01-20T17:41:22.411Z] ❌ FAILED: Porch Swing City in Hermleigh, TX
+[2026-01-20T17:41:22.415Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:22.418Z] 🚀 Restoring: Porch Swing City in Hickory Creek, TX
+[2026-01-20T17:41:22.636Z] 🚀 Restoring: Porch Swing City in Higgins, TX
+[2026-01-20T17:41:22.784Z] ❌ FAILED: Porch Swing City in Higgins, TX
+[2026-01-20T17:41:22.787Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:22.794Z] 🚀 Restoring: Porch Swing City in Highland Haven, TX
+[2026-01-20T17:41:22.946Z] ❌ FAILED: Porch Swing City in Highland Haven, TX
+[2026-01-20T17:41:22.950Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:22.954Z] 🚀 Restoring: Porch Swing City in Highland Park, TX
+[2026-01-20T17:41:23.156Z] 🚀 Restoring: Porch Swing City in Highlands, TX
+[2026-01-20T17:41:23.298Z] ❌ FAILED: Porch Swing City in Highlands, TX
+[2026-01-20T17:41:23.302Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:23.307Z] 🚀 Restoring: Porch Swing City in Hill Country Village, TX
+[2026-01-20T17:41:23.702Z] 🚀 Restoring: Porch Swing City in Hillside Acres, TX
+[2026-01-20T17:41:23.858Z] ❌ FAILED: Porch Swing City in Hillside Acres, TX
+[2026-01-20T17:41:23.863Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:23.866Z] 🚀 Restoring: Porch Swing City in Hilltop Lakes, TX
+[2026-01-20T17:41:24.020Z] ❌ FAILED: Porch Swing City in Hilltop Lakes, TX
+[2026-01-20T17:41:24.024Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:24.028Z] 🚀 Restoring: Porch Swing City in Hilltop, TX
+[2026-01-20T17:41:24.261Z] 🚀 Restoring: Porch Swing City in Hilltop, TX
+[2026-01-20T17:41:24.426Z] ❌ FAILED: Porch Swing City in Hilltop, TX
+[2026-01-20T17:41:24.431Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:24.436Z] 🚀 Restoring: Porch Swing City in Holiday Beach, TX
+[2026-01-20T17:41:24.665Z] 🚀 Restoring: Porch Swing City in Holiday Lakes, TX
+[2026-01-20T17:41:24.830Z] ❌ FAILED: Porch Swing City in Holiday Lakes, TX
+[2026-01-20T17:41:24.834Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:24.837Z] 🚀 Restoring: Porch Swing City in Holland, TX
+[2026-01-20T17:41:24.977Z] ❌ FAILED: Porch Swing City in Holland, TX
+[2026-01-20T17:41:24.979Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:24.980Z] 🚀 Restoring: Porch Swing City in Holly Lake Ranch, TX
+[2026-01-20T17:41:25.243Z] 🚀 Restoring: Porch Swing City in Hollywood Park, TX
+[2026-01-20T17:41:25.400Z] ❌ FAILED: Porch Swing City in Hollywood Park, TX
+[2026-01-20T17:41:25.404Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:25.408Z] 🚀 Restoring: Porch Swing City in Homestead Meadows North, TX
+[2026-01-20T17:41:25.620Z] 🚀 Restoring: Porch Swing City in Homestead Meadows South, TX
+[2026-01-20T17:41:25.759Z] ❌ FAILED: Porch Swing City in Homestead Meadows South, TX
+[2026-01-20T17:41:25.762Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:25.767Z] 🚀 Restoring: Porch Swing City in Hornsby Bend, TX
+[2026-01-20T17:41:25.920Z] ❌ FAILED: Porch Swing City in Hornsby Bend, TX
+[2026-01-20T17:41:25.924Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:25.928Z] 🚀 Restoring: Porch Swing City in Horseshoe Bend, TX
+[2026-01-20T17:41:26.142Z] 🚀 Restoring: Porch Swing City in Howardwick, TX
+[2026-01-20T17:41:26.308Z] ❌ FAILED: Porch Swing City in Howardwick, TX
+[2026-01-20T17:41:26.312Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:26.315Z] 🚀 Restoring: Porch Swing City in Howe, TX
+[2026-01-20T17:41:26.463Z] ❌ FAILED: Porch Swing City in Howe, TX
+[2026-01-20T17:41:26.467Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:26.471Z] 🚀 Restoring: Porch Swing City in Huckabay, TX
+[2026-01-20T17:41:26.690Z] 🚀 Restoring: Porch Swing City in Hudson Bend, TX
+[2026-01-20T17:41:26.871Z] ❌ FAILED: Porch Swing City in Hudson Bend, TX
+[2026-01-20T17:41:26.875Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:26.879Z] 🚀 Restoring: Porch Swing City in Hull, TX
+[2026-01-20T17:41:27.106Z] 🚀 Restoring: Porch Swing City in Hungerford, TX
+[2026-01-20T17:41:27.246Z] ❌ FAILED: Porch Swing City in Hungerford, TX
+[2026-01-20T17:41:27.250Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:27.255Z] 🚀 Restoring: Porch Swing City in Huntsville, Alabama
+[2026-01-20T17:41:27.414Z] ❌ FAILED: Porch Swing City in Huntsville, Alabama
+[2026-01-20T17:41:27.418Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:27.422Z] 🚀 Restoring: Porch Swing City in Huxley, TX
+[2026-01-20T17:41:27.626Z] 🚀 Restoring: Porch Swing City in Iago, TX
+[2026-01-20T17:41:27.770Z] ❌ FAILED: Porch Swing City in Iago, TX
+[2026-01-20T17:41:27.774Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:27.779Z] 🚀 Restoring: Porch Swing City in Iglesia Antigua, TX
+[2026-01-20T17:41:27.928Z] ❌ FAILED: Porch Swing City in Iglesia Antigua, TX
+[2026-01-20T17:41:27.932Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:27.936Z] 🚀 Restoring: Porch Swing City in Impact, TX
+[2026-01-20T17:41:28.152Z] 🚀 Restoring: Porch Swing City in Imperial, TX
+[2026-01-20T17:41:28.312Z] ❌ FAILED: Porch Swing City in Imperial, TX
+[2026-01-20T17:41:28.314Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:28.315Z] 🚀 Restoring: Porch Swing City in Indian Hills, TX
+[2026-01-20T17:41:28.457Z] ❌ FAILED: Porch Swing City in Indian Hills, TX
+[2026-01-20T17:41:28.462Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:28.467Z] 🚀 Restoring: Porch Swing City in Indian Lake, TX
+[2026-01-20T17:41:28.677Z] 🚀 Restoring: Porch Swing City in Indian Springs, TX
+[2026-01-20T17:41:28.813Z] ❌ FAILED: Porch Swing City in Indian Springs, TX
+[2026-01-20T17:41:28.815Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:28.818Z] 🚀 Restoring: Porch Swing City in Indio, TX
+[2026-01-20T17:41:28.970Z] ❌ FAILED: Porch Swing City in Indio, TX
+[2026-01-20T17:41:28.974Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:28.978Z] 🚀 Restoring: Porch Swing City in Industry, TX
+[2026-01-20T17:41:29.182Z] 🚀 Restoring: Porch Swing City in Inez, TX
+[2026-01-20T17:41:29.316Z] ❌ FAILED: Porch Swing City in Inez, TX
+[2026-01-20T17:41:29.318Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:29.320Z] 🚀 Restoring: Porch Swing City in Ingleside on the Bay, TX
+[2026-01-20T17:41:29.462Z] ❌ FAILED: Porch Swing City in Ingleside on the Bay, TX
+[2026-01-20T17:41:29.467Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:29.470Z] 🚀 Restoring: Porch Swing City in Iola, TX
+[2026-01-20T17:41:29.687Z] 🚀 Restoring: Porch Swing City in Iowa Colony, TX
+[2026-01-20T17:41:29.832Z] ❌ FAILED: Porch Swing City in Iowa Colony, TX
+[2026-01-20T17:41:29.834Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:29.837Z] 🚀 Restoring: Porch Swing City in Iredell, TX
+[2026-01-20T17:41:29.979Z] ❌ FAILED: Porch Swing City in Iredell, TX
+[2026-01-20T17:41:29.985Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:29.989Z] 🚀 Restoring: Porch Swing City in Italy, TX
+[2026-01-20T17:41:30.188Z] 🚀 Restoring: Porch Swing City in J.F. Villareal, TX
+[2026-01-20T17:41:30.335Z] ❌ FAILED: Porch Swing City in J.F. Villareal, TX
+[2026-01-20T17:41:30.339Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:30.343Z] 🚀 Restoring: Porch Swing City in Jardin de San Julian, TX
+[2026-01-20T17:41:30.501Z] ❌ FAILED: Porch Swing City in Jardin de San Julian, TX
+[2026-01-20T17:41:30.506Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:30.510Z] 🚀 Restoring: Porch Swing City in Jayton, TX
+[2026-01-20T17:41:30.711Z] 🚀 Restoring: Porch Swing City in Jewett, TX
+[2026-01-20T17:41:30.852Z] ❌ FAILED: Porch Swing City in Jewett, TX
+[2026-01-20T17:41:30.857Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:30.862Z] 🚀 Restoring: Porch Swing City in Joaquin, TX
+[2026-01-20T17:41:31.001Z] ❌ FAILED: Porch Swing City in Joaquin, TX
+[2026-01-20T17:41:31.005Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:31.009Z] 🚀 Restoring: Porch Swing City in Jolly, TX
+[2026-01-20T17:41:31.232Z] 🚀 Restoring: Porch Swing City in Jones Creek, TX
+[2026-01-20T17:41:31.372Z] ❌ FAILED: Porch Swing City in Jones Creek, TX
+[2026-01-20T17:41:31.375Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:31.381Z] 🚀 Restoring: Porch Swing City in Jonesboro, Arkansas
+[2026-01-20T17:41:31.621Z] 🚀 Restoring: Porch Swing City in Juarez, TX
+[2026-01-20T17:41:31.757Z] ❌ FAILED: Porch Swing City in Juarez, TX
+[2026-01-20T17:41:31.762Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:31.767Z] 🚀 Restoring: Porch Swing City in K-Bar Ranch, TX
+[2026-01-20T17:41:31.923Z] ❌ FAILED: Porch Swing City in K-Bar Ranch, TX
+[2026-01-20T17:41:31.925Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:31.928Z] 🚀 Restoring: Porch Swing City in Kendleton, TX
+[2026-01-20T17:41:32.139Z] 🚀 Restoring: Porch Swing City in Kenefick, TX
+[2026-01-20T17:41:32.299Z] ❌ FAILED: Porch Swing City in Kenefick, TX
+[2026-01-20T17:41:32.303Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:32.307Z] 🚀 Restoring: Porch Swing City in Kennard, TX
+[2026-01-20T17:41:32.458Z] ❌ FAILED: Porch Swing City in Kennard, TX
+[2026-01-20T17:41:32.462Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:32.466Z] 🚀 Restoring: Porch Swing City in Kingsbury, TX
+[2026-01-20T17:41:32.684Z] 🚀 Restoring: Porch Swing City in Kingsland, TX
+[2026-01-20T17:41:32.822Z] ❌ FAILED: Porch Swing City in Kingsland, TX
+[2026-01-20T17:41:32.827Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:32.831Z] 🚀 Restoring: Porch Swing City in Kirvin, TX
+[2026-01-20T17:41:32.981Z] ❌ FAILED: Porch Swing City in Kirvin, TX
+[2026-01-20T17:41:32.984Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:32.989Z] 🚀 Restoring: Porch Swing City in Knippa, TX
+[2026-01-20T17:41:33.192Z] 🚀 Restoring: Porch Swing City in Knollwood, TX
+[2026-01-20T17:41:33.345Z] ❌ FAILED: Porch Swing City in Knollwood, TX
+[2026-01-20T17:41:33.349Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:33.353Z] 🚀 Restoring: Porch Swing City in Knox City, TX
+[2026-01-20T17:41:33.613Z] 🚀 Restoring: Porch Swing City in Kopperl, TX
+[2026-01-20T17:41:33.756Z] ❌ FAILED: Porch Swing City in Kopperl, TX
+[2026-01-20T17:41:33.760Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:33.764Z] 🚀 Restoring: Porch Swing City in Kosse, TX
+[2026-01-20T17:41:33.913Z] ❌ FAILED: Porch Swing City in Kosse, TX
+[2026-01-20T17:41:33.917Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:33.921Z] 🚀 Restoring: Porch Swing City in Kress, TX
+[2026-01-20T17:41:34.118Z] 🚀 Restoring: Porch Swing City in Kurten, TX
+[2026-01-20T17:41:34.248Z] ❌ FAILED: Porch Swing City in Kurten, TX
+[2026-01-20T17:41:34.253Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:34.259Z] 🚀 Restoring: Porch Swing City in La Blanca, TX
+[2026-01-20T17:41:34.400Z] ❌ FAILED: Porch Swing City in La Blanca, TX
+[2026-01-20T17:41:34.404Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:34.412Z] 🚀 Restoring: Porch Swing City in La Carla, TX
+[2026-01-20T17:41:34.644Z] 🚀 Restoring: Porch Swing City in La Casita, TX
+[2026-01-20T17:41:34.968Z] ❌ FAILED: Porch Swing City in La Casita, TX
+[2026-01-20T17:41:34.974Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:34.978Z] 🚀 Restoring: Porch Swing City in La Chuparosa, TX
+[2026-01-20T17:41:35.305Z] 🚀 Restoring: Porch Swing City in La Coma Heights, TX
+[2026-01-20T17:41:35.613Z] 🚀 Restoring: Porch Swing City in La Coma, TX
+[2026-01-20T17:41:35.833Z] ❌ FAILED: Porch Swing City in La Coma, TX
+[2026-01-20T17:41:35.837Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:35.840Z] 🚀 Restoring: Porch Swing City in La Escondida, TX
+[2026-01-20T17:41:36.025Z] ❌ FAILED: Porch Swing City in La Escondida, TX
+[2026-01-20T17:41:36.029Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:36.032Z] 🚀 Restoring: Porch Swing City in La Esperanza, TX
+[2026-01-20T17:41:36.223Z] 🚀 Restoring: Porch Swing City in La Feria North, TX
+[2026-01-20T17:41:36.425Z] ❌ FAILED: Porch Swing City in La Feria North, TX
+[2026-01-20T17:41:36.429Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:36.433Z] 🚀 Restoring: Porch Swing City in La Homa, TX
+[2026-01-20T17:41:36.655Z] 🚀 Restoring: Porch Swing City in La Loma de Falcon, TX
+[2026-01-20T17:41:36.822Z] ❌ FAILED: Porch Swing City in La Loma de Falcon, TX
+[2026-01-20T17:41:36.824Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:36.826Z] 🚀 Restoring: Porch Swing City in La Minita, TX
+[2026-01-20T17:41:36.984Z] ❌ FAILED: Porch Swing City in La Minita, TX
+[2026-01-20T17:41:36.987Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:36.990Z] 🚀 Restoring: Porch Swing City in La Moca Ranch, TX
+[2026-01-20T17:41:37.218Z] 🚀 Restoring: Porch Swing City in La Paloma Addition, TX
+[2026-01-20T17:41:37.380Z] ❌ FAILED: Porch Swing City in La Paloma Addition, TX
+[2026-01-20T17:41:37.383Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:37.386Z] 🚀 Restoring: Porch Swing City in La Paloma Ranchettes, TX
+[2026-01-20T17:41:37.623Z] 🚀 Restoring: Porch Swing City in La Paloma, TX
+[2026-01-20T17:41:37.752Z] ❌ FAILED: Porch Swing City in La Paloma, TX
+[2026-01-20T17:41:37.755Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:37.759Z] 🚀 Restoring: Porch Swing City in La Paloma-Lost Creek, TX
+[2026-01-20T17:41:37.908Z] ❌ FAILED: Porch Swing City in La Paloma-Lost Creek, TX
+[2026-01-20T17:41:37.912Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:37.915Z] 🚀 Restoring: Porch Swing City in La Presa, TX
+[2026-01-20T17:41:38.161Z] 🚀 Restoring: Porch Swing City in La Pryor, TX
+[2026-01-20T17:41:38.330Z] ❌ FAILED: Porch Swing City in La Pryor, TX
+[2026-01-20T17:41:38.334Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:38.337Z] 🚀 Restoring: Porch Swing City in La Puerta, TX
+[2026-01-20T17:41:38.491Z] ❌ FAILED: Porch Swing City in La Puerta, TX
+[2026-01-20T17:41:38.495Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:38.498Z] 🚀 Restoring: Porch Swing City in La Rosita, TX
+[2026-01-20T17:41:38.732Z] 🚀 Restoring: Porch Swing City in La Tina Ranch, TX
+[2026-01-20T17:41:38.888Z] ❌ FAILED: Porch Swing City in La Tina Ranch, TX
+[2026-01-20T17:41:38.891Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:38.894Z] 🚀 Restoring: Porch Swing City in La Victoria, TX
+[2026-01-20T17:41:39.126Z] 🚀 Restoring: Porch Swing City in La Ward, TX
+[2026-01-20T17:41:39.307Z] ❌ FAILED: Porch Swing City in La Ward, TX
+[2026-01-20T17:41:39.311Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:39.315Z] 🚀 Restoring: Porch Swing City in Lackland AFB, TX
+[2026-01-20T17:41:39.495Z] ❌ FAILED: Porch Swing City in Lackland AFB, TX
+[2026-01-20T17:41:39.499Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:39.503Z] 🚀 Restoring: Porch Swing City in Ladonia, TX
+[2026-01-20T17:41:39.732Z] 🚀 Restoring: Porch Swing City in Lago, TX
+[2026-01-20T17:41:39.913Z] ❌ FAILED: Porch Swing City in Lago, TX
+[2026-01-20T17:41:39.915Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:39.918Z] 🚀 Restoring: Porch Swing City in Laguna Heights, TX
+[2026-01-20T17:41:40.147Z] 🚀 Restoring: Porch Swing City in Laguna Park, TX
+[2026-01-20T17:41:40.334Z] ❌ FAILED: Porch Swing City in Laguna Park, TX
+[2026-01-20T17:41:40.337Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:40.341Z] 🚀 Restoring: Porch Swing City in Laguna Seca, TX
+[2026-01-20T17:41:40.555Z] ❌ FAILED: Porch Swing City in Laguna Seca, TX
+[2026-01-20T17:41:40.558Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:40.562Z] 🚀 Restoring: Porch Swing City in Laguna Vista, TX
+[2026-01-20T17:41:40.877Z] 🚀 Restoring: Porch Swing City in Lake Bridgeport, TX
+[2026-01-20T17:41:41.025Z] ❌ FAILED: Porch Swing City in Lake Bridgeport, TX
+[2026-01-20T17:41:41.027Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:41.029Z] 🚀 Restoring: Porch Swing City in Lake Brownwood, TX
+[2026-01-20T17:41:41.234Z] 🚀 Restoring: Porch Swing City in Lake Bryan, TX
+[2026-01-20T17:41:41.412Z] ❌ FAILED: Porch Swing City in Lake Bryan, TX
+[2026-01-20T17:41:41.416Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:41.421Z] 🚀 Restoring: Porch Swing City in Lake Cherokee, TX
+[2026-01-20T17:41:41.688Z] 🚀 Restoring: Porch Swing City in Lake City, TX
+[2026-01-20T17:41:41.837Z] ❌ FAILED: Porch Swing City in Lake City, TX
+[2026-01-20T17:41:41.841Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:41.845Z] 🚀 Restoring: Porch Swing City in Lake Colorado City, TX
+[2026-01-20T17:41:41.994Z] ❌ FAILED: Porch Swing City in Lake Colorado City, TX
+[2026-01-20T17:41:41.996Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:41.998Z] 🚀 Restoring: Porch Swing City in Lake Dunlap, TX
+[2026-01-20T17:41:42.213Z] 🚀 Restoring: Porch Swing City in Lake Kiowa, TX
+[2026-01-20T17:41:42.449Z] ❌ FAILED: Porch Swing City in Lake Kiowa, TX
+[2026-01-20T17:41:42.453Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:42.457Z] 🚀 Restoring: Porch Swing City in Lake Medina Shores, TX
+[2026-01-20T17:41:42.681Z] 🚀 Restoring: Porch Swing City in Lake Meredith Estates, TX
+[2026-01-20T17:41:42.858Z] ❌ FAILED: Porch Swing City in Lake Meredith Estates, TX
+[2026-01-20T17:41:42.862Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:42.866Z] 🚀 Restoring: Porch Swing City in Lake Tanglewood, TX
+[2026-01-20T17:41:43.122Z] 🚀 Restoring: Porch Swing City in Lake View, TX
+[2026-01-20T17:41:43.302Z] ❌ FAILED: Porch Swing City in Lake View, TX
+[2026-01-20T17:41:43.306Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:43.311Z] 🚀 Restoring: Porch Swing City in Lakehills, TX
+[2026-01-20T17:41:43.495Z] ❌ FAILED: Porch Swing City in Lakehills, TX
+[2026-01-20T17:41:43.499Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:43.502Z] 🚀 Restoring: Porch Swing City in Lakeshore Gardens-Hidden Acres, TX
+[2026-01-20T17:41:43.753Z] 🚀 Restoring: Porch Swing City in Lakeside City, TX
+[2026-01-20T17:41:43.932Z] ❌ FAILED: Porch Swing City in Lakeside City, TX
+[2026-01-20T17:41:43.936Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:43.940Z] 🚀 Restoring: Porch Swing City in Lakeside, TX
+[2026-01-20T17:41:44.197Z] 🚀 Restoring: Porch Swing City in Lakeside, TX
+[2026-01-20T17:41:44.377Z] ❌ FAILED: Porch Swing City in Lakeside, TX
+[2026-01-20T17:41:44.381Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:44.384Z] 🚀 Restoring: Porch Swing City in Lakeview, TX
+[2026-01-20T17:41:44.623Z] 🚀 Restoring: Porch Swing City in Lakewood Village, TX
+[2026-01-20T17:41:44.798Z] ❌ FAILED: Porch Swing City in Lakewood Village, TX
+[2026-01-20T17:41:44.802Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:44.806Z] 🚀 Restoring: Porch Swing City in Lamar, TX
+[2026-01-20T17:41:45.122Z] 🚀 Restoring: Porch Swing City in Lamkin, TX
+[2026-01-20T17:41:45.309Z] ❌ FAILED: Porch Swing City in Lamkin, TX
+[2026-01-20T17:41:45.312Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:45.316Z] 🚀 Restoring: Porch Swing City in Lantana, TX
+[2026-01-20T17:41:45.501Z] ❌ FAILED: Porch Swing City in Lantana, TX
+[2026-01-20T17:41:45.505Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:45.509Z] 🚀 Restoring: Porch Swing City in Laredo Ranchettes West, TX
+[2026-01-20T17:41:45.711Z] 🚀 Restoring: Porch Swing City in Laredo Ranchettes, TX
+[2026-01-20T17:41:45.887Z] ❌ FAILED: Porch Swing City in Laredo Ranchettes, TX
+[2026-01-20T17:41:45.891Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:45.894Z] 🚀 Restoring: Porch Swing City in Las Haciendas, TX
+[2026-01-20T17:41:46.098Z] 🚀 Restoring: Porch Swing City in Las Lomas, TX
+[2026-01-20T17:41:46.266Z] ❌ FAILED: Porch Swing City in Las Lomas, TX
+[2026-01-20T17:41:46.267Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:46.269Z] 🚀 Restoring: Porch Swing City in Las Lomitas, TX
+[2026-01-20T17:41:46.441Z] ❌ FAILED: Porch Swing City in Las Lomitas, TX
+[2026-01-20T17:41:46.444Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:46.448Z] 🚀 Restoring: Porch Swing City in Las Palmas II, TX
+[2026-01-20T17:41:46.991Z] 🚀 Restoring: Porch Swing City in Las Palmas, TX
+[2026-01-20T17:41:47.185Z] 🚀 Restoring: Porch Swing City in Las Pilas, TX
+[2026-01-20T17:41:47.379Z] ❌ FAILED: Porch Swing City in Las Pilas, TX
+[2026-01-20T17:41:47.383Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:47.386Z] 🚀 Restoring: Porch Swing City in Las Quintas Fronterizas, TX
+[2026-01-20T17:41:47.622Z] 🚀 Restoring: Porch Swing City in Lasana, TX
+[2026-01-20T17:41:47.797Z] ❌ FAILED: Porch Swing City in Lasana, TX
+[2026-01-20T17:41:47.801Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:47.804Z] 🚀 Restoring: Porch Swing City in Lasara, TX
+[2026-01-20T17:41:47.956Z] ❌ FAILED: Porch Swing City in Lasara, TX
+[2026-01-20T17:41:47.960Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:47.963Z] 🚀 Restoring: Porch Swing City in Latexo, TX
+[2026-01-20T17:41:48.201Z] 🚀 Restoring: Porch Swing City in Laughlin AFB, TX
+[2026-01-20T17:41:48.351Z] ❌ FAILED: Porch Swing City in Laughlin AFB, TX
+[2026-01-20T17:41:48.354Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:48.356Z] 🚀 Restoring: Porch Swing City in Laureles, TX
+[2026-01-20T17:41:48.498Z] ❌ FAILED: Porch Swing City in Laureles, TX
+[2026-01-20T17:41:48.502Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:48.503Z] 🚀 Restoring: Porch Swing City in Lawn, TX
+[2026-01-20T17:41:48.721Z] 🚀 Restoring: Porch Swing City in Leakey, TX
+[2026-01-20T17:41:48.860Z] ❌ FAILED: Porch Swing City in Leakey, TX
+[2026-01-20T17:41:48.864Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:48.868Z] 🚀 Restoring: Porch Swing City in Leary, TX
+[2026-01-20T17:41:49.006Z] ❌ FAILED: Porch Swing City in Leary, TX
+[2026-01-20T17:41:49.009Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:49.012Z] 🚀 Restoring: Porch Swing City in Lefors, TX
+[2026-01-20T17:41:49.237Z] 🚀 Restoring: Porch Swing City in Lelia Lake, TX
+[2026-01-20T17:41:49.375Z] ❌ FAILED: Porch Swing City in Lelia Lake, TX
+[2026-01-20T17:41:49.377Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:49.380Z] 🚀 Restoring: Porch Swing City in Leming, TX
+[2026-01-20T17:41:49.535Z] ❌ FAILED: Porch Swing City in Leming, TX
+[2026-01-20T17:41:49.537Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:49.539Z] 🚀 Restoring: Porch Swing City in Leona, TX
+[2026-01-20T17:41:49.735Z] 🚀 Restoring: Porch Swing City in Leroy, TX
+[2026-01-20T17:41:49.870Z] ❌ FAILED: Porch Swing City in Leroy, TX
+[2026-01-20T17:41:49.872Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:49.873Z] 🚀 Restoring: Porch Swing City in Lexington, TX
+[2026-01-20T17:41:50.106Z] 🚀 Restoring: Porch Swing City in Liberty City, TX
+[2026-01-20T17:41:50.245Z] ❌ FAILED: Porch Swing City in Liberty City, TX
+[2026-01-20T17:41:50.247Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:50.252Z] 🚀 Restoring: Porch Swing City in Lingleville, TX
+[2026-01-20T17:41:50.439Z] ❌ FAILED: Porch Swing City in Lingleville, TX
+[2026-01-20T17:41:50.444Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:50.448Z] 🚀 Restoring: Porch Swing City in Linn, TX
+[2026-01-20T17:41:50.668Z] 🚀 Restoring: Porch Swing City in Lipan, TX
+[2026-01-20T17:41:50.806Z] ❌ FAILED: Porch Swing City in Lipan, TX
+[2026-01-20T17:41:50.808Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:50.810Z] 🚀 Restoring: Porch Swing City in Lipscomb, TX
+[2026-01-20T17:41:50.956Z] ❌ FAILED: Porch Swing City in Lipscomb, TX
+[2026-01-20T17:41:50.961Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:50.964Z] 🚀 Restoring: Porch Swing City in Little Cypress, TX
+[2026-01-20T17:41:51.204Z] 🚀 Restoring: Porch Swing City in Little Rock, Arkansas
+[2026-01-20T17:41:51.353Z] ❌ FAILED: Porch Swing City in Little Rock, Arkansas
+[2026-01-20T17:41:51.358Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:51.363Z] 🚀 Restoring: Porch Swing City in Liverpool, TX
+[2026-01-20T17:41:51.512Z] ❌ FAILED: Porch Swing City in Liverpool, TX
+[2026-01-20T17:41:51.514Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:51.517Z] 🚀 Restoring: Porch Swing City in Livingston, TX
+[2026-01-20T17:41:51.784Z] 🚀 Restoring: Porch Swing City in Llano Grande, TX
+[2026-01-20T17:41:51.912Z] ❌ FAILED: Porch Swing City in Llano Grande, TX
+[2026-01-20T17:41:51.917Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:51.921Z] 🚀 Restoring: Porch Swing City in Lockett, TX
+[2026-01-20T17:41:52.137Z] 🚀 Restoring: Porch Swing City in Lockney, TX
+[2026-01-20T17:41:52.283Z] ❌ FAILED: Porch Swing City in Lockney, TX
+[2026-01-20T17:41:52.285Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:52.286Z] 🚀 Restoring: Porch Swing City in Log Cabin, TX
+[2026-01-20T17:41:52.430Z] ❌ FAILED: Porch Swing City in Log Cabin, TX
+[2026-01-20T17:41:52.432Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:52.433Z] 🚀 Restoring: Porch Swing City in Lolita, TX
+[2026-01-20T17:41:52.656Z] 🚀 Restoring: Porch Swing City in Loma Grande, TX
+[2026-01-20T17:41:52.802Z] ❌ FAILED: Porch Swing City in Loma Grande, TX
+[2026-01-20T17:41:52.803Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:52.805Z] 🚀 Restoring: Porch Swing City in Loma Linda East, TX
+[2026-01-20T17:41:52.954Z] ❌ FAILED: Porch Swing City in Loma Linda East, TX
+[2026-01-20T17:41:52.956Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:52.957Z] 🚀 Restoring: Porch Swing City in Loma Linda East, TX
+[2026-01-20T17:41:53.211Z] 🚀 Restoring: Porch Swing City in Loma Linda West, TX
+[2026-01-20T17:41:53.363Z] ❌ FAILED: Porch Swing City in Loma Linda West, TX
+[2026-01-20T17:41:53.367Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:53.372Z] 🚀 Restoring: Porch Swing City in Loma Linda, TX
+[2026-01-20T17:41:53.602Z] 🚀 Restoring: Porch Swing City in Loma Vista, TX
+[2026-01-20T17:41:53.765Z] ❌ FAILED: Porch Swing City in Loma Vista, TX
+[2026-01-20T17:41:53.801Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:53.804Z] 🚀 Restoring: Porch Swing City in Lometa, TX
+[2026-01-20T17:41:53.951Z] ❌ FAILED: Porch Swing City in Lometa, TX
+[2026-01-20T17:41:53.959Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:53.973Z] 🚀 Restoring: Porch Swing City in Lone Oak, TX
+[2026-01-20T17:41:54.218Z] 🚀 Restoring: Porch Swing City in Long Beach, California
+[2026-01-20T17:41:54.357Z] ❌ FAILED: Porch Swing City in Long Beach, California
+[2026-01-20T17:41:54.358Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:54.360Z] 🚀 Restoring: Porch Swing City in Longoria, TX
+[2026-01-20T17:41:54.516Z] ❌ FAILED: Porch Swing City in Longoria, TX
+[2026-01-20T17:41:54.518Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:54.520Z] 🚀 Restoring: Porch Swing City in Loop, TX
+[2026-01-20T17:41:54.796Z] 🚀 Restoring: Porch Swing City in Lopeño, TX
+[2026-01-20T17:41:54.936Z] ❌ FAILED: Porch Swing City in Lopeño, TX
+[2026-01-20T17:41:54.938Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:54.942Z] 🚀 Restoring: Porch Swing City in Lopezville, TX
+[2026-01-20T17:41:55.142Z] 🚀 Restoring: Porch Swing City in Loraine, TX
+[2026-01-20T17:41:55.289Z] ❌ FAILED: Porch Swing City in Loraine, TX
+[2026-01-20T17:41:55.291Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:55.292Z] 🚀 Restoring: Porch Swing City in Lorenzo, TX
+[2026-01-20T17:41:55.446Z] ❌ FAILED: Porch Swing City in Lorenzo, TX
+[2026-01-20T17:41:55.451Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:55.455Z] 🚀 Restoring: Porch Swing City in Los Altos, TX
+[2026-01-20T17:41:55.674Z] 🚀 Restoring: Porch Swing City in Los Alvarez, TX
+[2026-01-20T17:41:55.833Z] ❌ FAILED: Porch Swing City in Los Alvarez, TX
+[2026-01-20T17:41:55.836Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:55.837Z] 🚀 Restoring: Porch Swing City in Los Angeles, California
+[2026-01-20T17:41:55.976Z] ❌ FAILED: Porch Swing City in Los Angeles, California
+[2026-01-20T17:41:55.983Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:55.986Z] 🚀 Restoring: Porch Swing City in Los Angeles, TX
+[2026-01-20T17:41:56.195Z] 🚀 Restoring: Porch Swing City in Los Arcos, TX
+[2026-01-20T17:41:56.339Z] ❌ FAILED: Porch Swing City in Los Arcos, TX
+[2026-01-20T17:41:56.341Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:56.342Z] 🚀 Restoring: Porch Swing City in Los Arrieros, TX
+[2026-01-20T17:41:56.478Z] ❌ FAILED: Porch Swing City in Los Arrieros, TX
+[2026-01-20T17:41:56.479Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:56.481Z] 🚀 Restoring: Porch Swing City in Los Barreras, TX
+[2026-01-20T17:41:56.717Z] 🚀 Restoring: Porch Swing City in Los Centenarios, TX
+[2026-01-20T17:41:57.009Z] ❌ FAILED: Porch Swing City in Los Centenarios, TX
+[2026-01-20T17:41:57.010Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:57.012Z] 🚀 Restoring: Porch Swing City in Los Corralitos, TX
+[2026-01-20T17:41:57.251Z] 🚀 Restoring: Porch Swing City in Los Ebanos, TX
+[2026-01-20T17:41:57.404Z] ❌ FAILED: Porch Swing City in Los Ebanos, TX
+[2026-01-20T17:41:57.408Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:57.412Z] 🚀 Restoring: Porch Swing City in Los Ebanos, TX
+[2026-01-20T17:41:57.629Z] 🚀 Restoring: Porch Swing City in Los Huisaches, TX
+[2026-01-20T17:41:57.786Z] ❌ FAILED: Porch Swing City in Los Huisaches, TX
+[2026-01-20T17:41:57.787Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:57.789Z] 🚀 Restoring: Porch Swing City in Los Indios, TX
+[2026-01-20T17:41:57.939Z] ❌ FAILED: Porch Swing City in Los Indios, TX
+[2026-01-20T17:41:57.941Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:57.943Z] 🚀 Restoring: Porch Swing City in Los Lobos, TX
+[2026-01-20T17:41:58.156Z] 🚀 Restoring: Porch Swing City in Los Minerales, TX
+[2026-01-20T17:41:58.306Z] ❌ FAILED: Porch Swing City in Los Minerales, TX
+[2026-01-20T17:41:58.307Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:58.309Z] 🚀 Restoring: Porch Swing City in Los Nopalitos, TX
+[2026-01-20T17:41:58.499Z] ❌ FAILED: Porch Swing City in Los Nopalitos, TX
+[2026-01-20T17:41:58.529Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:58.539Z] 🚀 Restoring: Porch Swing City in Los Veteranos I, TX
+[2026-01-20T17:41:58.773Z] 🚀 Restoring: Porch Swing City in Los Veteranos II, TX
+[2026-01-20T17:41:58.918Z] ❌ FAILED: Porch Swing City in Los Veteranos II, TX
+[2026-01-20T17:41:58.919Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:58.921Z] 🚀 Restoring: Porch Swing City in Los Ybanez, TX
+[2026-01-20T17:41:59.123Z] 🚀 Restoring: Porch Swing City in Lost Creek, TX
+[2026-01-20T17:41:59.270Z] ❌ FAILED: Porch Swing City in Lost Creek, TX
+[2026-01-20T17:41:59.272Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:59.274Z] 🚀 Restoring: Porch Swing City in Lott, TX
+[2026-01-20T17:41:59.410Z] ❌ FAILED: Porch Swing City in Lott, TX
+[2026-01-20T17:41:59.412Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:59.414Z] 🚀 Restoring: Porch Swing City in Louise, TX
+[2026-01-20T17:41:59.625Z] 🚀 Restoring: Porch Swing City in Lovelady, TX
+[2026-01-20T17:41:59.769Z] ❌ FAILED: Porch Swing City in Lovelady, TX
+[2026-01-20T17:41:59.774Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:59.785Z] 🚀 Restoring: Porch Swing City in Loving, TX
+[2026-01-20T17:41:59.939Z] ❌ FAILED: Porch Swing City in Loving, TX
+[2026-01-20T17:41:59.944Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:41:59.945Z] 🚀 Restoring: Porch Swing City in Lozano, TX
+[2026-01-20T17:42:00.161Z] 🚀 Restoring: Porch Swing City in Lueders, TX
+[2026-01-20T17:42:00.349Z] ❌ FAILED: Porch Swing City in Lueders, TX
+[2026-01-20T17:42:00.351Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:00.353Z] 🚀 Restoring: Porch Swing City in Lyons, TX
+[2026-01-20T17:42:00.518Z] ❌ FAILED: Porch Swing City in Lyons, TX
+[2026-01-20T17:42:00.530Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:00.534Z] 🚀 Restoring: Porch Swing City in Mabank, TX
+[2026-01-20T17:42:00.826Z] 🚀 Restoring: Porch Swing City in Macdona, TX
+[2026-01-20T17:42:00.975Z] ❌ FAILED: Porch Swing City in Macdona, TX
+[2026-01-20T17:42:00.977Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:00.979Z] 🚀 Restoring: Porch Swing City in Magnolia Beach, TX
+[2026-01-20T17:42:01.188Z] 🚀 Restoring: Porch Swing City in Malone, TX
+[2026-01-20T17:42:01.354Z] ❌ FAILED: Porch Swing City in Malone, TX
+[2026-01-20T17:42:01.360Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:01.367Z] 🚀 Restoring: Porch Swing City in Manchaca, TX
+[2026-01-20T17:42:01.697Z] 🚀 Restoring: Porch Swing City in Manuel Garcia II, TX
+[2026-01-20T17:42:01.846Z] ❌ FAILED: Porch Swing City in Manuel Garcia II, TX
+[2026-01-20T17:42:01.849Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:01.851Z] 🚀 Restoring: Porch Swing City in Manuel Garcia, TX
+[2026-01-20T17:42:01.993Z] ❌ FAILED: Porch Swing City in Manuel Garcia, TX
+[2026-01-20T17:42:01.995Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:01.998Z] 🚀 Restoring: Porch Swing City in Marathon, TX
+[2026-01-20T17:42:02.226Z] 🚀 Restoring: Porch Swing City in Marietta, TX
+[2026-01-20T17:42:02.373Z] ❌ FAILED: Porch Swing City in Marietta, TX
+[2026-01-20T17:42:02.377Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:02.381Z] 🚀 Restoring: Porch Swing City in Markham, TX
+[2026-01-20T17:42:02.658Z] 🚀 Restoring: Porch Swing City in Marquez, TX
+[2026-01-20T17:42:02.803Z] ❌ FAILED: Porch Swing City in Marquez, TX
+[2026-01-20T17:42:02.806Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:02.810Z] 🚀 Restoring: Porch Swing City in Martinez, TX
+[2026-01-20T17:42:02.969Z] ❌ FAILED: Porch Swing City in Martinez, TX
+[2026-01-20T17:42:02.973Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:02.977Z] 🚀 Restoring: Porch Swing City in Matador, TX
+[2026-01-20T17:42:03.196Z] 🚀 Restoring: Porch Swing City in Matagorda, TX
+[2026-01-20T17:42:03.366Z] ❌ FAILED: Porch Swing City in Matagorda, TX
+[2026-01-20T17:42:03.371Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:03.373Z] 🚀 Restoring: Porch Swing City in Mauriceville, TX
+[2026-01-20T17:42:03.531Z] ❌ FAILED: Porch Swing City in Mauriceville, TX
+[2026-01-20T17:42:03.533Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:03.535Z] 🚀 Restoring: Porch Swing City in May, TX
+[2026-01-20T17:42:03.758Z] 🚀 Restoring: Porch Swing City in Maypearl, TX
+[2026-01-20T17:42:03.902Z] ❌ FAILED: Porch Swing City in Maypearl, TX
+[2026-01-20T17:42:03.903Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:03.905Z] 🚀 Restoring: Porch Swing City in McCaulley, TX
+[2026-01-20T17:42:04.114Z] 🚀 Restoring: Porch Swing City in McDade, TX
+[2026-01-20T17:42:04.261Z] ❌ FAILED: Porch Swing City in McDade, TX
+[2026-01-20T17:42:04.263Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:04.265Z] 🚀 Restoring: Porch Swing City in McKinney Acres, TX
+[2026-01-20T17:42:04.419Z] ❌ FAILED: Porch Swing City in McKinney Acres, TX
+[2026-01-20T17:42:04.421Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:04.423Z] 🚀 Restoring: Porch Swing City in McLean, TX
+[2026-01-20T17:42:04.633Z] 🚀 Restoring: Porch Swing City in McLeod, TX
+[2026-01-20T17:42:04.783Z] ❌ FAILED: Porch Swing City in McLeod, TX
+[2026-01-20T17:42:04.788Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:04.794Z] 🚀 Restoring: Porch Swing City in McQueeney, TX
+[2026-01-20T17:42:04.940Z] ❌ FAILED: Porch Swing City in McQueeney, TX
+[2026-01-20T17:42:04.942Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:04.943Z] 🚀 Restoring: Porch Swing City in Meadow, TX
+[2026-01-20T17:42:05.169Z] 🚀 Restoring: Porch Swing City in Medina, TX
+[2026-01-20T17:42:05.319Z] ❌ FAILED: Porch Swing City in Medina, TX
+[2026-01-20T17:42:05.322Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:05.325Z] 🚀 Restoring: Porch Swing City in Megargel, TX
+[2026-01-20T17:42:05.472Z] ❌ FAILED: Porch Swing City in Megargel, TX
+[2026-01-20T17:42:05.478Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:05.484Z] 🚀 Restoring: Porch Swing City in Melvin, TX
+[2026-01-20T17:42:05.688Z] 🚀 Restoring: Porch Swing City in Mentone, TX
+[2026-01-20T17:42:05.822Z] ❌ FAILED: Porch Swing City in Mentone, TX
+[2026-01-20T17:42:05.823Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:05.825Z] 🚀 Restoring: Porch Swing City in Merkel, TX
+[2026-01-20T17:42:05.976Z] ❌ FAILED: Porch Swing City in Merkel, TX
+[2026-01-20T17:42:05.996Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:06.007Z] 🚀 Restoring: Porch Swing City in Mertens, TX
+[2026-01-20T17:42:06.209Z] 🚀 Restoring: Porch Swing City in Mertzon, TX
+[2026-01-20T17:42:06.353Z] ❌ FAILED: Porch Swing City in Mertzon, TX
+[2026-01-20T17:42:06.357Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:06.363Z] 🚀 Restoring: Porch Swing City in Mesa, Arizona
+[2026-01-20T17:42:06.524Z] ❌ FAILED: Porch Swing City in Mesa, Arizona
+[2026-01-20T17:42:06.540Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:06.545Z] 🚀 Restoring: Porch Swing City in Mi Ranchito Estate, TX
+[2026-01-20T17:42:06.772Z] 🚀 Restoring: Porch Swing City in Miami, TX
+[2026-01-20T17:42:06.911Z] ❌ FAILED: Porch Swing City in Miami, TX
+[2026-01-20T17:42:06.913Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:06.914Z] 🚀 Restoring: Porch Swing City in Midfield, TX
+[2026-01-20T17:42:07.129Z] 🚀 Restoring: Porch Swing City in Midway North, TX
+[2026-01-20T17:42:07.267Z] ❌ FAILED: Porch Swing City in Midway North, TX
+[2026-01-20T17:42:07.269Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:07.272Z] 🚀 Restoring: Porch Swing City in Midway South, TX
+[2026-01-20T17:42:07.433Z] ❌ FAILED: Porch Swing City in Midway South, TX
+[2026-01-20T17:42:07.439Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:07.441Z] 🚀 Restoring: Porch Swing City in Midway, TX
+[2026-01-20T17:42:07.674Z] 🚀 Restoring: Porch Swing City in Miguel Barrera, TX
+[2026-01-20T17:42:07.831Z] ❌ FAILED: Porch Swing City in Miguel Barrera, TX
+[2026-01-20T17:42:07.836Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:07.841Z] 🚀 Restoring: Porch Swing City in Mikes, TX
+[2026-01-20T17:42:08.007Z] ❌ FAILED: Porch Swing City in Mikes, TX
+[2026-01-20T17:42:08.009Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:08.010Z] 🚀 Restoring: Porch Swing City in Mila Doce, TX
+[2026-01-20T17:42:08.235Z] 🚀 Restoring: Porch Swing City in Milam, TX
+[2026-01-20T17:42:08.404Z] ❌ FAILED: Porch Swing City in Milam, TX
+[2026-01-20T17:42:08.405Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:08.407Z] 🚀 Restoring: Porch Swing City in Milano, TX
+[2026-01-20T17:42:08.660Z] 🚀 Restoring: Porch Swing City in Mildred, TX
+[2026-01-20T17:42:08.812Z] ❌ FAILED: Porch Swing City in Mildred, TX
+[2026-01-20T17:42:08.813Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:08.815Z] 🚀 Restoring: Porch Swing City in Milford, TX
+[2026-01-20T17:42:08.972Z] ❌ FAILED: Porch Swing City in Milford, TX
+[2026-01-20T17:42:08.975Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:08.978Z] 🚀 Restoring: Porch Swing City in Miller's Cove, TX
+[2026-01-20T17:42:09.186Z] 🚀 Restoring: Porch Swing City in Millsap, TX
+[2026-01-20T17:42:09.325Z] ❌ FAILED: Porch Swing City in Millsap, TX
+[2026-01-20T17:42:09.327Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:09.328Z] 🚀 Restoring: Porch Swing City in Mingus, TX
+[2026-01-20T17:42:09.473Z] ❌ FAILED: Porch Swing City in Mingus, TX
+[2026-01-20T17:42:09.475Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:09.476Z] 🚀 Restoring: Porch Swing City in Mirando City, TX
+[2026-01-20T17:42:09.672Z] 🚀 Restoring: Porch Swing City in Mission Bend, TX
+[2026-01-20T17:42:09.844Z] ❌ FAILED: Porch Swing City in Mission Bend, TX
+[2026-01-20T17:42:09.849Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:09.852Z] 🚀 Restoring: Porch Swing City in Mobeetie, TX
+[2026-01-20T17:42:09.997Z] ❌ FAILED: Porch Swing City in Mobeetie, TX
+[2026-01-20T17:42:09.999Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:10.005Z] 🚀 Restoring: Porch Swing City in Mobile City, TX
+[2026-01-20T17:42:10.285Z] 🚀 Restoring: Porch Swing City in Mobile, Alabama
+[2026-01-20T17:42:10.422Z] ❌ FAILED: Porch Swing City in Mobile, Alabama
+[2026-01-20T17:42:10.423Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:10.424Z] 🚀 Restoring: Porch Swing City in Montague, TX
+[2026-01-20T17:42:10.616Z] 🚀 Restoring: Porch Swing City in Monte Alto, TX
+[2026-01-20T17:42:10.746Z] ❌ FAILED: Porch Swing City in Monte Alto, TX
+[2026-01-20T17:42:10.750Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:10.754Z] 🚀 Restoring: Porch Swing City in Montgomery, Alabama
+[2026-01-20T17:42:10.890Z] ❌ FAILED: Porch Swing City in Montgomery, Alabama
+[2026-01-20T17:42:10.892Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:10.893Z] 🚀 Restoring: Porch Swing City in Moore Station, TX
+[2026-01-20T17:42:11.095Z] 🚀 Restoring: Porch Swing City in Moore, TX
+[2026-01-20T17:42:11.246Z] ❌ FAILED: Porch Swing City in Moore, TX
+[2026-01-20T17:42:11.247Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:11.248Z] 🚀 Restoring: Porch Swing City in Moraida, TX
+[2026-01-20T17:42:11.392Z] ❌ FAILED: Porch Swing City in Moraida, TX
+[2026-01-20T17:42:11.393Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:11.395Z] 🚀 Restoring: Porch Swing City in Morales-Sanchez, TX
+[2026-01-20T17:42:11.604Z] 🚀 Restoring: Porch Swing City in Moran, TX
+[2026-01-20T17:42:11.755Z] ❌ FAILED: Porch Swing City in Moran, TX
+[2026-01-20T17:42:11.757Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:11.760Z] 🚀 Restoring: Porch Swing City in Morgan's Point, TX
+[2026-01-20T17:42:11.920Z] ❌ FAILED: Porch Swing City in Morgan's Point, TX
+[2026-01-20T17:42:11.923Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:11.937Z] 🚀 Restoring: Porch Swing City in Morgan, TX
+[2026-01-20T17:42:12.142Z] 🚀 Restoring: Porch Swing City in Morse, TX
+[2026-01-20T17:42:12.303Z] ❌ FAILED: Porch Swing City in Morse, TX
+[2026-01-20T17:42:12.305Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:12.309Z] 🚀 Restoring: Porch Swing City in Mosheim, TX
+[2026-01-20T17:42:12.450Z] ❌ FAILED: Porch Swing City in Mosheim, TX
+[2026-01-20T17:42:12.459Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:12.463Z] 🚀 Restoring: Porch Swing City in Moulton, TX
+[2026-01-20T17:42:12.706Z] 🚀 Restoring: Porch Swing City in Mound, TX
+[2026-01-20T17:42:12.878Z] ❌ FAILED: Porch Swing City in Mound, TX
+[2026-01-20T17:42:12.880Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:12.882Z] 🚀 Restoring: Porch Swing City in Mount Calm, TX
+[2026-01-20T17:42:13.020Z] ❌ FAILED: Porch Swing City in Mount Calm, TX
+[2026-01-20T17:42:13.022Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:13.024Z] 🚀 Restoring: Porch Swing City in Mount Enterprise, TX
+[2026-01-20T17:42:13.243Z] 🚀 Restoring: Porch Swing City in Mount Vernon, TX
+[2026-01-20T17:42:13.399Z] ❌ FAILED: Porch Swing City in Mount Vernon, TX
+[2026-01-20T17:42:13.402Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:13.405Z] 🚀 Restoring: Porch Swing City in Mountain City, TX
+[2026-01-20T17:42:13.617Z] 🚀 Restoring: Porch Swing City in Mountain View, California
+[2026-01-20T17:42:13.760Z] ❌ FAILED: Porch Swing City in Mountain View, California
+[2026-01-20T17:42:13.771Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:13.788Z] 🚀 Restoring: Porch Swing City in Mullin, TX
+[2026-01-20T17:42:13.947Z] ❌ FAILED: Porch Swing City in Mullin, TX
+[2026-01-20T17:42:13.953Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:13.959Z] 🚀 Restoring: Porch Swing City in Murchison, TX
+[2026-01-20T17:42:14.191Z] 🚀 Restoring: Porch Swing City in Myra, TX
+[2026-01-20T17:42:14.345Z] ❌ FAILED: Porch Swing City in Myra, TX
+[2026-01-20T17:42:14.347Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:14.348Z] 🚀 Restoring: Porch Swing City in Myrtle Springs, TX
+[2026-01-20T17:42:14.506Z] ❌ FAILED: Porch Swing City in Myrtle Springs, TX
+[2026-01-20T17:42:14.510Z] Shopify create failed: {"errors":"Exceeded 2 calls per second for api client. Reduce request rates to resume uninterrupted service."}
+[2026-01-20T17:42:14.514Z] 🚀 Restoring: Porch Swing City in Nada, TX

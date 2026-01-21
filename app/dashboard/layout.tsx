@@ -447,6 +447,12 @@ async function askAdminAI() {
   AI
 </button>
 
+<button
+  onClick={() => window.location.reload()}
+  className="text-sm text-gray-500 hover:text-black"
+>
+  ↻ Refresh
+</button>
 
 <div className="relative">
   <button
@@ -461,6 +467,8 @@ async function askAdminAI() {
       </span>
     )}
   </button>
+
+
 
   {open && (
     <div className="absolute right-0 mt-2 w-80 bg-white border rounded shadow z-50">
@@ -510,7 +518,11 @@ async function askAdminAI() {
       ))}
     </div>
   )}
+
+
+  
 </div>
+
 
         </header>
 

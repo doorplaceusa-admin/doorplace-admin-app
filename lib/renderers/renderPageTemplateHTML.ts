@@ -20,6 +20,9 @@ export type RenderPageTemplateProps = {
   slug: string;
 
   heroImageUrl?: string | null;
+
+  // 🔥 REQUIRED FOR VARIANT TEMPLATES
+  variant_key?: string | null;
 };
 
 /* =========================================
@@ -29,26 +32,90 @@ export type RenderPageTemplateProps = {
 export function renderPageTemplateHTML(
   props: RenderPageTemplateProps
 ): string {
-  const { page_template, ...templateProps } = props;
+  const {
+    page_template,
+    variant_key,
+    city,
+    state,
+    stateCode,
+    slug,
+    heroImageUrl,
+  } = props;
 
   switch (page_template) {
     case "porch_swing_city":
-      return renderPorchSwingCityHTML(templateProps);
+      return renderPorchSwingCityHTML({
+        city,
+        state,
+        stateCode,
+        slug,
+        heroImageUrl,
+      });
 
     case "porch_swing_delivery":
-      return renderPorchSwingDeliveryCityHTML(templateProps);
+      return renderPorchSwingDeliveryCityHTML({
+        city,
+        state,
+        stateCode,
+        slug,
+        heroImageUrl,
+      });
 
     case "porch_swing_size_city":
-      return renderPorchSwingSizeCityHTML(templateProps);
+      if (!variant_key) {
+        throw new Error("Size template requires variant_key");
+      }
+
+      return renderPorchSwingSizeCityHTML({
+        city,
+        state,
+        stateCode,
+        slug,
+        heroImageUrl,
+        size: variant_key,
+      });
 
     case "porch_swing_material_city":
-      return renderPorchSwingMaterialCityHTML(templateProps);
+      if (!variant_key) {
+        throw new Error("Material template requires variant_key");
+      }
+
+      return renderPorchSwingMaterialCityHTML({
+        city,
+        state,
+        stateCode,
+        slug,
+        heroImageUrl,
+        material: variant_key,
+      });
 
     case "porch_swing_style_city":
-      return renderPorchSwingStyleCityHTML(templateProps);
+      if (!variant_key) {
+        throw new Error("Style template requires variant_key");
+      }
+
+      return renderPorchSwingStyleCityHTML({
+        city,
+        state,
+        stateCode,
+        slug,
+        heroImageUrl,
+        style: variant_key,
+      });
 
     case "porch_swing_usecase_city":
-      return renderPorchSwingUsecaseCityHTML(templateProps);
+      if (!variant_key) {
+        throw new Error("Usecase template requires variant_key");
+      }
+
+      return renderPorchSwingUsecaseCityHTML({
+        city,
+        state,
+        stateCode,
+        slug,
+        heroImageUrl,
+        usecase: variant_key,
+      });
 
     default:
       throw new Error(

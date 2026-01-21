@@ -8,16 +8,22 @@ type RenderProps = {
   state: string;
   stateCode: string;
   slug: string;
-  nearbyCities?: CityLink[]; // kept for compatibility
+  material: string; // ✅ REQUIRED
+  nearbyCities?: CityLink[];
   heroImageUrl?: string | null;
+  
 };
 
 export function renderPorchSwingMaterialCityHTML({
   city,
   state,
   stateCode,
+  material,
   heroImageUrl,
 }: RenderProps): string {
+  const materialLabel =
+    material.charAt(0).toUpperCase() + material.slice(1);
+
   return `
 <div style="max-width:850px;margin:0 auto;padding:20px;font-family:'Times New Roman',serif;">
 
@@ -26,20 +32,21 @@ export function renderPorchSwingMaterialCityHTML({
       ? `<div style="text-align:center;margin-bottom:20px;">
           <img
             src="${heroImageUrl}"
-            alt="Porch swing materials in ${city}, ${stateCode}"
-            style="width:100%;max-width:800px;border-radius:6px;"
+            alt="${materialLabel} porch swings in ${city}, ${stateCode}"
+            style="width:100%;max-width:500px;border-radius:6px;"
           />
         </div>`
       : ""
   }
 
   <h1 style="color:#b80d0d;font-size:32px;margin-bottom:10px;">
-    Porch Swing Materials in ${city}, ${stateCode}
+    ${materialLabel} Porch Swings in ${city}, ${stateCode}
   </h1>
 
   <p style="font-size:18px;line-height:1.7;">
-    Choosing the right <strong>porch swing material in ${city}, ${stateCode}</strong>
-    makes a major difference in durability, appearance, and long-term performance.
+    Choosing the right <strong>${materialLabel.toLowerCase()}</strong> porch swing in
+    ${city}, ${stateCode} makes a major difference in durability, appearance,
+    and long-term performance.
     Doorplace USA builds solid-wood porch swings using materials selected for outdoor use
     and real-world weather conditions.
   </p>
@@ -86,7 +93,7 @@ export function renderPorchSwingMaterialCityHTML({
   <h2 style="color:#b80d0d;">Built for ${city} Outdoor Spaces</h2>
   <p style="font-size:16px;line-height:1.8;">
     From shaded front porches to open backyard patios,
-    Doorplace USA builds porch swings using materials
+    Doorplace USA builds ${materialLabel.toLowerCase()} porch swings
     that perform well in real outdoor environments.
     Every swing is designed for comfort, strength, and durability.
   </p>
@@ -111,7 +118,8 @@ export function renderPorchSwingMaterialCityHTML({
   </ul>
 
   <p style="margin-top:30px;font-size:16px;line-height:1.7;">
-    If you're comparing porch swing materials for your ${city}, ${state} home,
+    If you're comparing ${materialLabel.toLowerCase()} porch swings for your
+    ${city}, ${state} home,
     Doorplace USA provides expert guidance, quality craftsmanship,
     and nationwide delivery.
   </p>

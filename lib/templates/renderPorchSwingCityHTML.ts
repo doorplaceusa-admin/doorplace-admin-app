@@ -26,7 +26,7 @@ export function renderPorchSwingCityHTML({
   ${
     heroImageUrl
       ? `<div style="text-align:center;margin-bottom:20px;">
-          <img src="${heroImageUrl}" alt="Porch swings in ${city}, ${stateCode}" style="width:100%;max-width:800px;border-radius:6px;" />
+          <img src="${heroImageUrl}" alt="Porch swings in ${city}, ${stateCode}" style="width:100%;max-width:500px;border-radius:6px;" />
         </div>`
       : ""
   }

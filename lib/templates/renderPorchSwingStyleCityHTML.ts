@@ -10,6 +10,7 @@ type RenderProps = {
   slug: string;
   nearbyCities?: CityLink[]; // kept for compatibility
   heroImageUrl?: string | null;
+  style: string;
 };
 
 export function renderPorchSwingStyleCityHTML({
@@ -27,7 +28,7 @@ export function renderPorchSwingStyleCityHTML({
           <img
             src="${heroImageUrl}"
             alt="Porch swing styles in ${city}, ${stateCode}"
-            style="width:100%;max-width:800px;border-radius:6px;"
+            style="width:100%;max-width:500px;border-radius:6px;"
           />
         </div>`
       : ""

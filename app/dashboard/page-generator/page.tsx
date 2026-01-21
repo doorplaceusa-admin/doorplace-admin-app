@@ -51,6 +51,15 @@ const SWING_SIZE_OPTIONS = [
   { value: "custom", label: "Custom Size" },
 ];
 
+const SWING_MATERIAL_OPTIONS = [
+  { value: "pine", label: "Pine Wood" },
+  { value: "cedar", label: "Cedar Wood" },
+  { value: "oak", label: "Oak Wood" },
+  { value: "Test", label: "test" },
+  { value: "cypress", label: "Cypress Wood" },
+  { value: "pressure-treated", label: "Pressure Treated" },
+];
+
 
 const TEMPLATE_OPTIONS = [
   // Core swing pages
@@ -74,15 +83,12 @@ export default function PageGeneratorAdminPage() {
   const [loadingCities, setLoadingCities] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [bulkGeneratedIds, setBulkGeneratedIds] = useState<string[]>([]);
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
+
+
   const [selectedSwingSize, setSelectedSwingSize] = useState("crib");
-  const [lastGeneratedPageId, setLastGeneratedPageId] = useState<string | null>(null);
-
-
-
-
-
-
-
+  
+  const [selectedSwingMaterial, setSelectedSwingMaterial] = useState("cedar");
 
 
   const [states, setStates] = useState<StateRow[]>([]);
@@ -92,6 +98,11 @@ export default function PageGeneratorAdminPage() {
   const [selectedCityIds, setSelectedCityIds] = useState<Set<string>>(new Set());
   const [radiusCenterId, setRadiusCenterId] = useState<string>("");
   const [radiusMiles, setRadiusMiles] = useState<number>(25);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [progressText, setProgressText] = useState<string>("");
+  const [isPushingToShopify, setIsPushingToShopify] = useState(false);
+
+
 
   const [selectedStateId, setSelectedStateId] = useState<string>("");
   const [selectedTemplate, setSelectedTemplate] = useState<string>(
@@ -108,24 +119,45 @@ export default function PageGeneratorAdminPage() {
   } | null>(null);
 
 const getTemplateParams = () => {
-  switch (selectedTemplate) {
-    case "porch_swing_size_city":
-      return { size: selectedSwingSize };
+  const pageType = getPageTypeFromTemplate(selectedTemplate);
 
-    case "porch_swing_usecase_city":
-      return { usecase: "porch" }; // or later add UI dropdown
+  switch (pageType) {
+    case "size":
+      return {
+        pageType,
+        size: selectedSwingSize,
+      };
 
-    case "porch_swing_material_city":
-      return { material: "cedar" }; // or later add UI dropdown
+    case "material":
+      return {
+        pageType,
+        material: selectedSwingMaterial,
+      };
 
-    case "porch_swing_style_city":
-      return { style: "modern" }; // or later add UI dropdown
-
+    case "general":
     default:
-      return {};
+      return {
+        pageType,
+      };
   }
 };
 
+
+
+const getPageTypeFromTemplate = (template: string) => {
+  switch (template) {
+    case "porch_swing_material_city":
+      return "material";
+    case "porch_swing_size_city":
+      return "size";
+    case "door_city":
+      return "door";
+    case "porch_swing_delivery":
+      return "install";
+    default:
+      return "general";
+  }
+};
 
 
   function haversineMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -194,10 +226,7 @@ const getTemplateParams = () => {
     setSelectedCityIds(next);
   };
 
-  const firstSelectedCityId = useMemo(
-    () => Array.from(selectedCityIds)[0] || null,
-    [selectedCityIds]
-  );
+ 
 
   const showToast = (type: any, msg: string) => {
     setToast({ type, msg });
@@ -219,6 +248,39 @@ const getTemplateParams = () => {
     };
     run();
   }, []);
+
+
+useEffect(() => {
+  if (!jobId) return;
+
+  const interval = setInterval(async () => {
+    const res = await fetch(`/api/pages/job-status?job_id=${jobId}`);
+    const job = await res.json();
+
+    setProgressText(
+      `Batch ${job.last_batch} of ${Math.ceil(
+        job.total / 150
+      )} completed — ${job.processed} / ${job.total} pages`
+    );
+
+    if (job.status === "completed") {
+  setJobId(null);
+  clearInterval(interval);
+  showToast("success", "All pages generated — ready to push");
+}
+
+
+    if (job.status === "failed") {
+      clearInterval(interval);
+      setJobId(null);
+      showToast("error", "Generation failed");
+    }
+  }, 1500);
+
+  return () => clearInterval(interval);
+}, [jobId]);
+
+
 
   useEffect(() => {
   if (!selectedStateId) return;
@@ -253,6 +315,22 @@ const getTemplateParams = () => {
 
   run();
 }, [selectedStateId]);
+
+useEffect(() => {
+  const loadPendingCount = async () => {
+    const { count } = await supabase
+      .from("generated_pages")
+      .select("id", { count: "exact", head: true })
+      .is("shopify_page_id", null)
+      .in("status", ["generated"]);
+
+    setPendingCount(count || 0);
+  };
+
+  loadPendingCount();
+}, []);
+
+
 
 
   const selectCitiesInRadius = (centerCityId: string, miles: number) => {
@@ -354,6 +432,26 @@ const getTemplateParams = () => {
     </select>
   </div>
 )}
+
+{selectedTemplate === "porch_swing_material_city" && (
+  <div>
+    <label className="block text-sm font-semibold mb-2">
+      Swing Material
+    </label>
+    <select
+      value={selectedSwingMaterial}
+      onChange={(e) => setSelectedSwingMaterial(e.target.value)}
+      className="w-full rounded-lg border px-3 py-2 text-sm"
+    >
+      {SWING_MATERIAL_OPTIONS.map((m) => (
+        <option key={m.value} value={m.value}>
+          {m.label}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+
 
 
             <div>
@@ -462,73 +560,77 @@ const getTemplateParams = () => {
             </div>
 
            <div className="mt-4 flex flex-col gap-2">
-              <button
-                onClick={async () => {
-                  if (!selectedStateId || !firstSelectedCityId) {
-                    showToast("info", "Select at least one city");
-                    return;
-                  }
-                  setIsGenerating(true);
-                  try {
-                    const res = await fetch("/api/pages/generate-single", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    state_id: selectedStateId,
-    location_id: firstSelectedCityId,
-    page_template: selectedTemplate,
-    hero_image_url: heroImageUrl || null,
-    ...getTemplateParams(),
-  }),
-});
+
+            
 
 
-                    const json = await res.json();
-if (!res.ok) throw new Error(json.error);
-
-setLastGeneratedPageId(json.page.id);
-showToast("success", "Draft page created");
 
 
-                  } catch (e: any) {
-                    showToast("error", e.message);
-                  } finally {
-                    setIsGenerating(false);
-                  }
-                }}
-                className="bg-black text-white px-4 py-2 rounded"
-              >
-                Generate 1 Page
-              </button>
 
-{lastGeneratedPageId && (
+
+
+
+
+
+
+
+
+{pendingCount !== null && (
   <button
+    disabled={pendingCount === 0 || isPushingToShopify}
     onClick={async () => {
+      setIsPushingToShopify(true);
+      showToast(
+        "info",
+        `Publishing ${pendingCount} pending page${pendingCount === 1 ? "" : "s"}…`
+      );
+
       try {
-        const res = await fetch("/api/pages/push-bulk", {
+        const res = await fetch("/api/pages/push-pending", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            page_ids: [lastGeneratedPageId],
-          }),
         });
 
         const json = await res.json();
         if (!res.ok) throw new Error(json.error);
 
-        showToast("success", "Page pushed to Shopify");
+        showToast("success", "Pending pages publish started");
       } catch (e: any) {
         showToast("error", e.message);
+        setIsPushingToShopify(false);
       }
     }}
-    className="bg-green-600 text-white px-4 py-2 rounded"
+    className={`px-4 py-2 rounded text-white transition-all
+      ${
+        pendingCount === 0 || isPushingToShopify
+          ? "bg-gray-400 opacity-60 cursor-not-allowed"
+          : "bg-blue-600 hover:bg-blue-700"
+      }`}
   >
-    Push This Page to Shopify
+    {pendingCount === 0
+      ? "No Pending Pages"
+      : `Publish Pending Pages (${pendingCount})`}
   </button>
 )}
 
-          
 
+
+            {selectedCityIds.size > 0 && (
+  <div className="text-sm text-gray-700">
+    You are about to generate{" "}
+    <strong>{selectedCityIds.size}</strong>{" "}
+    page{selectedCityIds.size === 1 ? "" : "s"}.
+  </div>
+)}
+
+{progressText && (
+  <div className="text-sm font-semibold text-blue-700">
+    {progressText}
+  </div>
+)}
+
+
+              
 
 
               <button
@@ -539,7 +641,7 @@ showToast("success", "Draft page created");
                   }
                   setIsGenerating(true);
                   try {
-                    const res = await fetch("/api/pages/generate-bulk", {
+                    const res = await fetch("/api/pages/generate-job", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -547,16 +649,19 @@ showToast("success", "Draft page created");
     city_ids: Array.from(selectedCityIds),
     page_template: selectedTemplate,
     hero_image_url: heroImageUrl || null,
-    ...getTemplateParams(),
+    ...getTemplateParams(), // 👈 includes pageType automatically
   }),
 });
+
 
 
                     const json = await res.json();
                     if (!res.ok) throw new Error(json.error);
 
-                    setBulkGeneratedIds(json.page_ids || []);
-                    showToast("success", "Bulk pages created");
+                    setJobId(json.job_id);
+setProgressText("Starting generation...");
+showToast("info", "Generation started");
+
                   } catch (e: any) {
                     showToast("error", e.message);
                   } finally {
@@ -565,36 +670,14 @@ showToast("success", "Draft page created");
                 }}
                 className="bg-red-600 text-white px-4 py-2 rounded"
               >
-                Bulk Generate
+                Generate Pages
               </button>
 
-              {bulkGeneratedIds.length > 0 && (
-                <button
-                  onClick={async () => {
-                    setIsGenerating(true);
-                    try {
-                      const res = await fetch("/api/pages/push-bulk", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ page_ids: bulkGeneratedIds }),
-                      });
+          
 
-                      const json = await res.json();
-                      if (!res.ok) throw new Error(json.error);
 
-                      showToast("success", "Pages pushed to Shopify");
-                      setBulkGeneratedIds([]);
-                    } catch (e: any) {
-                      showToast("error", e.message);
-                    } finally {
-                      setIsGenerating(false);
-                    }
-                  }}
-                  className="bg-green-600 text-white px-4 py-2 rounded"
-                >
-                  Push All to Shopify
-                </button>
-              )}
+
+
             </div>
           </div>
         </div>

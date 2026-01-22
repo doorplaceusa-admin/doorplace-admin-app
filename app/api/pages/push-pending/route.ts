@@ -4,16 +4,21 @@ import { createShopifyPage } from "@/lib/shopify/createShopifyPage";
 import { renderPageTemplateHTML } from "@/lib/renderers/renderPageTemplateHTML";
 import { buildMetaDescription } from "@/lib/seo/build_meta/description";
 
-const BATCH_SIZE = 10;                 // pages per mini-batch
-const MAX_PAGES_PER_RUN = 200;         // ⛔ HARD SAFETY CAP
+/* ===============================
+   CONFIG
+================================ */
+const BATCH_SIZE = 10;
+const MAX_PAGES_PER_RUN = 200;
 const PAGE_COOLDOWN_MS = 900;
 const BATCH_COOLDOWN_MS = 2500;
 
+/* ===============================
+   HELPERS
+================================ */
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// 🔥 Determine pageType from template
 function getPageType(template: string) {
   switch (template) {
     case "porch_swing_material_city":
@@ -29,6 +34,9 @@ function getPageType(template: string) {
   }
 }
 
+/* ===============================
+   POST HANDLER
+================================ */
 export async function POST() {
   try {
     console.log("🚀 PUSH PENDING STARTED");
@@ -36,11 +44,17 @@ export async function POST() {
     const { data: pages, error } = await supabaseAdmin
       .from("generated_pages")
       .select(`
-        *,
-        us_locations (
+        id,
+        title,
+        slug,
+        page_template,
+        variant_key,
+        hero_image_url,
+        template_suffix,
+        created_at,
+        us_locations!inner (
           city_name,
-          slug,
-          us_states (
+          us_states!inner (
             state_name,
             state_code
           )
@@ -48,7 +62,8 @@ export async function POST() {
       `)
       .eq("status", "generated")
       .is("shopify_page_id", null)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true })
+      .limit(MAX_PAGES_PER_RUN);
 
     if (error) throw error;
 
@@ -57,27 +72,24 @@ export async function POST() {
       return NextResponse.json({ success: true, message: "No pending pages" });
     }
 
-    // ⛔ LIMIT WORKLOAD PER RUN
-    const pagesToProcess = pages.slice(0, MAX_PAGES_PER_RUN);
-
-    console.log(
-      `📦 Found ${pages.length} pending pages, processing ${pagesToProcess.length}`
-    );
+    console.log(`📦 Processing ${pages.length} pages`);
 
     let published = 0;
     let skipped = 0;
     let failed = 0;
 
-    for (let i = 0; i < pagesToProcess.length; i += BATCH_SIZE) {
-      const batch = pagesToProcess.slice(i, i + BATCH_SIZE);
-
+    for (let i = 0; i < pages.length; i += BATCH_SIZE) {
+      const batch = pages.slice(i, i + BATCH_SIZE);
       console.log(`➡️ Processing batch ${i + 1}-${i + batch.length}`);
 
       for (const page of batch) {
         try {
-          const city = page.us_locations?.city_name;
-          const state = page.us_locations?.us_states?.state_name;
-          const stateCode = page.us_locations?.us_states?.state_code;
+          const location = page.us_locations?.[0];
+          const stateRow = location?.us_states?.[0];
+
+          const city = location?.city_name;
+          const state = stateRow?.state_name;
+          const stateCode = stateRow?.state_code;
 
           if (!city || !state || !stateCode) {
             skipped++;
@@ -153,21 +165,9 @@ export async function POST() {
 
     console.log("🎉 PUSH RUN COMPLETE");
 
-    // 🔁 AUTO-RESTART IF MORE WORK EXISTS
-    if (pages.length > MAX_PAGES_PER_RUN) {
-      console.log("🔁 More pages remain — restarting push job");
-
-      fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/push-pending`, {
-        method: "POST",
-      }).catch(() => {
-        console.warn("⚠️ Auto-restart fetch failed");
-      });
-    }
-
     return NextResponse.json({
       success: true,
-      totalFound: pages.length,
-      processedThisRun: pagesToProcess.length,
+      processed: pages.length,
       published,
       skipped,
       failed,

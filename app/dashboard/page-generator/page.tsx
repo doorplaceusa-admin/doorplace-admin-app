@@ -55,10 +55,39 @@ const SWING_MATERIAL_OPTIONS = [
   { value: "pine", label: "Pine Wood" },
   { value: "cedar", label: "Cedar Wood" },
   { value: "oak", label: "Oak Wood" },
-  { value: "Test", label: "test" },
+  { value: "Red Oak Wood", label: "Red Oak Wood" },
+  { value: "White Oak Wood", label: "White Oak Wood" },
   { value: "cypress", label: "Cypress Wood" },
   { value: "pressure-treated", label: "Pressure Treated" },
 ];
+
+const SWING_STYLE_OPTIONS = [
+  { value: "daybed-porch-swings", label: "Daybed Porch Swings" },
+  { value: "farmhouse-porch-swings", label: "Farmhouse Porch Swings" },
+  { value: "patio-swings", label: "Patio Swings" },
+  { value: "pergola-swings", label: "Pergola Swings" },
+  { value: "backyard-swings", label: "Backyard Swings" },
+  { value: "front-yard-swings", label: "Front Yard Swings" },
+
+  { value: "luxury-porch-swings", label: "Luxury Porch Swings" },
+  { value: "modern-porch-swings", label: "Modern Porch Swings" },
+  { value: "traditional-porch-swings", label: "Traditional Porch Swings" },
+  { value: "rustic-porch-swings", label: "Rustic Porch Swings" },
+  { value: "country-porch-swings", label: "Country Porch Swings" },
+
+  { value: "custom-porch-swings", label: "Custom Porch Swings" },
+  { value: "handcrafted-porch-swings", label: "Handcrafted Porch Swings" },
+  { value: "heavy-duty-porch-swings", label: "Heavy-Duty Porch Swings" },
+  { value: "oversized-porch-swings", label: "Oversized Porch Swings" },
+
+  { value: "gazebo-swings", label: "Gazebo Swings" },
+  { value: "garden-swings", label: "Garden Swings" },
+  { value: "poolside-swings", label: "Poolside Swings" },
+
+  { value: "porch-swings-with-chains", label: "Porch Swings with Chains" },
+  { value: "hanging-porch-swings", label: "Hanging Porch Swings" },
+];
+
 
 
 const TEMPLATE_OPTIONS = [
@@ -89,6 +118,10 @@ export default function PageGeneratorAdminPage() {
   const [selectedSwingSize, setSelectedSwingSize] = useState("crib");
   
   const [selectedSwingMaterial, setSelectedSwingMaterial] = useState("cedar");
+  const [selectedSwingStyle, setSelectedSwingStyle] = useState(
+  SWING_STYLE_OPTIONS[0].value
+);
+
 
 
   const [states, setStates] = useState<StateRow[]>([]);
@@ -134,7 +167,12 @@ const getTemplateParams = () => {
         material: selectedSwingMaterial,
       };
 
-    case "general":
+    case "style":
+      return {
+        pageType,
+        style: selectedSwingStyle,
+      };
+
     default:
       return {
         pageType,
@@ -144,12 +182,15 @@ const getTemplateParams = () => {
 
 
 
+
 const getPageTypeFromTemplate = (template: string) => {
   switch (template) {
     case "porch_swing_material_city":
       return "material";
     case "porch_swing_size_city":
       return "size";
+    case "porch_swing_style_city":
+      return "style";
     case "door_city":
       return "door";
     case "porch_swing_delivery":
@@ -158,6 +199,7 @@ const getPageTypeFromTemplate = (template: string) => {
       return "general";
   }
 };
+
 
 
   function haversineMiles(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -451,6 +493,26 @@ useEffect(() => {
     </select>
   </div>
 )}
+
+{selectedTemplate === "porch_swing_style_city" && (
+  <div>
+    <label className="block text-sm font-semibold mb-2">
+      Porch Swing Style
+    </label>
+    <select
+      value={selectedSwingStyle}
+      onChange={(e) => setSelectedSwingStyle(e.target.value)}
+      className="w-full rounded-lg border px-3 py-2 text-sm"
+    >
+      {SWING_STYLE_OPTIONS.map((s) => (
+        <option key={s.value} value={s.value}>
+          {s.label}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+
 
 
 

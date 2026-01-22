@@ -2,15 +2,18 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createShopifyPage } from "@/lib/shopify/createShopifyPage";
 import { renderPageTemplateHTML } from "@/lib/renderers/renderPageTemplateHTML";
-import { buildMetaDescription } from "@/lib/seo/build_meta/description"; // ✅ ADD
+import { buildMetaDescription } from "@/lib/seo/build_meta/description";
 
-const BATCH_SIZE = 10; // ⬅️ SLOWER + SAFER
+const BATCH_SIZE = 10;                 // pages per mini-batch
+const MAX_PAGES_PER_RUN = 200;         // ⛔ HARD SAFETY CAP
+const PAGE_COOLDOWN_MS = 900;
+const BATCH_COOLDOWN_MS = 2500;
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// 🔥 Determine pageType from template (single source of truth)
+// 🔥 Determine pageType from template
 function getPageType(template: string) {
   switch (template) {
     case "porch_swing_material_city":
@@ -50,17 +53,23 @@ export async function POST() {
     if (error) throw error;
 
     if (!pages || pages.length === 0) {
+      console.log("✅ No pending pages");
       return NextResponse.json({ success: true, message: "No pending pages" });
     }
 
-    console.log(`📦 Found ${pages.length} pages to process`);
+    // ⛔ LIMIT WORKLOAD PER RUN
+    const pagesToProcess = pages.slice(0, MAX_PAGES_PER_RUN);
+
+    console.log(
+      `📦 Found ${pages.length} pending pages, processing ${pagesToProcess.length}`
+    );
 
     let published = 0;
     let skipped = 0;
     let failed = 0;
 
-    for (let i = 0; i < pages.length; i += BATCH_SIZE) {
-      const batch = pages.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < pagesToProcess.length; i += BATCH_SIZE) {
+      const batch = pagesToProcess.slice(i, i + BATCH_SIZE);
 
       console.log(`➡️ Processing batch ${i + 1}-${i + batch.length}`);
 
@@ -94,7 +103,6 @@ export async function POST() {
 
           const pageType = getPageType(page.page_template);
 
-          // ✅ BUILD SEO AUTOMATICALLY
           const seoDescription = buildMetaDescription({
             pageType,
             city,
@@ -104,13 +112,12 @@ export async function POST() {
           });
 
           const shopifyPage = await createShopifyPage({
-  title: page.title,
-  handle: page.slug,
-  body_html: html,
-  template_suffix: page.template_suffix || null,
-  meta_description: seoDescription, // ✅ THIS IS THE KEY
-});
-
+            title: page.title,
+            handle: page.slug,
+            body_html: html,
+            template_suffix: page.template_suffix || null,
+            meta_description: seoDescription,
+          });
 
           await supabaseAdmin
             .from("generated_pages")
@@ -124,8 +131,7 @@ export async function POST() {
           published++;
           console.log(`✅ Published → ${page.title}`);
 
-          // ⏳ PER-PAGE COOL DOWN
-          await sleep(900);
+          await sleep(PAGE_COOLDOWN_MS);
 
         } catch (err: any) {
           failed++;
@@ -142,14 +148,26 @@ export async function POST() {
       }
 
       console.log("⏳ Batch cooldown");
-      await sleep(2500);
+      await sleep(BATCH_COOLDOWN_MS);
     }
 
-    console.log("🎉 PUSH COMPLETE");
+    console.log("🎉 PUSH RUN COMPLETE");
+
+    // 🔁 AUTO-RESTART IF MORE WORK EXISTS
+    if (pages.length > MAX_PAGES_PER_RUN) {
+      console.log("🔁 More pages remain — restarting push job");
+
+      fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/push-pending`, {
+        method: "POST",
+      }).catch(() => {
+        console.warn("⚠️ Auto-restart fetch failed");
+      });
+    }
 
     return NextResponse.json({
       success: true,
-      total: pages.length,
+      totalFound: pages.length,
+      processedThisRun: pagesToProcess.length,
       published,
       skipped,
       failed,

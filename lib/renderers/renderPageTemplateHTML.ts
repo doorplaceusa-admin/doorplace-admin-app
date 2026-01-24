@@ -6,6 +6,8 @@ import { renderPorchSwingSizeCityHTML } from "../templates/renderPorchSwingSizeC
 import { renderPorchSwingMaterialCityHTML } from "../templates/renderPorchSwingMaterialCityHTML";
 import { renderPorchSwingStyleCityHTML } from "../templates/renderPorchSwingStyleCityHTML";
 import { renderPorchSwingUsecaseCityHTML } from "../templates/renderPorchSwingUsecaseCityHTML";
+import { renderBarnDoorStyleCityHTML } from "../templates/renderBarnDoorStyleCityHTML";
+import { renderCustomDoorInstallationCityHTML } from "../templates/renderCustomDoorInstallationCityHTML";
 
 /* =========================================
    Types
@@ -43,6 +45,37 @@ export function renderPageTemplateHTML(
   } = props;
 
   switch (page_template) {
+    /* -----------------------------
+       DOOR TEMPLATES
+    ------------------------------ */
+
+    case "door_city":
+      if (!variant_key) {
+        throw new Error("Door style template requires variant_key");
+      }
+
+      return renderBarnDoorStyleCityHTML({
+        city,
+        state,
+        stateCode,
+        slug,
+        heroImageUrl,
+        style: variant_key,
+      });
+
+    case "custom_door_installation_city":
+      return renderCustomDoorInstallationCityHTML({
+        city,
+        state,
+        stateCode,
+        slug,
+        heroImageUrl,
+      });
+
+    /* -----------------------------
+       PORCH SWING TEMPLATES
+    ------------------------------ */
+
     case "porch_swing_city":
       return renderPorchSwingCityHTML({
         city,
@@ -116,6 +149,10 @@ export function renderPageTemplateHTML(
         heroImageUrl,
         usecase: variant_key,
       });
+
+    /* -----------------------------
+       FALLBACK
+    ------------------------------ */
 
     default:
       throw new Error(

@@ -1,3 +1,5 @@
+// lib/seo/build_meta/description.ts
+
 type BuildMetaDescriptionArgs = {
   pageType:
     | "material"
@@ -10,10 +12,11 @@ type BuildMetaDescriptionArgs = {
   stateCode: string;
   material?: string | null;
   size?: string | null;
+  template?: string | null; // ✅ allows custom handling
 };
 
 const BRAND_LINE =
-  "Built by Doorplace USA with quality craftsmanship and nationwide delivery.";
+  "Built by Doorplace USA with quality craftsmanship.";
 
 function trim160(str: string) {
   return str.length > 160 ? str.slice(0, 157) + "…" : str;
@@ -25,6 +28,7 @@ export function buildMetaDescription({
   stateCode,
   material,
   size,
+  template,
 }: BuildMetaDescriptionArgs): string {
   let description = "";
 
@@ -38,7 +42,11 @@ export function buildMetaDescription({
       break;
 
     case "door":
-      description = `Custom wood doors in ${city}, ${stateCode}. Designed for beauty, security, and long-term performance. ${BRAND_LINE}`;
+      if (template === "custom_door_installation_city") {
+        description = `Custom door installation in ${city}, ${stateCode}. Handcrafted wood doors built and professionally installed by Doorplace USA.`;
+      } else {
+        description = `Custom wood doors in ${city}, ${stateCode}. Designed for beauty, security, and long-term performance. ${BRAND_LINE}`;
+      }
       break;
 
     case "install":

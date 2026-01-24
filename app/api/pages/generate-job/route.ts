@@ -10,7 +10,9 @@ function slugify(v: string) {
 }
 
 function titleCase(v: string) {
-  return v.charAt(0).toUpperCase() + v.slice(1);
+  return v
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
 export async function POST(req: Request) {
@@ -32,12 +34,11 @@ export async function POST(req: Request) {
     }
 
     if (!page_template) {
-      return NextResponse.json({ error: "page_template required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "page_template required" },
+        { status: 400 }
+      );
     }
-
-    console.log("🚀 GENERATION STARTED");
-    console.log("📦 Cities:", city_ids.length);
-    console.log("📄 Template:", page_template);
 
     await supabaseAdmin.from("page_generation_jobs").insert({
       id: jobId,
@@ -54,19 +55,17 @@ export async function POST(req: Request) {
         (batchIndex + 1) * BATCH_SIZE
       );
 
-      console.log(
-        `📦 Batch ${batchIndex + 1}/${totalBatches} — ${batch.length} cities`
-      );
-
       const { data: cities, error } = await supabaseAdmin
         .from("us_locations")
-        .select(`
+        .select(
+          `
           id,
           city_name,
           slug,
           state_id,
           us_states:state_id ( state_code )
-        `)
+        `
+        )
         .in("id", batch);
 
       if (error || !cities) {
@@ -83,6 +82,10 @@ export async function POST(req: Request) {
         let variant_key: string | null = null;
 
         switch (page_template) {
+          /* -----------------------------
+             PORCH SWING TEMPLATES
+          ------------------------------ */
+
           case "porch_swing_city":
             title = `Porch Swings in ${c.city_name}, ${stateCodeUpper}`;
             slug = `porch-swings-${c.slug}-${stateCodeLower}`;
@@ -121,10 +124,30 @@ export async function POST(req: Request) {
             slug = `porch-swing-${variant_key}-${c.slug}-${stateCodeLower}`;
             break;
 
+          /* -----------------------------
+             DOOR TEMPLATES
+          ------------------------------ */
+
           case "door_city":
-            title = `Custom Wood Doors in ${c.city_name}, ${stateCodeUpper}`;
-            slug = `wood-doors-${c.slug}-${stateCodeLower}`;
+            if (style) {
+              variant_key = slugify(style);
+              title = `${titleCase(style)} in ${c.city_name}, ${stateCodeUpper}`;
+              slug = `${variant_key}-${c.slug}-${stateCodeLower}`;
+            } else {
+              title = `Custom Wood Doors in ${c.city_name}, ${stateCodeUpper}`;
+              slug = `wood-doors-${c.slug}-${stateCodeLower}`;
+            }
             break;
+
+          case "custom_door_installation_city":
+            title = `Custom Door Installation in ${c.city_name}, ${stateCodeUpper}`;
+            slug = `custom-door-installation-${c.slug}-${stateCodeLower}`;
+            variant_key = null;
+            break;
+
+          /* -----------------------------
+             FALLBACK
+          ------------------------------ */
 
           default:
             throw new Error(`Unsupported template: ${page_template}`);
@@ -163,16 +186,8 @@ export async function POST(req: Request) {
       .update({ status: "completed" })
       .eq("id", jobId);
 
-    console.log("🎉 GENERATION COMPLETE");
-
-    return NextResponse.json({
-      success: true,
-      job_id: jobId,
-    });
-
+    return NextResponse.json({ success: true, job_id: jobId });
   } catch (err: any) {
-    console.error("❌ GENERATION FAILED:", err);
-
     await supabaseAdmin
       .from("page_generation_jobs")
       .update({

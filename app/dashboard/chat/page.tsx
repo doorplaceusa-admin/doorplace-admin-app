@@ -1,11 +1,14 @@
-// app/dashboard/chat/page.tsx
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+/* ======================
+   TYPES
+====================== */
+
 type InboxRow = {
-  partner_id: string;
+  partner_id: string; // ✅ PRIMARY KEY
   first_name: string;
   last_name: string;
   email_address: string;
@@ -15,7 +18,12 @@ type InboxRow = {
   pinned?: boolean;
 };
 
+
 type SortMode = "unread" | "latest" | "name";
+
+/* ======================
+   COMPONENT
+====================== */
 
 export default function AdminChatInboxPage() {
   const [rows, setRows] = useState<InboxRow[]>([]);
@@ -25,17 +33,24 @@ export default function AdminChatInboxPage() {
   const [busyPin, setBusyPin] = useState<string | null>(null);
 
   // swipe state
-  const startX = useRef<number>(0);
-  const startY = useRef<number>(0);
-  const swiping = useRef<boolean>(false);
-  const swipedPartnerId = useRef<string | null>(null);
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const swiping = useRef(false);
+  const swipedPartnerUuid = useRef<string | null>(null);
 
-  /* ===============================
+  /* ======================
      LOAD INBOX
-  =============================== */
+  ====================== */
+
   async function loadInbox() {
-    const { data } = await supabase.from("admin_chat_inbox").select("*");
-    if (data) setRows(data as InboxRow[]);
+    const { data, error } = await supabase
+      .from("admin_chat_inbox")
+      .select("*")
+      .order("last_message_at", { ascending: false });
+
+    if (!error && data) {
+      setRows(data as InboxRow[]);
+    }
   }
 
   useEffect(() => {
@@ -55,31 +70,42 @@ export default function AdminChatInboxPage() {
     };
   }, []);
 
-  /* ===============================
-     PIN / UNPIN (FIXED)
-  =============================== */
-  async function togglePin(partner_id: string, pinned?: boolean) {
-    setBusyPin(partner_id);
+  /* ======================
+     PIN / UNPIN
+  ====================== */
 
-    if (pinned) {
-      await supabase
-        .from("admin_chat_pins")
-        .delete()
-        .eq("partner_id", partner_id);
-    } else {
-      await supabase
-        .from("admin_chat_pins")
-        .insert({ partner_id });
-    }
+  type InboxRow = {
+  partner_id: string; // ✅ PRIMARY KEY
+  first_name: string;
+  last_name: string;
+  email_address: string;
+  last_message: string | null;
+  last_message_at: string;
+  unread_count: number;
+  pinned?: boolean;
+};async function togglePin(partner_id: string, pinned?: boolean) {
+  setBusyPin(partner_id);
 
-    // 🔑 force UI sync immediately
-    await loadInbox();
-    setBusyPin(null);
+  if (pinned) {
+    await supabase
+      .from("admin_chat_pins")
+      .delete()
+      .eq("partner_id", partner_id);
+  } else {
+    await supabase
+      .from("admin_chat_pins")
+      .insert({ partner_id });
   }
 
-  /* ===============================
-     MARK READ (FIXED)
-  =============================== */
+  await loadInbox();
+  setBusyPin(null);
+}
+
+
+  /* ======================
+     MARK READ
+  ====================== */
+
   async function markRead(partner_id: string) {
   await supabase
     .from("partner_messages")
@@ -88,14 +114,14 @@ export default function AdminChatInboxPage() {
     .eq("sender", "partner")
     .eq("is_read", false);
 
-  // 🔑 force inbox refresh
   await loadInbox();
 }
 
 
-  /* ===============================
+  /* ======================
      FILTER + SORT
-  =============================== */
+  ====================== */
+
   const filteredRows = useMemo(() => {
     let data = [...rows];
 
@@ -138,15 +164,16 @@ export default function AdminChatInboxPage() {
     return data;
   }, [rows, search, sortMode, showUnreadOnly]);
 
-  /* ===============================
-     SWIPE TO PIN (iOS SAFE)
-  =============================== */
-  function onTouchStartRow(e: React.TouchEvent, partner_id: string) {
+  /* ======================
+     SWIPE HANDLERS
+  ====================== */
+
+  function onTouchStartRow(e: React.TouchEvent, partner_uuid: string) {
     const t = e.touches[0];
     startX.current = t.clientX;
     startY.current = t.clientY;
     swiping.current = false;
-    swipedPartnerId.current = partner_id;
+    swipedPartnerUuid.current = partner_uuid;
   }
 
   function onTouchMoveRow(e: React.TouchEvent) {
@@ -154,13 +181,11 @@ export default function AdminChatInboxPage() {
     const dx = t.clientX - startX.current;
     const dy = t.clientY - startY.current;
 
-    // vertical scroll wins
     if (Math.abs(dy) > 14 && Math.abs(dy) > Math.abs(dx)) {
       swiping.current = false;
       return;
     }
 
-    // horizontal swipe
     if (Math.abs(dx) > 24 && Math.abs(dx) > Math.abs(dy)) {
       swiping.current = true;
       e.preventDefault();
@@ -169,7 +194,7 @@ export default function AdminChatInboxPage() {
 
   async function onTouchEndRow(
     e: React.TouchEvent,
-    partner_id: string,
+    partner_uuid: string,
     pinned?: boolean
   ) {
     const endX = e.changedTouches[0].clientX;
@@ -180,33 +205,28 @@ export default function AdminChatInboxPage() {
     const isHorizontalSwipe =
       Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5;
 
-    if (isHorizontalSwipe && swipedPartnerId.current === partner_id) {
+    if (isHorizontalSwipe && swipedPartnerUuid.current === partner_uuid) {
       e.preventDefault();
       e.stopPropagation();
-      await togglePin(partner_id, pinned);
+      await togglePin(partner_uuid, pinned);
     }
 
     swiping.current = false;
-    swipedPartnerId.current = null;
+    swipedPartnerUuid.current = null;
   }
 
   function onClickRow(partner_id: string) {
-    if (swiping.current) return;
-    markRead(partner_id);
-    window.location.href = `/dashboard/chat/${partner_id}`;
-  }
+  if (swiping.current) return;
 
-  /* ===============================
-     TOTAL UNREAD (FOR BELL)
-  =============================== */
-  const totalUnread = useMemo(
-    () => rows.reduce((sum, r) => sum + r.unread_count, 0),
-    [rows]
-  );
+  markRead(partner_id);
+  window.location.href = `/dashboard/chat/${partner_id}`;
+}
 
-  /* ===============================
+
+  /* ======================
      RENDER
-  =============================== */
+  ====================== */
+
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col bg-gray-50 overflow-x-hidden max-w-[1500px] w-full mx-auto">
       {/* HEADER */}
@@ -240,10 +260,6 @@ export default function AdminChatInboxPage() {
             Unread only
           </label>
         </div>
-
-        <div className="text-[11px] text-gray-500 mt-2">
-          Tip: Swipe right on a chat row to pin/unpin.
-        </div>
       </div>
 
       {/* LIST */}
@@ -273,7 +289,7 @@ export default function AdminChatInboxPage() {
             </div>
 
             {/* RIGHT */}
-            <div className="flex flex-col items-end text-xs gap-1 pointer-events-auto">
+            <div className="flex flex-col items-end text-xs gap-1">
               <div>{new Date(r.last_message_at).toLocaleDateString()}</div>
 
               {r.unread_count > 0 && (
@@ -284,7 +300,7 @@ export default function AdminChatInboxPage() {
 
               <button
                 type="button"
-                className="text-[11px] underline text-gray-500 relative z-10"
+                className="text-[11px] underline text-gray-500"
                 disabled={busyPin === r.partner_id}
                 onClick={(e) => {
                   e.preventDefault();

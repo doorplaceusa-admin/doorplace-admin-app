@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import GeneratedPagesTable from "../../components/GeneratedPagesTable";
 
 /**
  * Page Generator (Mobile-first)
@@ -88,6 +89,19 @@ const SWING_STYLE_OPTIONS = [
   { value: "hanging-porch-swings", label: "Hanging Porch Swings" },
 ];
 
+const DOOR_STYLE_OPTIONS = [
+  { value: "single-barn-doors", label: "Single Barn Doors" },
+  { value: "double-barn-doors", label: "Double Barn Doors" },
+  { value: "bypass-barn-doors", label: "Bypass Barn Doors" },
+  { value: "bifold-barn-doors", label: "Bifold Barn Doors" },
+  { value: "glass-barn-doors", label: "Glass Barn Doors" },
+  { value: "mirror-barn-doors", label: "Mirror Barn Doors" },
+  { value: "rustic-barn-doors", label: "Rustic Barn Doors" },
+  { value: "modern-barn-doors", label: "Modern Barn Doors" },
+  { value: "custom-barn-doors", label: "Custom Barn Doors" },
+];
+
+
 
 
 const TEMPLATE_OPTIONS = [
@@ -102,8 +116,15 @@ const TEMPLATE_OPTIONS = [
   { value: "porch_swing_style_city", label: "Porch Swing – Style (City)" },
 
   // Doors (DFW only)
-  { value: "door_city", label: "Door – City (DFW)" },
+  { value: "door_city", label: "Door Style – City (DFW)" },
+
+  // ✅ NEW — Custom Door Installation
+  {
+    value: "custom_door_installation_city",
+    label: "Custom Door Installation – City (DFW)",
+  },
 ];
+
 
 
 
@@ -134,6 +155,10 @@ export default function PageGeneratorAdminPage() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [progressText, setProgressText] = useState<string>("");
   const [isPushingToShopify, setIsPushingToShopify] = useState(false);
+  const [selectedDoorStyle, setSelectedDoorStyle] = useState(
+  DOOR_STYLE_OPTIONS[0].value
+);
+
 
 
 
@@ -151,34 +176,35 @@ export default function PageGeneratorAdminPage() {
     msg: string;
   } | null>(null);
 
+
 const getTemplateParams = () => {
   const pageType = getPageTypeFromTemplate(selectedTemplate);
 
   switch (pageType) {
     case "size":
-      return {
-        pageType,
-        size: selectedSwingSize,
-      };
+      return { pageType, size: selectedSwingSize };
 
     case "material":
-      return {
-        pageType,
-        material: selectedSwingMaterial,
-      };
+      return { pageType, material: selectedSwingMaterial };
 
     case "style":
-      return {
-        pageType,
-        style: selectedSwingStyle,
-      };
+      return { pageType, style: selectedSwingStyle };
+
+    case "door":
+      if (selectedTemplate === "door_city") {
+        return { pageType, style: selectedDoorStyle };
+      }
+
+      // ✅ custom_door_installation_city → NO variant params
+      return { pageType };
 
     default:
-      return {
-        pageType,
-      };
+      return { pageType };
   }
 };
+
+
+
 
 
 
@@ -193,12 +219,19 @@ const getPageTypeFromTemplate = (template: string) => {
       return "style";
     case "door_city":
       return "door";
+    case "custom_door_installation_city": // ✅ ADD
+      return "door";
     case "porch_swing_delivery":
       return "install";
     default:
       return "general";
   }
 };
+
+
+
+
+
 
 
 
@@ -513,6 +546,25 @@ useEffect(() => {
   </div>
 )}
 
+{selectedTemplate === "door_city" && (
+  <div>
+    <label className="block text-sm font-semibold mb-2">
+      Barn Door Style
+    </label>
+    <select
+      value={selectedDoorStyle}
+      onChange={(e) => setSelectedDoorStyle(e.target.value)}
+      className="w-full rounded-lg border px-3 py-2 text-sm"
+    >
+      {DOOR_STYLE_OPTIONS.map((d) => (
+        <option key={d.value} value={d.value}>
+          {d.label}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+
 
 
 
@@ -744,6 +796,11 @@ showToast("info", "Generation started");
           </div>
         </div>
       </div>
+
+
+
+<GeneratedPagesTable />
+
     </div>
   );
 }

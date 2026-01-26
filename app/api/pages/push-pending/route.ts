@@ -4,7 +4,7 @@ import { createShopifyPage } from "@/lib/shopify/createShopifyPage";
 import { renderPageTemplateHTML } from "@/lib/renderers/renderPageTemplateHTML";
 import { buildMetaDescription } from "@/lib/seo/build_meta/description";
 
-const BATCH_SIZE =15;
+const BATCH_SIZE =20;
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));

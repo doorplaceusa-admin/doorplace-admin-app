@@ -5,30 +5,48 @@ export async function POST(req: Request) {
   try {
     const payload = await req.json();
 
-    console.log("📞 RAW IPLUM PAYLOAD ↓↓↓");
-    console.log(JSON.stringify(payload, null, 2));
+    // 🔍 Normalize iPlum event type
+    const eventType =
+      payload.type ||
+      payload.event ||
+      payload.event_type ||
+      payload.call_type ||
+      "unknown";
+
+    // 🔁 Normalize direction
+    const direction =
+      payload.direction ||
+      payload.call_direction ||
+      (eventType.includes("in") ? "inbound" : "outbound");
+
+    // 📞 Normalize phone numbers
+    const from =
+      payload.from_number ||
+      payload.from ||
+      payload.caller ||
+      payload.external_number ||
+      null;
+
+    const to =
+      payload.to_number ||
+      payload.to ||
+      payload.callee ||
+      payload.internal_number ||
+      null;
+
+    // 💬 Normalize message (SMS only)
+    const message =
+      payload.text ||
+      payload.message ||
+      payload.body ||
+      null;
 
     await supabaseAdmin.from("iplum_events").insert({
-      event_type: payload.event_type ?? payload.type ?? payload.event ?? "unknown",
-      direction: payload.direction ?? null,
-      from_number:
-        payload.from ??
-        payload.from_number ??
-        payload.caller ??
-        payload.data?.from ??
-        null,
-      to_number:
-        payload.to ??
-        payload.to_number ??
-        payload.callee ??
-        payload.data?.to ??
-        null,
-      message:
-        payload.message ??
-        payload.text ??
-        payload.body ??
-        payload.data?.text ??
-        null,
+      event_type: eventType,
+      direction,
+      from_number: from,
+      to_number: to,
+      message,
       raw_payload: payload,
     });
 

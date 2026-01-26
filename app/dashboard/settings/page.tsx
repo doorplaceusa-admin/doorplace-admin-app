@@ -1,10 +1,56 @@
 "use client";
 
+import { useState } from "react";
 import SendPasswordReset from "./components/SendPasswordReset";
 
 export default function Page() {
+  const [syncing, setSyncing] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+
+  async function runSitemapSync() {
+    if (syncing) return;
+
+    setSyncing(true);
+    setStatus("Starting sitemap sync…");
+
+    let sitemapIndex = 0;
+    let done = false;
+
+    try {
+      while (!done) {
+        const res = await fetch("/api/iplum/sync-sitemap", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sitemapIndex }),
+        });
+
+        if (!res.ok) {
+          throw new Error(`Sync failed (${res.status})`);
+        }
+
+        const data = await res.json();
+
+        if (data.done) {
+          done = true;
+          setStatus("✅ Sitemap sync complete");
+          break;
+        }
+
+        sitemapIndex = data.sitemapIndex;
+
+        setStatus(
+          `Syncing sitemap ${sitemapIndex} of ${data.total_sitemaps}…`
+        );
+      }
+    } catch (err: any) {
+      setStatus(`❌ Error: ${err.message}`);
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-[1500px] w-full mx-auto">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-6 max-w-[1500px] w-full mx-auto">
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
@@ -25,7 +71,37 @@ export default function Page() {
         <SendPasswordReset />
       </div>
 
-      {/* Future settings */}
+      {/* Shopify Sitemap Sync */}
+      <div className="border-t pt-6">
+        <h2 className="text-lg font-semibold mb-2">
+          Shopify Sitemap Sync
+        </h2>
+
+        <p className="text-sm text-gray-600 mb-4">
+          Sync all existing Shopify pages into TradePilot.  
+          Handles very large sitemaps (200k+ pages) safely.
+        </p>
+
+        <button
+          onClick={runSitemapSync}
+          disabled={syncing}
+          className={`px-4 py-2 rounded font-medium text-sm transition ${
+            syncing
+              ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+              : "bg-black text-white hover:bg-gray-800"
+          }`}
+        >
+          {syncing ? "Syncing Sitemap…" : "Sync Shopify Sitemap"}
+        </button>
+
+        {status && (
+          <p className="mt-3 text-sm text-gray-700">
+            {status}
+          </p>
+        )}
+      </div>
+
+      {/* Footer */}
       <div className="border-t pt-6 text-sm text-gray-500">
         More features coming soon.
       </div>

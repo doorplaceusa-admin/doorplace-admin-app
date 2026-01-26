@@ -14,15 +14,17 @@ type IPlumEvent = {
 
 /* ---------- helpers ---------- */
 
-function getEventKind(eventType: string) {
-  if (eventType.startsWith("sms")) return "SMS";
-  return "CALL";
+// 🔒 Case-safe, future-proof
+function getEventKind(eventType: string | null) {
+  if (!eventType) return "CALL";
+  return eventType.toLowerCase().startsWith("sms") ? "SMS" : "CALL";
 }
 
 function formatDirection(direction: string | null) {
   if (!direction) return "";
-  if (direction === "in" || direction === "inbound") return "Incoming";
-  if (direction === "out" || direction === "outbound") return "Outgoing";
+  const d = direction.toLowerCase();
+  if (d === "in" || d === "inbound" || d === "incoming") return "Incoming";
+  if (d === "out" || d === "outbound" || d === "outgoing") return "Outgoing";
   return direction;
 }
 
@@ -130,8 +132,8 @@ export default function IPlumPage() {
                 </span>
               </div>
 
-              {/* Message */}
-              {e.message && (
+              {/* Message (SMS only) */}
+              {kind === "SMS" && e.message && (
                 <div className="mt-2 text-sm text-gray-700 italic border-l-2 border-gray-200 pl-3">
                   “{e.message}”
                 </div>

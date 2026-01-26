@@ -6,7 +6,7 @@ export async function POST(req: Request) {
     const payload = await req.json();
 
     /* ======================================================
-       1️⃣ DETECT SMS FIRST (THIS FIXES THE BUG)
+       1️⃣ DETECT SMS FIRST
     ====================================================== */
 
     const message =
@@ -18,26 +18,20 @@ export async function POST(req: Request) {
     const isSMS = !!message;
 
     /* ======================================================
-       2️⃣ NORMALIZE EVENT TYPE (SMS WINS)
+       2️⃣ FORCE CANONICAL EVENT TYPE (UI-SAFE)
     ====================================================== */
 
-    const eventType = isSMS
-      ? "sms"
-      : payload.type ||
-        payload.event ||
-        payload.event_type ||
-        payload.call_type ||
-        "call";
+    const eventType = isSMS ? "SMS" : "CALL";
 
     /* ======================================================
-       3️⃣ NORMALIZE DIRECTION (SAFE + SIMPLE)
+       3️⃣ NORMALIZE DIRECTION
     ====================================================== */
 
     const direction =
       payload.direction ||
       payload.call_direction ||
       payload.sms_direction ||
-      "inbound";
+      "Incoming";
 
     /* ======================================================
        4️⃣ NORMALIZE PHONE NUMBERS
@@ -62,8 +56,8 @@ export async function POST(req: Request) {
     ====================================================== */
 
     await supabaseAdmin.from("iplum_events").insert({
-      event_type: eventType,   // "sms" | "call"
-      direction,               // inbound | outbound
+      event_type: eventType,   // "SMS" | "CALL"
+      direction,               // Incoming | Outgoing
       from_number: from,
       to_number: to,
       message,                 // null for calls

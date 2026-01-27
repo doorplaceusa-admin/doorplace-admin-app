@@ -5,7 +5,6 @@ import { renderPageTemplateHTML } from "@/lib/renderers/renderPageTemplateHTML";
 import { buildMetaDescription } from "@/lib/seo/build_meta/description";
 
 const BATCH_SIZE = 15;
-const RATE_LIMIT_DELAY = 900;
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -29,153 +28,194 @@ function getPageType(template: string) {
 }
 
 export async function POST() {
-  console.log("🚀 PUSH GENERATED STARTED");
-
-  let totalPublished = 0;
-  let totalSkipped = 0;
-  let totalFailed = 0;
-
   try {
-    while (true) {
-      /* -----------------------------------------
-         FETCH NEXT BATCH
-      ----------------------------------------- */
-      const { data: pages, error } = await supabaseAdmin
-        .from("generated_pages")
-        .select(
-          `
-          *,
-          us_locations (
-            city_name,
-            slug,
-            us_states (
-              state_name,
-              state_code
-            )
+    console.log("🚀 PUSH PENDING STARTED");
+
+    /* -----------------------------------------
+       FETCH ONLY VALID, NON-DUPLICATE PAGES
+    ----------------------------------------- */
+    const { data: pages, error } = await supabaseAdmin
+      .from("generated_pages")
+      .select(`
+        *,
+        us_locations (
+          city_name,
+          slug,
+          us_states (
+            state_name,
+            state_code
           )
-        `
         )
-        .eq("status", "generated")
-        .is("shopify_page_id", null)
-        .eq("is_duplicate", false)
-        .order("created_at", { ascending: true })
-        .limit(BATCH_SIZE);
+      `)
+      .eq("status", "generated")
+      .is("shopify_page_id", null)
+      .eq("is_duplicate", false) // 🔒 HARD BLOCK
+      .order("created_at", { ascending: true })
+      .limit(BATCH_SIZE);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      if (!pages || pages.length === 0) {
-        console.log("🎉 NO GENERATED PAGES LEFT");
-        break;
-      }
+    if (!pages || pages.length === 0) {
+      console.log("✅ NO PENDING PAGES LEFT");
+      return NextResponse.json({ success: true });
+    }
 
-      console.log(`📦 Processing batch of ${pages.length}`);
+    console.log(`📦 Processing ${pages.length} pages`);
 
-      /* -----------------------------------------
-         PROCESS BATCH
-      ----------------------------------------- */
-      for (const page of pages) {
-        try {
-          const city = page.us_locations?.city_name;
-          const state = page.us_locations?.us_states?.state_name;
-          const stateCode = page.us_locations?.us_states?.state_code;
+    let published = 0;
+    let skipped = 0;
+    let failed = 0;
 
-          if (!city || !state || !stateCode) {
-            totalSkipped++;
-            continue;
-          }
+    /* -----------------------------------------
+       PROCESS BATCH
+    ----------------------------------------- */
+    for (const page of pages) {
+      try {
+        const city = page.us_locations?.city_name;
+        const state = page.us_locations?.us_states?.state_name;
+        const stateCode = page.us_locations?.us_states?.state_code;
 
-          const html = renderPageTemplateHTML({
-            page_template: page.page_template,
-            variant_key: page.variant_key ?? null,
-            city,
-            state,
-            stateCode,
-            slug: page.slug,
-            heroImageUrl: page.hero_image_url,
-          });
+        if (!city || !state || !stateCode) {
+          skipped++;
+          continue;
+        }
 
-          if (!html || html.trim().length < 50) {
-            totalSkipped++;
-            continue;
-          }
+        const html = renderPageTemplateHTML({
+          page_template: page.page_template,
+          variant_key: page.variant_key ?? null,
+          city,
+          state,
+          stateCode,
+          slug: page.slug,
+          heroImageUrl: page.hero_image_url,
+        });
 
-          const pageType = getPageType(page.page_template);
+        if (!html || html.trim().length < 50) {
+          skipped++;
+          continue;
+        }
 
-          const metaDescription = buildMetaDescription({
-            pageType,
-            city,
-            stateCode,
-            material: pageType === "material" ? page.variant_key : undefined,
-            size: pageType === "size" ? page.variant_key : undefined,
-            template: page.page_template,
-          });
+        const pageType = getPageType(page.page_template);
 
-          const shopifyPage = await createShopifyPage({
-            title: page.title,
-            handle: page.slug,
-            body_html: html,
-            template_suffix: page.template_suffix || null,
-            meta_description: metaDescription,
-          });
+        const seoDescription = buildMetaDescription({
+          pageType,
+          city,
+          stateCode,
+          material: pageType === "material" ? page.variant_key : undefined,
+          size: pageType === "size" ? page.variant_key : undefined,
+          template: page.page_template,
+        });
+
+        const shopifyPage = await createShopifyPage({
+          title: page.title,
+          handle: page.slug,
+          body_html: html,
+          template_suffix: page.template_suffix || null,
+          meta_description: seoDescription,
+        });
+
+        await supabaseAdmin
+          .from("generated_pages")
+          .update({
+            shopify_page_id: shopifyPage.id,
+            status: "published",
+            published_at: new Date().toISOString(),
+          })
+          .eq("id", page.id);
+
+        published++;
+        console.log(`✅ Published → ${page.title}`);
+
+        await sleep(900);
+
+      } catch (err: any) {
+        const message = err?.message || "";
+
+        /* -----------------------------------------
+           HANDLE DUPLICATE HANDLE (FOREVER FIX)
+        ----------------------------------------- */
+        if (message.includes("handle") && message.includes("already been taken")) {
+          skipped++;
 
           await supabaseAdmin
             .from("generated_pages")
             .update({
-              shopify_page_id: shopifyPage.id,
-              status: "published",
-              published_at: new Date().toISOString(),
+              is_duplicate: true,
+              status: "skipped",
+              publish_error: "duplicate handle exists in Shopify",
             })
-            .eq("id", page.id);
+            .eq("slug", page.slug); // 🔥 ALL DUPES AT ONCE
 
-          totalPublished++;
-          console.log(`✅ Published → ${page.slug}`);
+          console.log(`⏭️ Marked duplicate → ${page.slug}`);
+          continue;
+        }
 
-          await sleep(RATE_LIMIT_DELAY);
+        console.error(`❌ FAILED → ${page.title}`, message);
 
-        } catch (err: any) {
-          const message = err?.message || "";
-
-          // 🔒 DUPLICATE HANDLE (PERMANENT BLOCK)
-          if (message.includes("handle") && message.includes("already been taken")) {
-            totalSkipped++;
-
-            await supabaseAdmin
-              .from("generated_pages")
-              .update({
-                is_duplicate: true,
-                publish_error: "duplicate handle exists in Shopify",
-              })
-              .eq("slug", page.slug);
-
-            console.log(`⏭️ Duplicate blocked → ${page.slug}`);
-            continue;
-          }
-
-          console.error(`❌ Failed → ${page.slug}`, message);
-          totalFailed++;
+        /* -----------------------------------------
+           HARD FAIL CONDITIONS
+        ----------------------------------------- */
+        if (message.includes("Unsupported page_template") ||
+            message.includes("requires variant_key")) {
+          failed++;
 
           await supabaseAdmin
             .from("generated_pages")
             .update({
+              status: "failed",
               publish_error: message,
             })
             .eq("id", page.id);
-        }
-      }
 
-      // small buffer before next batch
-      await sleep(1200);
+          continue;
+        }
+
+        /* -----------------------------------------
+           TRANSIENT ERROR (RETRY ALLOWED)
+        ----------------------------------------- */
+        failed++;
+
+        await supabaseAdmin
+          .from("generated_pages")
+          .update({
+            status: "error",
+            publish_error: message,
+          })
+          .eq("id", page.id);
+      }
+    }
+
+    /* -----------------------------------------
+       CHECK IF MORE REMAIN
+    ----------------------------------------- */
+    const { count } = await supabaseAdmin
+      .from("generated_pages")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "generated")
+      .is("shopify_page_id", null)
+      .eq("is_duplicate", false);
+
+    if (count && count > 0) {
+      console.log(`🔁 ${count} pages remaining → restarting push`);
+
+      fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/pages/push-pending`, {
+        method: "POST",
+      }).catch(() => {});
+    } else {
+      console.log("🎉 ALL PAGES PROCESSED");
     }
 
     return NextResponse.json({
       success: true,
-      published: totalPublished,
-      skipped: totalSkipped,
-      failed: totalFailed,
+      processed: pages.length,
+      published,
+      skipped,
+      failed,
+      remaining: count ?? 0,
     });
 
   } catch (err: any) {
-    console.error("🔥 PUSH GENERATED CRASHED", err);
+    console.error("🔥 PUSH CRASHED", err);
     return NextResponse.json(
       { error: err.message || "Push failed" },
       { status: 500 }

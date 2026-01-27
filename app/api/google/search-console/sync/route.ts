@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { refreshGoogleTokenIfNeeded } from "@/lib/google/refreshGoogleToken";
 
 const GOOGLE_API_BASE = "https://searchconsole.googleapis.com/webmasters/v3";
 
 export async function POST() {
   try {
     /**
-     * 1️⃣ Load Google OAuth tokens
+     * 1️⃣ Load Google OAuth record
      */
     const { data: oauth, error: oauthError } = await supabaseAdmin
       .from("google_oauth_accounts")
-      .select("*")
+      .select("company_id")
       .eq("provider", "google")
       .single();
 
@@ -21,11 +22,15 @@ export async function POST() {
       );
     }
 
-    const accessToken = oauth.access_token;
     const companyId = oauth.company_id;
 
     /**
-     * 2️⃣ Get Search Console sites
+     * 2️⃣ Get VALID access token (auto-refresh)
+     */
+    const accessToken = await refreshGoogleTokenIfNeeded(companyId);
+
+    /**
+     * 3️⃣ Fetch Search Console sites
      */
     const sitesRes = await fetch(`${GOOGLE_API_BASE}/sites`, {
       headers: {
@@ -46,7 +51,7 @@ export async function POST() {
     const sites = sitesData.siteEntry || [];
 
     /**
-     * 3️⃣ Store sites (idempotent)
+     * 4️⃣ Store sites (idempotent)
      */
     for (const site of sites) {
       await supabaseAdmin.from("google_sites").upsert(
@@ -62,7 +67,7 @@ export async function POST() {
     }
 
     /**
-     * 4️⃣ Pull performance data (last 28 days)
+     * 5️⃣ Date range (last 28 days)
      */
     const endDate = new Date().toISOString().slice(0, 10);
     const startDate = new Date(
@@ -71,6 +76,9 @@ export async function POST() {
       .toISOString()
       .slice(0, 10);
 
+    /**
+     * 6️⃣ Fetch & store performance data
+     */
     for (const site of sites) {
       const perfRes = await fetch(
         `${GOOGLE_API_BASE}/sites/${encodeURIComponent(
@@ -100,9 +108,6 @@ export async function POST() {
 
       const rows = perfData.rows || [];
 
-      /**
-       * 5️⃣ Store metrics
-       */
       for (const row of rows) {
         const [page, query] = row.keys;
 

@@ -40,6 +40,7 @@ import {
   MapIcon,
   ScanLine,
   ScanLineIcon,
+  DatabaseBackup,
 } from "lucide-react";
 
 
@@ -392,6 +393,11 @@ async function askAdminAI() {
     href="/dashboard/page-scanner"
     icon={<ScanLineIcon size={18} />}
     label="Page Scanner"
+  />
+  <NavLink
+    href="/dashboard/google-search-console"
+    icon={<DatabaseIcon size={18} />}
+    label="Google Analytics"
   />
   
 
@@ -785,6 +791,12 @@ function MobileBottomNav() {
                 href="/dashboard/admin-partner-resources"
                 icon={<BookOpen size={20} />}
                 label="Resources"
+                onClick={() => setShowMore(false)}
+              />
+              <MoreTile
+                href="/dashboard/google-search-console"
+                icon={<DatabaseIcon size={20} />}
+                label="GSC Analytics"
                 onClick={() => setShowMore(false)}
               />
               <MoreTile

@@ -14,19 +14,24 @@ export default function Page() {
     setStatus("Starting sitemap sync…");
 
     let sitemapIndex = 0;
+    let urlOffset = 0;
     let done = false;
 
     try {
       while (!done) {
-        const res = await fetch("/api/iplum/sync-sitemap", {
+        const res = await fetch("/api/shopify/sync-sitemap", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sitemapIndex }),
+          body: JSON.stringify({
+            sitemapIndex,
+            urlOffset,
+          }),
         });
 
         if (!res.ok) {
-          throw new Error(`Sync failed (${res.status})`);
-        }
+  const text = await res.text();
+  throw new Error(text);
+}
 
         const data = await res.json();
 
@@ -37,9 +42,10 @@ export default function Page() {
         }
 
         sitemapIndex = data.sitemapIndex;
+        urlOffset = data.urlOffset;
 
         setStatus(
-          `Syncing sitemap ${sitemapIndex} of ${data.total_sitemaps}…`
+          `Syncing sitemap ${sitemapIndex + 1} of ${data.total_sitemaps}…`
         );
       }
     } catch (err: any) {

@@ -405,6 +405,23 @@ useEffect(() => {
   loadPendingCount();
 }, []);
 
+const selectAllCitiesAllStates = async () => {
+  showToast("info", "Selecting all cities across all states…");
+
+  try {
+    const res = await fetch("/api/locations/select-all");
+    const json = await res.json();
+
+    if (!res.ok) throw new Error(json.error);
+
+    setSelectedCityIds(new Set(json.city_ids));
+    showToast("success", `Selected ${json.city_ids.length} cities`);
+  } catch (e: any) {
+    showToast("error", e.message);
+  }
+};
+
+
 
 
 
@@ -580,20 +597,34 @@ useEffect(() => {
             </div>
 
             <div className="rounded-lg border bg-gray-50 p-3">
-              <div className="text-sm mb-3">
-                Selected: <strong>{selectedCityIds.size}</strong>
-              </div>
+  <div className="text-sm mb-3">
+    Selected: <strong>{selectedCityIds.size}</strong>
+  </div>
 
-              <button
-                onClick={selectAllVisible}
-                className="text-sm underline mr-3"
-              >
-                Select All (Visible)
-              </button>
-              <button onClick={clearSelection} className="text-sm underline">
-                Clear
-              </button>
-            </div>
+  <div className="flex flex-wrap gap-3">
+    <button
+      onClick={selectAllVisible}
+      className="text-sm underline"
+    >
+      Select All (Visible)
+    </button>
+
+    <button
+      onClick={selectAllCitiesAllStates}
+      className="text-sm underline font-semibold text-red-700"
+    >
+      Select ALL Cities (All States)
+    </button>
+
+    <button
+      onClick={clearSelection}
+      className="text-sm underline"
+    >
+      Clear
+    </button>
+  </div>
+</div>
+
           </div>
 
           {/* RIGHT PANEL */}

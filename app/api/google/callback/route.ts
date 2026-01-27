@@ -29,12 +29,10 @@ export async function GET(req: Request) {
   const tokenData = await tokenRes.json();
 
   if (!tokenRes.ok) {
-    console.error("Google token error:", tokenData);
-    return NextResponse.json(
-      { error: "Failed to exchange token" },
-      { status: 500 }
-    );
-  }
+  console.error("Google token error:", tokenData);
+  return NextResponse.json(tokenData, { status: tokenRes.status });
+}
+
 
   // 🔐 Calculate expiration
   const expiresAt = new Date(
@@ -43,7 +41,7 @@ export async function GET(req: Request) {
 
   // ⚠️ TEMP: hardcode company_id for now (OK for testing)
   // Replace this with session → user → company lookup later
-  const companyId = "REPLACE_WITH_REAL_COMPANY_ID";
+  const companyId = "88c22910-7bd1-42fc-bc81-8144a50d7b41";
 
   // 💾 Store / update tokens
   const { error } = await supabaseAdmin

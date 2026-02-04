@@ -543,14 +543,7 @@ async function askAdminAI() {
 </AdminPresenceProvider>
 
 {aiOpen && (
-
-  
   <div className="fixed inset-0 z-50 flex">
-
-    
-  {realtimeVoice.connected ? "■ End Live Voice" : "🎙 Start Live Voice"}
-
-
     {/* Overlay */}
     <div
       className="flex-1 bg-black/40"
@@ -569,79 +562,46 @@ async function askAdminAI() {
         </button>
       </div>
 
+      <div className="p-4 space-y-3">
+        {/* Tone */}
+        <select
+          value={aiTone}
+          onChange={(e) => setAiTone(e.target.value as any)}
+          className="w-full border rounded p-2 text-sm"
+        >
+          <option value="neutral">Neutral</option>
+          <option value="direct">Direct</option>
+          <option value="technical">Technical</option>
+          <option value="sales">Sales</option>
+        </select>
 
-<select
-  value={aiTone}
-  onChange={(e) => setAiTone(e.target.value as any)}
-  className="w-full border rounded p-1 text-xs mb-2"
->
-  <option value="neutral">Neutral</option>
-  <option value="direct">Direct / Blunt</option>
-  <option value="technical">Technical</option>
-  <option value="sales">Sales / Persuasive</option>
-</select>
+        {/* Question */}
+        <textarea
+          ref={aiTextareaRef}
+          value={aiQuestion}
+          onChange={(e) => setAiQuestion(e.target.value)}
+          placeholder="Ask anything…"
+          className="w-full h-28 border rounded p-2 text-sm"
+        />
 
-
-
-      <div className="relative">
-  <textarea
-    ref={aiTextareaRef}
-    value={aiQuestion}
-    onChange={(e) => setAiQuestion(e.target.value)}
-    placeholder={
-      realtimeVoice.connected
-        ? "Listening… speak now"
-        : "Ask anything about the system, data, pages, or performance…"
-    }
-    className="w-full h-28 border rounded p-2 text-base pr-12 focus:outline-none"
-    inputMode="text"
-    autoCorrect="off"
-    autoCapitalize="off"
-    spellCheck={false}
-  />
-
-  <button
-    onClick={() => {
-      if (!realtimeVoice.supported) {
-        alert("Live voice is not supported on this browser.");
-        return;
-      }
-
-      realtimeVoice.connected
-        ? realtimeVoice.stop()
-        : realtimeVoice.start();
-    }}
-    className={`absolute bottom-2 right-2 w-10 h-10 rounded-full flex items-center justify-center text-white
-      ${realtimeVoice.connected ? "bg-red-700" : "bg-gray-900"}`}
-  >
-    🎙
-  </button>
-</div>
-
-
-
-
+        {/* Ask */}
         <button
           onClick={askAdminAI}
           disabled={aiLoading}
-          className="bg-red-700 text-white py-2 rounded text-sm font-semibold hover:bg-red-800 disabled:opacity-60"
+          className="w-full bg-red-700 text-white py-2 rounded font-semibold"
         >
           {aiLoading ? "Thinking..." : "Ask AI"}
         </button>
 
-        <div
-  className="bg-gray-900 text-green-400 text-xs rounded p-3 whitespace-pre-wrap overflow-y-auto"
-  style={{
-    maxHeight: "45vh",
-  }}
->
-  {aiAnswer || "AI ready."}
-</div>
-
+        {/* Answer */}
+        <div className="bg-gray-900 text-green-400 text-xs rounded p-3 whitespace-pre-wrap max-h-64 overflow-y-auto">
+          {aiAnswer || "AI ready."}
+        </div>
       </div>
     </div>
-  
+  </div>
 )}
+
 
 
         {/* ===== MOBILE BOTTOM NAV ===== */}

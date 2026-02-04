@@ -1,24 +1,22 @@
 import { NextResponse } from "next/server";
 
-const TOTAL_CHUNKS = 500000 / 50000; // 10 chunks if 500k pages
+const SHOPIFY_SITEMAP_INDEX = "https://doorplaceusa.com/sitemap.xml";
 
 export async function GET() {
-  const chunks = Math.ceil(TOTAL_CHUNKS);
+  // Always fetch the live Shopify sitemap index
+  const res = await fetch(SHOPIFY_SITEMAP_INDEX, {
+    cache: "no-store",
+  });
 
-  const sitemapLinks = Array.from({ length: chunks })
-    .map((_, i) => {
-      return `
-<sitemap>
-  <loc>https://tradepilot.doorplaceusa.com/sitemap/${i}</loc>
-</sitemap>`;
-    })
-    .join("");
+  if (!res.ok) {
+    return new NextResponse("Failed to fetch Shopify sitemap", {
+      status: 500,
+    });
+  }
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${sitemapLinks}
-</sitemapindex>`;
+  const xml = await res.text();
 
+  // Serve it directly through TradePilot
   return new NextResponse(xml, {
     headers: {
       "Content-Type": "application/xml",

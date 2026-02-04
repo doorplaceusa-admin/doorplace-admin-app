@@ -5,9 +5,11 @@ const CHUNK_SIZE = 50000;
 
 export async function GET(
   req: Request,
-  context: { params: { index: string } }
+  { params }: { params: Promise<{ index: string }> }
 ) {
-  const indexNum = parseInt(context.params.index, 10);
+  const { index } = await params;
+
+  const indexNum = parseInt(index, 10);
 
   if (isNaN(indexNum)) {
     return new NextResponse("Invalid sitemap index", { status: 400 });

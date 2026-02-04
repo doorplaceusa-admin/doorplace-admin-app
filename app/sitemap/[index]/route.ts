@@ -4,36 +4,42 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 const CHUNK_SIZE = 50000;
 
 export async function GET(
-  req: Request,
-  context: any
+  request: Request,
+  context: { params: { index: string } }
 ) {
-  const index = parseInt(context.params.index);
+  const indexNum = parseInt(context.params.index, 10);
 
-  const from = index * CHUNK_SIZE;
+  if (isNaN(indexNum)) {
+    return new NextResponse("Invalid sitemap index", { status: 400 });
+  }
+
+  const from = indexNum * CHUNK_SIZE;
   const to = from + CHUNK_SIZE - 1;
 
   const { data, error } = await supabaseAdmin
-    .from("shopify_urls")
+    .from("shopify_url_inventory")
     .select("url")
-    .order("id", { ascending: true })
+    .order("url", { ascending: true })
     .range(from, to);
 
   if (error) {
     return new NextResponse("Supabase error", { status: 500 });
   }
 
-  const xmlUrls = (data || [])
+  const urls = data || [];
+
+  const xmlBody = urls
     .map(
       (row) => `
   <url>
     <loc>${row.url}</loc>
   </url>`
     )
-    .join("\n");
+    .join("");
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${xmlUrls}
+${xmlBody}
 </urlset>`;
 
   return new NextResponse(xml, {

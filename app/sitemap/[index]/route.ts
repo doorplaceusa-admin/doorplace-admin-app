@@ -1,23 +1,17 @@
 import { NextResponse } from "next/server";
-import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const CHUNK_SIZE = 50000;
 
 export async function GET(
-  req: NextRequest,
-  context: { params: { index: string } }
+  req: Request,
+  context: any
 ) {
   const index = parseInt(context.params.index);
-
-  if (isNaN(index)) {
-    return new NextResponse("Invalid sitemap index", { status: 400 });
-  }
 
   const from = index * CHUNK_SIZE;
   const to = from + CHUNK_SIZE - 1;
 
-  // Pull URLs from Supabase
   const { data, error } = await supabaseAdmin
     .from("shopify_urls")
     .select("url")
@@ -28,9 +22,7 @@ export async function GET(
     return new NextResponse("Supabase error", { status: 500 });
   }
 
-  const urls = data || [];
-
-  const xmlUrls = urls
+  const xmlUrls = (data || [])
     .map(
       (row) => `
   <url>

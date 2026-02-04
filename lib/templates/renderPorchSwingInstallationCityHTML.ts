@@ -1,5 +1,4 @@
 import { buildHtmlFromSections } from "../renderers/buildHtmlFromSections";
-import { renderPorchSwingInternalLinksHTML } from "./renderPorchSwingInternalLinksHTML";
 
 type RenderProps = {
   city: string;
@@ -70,13 +69,6 @@ Our team ensures every installation is secure, level, and built to handle everyd
   return `
 <div style="max-width:850px;margin:0 auto;padding:20px;font-family:'Times New Roman',serif;">
   ${buildHtmlFromSections(sections)}
-  ${renderPorchSwingInternalLinksHTML({
-    currentTemplate: "porch_swing_installation_city",
-    city,
-    state,
-    stateCode,
-    slug,
-  })}
 </div>
 `;
 }

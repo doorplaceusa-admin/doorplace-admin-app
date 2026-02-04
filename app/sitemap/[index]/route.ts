@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const CHUNK_SIZE = 50000;
 
 export async function GET(
-  req: Request,
-  { params }: { params: { index: string } }
+  req: NextRequest,
+  context: { params: { index: string } }
 ) {
-  const index = parseInt(params.index);
+  const index = parseInt(context.params.index);
 
   if (isNaN(index)) {
     return new NextResponse("Invalid sitemap index", { status: 400 });

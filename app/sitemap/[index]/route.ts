@@ -5,15 +5,15 @@ const CHUNK_SIZE = 50000;
 
 export async function GET(
   request: Request,
-  context: { params: { index: string } }
+  { params }: { params: { index: string } }
 ) {
-  const indexNum = parseInt(context.params.index, 10);
+  const chunkIndex = parseInt(params.index, 10);
 
-  if (isNaN(indexNum)) {
-    return new NextResponse("Invalid sitemap index", { status: 400 });
+  if (isNaN(chunkIndex)) {
+    return new NextResponse("Invalid chunk index", { status: 400 });
   }
 
-  const from = indexNum * CHUNK_SIZE;
+  const from = chunkIndex * CHUNK_SIZE;
   const to = from + CHUNK_SIZE - 1;
 
   const { data, error } = await supabaseAdmin
@@ -31,9 +31,9 @@ export async function GET(
   const xmlBody = urls
     .map(
       (row) => `
-  <url>
-    <loc>${row.url}</loc>
-  </url>`
+<url>
+  <loc>${row.url}</loc>
+</url>`
     )
     .join("");
 

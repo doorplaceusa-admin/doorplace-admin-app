@@ -4,16 +4,16 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 const CHUNK_SIZE = 50000;
 
 export async function GET(
-  request: Request,
-  { params }: { params: { index: string } }
+  req: Request,
+  context: { params: { index: string } }
 ) {
-  const chunkIndex = parseInt(params.index, 10);
+  const indexNum = parseInt(context.params.index, 10);
 
-  if (isNaN(chunkIndex)) {
-    return new NextResponse("Invalid chunk index", { status: 400 });
+  if (isNaN(indexNum)) {
+    return new NextResponse("Invalid sitemap index", { status: 400 });
   }
 
-  const from = chunkIndex * CHUNK_SIZE;
+  const from = indexNum * CHUNK_SIZE;
   const to = from + CHUNK_SIZE - 1;
 
   const { data, error } = await supabaseAdmin

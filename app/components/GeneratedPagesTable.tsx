@@ -10,6 +10,18 @@ type Row = {
   created_at: string;
 };
 
+const TEMPLATE_LABELS: Record<string, string> = {
+  porch_swing_city: "Porch Swing – City",
+  porch_swing_delivery: "Porch Swing – Delivery",
+  porch_swing_installation_city: "Porch Swing – Installation",
+  porch_swing_size_city: "Porch Swing – Size",
+  porch_swing_material_city: "Porch Swing – Material",
+  porch_swing_style_city: "Porch Swing – Style",
+  porch_swing_usecase_city: "Porch Swing – Use Case",
+  door_city: "Door Style – City",
+  custom_door_installation_city: "Custom Door Installation",
+};
+
 export default function GeneratedPagesTable() {
   const [rows, setRows] = useState<Row[]>([]);
   const [search, setSearch] = useState("");
@@ -36,8 +48,9 @@ export default function GeneratedPagesTable() {
     setSelected(next);
   };
 
-  const selectAll = () =>
+  const selectAll = () => {
     setSelected(new Set(rows.map((r) => r.id)));
+  };
 
   const clear = () => setSelected(new Set());
 
@@ -65,7 +78,7 @@ export default function GeneratedPagesTable() {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search or URL…"
+          placeholder="Search slug or URL…"
           className="border rounded px-3 py-1 text-sm"
         />
 
@@ -78,7 +91,7 @@ export default function GeneratedPagesTable() {
         </button>
       </div>
 
-      <div className="max-h-[420px] overflow-auto border-t">
+      <div className="max-h-105 overflow-auto border-t">
         <table className="w-full text-sm">
           <thead className="sticky top-0 bg-gray-100 border-b z-10">
             <tr>
@@ -109,12 +122,35 @@ export default function GeneratedPagesTable() {
                     onChange={() => toggle(r.id)}
                   />
                 </td>
-                <td className="p-2 font-mono text-xs">{r.slug}</td>
-                <td className="p-2">{r.page_template}</td>
-                <td className="p-2">{r.status}</td>
+
+                <td className="p-2 font-mono text-xs">
+                  {r.slug}
+                </td>
+
+                <td className="p-2">
+                  {TEMPLATE_LABELS[r.page_template] || r.page_template}
+                </td>
+
+                <td className="p-2">
+                  <span
+                    className={[
+                      "px-2 py-0.5 rounded text-xs font-semibold",
+                      r.status === "generated" &&
+                        "bg-yellow-100 text-yellow-800",
+                      r.status === "published" &&
+                        "bg-green-100 text-green-800",
+                      r.status === "failed" &&
+                        "bg-red-100 text-red-800",
+                    ].join(" ")}
+                  >
+                    {r.status}
+                  </span>
+                </td>
+
                 <td className="p-2">
                   {new Date(r.created_at).toLocaleDateString()}
                 </td>
+
                 <td className="p-2">
                   <button
                     onClick={() => remove([r.id])}

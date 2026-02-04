@@ -67,11 +67,32 @@ export default function SitemapScannerPage() {
     }
   }
 
+  function renderScanStatus() {
+    if (!result) return null;
+
+    if (result.sampled) {
+      return (
+        <span className="inline-block px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800">
+          SAMPLED
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-block px-2 py-1 text-xs rounded bg-green-100 text-green-800">
+        FULL
+      </span>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-semibold mb-6">
-        Sitemap Scanner
-      </h1>
+      <h1 className="text-2xl font-semibold mb-2">Sitemap Scanner</h1>
+
+      <p className="text-sm text-gray-600 mb-6">
+        Max sitemap size: <strong>20,000 URLs</strong>.  
+        Large sites are automatically <strong>sampled (500 URLs)</strong>.
+      </p>
 
       <div className="space-y-4">
         <input
@@ -94,38 +115,50 @@ export default function SitemapScannerPage() {
             checked={isInternal}
             onChange={e => setIsInternal(e.target.checked)}
           />
-          Internal site (DoorPlace USA)
+          Internal site (Doorplace USA)
         </label>
 
-        <button
-          onClick={runScan}
-          disabled={loading || !inputUrl || !companyName}
-          className="bg-black text-white px-5 py-2 rounded disabled:opacity-50"
-        >
-          {loading ? "Scanning…" : "Get Sitemap"}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={runScan}
+            disabled={loading || !inputUrl || !companyName}
+            className="bg-black text-white px-5 py-2 rounded disabled:opacity-50"
+          >
+            {loading ? "Scanning…" : "Get Sitemap"}
+          </button>
 
-        <button
-          onClick={runClassification}
-          disabled={processing}
-          className="border border-black px-5 py-2 rounded disabled:opacity-50"
-        >
-          {processing ? "Classifying…" : "Classify Sitemap URLs"}
-        </button>
+          <button
+            onClick={runClassification}
+            disabled={processing}
+            className="border border-black px-5 py-2 rounded disabled:opacity-50"
+          >
+            {processing ? "Classifying…" : "Classify URLs"}
+          </button>
+        </div>
       </div>
 
       {/* Scan Errors */}
       {error && (
-        <div className="mt-6 text-red-600">
+        <div className="mt-6 text-red-600 text-sm">
           {error}
         </div>
       )}
 
       {/* Scan Result */}
       {result && (
-        <div className="mt-6 border rounded p-4 bg-gray-50 text-sm">
+        <div className="mt-6 border rounded p-4 bg-gray-50 text-sm space-y-1">
+          <div className="flex items-center gap-2">
+            <strong>Status:</strong> {renderScanStatus()}
+          </div>
           <div><strong>Domain:</strong> {result.root_domain}</div>
-          <div><strong>URLs found:</strong> {result.scanned_urls}</div>
+          <div>
+            <strong>URLs discovered "before Limits":</strong> {result.scanned_urls}
+          </div>
+          {result.sampled && (
+            <div>
+              <strong>URLs stored:</strong> {result.sample_limit} (sample)
+            </div>
+          )}
           <div><strong>Scan ID:</strong> {result.scan_run_id}</div>
         </div>
       )}

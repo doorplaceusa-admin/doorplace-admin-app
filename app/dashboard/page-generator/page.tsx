@@ -56,38 +56,95 @@ const SWING_MATERIAL_OPTIONS = [
   { value: "pine", label: "Pine Wood" },
   { value: "cedar", label: "Cedar Wood" },
   { value: "oak", label: "Oak Wood" },
-  { value: "Red Oak Wood", label: "Red Oak Wood" },
-  { value: "White Oak Wood", label: "White Oak Wood" },
+  { value: "red-oak", label: "Red Oak Wood" },
+  { value: "white-oak", label: "White Oak Wood" },
   { value: "cypress", label: "Cypress Wood" },
-  { value: "pressure-treated", label: "Pressure Treated" },
+  { value: "pressure-treated", label: "Pressure-Treated Wood" },
+  { value: "stained-wood", label: "Stained Wood" },
+  { value: "painted-wood", label: "Painted Wood" },
+  { value: "natural-wood", label: "Natural Wood" },
+  { value: "marine-grade", label: "Marine-Grade Wood" },
 ];
 
-const SWING_STYLE_OPTIONS = [
-  { value: "daybed-porch-swings", label: "Daybed Porch Swings" },
-  { value: "farmhouse-porch-swings", label: "Farmhouse Porch Swings" },
-  { value: "patio-swings", label: "Patio Swings" },
-  { value: "pergola-swings", label: "Pergola Swings" },
-  { value: "backyard-swings", label: "Backyard Swings" },
-  { value: "front-yard-swings", label: "Front Yard Swings" },
 
-  { value: "luxury-porch-swings", label: "Luxury Porch Swings" },
+const SWING_STYLE_OPTIONS = [
+  // Bed / Size Styles
+  { value: "daybed-porch-swings", label: "Daybed Porch Swings" },
+  { value: "bed-style-porch-swings", label: "Bed-Style Porch Swings" },
+  { value: "crib-porch-swings", label: "Crib Porch Swings" },
+  { value: "twin-bed-porch-swings", label: "Twin Bed Porch Swings" },
+  { value: "full-bed-porch-swings", label: "Full Bed Porch Swings" },
+  { value: "queen-bed-porch-swings", label: "Queen Bed Porch Swings" },
+  { value: "king-bed-porch-swings", label: "King Bed Porch Swings" },
+  { value: "extra-wide-porch-swings", label: "Extra-Wide Porch Swings" },
+
+  // Location / Property
+  { value: "front-porch-swings", label: "Front Porch Swings" },
+  { value: "back-porch-swings", label: "Back Porch Swings" },
+  { value: "backyard-swings", label: "Backyard Swings" },
+  { value: "patio-swings", label: "Patio Swings" },
+  { value: "garden-swings", label: "Garden Swings" },
+  { value: "poolside-swings", label: "Poolside Swings" },
+  { value: "lake-house-porch-swings", label: "Lake House Porch Swings" },
+  { value: "beach-house-porch-swings", label: "Beach House Porch Swings" },
+  { value: "cabin-porch-swings", label: "Cabin Porch Swings" },
+
+  // Mounting / Structure
+  { value: "pergola-swings", label: "Pergola Swings" },
+  { value: "gazebo-swings", label: "Gazebo Swings" },
+  { value: "hanging-porch-swings", label: "Hanging Porch Swings" },
+  { value: "ceiling-mounted-porch-swings", label: "Ceiling-Mounted Porch Swings" },
+  { value: "beam-mounted-porch-swings", label: "Beam-Mounted Porch Swings" },
+  { value: "a-frame-porch-swings", label: "A-Frame Porch Swings" },
+  { value: "freestanding-porch-swings", label: "Freestanding Porch Swings" },
+  { value: "stand-mounted-porch-swings", label: "Stand-Mounted Porch Swings" },
+
+  // Hardware / Hanging
+  { value: "porch-swings-with-chains", label: "Porch Swings with Chains" },
+  { value: "porch-swings-with-ropes", label: "Porch Swings with Ropes" },
+  { value: "adjustable-height-porch-swings", label: "Adjustable-Height Porch Swings" },
+  { value: "quiet-swing-porch-swings", label: "Quiet-Swing Porch Swings" },
+  { value: "hidden-hardware-porch-swings", label: "Hidden-Hardware Porch Swings" },
+
+  // Design Styles
+  { value: "farmhouse-porch-swings", label: "Farmhouse Porch Swings" },
   { value: "modern-porch-swings", label: "Modern Porch Swings" },
+  { value: "modern-farmhouse-porch-swings", label: "Modern Farmhouse Porch Swings" },
   { value: "traditional-porch-swings", label: "Traditional Porch Swings" },
   { value: "rustic-porch-swings", label: "Rustic Porch Swings" },
   { value: "country-porch-swings", label: "Country Porch Swings" },
+  { value: "luxury-porch-swings", label: "Luxury Porch Swings" },
+  { value: "minimalist-porch-swings", label: "Minimalist Porch Swings" },
+  { value: "contemporary-porch-swings", label: "Contemporary Porch Swings" },
 
-  { value: "custom-porch-swings", label: "Custom Porch Swings" },
+  // Comfort / Use Case
+  { value: "lounging-porch-swings", label: "Lounging Porch Swings" },
+  { value: "reading-porch-swings", label: "Reading Porch Swings" },
+  { value: "family-size-porch-swings", label: "Family-Size Porch Swings" },
+  { value: "couples-porch-swings", label: "Couples Porch Swings" },
+  { value: "deep-seat-porch-swings", label: "Deep-Seat Porch Swings" },
+  { value: "adult-porch-swings", label: "Adult Porch Swings" },
+
+  // Build / Strength
   { value: "handcrafted-porch-swings", label: "Handcrafted Porch Swings" },
+  { value: "custom-porch-swings", label: "Custom Porch Swings" },
   { value: "heavy-duty-porch-swings", label: "Heavy-Duty Porch Swings" },
   { value: "oversized-porch-swings", label: "Oversized Porch Swings" },
+  { value: "reinforced-porch-swings", label: "Reinforced Porch Swings" },
+  { value: "high-weight-capacity-porch-swings", label: "High Weight Capacity Porch Swings" },
 
-  { value: "gazebo-swings", label: "Gazebo Swings" },
-  { value: "garden-swings", label: "Garden Swings" },
-  { value: "poolside-swings", label: "Poolside Swings" },
+  // Finish / Durability
+  { value: "weather-resistant-porch-swings", label: "Weather-Resistant Porch Swings" },
+  { value: "outdoor-rated-porch-swings", label: "Outdoor-Rated Porch Swings" },
+  { value: "sealed-wood-porch-swings", label: "Sealed Wood Porch Swings" },
+  { value: "solid-wood-porch-swings", label: "Solid Wood Porch Swings" },
 
-  { value: "porch-swings-with-chains", label: "Porch Swings with Chains" },
-  { value: "hanging-porch-swings", label: "Hanging Porch Swings" },
+  // Premium / Sales Drivers
+  { value: "made-to-order-porch-swings", label: "Made-to-Order Porch Swings" },
+  { value: "built-to-last-porch-swings", label: "Built-to-Last Porch Swings" },
+  { value: "USA-made-porch-swings", label: "USA-Made Porch Swings" },
 ];
+
 
 const DOOR_STYLE_OPTIONS = [
   { value: "single-barn-doors", label: "Single Barn Doors" },
@@ -101,29 +158,84 @@ const DOOR_STYLE_OPTIONS = [
   { value: "custom-barn-doors", label: "Custom Barn Doors" },
 ];
 
+const INSTALL_MOUNT_OPTIONS = [
+  { value: "ceiling-mounted", label: "Ceiling Mounted" },
+  { value: "beam-mounted", label: "Beam Mounted" },
+  { value: "pergola", label: "Pergola / Gazebo" },
+  { value: "freestanding", label: "Freestanding / A-Frame" },
+];
+
+
 
 
 
 const TEMPLATE_OPTIONS = [
-  // Core swing pages
+  /* =========================================
+     CORE PORCH SWING
+  ========================================= */
+
   { value: "porch_swing_city", label: "Porch Swing – City" },
   { value: "porch_swing_delivery", label: "Porch Swing – Delivery (City)" },
 
-  // 🔥 Variant swing pages
+  /* =========================================
+     INSTALLATION
+  ========================================= */
+
+  { value: "porch_swing_installation_city", label: "Porch Swing – Installation (City)" },
+  { value: "porch_swing_installation_process_city", label: "Porch Swing – Installation Process (City)" },
+  { value: "porch_swing_mount_type_city", label: "Porch Swing – Mount Type (City)" },
+
+  /* =========================================
+     COST CLUSTER
+  ========================================= */
+
+  { value: "porch_swing_cost_city", label: "Porch Swing – Cost (City)" },
+  { value: "porch_swing_cost_factors_city", label: "Porch Swing – Cost Factors (City)" },
+  { value: "porch_swing_installed_cost_city", label: "Porch Swing – Installed Cost (City)" },
+  { value: "porch_swing_cost_by_size_city", label: "Porch Swing – Cost by Size (City)" },
+  { value: "porch_swing_vs_daybed_cost_city", label: "Porch Swing vs Daybed – Cost (City)" },
+  { value: "porch_swing_vs_rocker_cost_city", label: "Porch Swing vs Rocker – Cost (City)" },
+
+  /* =========================================
+     SIZE & FIT
+  ========================================= */
+
   { value: "porch_swing_size_city", label: "Porch Swing – Size (City)" },
-  { value: "porch_swing_usecase_city", label: "Porch Swing – Use Case (City)" },
+  { value: "porch_swing_size_fit_city", label: "Porch Swing – Size Fit (City)" },
+  { value: "porch_swing_clearance_city", label: "Porch Swing – Clearance (City)" },
+  { value: "porch_swing_ceiling_height_city", label: "Porch Swing – Ceiling Height (City)" },
+  { value: "porch_swing_chain_spacing_city", label: "Porch Swing – Chain Spacing (City)" },
+  { value: "porch_swing_width_city", label: "Porch Swing – Width (City)" },
+  { value: "porch_swing_depth_city", label: "Porch Swing – Depth (City)" },
+  { value: "what_size_porch_swing_city", label: "What Size Porch Swing? (City)" },
+
+  /* =========================================
+     MATERIAL / STYLE / USE CASE
+  ========================================= */
+
   { value: "porch_swing_material_city", label: "Porch Swing – Material (City)" },
   { value: "porch_swing_style_city", label: "Porch Swing – Style (City)" },
+  { value: "porch_swing_usecase_city", label: "Porch Swing – Use Case (City)" },
+  { value: "porch_swing_small_porch_city", label: "Porch Swing – Small Porch (City)" },
 
-  // Doors (DFW only)
-  { value: "door_city", label: "Door Style – City (DFW)" },
+  /* =========================================
+     DIY / HARDWARE / PRO
+  ========================================= */
 
-  // ✅ NEW — Custom Door Installation
-  {
-    value: "custom_door_installation_city",
-    label: "Custom Door Installation – City (DFW)",
-  },
+  { value: "porch_swing_diy_city", label: "Porch Swing – DIY vs Pro (City)" },
+  { value: "porch_swing_hardware_city", label: "Porch Swing – Hardware (City)" },
+  { value: "porch_swing_hire_pro_city", label: "Porch Swing – Hire a Pro (City)" },
+  { value: "porch_swing_weight_capacity_city", label: "Porch Swing – Weight Capacity (City)" },
+
+  /* =========================================
+     DOORS
+  ========================================= */
+
+  { value: "door_city", label: "Barn Door Style – City" },
+  { value: "custom_door_installation_city", label: "Custom Door Installation – City" },
 ];
+
+
 
 
 
@@ -153,6 +265,8 @@ export default function PageGeneratorAdminPage() {
   const [radiusCenterId, setRadiusCenterId] = useState<string>("");
   const [radiusMiles, setRadiusMiles] = useState<number>(25);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [selectedMountType, setSelectedMountType] = useState("ceiling-mounted");
+
   const [progressText, setProgressText] = useState<string>("");
   const [isPushingToShopify, setIsPushingToShopify] = useState(false);
   const [selectedDoorStyle, setSelectedDoorStyle] = useState(
@@ -190,6 +304,10 @@ const getTemplateParams = () => {
     case "style":
       return { pageType, style: selectedSwingStyle };
 
+    case "install":
+      return { pageType, mountType: selectedMountType };
+
+
     case "door":
       if (selectedTemplate === "door_city") {
         return { pageType, style: selectedDoorStyle };
@@ -219,9 +337,9 @@ const getPageTypeFromTemplate = (template: string) => {
       return "style";
     case "door_city":
       return "door";
-    case "custom_door_installation_city": // ✅ ADD
+    case "custom_door_installation_city":
       return "door";
-    case "porch_swing_delivery":
+    case "porch_swing_installation_city":
       return "install";
     default:
       return "general";
@@ -444,7 +562,7 @@ const selectAllCitiesAllStates = async () => {
   };
 
  return (
-    <div className="h-[calc(110vh-80px)] flex flex-col bg-gray-50 overflow-x-hidden max-w-[1300px] w-full mx-auto">
+    <div className="h-[calc(110vh-80px)] flex flex-col bg-gray-50 overflow-x-hidden max-w-325 w-full mx-auto">
       <div className="w-full px-6 py-6">
         <div className="mb-5 flex items-center justify-between">
           <div>
@@ -581,6 +699,26 @@ const selectAllCitiesAllStates = async () => {
     </select>
   </div>
 )}
+
+{selectedTemplate === "porch_swing_installation_city" && (
+  <div>
+    <label className="block text-sm font-semibold mb-2">
+      Installation Mount Type
+    </label>
+    <select
+      value={selectedMountType}
+      onChange={(e) => setSelectedMountType(e.target.value)}
+      className="w-full rounded-lg border px-3 py-2 text-sm"
+    >
+      {INSTALL_MOUNT_OPTIONS.map((m) => (
+        <option key={m.value} value={m.value}>
+          {m.label}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+
 
 
 

@@ -10,6 +10,13 @@ const COMMON_SITEMAPS = [
 ];
 
 /* ===============================
+   SAFETY LIMITS
+================================ */
+
+const MAX_SITEMAP_URLS = 20_000; // 🔒 HARD STOP
+const SAMPLE_LIMIT = 500;        // 🧠 SAMPLE ONLY
+
+/* ===============================
    HELPERS
 ================================ */
 
@@ -81,7 +88,8 @@ export async function POST(req: Request) {
     const base = input_url.replace(/\/$/, "");
 
     let sitemapUrls: string[] = [];
-    let totalUrlsFound = 0; // ✅ FIX: counter
+    let totalUrlsFound = 0;
+    let isSampled = false;
 
     /* -------------------------------
        ROBOTS.TXT DISCOVERY
@@ -155,27 +163,36 @@ export async function POST(req: Request) {
           const pageUrl = extractTag(block, "loc");
           if (!pageUrl) continue;
 
-          totalUrlsFound++; // ✅ FIX: increment count
+          totalUrlsFound++;
 
-          buffer.push({
-            company_name,
-            root_domain,
-            input_url,
-            is_internal: !!is_internal,
+          /* 🚨 HARD CAP — STOP SCAN COMPLETELY */
+          if (totalUrlsFound > MAX_SITEMAP_URLS) {
+            isSampled = true;
+            break;
+          }
 
-            page_url: pageUrl,
-            normalized_path: normalizePath(pageUrl),
-            path_depth: pathDepth(pageUrl),
+          /* 🎯 SAMPLE ONLY — WRITE FIRST N */
+          if (totalUrlsFound <= SAMPLE_LIMIT) {
+            buffer.push({
+              company_name,
+              root_domain,
+              input_url,
+              is_internal: !!is_internal,
 
-            sitemap_source_urls: [sm],
-            lastmod: extractTag(block, "lastmod"),
-            changefreq: extractTag(block, "changefreq"),
-            priority: extractTag(block, "priority"),
+              page_url: pageUrl,
+              normalized_path: normalizePath(pageUrl),
+              path_depth: pathDepth(pageUrl),
 
-            scan_run_id,
-            last_seen_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
+              sitemap_source_urls: [sm],
+              lastmod: extractTag(block, "lastmod"),
+              changefreq: extractTag(block, "changefreq"),
+              priority: extractTag(block, "priority"),
+
+              scan_run_id,
+              last_seen_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+          }
 
           if (buffer.length >= CHUNK_SIZE) {
             await flush();
@@ -187,13 +204,16 @@ export async function POST(req: Request) {
     await flush();
 
     /* -------------------------------
-       RESPONSE (FIXED)
+       RESPONSE
     -------------------------------- */
     return NextResponse.json({
       success: true,
       root_domain,
       scan_run_id,
-      scanned_urls: totalUrlsFound, // ✅ FIX: UI now shows number
+      scanned_urls: totalUrlsFound,
+      sampled: isSampled,
+      sample_limit: isSampled ? SAMPLE_LIMIT : null,
+      max_allowed: MAX_SITEMAP_URLS,
     });
 
   } catch (err: any) {

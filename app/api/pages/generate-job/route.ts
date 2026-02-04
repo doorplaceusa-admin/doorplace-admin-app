@@ -23,10 +23,13 @@ export async function POST(req: Request) {
       city_ids,
       page_template,
       hero_image_url = null,
+
+      // 🔥 VARIANTS
       size,
       material,
       style,
       usecase,
+      mountType, // 🔥 FIX: ACCEPT THIS
     } = await req.json();
 
     if (!Array.isArray(city_ids) || city_ids.length === 0) {
@@ -80,6 +83,7 @@ export async function POST(req: Request) {
         let title = "";
         let slug = "";
         let variant_key: string | null = null;
+        let mount_type: string | null = null;
 
         switch (page_template) {
           /* -----------------------------
@@ -94,6 +98,20 @@ export async function POST(req: Request) {
           case "porch_swing_delivery":
             title = `Porch Swing Delivery in ${c.city_name}, ${stateCodeUpper}`;
             slug = `porch-swing-delivery-${c.slug}-${stateCodeLower}`;
+            break;
+
+          case "porch_swing_installation_city":
+            title = `${
+              mountType
+                ? `${titleCase(mountType)} Porch Swing Installation`
+                : "Porch Swing Installation"
+            } in ${c.city_name}, ${stateCodeUpper}`;
+
+            slug = `porch-swing-installation-${c.slug}-${stateCodeLower}`;
+
+            // 🔥 FIX: STORE MOUNT TYPE
+            mount_type = mountType ?? null;
+            variant_key = mountType ? slugify(mountType) : null;
             break;
 
           case "porch_swing_size_city":
@@ -142,12 +160,7 @@ export async function POST(req: Request) {
           case "custom_door_installation_city":
             title = `Custom Door Installation in ${c.city_name}, ${stateCodeUpper}`;
             slug = `custom-door-installation-${c.slug}-${stateCodeLower}`;
-            variant_key = null;
             break;
-
-          /* -----------------------------
-             FALLBACK
-          ------------------------------ */
 
           default:
             throw new Error(`Unsupported template: ${page_template}`);
@@ -162,6 +175,7 @@ export async function POST(req: Request) {
           page_type: "city",
           page_template,
           variant_key,
+          mount_type, // 🔥 STORED
           hero_image_url,
           shopify_page_id: null,
         };

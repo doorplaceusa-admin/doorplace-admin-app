@@ -21,9 +21,10 @@ export default function Page() {
   const [cleanupMessage, setCleanupMessage] = useState<string | null>(null);
   const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(null);
 
-  /* -----------------------------------------
-     Sitemap Sync
-  ------------------------------------------ */
+  /* ======================================================
+     Shopify Sitemap Sync
+  ====================================================== */
+
   async function runSitemapSync() {
     if (syncing) return;
 
@@ -38,24 +39,36 @@ export default function Page() {
       while (!done) {
         const res = await fetch("/api/shopify/sync-sitemap", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+
+            // ✅ REQUIRED SECRET HEADER
+            "x-sync-secret":
+              process.env.NEXT_PUBLIC_SITEMAP_SYNC_SECRET || "",
+          },
           body: JSON.stringify({ sitemapIndex, urlOffset }),
         });
 
-        if (!res.ok) throw new Error(await res.text());
+        if (!res.ok) {
+          throw new Error(await res.text());
+        }
 
         const data = await res.json();
 
+        // ✅ Finished all sitemaps
         if (data.done) {
           setStatus("✅ Sitemap sync complete");
           break;
         }
 
+        // Continue from returned offsets
         sitemapIndex = data.sitemapIndex;
         urlOffset = data.urlOffset;
 
         setStatus(
-          `Syncing sitemap ${sitemapIndex + 1} of ${data.total_sitemaps}…`
+          `Syncing sitemap ${sitemapIndex + 1} of ${
+            data.total_sitemaps
+          }… (${data.upserted} URLs saved)`
         );
       }
     } catch (err: any) {
@@ -65,9 +78,10 @@ export default function Page() {
     }
   }
 
-  /* -----------------------------------------
-     Duplicate Cleanup
-  ------------------------------------------ */
+  /* ======================================================
+     Shopify Duplicate Cleanup
+  ====================================================== */
+
   async function runDuplicateCleanup(dryRun: boolean) {
     if (cleanupRunning) return;
 
@@ -105,8 +119,12 @@ export default function Page() {
     }
   }
 
+  /* ======================================================
+     PAGE UI
+  ====================================================== */
+
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-6 max-w-[1500px] w-full mx-auto">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-6 max-w-375 w-full mx-auto">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
@@ -129,8 +147,8 @@ export default function Page() {
         <h2 className="text-lg font-semibold mb-2">Shopify Sitemap Sync</h2>
 
         <p className="text-sm text-gray-600 mb-4">
-          Sync all existing Shopify pages into TradePilot.  
-          Handles very large sitemaps (200k+ pages) safely.
+          Sync all existing Shopify pages into TradePilot. Handles very large
+          sitemaps (200k+ pages) safely.
         </p>
 
         <button
@@ -145,9 +163,7 @@ export default function Page() {
           {syncing ? "Syncing Sitemap…" : "Sync Shopify Sitemap"}
         </button>
 
-        {status && (
-          <p className="mt-3 text-sm text-gray-700">{status}</p>
-        )}
+        {status && <p className="mt-3 text-sm text-gray-700">{status}</p>}
       </div>
 
       {/* Duplicate Page Cleanup */}
@@ -157,8 +173,8 @@ export default function Page() {
         </h2>
 
         <p className="text-sm text-gray-600 mb-4">
-          Scans all Shopify pages and removes duplicate titles.  
-          Always run a dry test first.
+          Scans all Shopify pages and removes duplicate titles. Always run a dry
+          test first.
         </p>
 
         <div className="flex gap-3 mb-4">

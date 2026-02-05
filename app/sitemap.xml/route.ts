@@ -3,8 +3,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     // ✅ Fetch Shopify sitemap directly
-    const res = await fetch("https://tradepilot.doorplaceusa.com/sitemap.xml", {
-
+    const res = await fetch("https://doorplaceusa.com/sitemap.xml", {
       headers: {
         "User-Agent": "Mozilla/5.0",
       },
@@ -25,7 +24,6 @@ export async function GET() {
       status: 200,
       headers: {
         "Content-Type": "text/xml",
-
       },
     });
   } catch (err) {

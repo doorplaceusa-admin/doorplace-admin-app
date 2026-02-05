@@ -24,47 +24,38 @@ export default function AdminTable<T>({
   renderCell,
 }: AdminTableProps<T>) {
   return (
-    /* ✅ Scroll container */
-    <div className="w-full flex-1 min-h-0 overflow-auto rounded border bg-white">
-      
-      {/* ✅ Horizontal scroll support on mobile */}
-      <div className="min-w-[700px]">
+    <div className="w-full max-w-full overflow-hidden rounded border bg-white">
+      <table className="w-full table-fixed border-collapse">
+        <thead className="bg-gray-50">
+          <tr>
+            {columns.map((c) => (
+              <th
+                key={c.key}
+                className={`text-left text-xs font-semibold text-gray-600 px-3 py-2 border-b ${c.headerClassName || ""}`}
+              >
+                <div className="min-w-0 truncate">{c.label}</div>
+              </th>
+            ))}
+          </tr>
+        </thead>
 
-        <table className="w-full border-collapse">
-          <thead className="bg-gray-50 sticky top-0 z-10">
-            <tr>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={rowKey(r)} className="border-b last:border-b-0">
               {columns.map((c) => (
-                <th
+                <td
                   key={c.key}
-                  className={`text-left text-xs font-semibold text-gray-600 px-3 py-2 border-b ${
-                    c.headerClassName || ""
-                  }`}
+                  className={`px-3 py-3 align-top text-sm ${c.cellClassName || ""}`}
                 >
-                  {c.label}
-                </th>
+                  <div className="min-w-0 break-words overflow-hidden">
+                    {renderCell(r, c.key)}
+                  </div>
+                </td>
               ))}
             </tr>
-          </thead>
-
-          <tbody>
-            {rows.map((r) => (
-              <tr key={rowKey(r)} className="border-b last:border-b-0">
-                {columns.map((c) => (
-                  <td
-                    key={c.key}
-                    className={`px-3 py-3 align-top text-sm ${
-                      c.cellClassName || ""
-                    }`}
-                  >
-                    {renderCell(r, c.key)}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

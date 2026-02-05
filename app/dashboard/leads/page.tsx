@@ -63,9 +63,12 @@ export default function LeadsPage() {
 
   const [search, setSearch] = useState("");
   const [viewLead, setViewLead] = useState<Lead | null>(null);
-  const [editLead, setEditLead] = useState<Lead | null>(null);
+const [editLead, setEditLead] = useState<Lead | null>(null);
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+const [layout, setLayout] = useState<"cards" | "table">("cards");
+
+const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
 
   /* ===============================
      LOAD LEADS
@@ -121,6 +124,15 @@ export default function LeadsPage() {
     loadLeads();
   }
 
+async function updateLeadStatus(
+  leadId: string,
+  lead_status: string
+) {
+  await supabase.from("leads").update({ lead_status }).eq("id", leadId);
+  loadLeads();
+}
+
+
   /* ===============================
      SAVE EDIT
   ================================ */
@@ -153,9 +165,7 @@ export default function LeadsPage() {
      RENDER
   ================================ */
   return (
-  <div className="min-h-screen flex flex-col bg-gray-50 max-w-[1500px] w-full mx-auto">
-
-
+<div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-[1500px] w-full mx-auto">
       {/* HEADER */}
       <div className="sticky top-0 bg-white z-30 border-b pb-4">
         <div className="flex justify-between items-center">
@@ -168,6 +178,33 @@ export default function LeadsPage() {
         <p className="text-sm text-gray-500 mb-3">
           General Inquiry & Swing / Door Quotes
         </p>
+
+<div className="flex items-center gap-2 mb-3">
+  <span className="text-xs text-gray-500">Layout</span>
+
+  <button
+    className={`px-3 py-1 rounded text-xs border ${
+      layout === "cards"
+        ? "bg-black text-white"
+        : "bg-white text-gray-700"
+    }`}
+    onClick={() => setLayout("cards")}
+  >
+    Cards
+  </button>
+
+  <button
+    className={`px-3 py-1 rounded text-xs border ${
+      layout === "table"
+        ? "bg-black text-white"
+        : "bg-white text-gray-700"
+    }`}
+    onClick={() => setLayout("table")}
+  >
+    Table
+  </button>
+</div>
+
 
         <div className="flex gap-2 items-center">
           <input
@@ -189,14 +226,120 @@ export default function LeadsPage() {
       </div>
 
       {/* TABLE */}
-      <div className="flex-1 min-h-0 overflow-auto"></div>
-      <AdminTable<Lead>
-      
+      {/* CARDS LAYOUT */}
+{layout === "cards" && (
+  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    {filteredLeads.map((l) => (
+      <div
+        key={l.id}
+        className="border rounded-lg p-4 shadow-sm bg-white space-y-2"
+      >
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="font-semibold text-lg">
+              {l.first_name} {l.last_name}
+            </div>
+            <div className="text-xs text-gray-500">{l.email}</div>
+          </div>
+
+          {/* STATUS DROPDOWN */}
+          <select
+            className={`text-xs font-semibold border rounded px-2 py-1 ${
+  (l.lead_status || "new") === "converted_to_order"
+    ? "text-green-700"
+    : (l.lead_status || "new") === "lost"
+    ? "text-red-700"
+    : (l.lead_status || "new") === "contacted"
+    ? "text-blue-700"
+    : "text-orange-700"
+}`}
+
+            value={l.lead_status || "new"}
+            onChange={(e) =>
+              updateLeadStatus(l.id, e.target.value)
+            }
+          >
+            <option value="new">● New</option>
+            <option value="contacted">● Contacted</option>
+            <option value="in_progress">● In Progress</option>
+            <option value="converted_to_order">● Converted</option>
+            <option value="closed">● Closed</option>
+            <option value="lost">● Lost</option>
+          </select>
+        </div>
+
+        <div className="text-xs text-gray-600 space-y-1">
+          <div>
+            <b>Lead Type:</b>{" "}
+            {l.submission_type === "general"
+              ? "General Inquiry"
+              : l.submission_type === "quote"
+              ? "Swing / Door Quote"
+              : l.submission_type === "partner_tracking"
+              ? "Partner Tracking Link"
+              : "—"}
+          </div>
+
+          <div>
+            <b>Lead ID:</b> {l.lead_id}
+          </div>
+
+          <div>
+  <b>Created:</b>{" "}
+  {new Date(l.created_at).toLocaleDateString()}
+</div>
+
+        </div>
+
+        <div className="flex gap-2 pt-2">
+          <button
+            className="text-xs border px-2 py-1 rounded"
+            onClick={() => setViewLead(l)}
+          >
+            View
+          </button>
+
+          <button
+            className="text-xs border px-2 py-1 rounded"
+            onClick={() => setEditLead(l)}
+          >
+            Edit
+          </button>
+
+          <select
+  className="text-xs border px-2 py-1 rounded flex-1"
+  onChange={(e) => {
+    const v = e.target.value;
+    e.target.value = "";
+
+    if (v === "contacted") updateLeadStatus(l.id, "contacted");
+    if (v === "converted") updateLeadStatus(l.id, "converted_to_order");
+    if (v === "delete") deleteLead(l);
+  }}
+>
+  <option value="">Actions</option>
+  <option value="contacted">Mark Contacted</option>
+  <option value="converted">Mark Converted</option>
+  <option value="delete">Delete</option>
+</select>
+
+        </div>
+      </div>
+    ))}
+  </div>
+)}
+
+{/* TABLE LAYOUT */}
+{layout === "table" && (
+  <AdminTable<Lead>
+
   columns={[
-    { key: "name", label: "Name" },
-    { key: "type", label: "Lead Type" },
-    { key: "actions", label: "Actions" },
-  ]}
+  { key: "name", label: "Name" },
+  { key: "status", label: "Status" },
+  { key: "type", label: "Lead Type" },
+  { key: "actions", label: "Actions" },
+]}
+
   rows={filteredLeads}
   rowKey={(l) => l.id}
   renderCell={(l, key) => {
@@ -223,6 +366,34 @@ export default function LeadsPage() {
           </span>
         );
 
+        case "status":
+  return (
+    <select
+      className={`text-xs font-semibold border rounded px-2 py-1 ${
+  (l.lead_status || "new") === "converted_to_order"
+    ? "text-green-700"
+    : (l.lead_status || "new") === "lost"
+    ? "text-red-700"
+    : (l.lead_status || "new") === "contacted"
+    ? "text-blue-700"
+    : "text-orange-700"
+}`}
+
+      value={l.lead_status || "new"}
+      onChange={(e) =>
+        updateLeadStatus(l.id, e.target.value)
+      }
+    >
+      <option value="new">● New</option>
+      <option value="contacted">● Contacted</option>
+      <option value="in_progress">● In Progress</option>
+      <option value="converted_to_order">● Converted</option>
+      <option value="closed">● Closed</option>
+      <option value="lost">● Lost</option>
+    </select>
+  );
+
+
       case "type":
         return (
           <span className="text-xs font-medium">
@@ -245,13 +416,19 @@ export default function LeadsPage() {
               e.target.value = "";
               if (v === "view") setViewLead(l);
               if (v === "edit") setEditLead(l);
-              if (v === "delete") deleteLead(l);
+              if (v === "contacted") updateLeadStatus(l.id, "contacted");
+if (v === "converted") updateLeadStatus(l.id, "converted_to_order");
+if (v === "delete") deleteLead(l);
+
             }}
           >
             <option value="">Select</option>
             <option value="view">View</option>
-            <option value="edit">Edit</option>
-            <option value="delete">Delete</option>
+<option value="edit">Edit</option>
+<option value="contacted">Mark Contacted</option>
+<option value="converted">Mark Converted</option>
+<option value="delete">Delete</option>
+
           </select>
         );
 
@@ -260,7 +437,7 @@ export default function LeadsPage() {
     }
   }}
 />
-
+)}
 {/* ===============================
     VIEW MODAL — LEAD DETAILS
 ================================ */}

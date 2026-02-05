@@ -10,7 +10,6 @@ type RenderProps = {
   slug: string;
   nearbyCities?: CityLink[];
   heroImageUrl?: string | null;
-  
 };
 
 export function renderPorchSwingDeliveryCityHTML({
@@ -20,7 +19,7 @@ export function renderPorchSwingDeliveryCityHTML({
   heroImageUrl,
 }: RenderProps): string {
   return `
-<div style="max-width:900px;margin:0 auto;padding:20px;font-family:'Times New Roman',serif;">
+<div style="max-width:850px;margin:0 auto;padding:20px;font-family:'Times New Roman',serif;">
 
   ${
     heroImageUrl
@@ -106,6 +105,7 @@ export function renderPorchSwingDeliveryCityHTML({
     no cheap overseas furniture.
   </p>
 
+  <!-- Helpful Resources Internal Links -->
   <h2 style="color:#b80d0d;">Helpful Resources</h2>
   <ul style="line-height:1.9;font-size:16px;">
     <li><a href="https://doorplaceusa.com/pages/porch-swings" style="color:#b80d0d;">Custom Swings Home Page</a></li>

@@ -80,6 +80,36 @@ export function renderPorchSwingInstallationProcessCityHTML({
     uneven hanging, and safety risks—especially for larger swings.
   </p>
 
+  <!-- ✅ Helpful Resources Internal Links -->
+  <h2 style="color:#b80d0d;">Helpful Resources</h2>
+  <ul style="line-height:1.9;font-size:16px;">
+    <li>
+      <a href="https://doorplaceusa.com/pages/porch-swings" style="color:#b80d0d;">
+        Custom Swings Home Page
+      </a>
+    </li>
+    <li>
+      <a href="https://doorplaceusa.com/pages/porch-swing-stain-guide" style="color:#b80d0d;">
+        Stain Color Guide
+      </a>
+    </li>
+    <li>
+      <a href="https://doorplaceusa.com/pages/cushion-guide" style="color:#b80d0d;">
+        Cushion Guide
+      </a>
+    </li>
+    <li>
+      <a href="https://doorplaceusa.com/pages/how-to-install-a-porch-swing" style="color:#b80d0d;">
+        Installation Instructions
+      </a>
+    </li>
+    <li>
+      <a href="https://doorplaceusa.com/pages/get-a-fast-quote" style="color:#b80d0d;">
+        Request a Fast Quote
+      </a>
+    </li>
+  </ul>
+
   <div style="border:2px solid #b80d0d;padding:18px;background:#fdf6f6;margin:30px 0;border-radius:6px;">
     <strong>Need help installing a porch swing in ${city}?</strong><br/>
     Doorplace USA can assist with swing selection,

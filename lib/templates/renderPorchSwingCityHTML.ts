@@ -12,7 +12,6 @@ type RenderProps = {
   heroImageUrl?: string | null;
 };
 
-
 export function renderPorchSwingCityHTML({
   city,
   state,
@@ -75,11 +74,29 @@ export function renderPorchSwingCityHTML({
   </ul>
   <p style="font-size:14px;color:#555;">* Sizes may vary slightly by design.</p>
 
-  <h2 style="color:#b80d0d;">Helpful Swing Resources</h2>
-  <ul style="line-height:1.8;font-size:16px;">
-    <li><a href="https://doorplaceusa.com/pages/porch-swing-stain-guide" style="color:#b80d0d;">View Stain Colors Guide</a></li>
-    <li><a href="https://doorplaceusa.com/pages/cushion-guide" style="color:#b80d0d;">Swing Cushion Guide</a></li>
-    <li><a href="https://doorplaceusa.com/pages/how-to-install-a-porch-swing" style="color:#b80d0d;">Installation Instructions</a></li>
+  <!-- Helpful Resources Internal Links -->
+  <h2 style="color:#b80d0d;">Helpful Resources</h2>
+  <ul style="line-height:1.9;font-size:16px;">
+    <li>
+      <a href="https://doorplaceusa.com/pages/porch-swings" style="color:#b80d0d;">
+        Custom Swings Home Page
+      </a>
+    </li>
+    <li>
+      <a href="https://doorplaceusa.com/pages/porch-swing-stain-guide" style="color:#b80d0d;">
+        Stain Color Guide
+      </a>
+    </li>
+    <li>
+      <a href="https://doorplaceusa.com/pages/cushion-guide" style="color:#b80d0d;">
+        Cushion Guide
+      </a>
+    </li>
+    <li>
+      <a href="https://doorplaceusa.com/pages/how-to-install-a-porch-swing" style="color:#b80d0d;">
+        Installation Instructions
+      </a>
+    </li>
   </ul>
 
   <h2 style="color:#b80d0d;">Installation & Support in ${city}</h2>
@@ -93,6 +110,7 @@ export function renderPorchSwingCityHTML({
     Doorplace USA builds and ships custom porch swings nationwide.
   </p>
 
+  <!-- Primary CTA Button -->
   <div style="margin-top:40px;text-align:center;">
     <a 
       href="https://doorplaceusa.com/pages/get-a-fast-quote"

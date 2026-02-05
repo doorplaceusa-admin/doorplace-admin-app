@@ -70,6 +70,31 @@ export function renderPorchSwingHardwareCityHTML({
     improves safety, and extends the life of your porch swing installation.
   </p>
 
+  <!-- Helpful Resources Internal Links -->
+  <h2 style="color:#b80d0d;">Helpful Resources</h2>
+  <ul style="line-height:1.9;font-size:16px;">
+    <li>
+      <a href="https://doorplaceusa.com/pages/porch-swings" style="color:#b80d0d;">
+        Custom Swings Home Page
+      </a>
+    </li>
+    <li>
+      <a href="https://doorplaceusa.com/pages/porch-swing-stain-guide" style="color:#b80d0d;">
+        Stain Color Guide
+      </a>
+    </li>
+    <li>
+      <a href="https://doorplaceusa.com/pages/cushion-guide" style="color:#b80d0d;">
+        Cushion Guide
+      </a>
+    </li>
+    <li>
+      <a href="https://doorplaceusa.com/pages/how-to-install-a-porch-swing" style="color:#b80d0d;">
+        Installation Instructions
+      </a>
+    </li>
+  </ul>
+
   <div style="border-top:1px solid #ccc;margin-top:30px;padding-top:20px;">
     <p style="font-weight:bold;font-size:16px;">
       Need help choosing the right porch swing hardware in ${city}, ${stateCode}?

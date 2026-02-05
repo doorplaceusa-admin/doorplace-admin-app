@@ -11,7 +11,6 @@ type RenderProps = {
   material: string; // ✅ REQUIRED
   nearbyCities?: CityLink[];
   heroImageUrl?: string | null;
-  
 };
 
 export function renderPorchSwingMaterialCityHTML({
@@ -98,21 +97,32 @@ export function renderPorchSwingMaterialCityHTML({
     Every swing is designed for comfort, strength, and durability.
   </p>
 
-  <h2 style="color:#b80d0d;">Helpful Material & Care Resources</h2>
-  <ul style="line-height:1.8;font-size:16px;">
+  <!-- ✅ Helpful Resources Internal Links -->
+  <h2 style="color:#b80d0d;">Helpful Resources</h2>
+  <ul style="line-height:1.9;font-size:16px;">
     <li>
-      <a href="https://doorplaceusa.com/pages/porch-swing-stain-guide" style="color:#b80d0d;">
-        Stain & Finish Options
+      <a href="https://doorplaceusa.com/pages/porch-swings" style="color:#b80d0d;">
+        Custom Swings Home Page
       </a>
     </li>
     <li>
-      <a href="https://doorplaceusa.com/pages/how-to-install-a-porch-swing" style="color:#b80d0d;">
-        Porch Swing Installation Guide
+      <a href="https://doorplaceusa.com/pages/porch-swing-stain-guide" style="color:#b80d0d;">
+        Stain Color Guide
       </a>
     </li>
     <li>
       <a href="https://doorplaceusa.com/pages/cushion-guide" style="color:#b80d0d;">
-        Cushion & Accessory Guide
+        Cushion Guide
+      </a>
+    </li>
+    <li>
+      <a href="https://doorplaceusa.com/pages/how-to-install-a-porch-swing" style="color:#b80d0d;">
+        Installation Instructions
+      </a>
+    </li>
+    <li>
+      <a href="https://doorplaceusa.com/pages/get-a-fast-quote" style="color:#b80d0d;">
+        Request a Fast Quote
       </a>
     </li>
   </ul>

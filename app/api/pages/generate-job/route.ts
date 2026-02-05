@@ -86,85 +86,214 @@ export async function POST(req: Request) {
         let mount_type: string | null = null;
 
         switch (page_template) {
-          /* -----------------------------
-             PORCH SWING TEMPLATES
-          ------------------------------ */
+  /* -----------------------------
+     PORCH SWING CORE
+  ------------------------------ */
 
-          case "porch_swing_city":
-            title = `Porch Swings in ${c.city_name}, ${stateCodeUpper}`;
-            slug = `porch-swings-${c.slug}-${stateCodeLower}`;
-            break;
+  case "porch_swing_city":
+    title = `Porch Swings in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swings-${c.slug}-${stateCodeLower}`;
+    break;
 
-          case "porch_swing_delivery":
-            title = `Porch Swing Delivery in ${c.city_name}, ${stateCodeUpper}`;
-            slug = `porch-swing-delivery-${c.slug}-${stateCodeLower}`;
-            break;
+  case "porch_swing_delivery_city":
+    title = `Porch Swing Delivery in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-delivery-${c.slug}-${stateCodeLower}`;
+    break;
 
-          case "porch_swing_installation_city":
-            title = `${
-              mountType
-                ? `${titleCase(mountType)} Porch Swing Installation`
-                : "Porch Swing Installation"
-            } in ${c.city_name}, ${stateCodeUpper}`;
+  case "porch_swing_installation_city":
+    title = `${
+      mountType
+        ? `${titleCase(mountType)} Porch Swing Installation`
+        : "Porch Swing Installation"
+    } in ${c.city_name}, ${stateCodeUpper}`;
 
-            slug = `porch-swing-installation-${c.slug}-${stateCodeLower}`;
+    slug = `porch-swing-installation-${c.slug}-${stateCodeLower}`;
+    mount_type = mountType ?? null;
+    variant_key = mountType ? slugify(mountType) : null;
+    break;
 
-            // 🔥 FIX: STORE MOUNT TYPE
-            mount_type = mountType ?? null;
-            variant_key = mountType ? slugify(mountType) : null;
-            break;
+  case "porch_swing_size_city":
+    if (!size) throw new Error("Missing size");
+    variant_key = slugify(size);
+    title = `${titleCase(size)} Porch Swing Sizes in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-${variant_key}-${c.slug}-${stateCodeLower}`;
+    break;
 
-          case "porch_swing_size_city":
-            if (!size) throw new Error("Missing size");
-            variant_key = slugify(size);
-            title = `${titleCase(size)} Porch Swing Sizes in ${c.city_name}, ${stateCodeUpper}`;
-            slug = `porch-swing-${variant_key}-${c.slug}-${stateCodeLower}`;
-            break;
+  case "porch_swing_material_city":
+    if (!material) throw new Error("Missing material");
+    variant_key = slugify(material);
+    title = `${titleCase(material)} Porch Swings in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-${variant_key}-${c.slug}-${stateCodeLower}`;
+    break;
 
-          case "porch_swing_material_city":
-            if (!material) throw new Error("Missing material");
-            variant_key = slugify(material);
-            title = `${titleCase(material)} Porch Swings in ${c.city_name}, ${stateCodeUpper}`;
-            slug = `porch-swing-${variant_key}-${c.slug}-${stateCodeLower}`;
-            break;
+  case "porch_swing_style_city":
+    if (!style) throw new Error("Missing style");
+    variant_key = slugify(style);
+    title = `${titleCase(style)} Porch Swings in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-${variant_key}-${c.slug}-${stateCodeLower}`;
+    break;
 
-          case "porch_swing_usecase_city":
-            if (!usecase) throw new Error("Missing usecase");
-            variant_key = slugify(usecase);
-            title = `${titleCase(usecase)} Porch Swings in ${c.city_name}, ${stateCodeUpper}`;
-            slug = `porch-swing-${variant_key}-${c.slug}-${stateCodeLower}`;
-            break;
+  case "porch_swing_usecase_city":
+    if (!usecase) throw new Error("Missing usecase");
+    variant_key = slugify(usecase);
+    title = `${titleCase(usecase)} Porch Swings in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-${variant_key}-${c.slug}-${stateCodeLower}`;
+    break;
 
-          case "porch_swing_style_city":
-            if (!style) throw new Error("Missing style");
-            variant_key = slugify(style);
-            title = `${titleCase(style)} Porch Swings in ${c.city_name}, ${stateCodeUpper}`;
-            slug = `porch-swing-${variant_key}-${c.slug}-${stateCodeLower}`;
-            break;
+  /* -----------------------------
+     COST + PRICING TEMPLATES
+  ------------------------------ */
 
-          /* -----------------------------
-             DOOR TEMPLATES
-          ------------------------------ */
+  case "porch_swing_cost_city":
+    title = `Porch Swing Cost in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-cost-${c.slug}-${stateCodeLower}`;
+    break;
 
-          case "door_city":
-            if (style) {
-              variant_key = slugify(style);
-              title = `${titleCase(style)} in ${c.city_name}, ${stateCodeUpper}`;
-              slug = `${variant_key}-${c.slug}-${stateCodeLower}`;
-            } else {
-              title = `Custom Wood Doors in ${c.city_name}, ${stateCodeUpper}`;
-              slug = `wood-doors-${c.slug}-${stateCodeLower}`;
-            }
-            break;
+  case "porch_swing_cost_factors_city":
+    title = `Porch Swing Cost Factors in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-cost-factors-${c.slug}-${stateCodeLower}`;
+    break;
 
-          case "custom_door_installation_city":
-            title = `Custom Door Installation in ${c.city_name}, ${stateCodeUpper}`;
-            slug = `custom-door-installation-${c.slug}-${stateCodeLower}`;
-            break;
+  case "porch_swing_cost_by_size_city":
+    title = `Porch Swing Cost by Size in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-cost-by-size-${c.slug}-${stateCodeLower}`;
+    break;
 
-          default:
-            throw new Error(`Unsupported template: ${page_template}`);
-        }
+  case "porch_swing_installed_cost_city":
+    title = `Installed Porch Swing Cost in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-installed-cost-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "porch_swing_vs_daybed_cost_city":
+    title = `Porch Swing vs Daybed Cost in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-vs-daybed-cost-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "porch_swing_vs_rocker_cost_city":
+    title = `Porch Swing vs Rocker Cost in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-vs-rocker-cost-${c.slug}-${stateCodeLower}`;
+    break;
+
+  /* -----------------------------
+     DIY + PRO INSTALLATION
+  ------------------------------ */
+
+  case "porch_swing_diy_city":
+    title = `DIY Porch Swing Installation in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `diy-porch-swing-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "porch_swing_hire_pro_city":
+    title = `Hire a Pro to Install a Porch Swing in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `hire-pro-porch-swing-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "porch_swing_installation_process_city":
+    title = `Porch Swing Installation Process in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-installation-process-${c.slug}-${stateCodeLower}`;
+    break;
+
+  /* -----------------------------
+     HARDWARE + SUPPORT
+  ------------------------------ */
+
+  case "porch_swing_hardware_city":
+    title = `Porch Swing Hardware in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-hardware-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "porch_swing_support_city":
+    title = `Porch Swing Support Requirements in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-support-${c.slug}-${stateCodeLower}`;
+    break;
+
+  /* -----------------------------
+     MEASUREMENTS + ENGINEERING
+  ------------------------------ */
+
+  case "porch_swing_beam_size_city":
+    title = `Porch Swing Beam Size Requirements in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-beam-size-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "porch_swing_ceiling_height_city":
+    title = `Porch Swing Ceiling Height Guide in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-ceiling-height-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "porch_swing_chain_spacing_city":
+    title = `Porch Swing Chain Spacing Guide in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-chain-spacing-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "porch_swing_clearance_city":
+    title = `Porch Swing Clearance Requirements in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-clearance-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "porch_swing_hang_height_city":
+    title = `Porch Swing Hanging Height Guide in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-hang-height-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "porch_swing_mount_type_city":
+    title = `Porch Swing Mount Type Guide in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-mount-type-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "porch_swing_weight_capacity_city":
+    title = `Porch Swing Weight Capacity Guide in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-weight-capacity-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "porch_width_for_swing_city":
+    title = `Porch Width Needed for a Swing in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-width-for-swing-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "what_size_porch_swing_city":
+    title = `What Size Porch Swing Should You Get in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `what-size-porch-swing-${c.slug}-${stateCodeLower}`;
+    break;
+
+  /* -----------------------------
+     SMALL + SPECIAL TYPES
+  ------------------------------ */
+
+  case "porch_swing_small_porch_city":
+    title = `Porch Swings for Small Porches in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `small-porch-swings-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "porch_swing_style_fit_city":
+    title = `Porch Swing Style Fit Guide in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-style-fit-${c.slug}-${stateCodeLower}`;
+    break;
+
+  /* -----------------------------
+     DOOR TEMPLATES
+  ------------------------------ */
+
+  case "door_city":
+    if (style) {
+      variant_key = slugify(style);
+      title = `${titleCase(style)} in ${c.city_name}, ${stateCodeUpper}`;
+      slug = `${variant_key}-${c.slug}-${stateCodeLower}`;
+    } else {
+      title = `Custom Wood Doors in ${c.city_name}, ${stateCodeUpper}`;
+      slug = `wood-doors-${c.slug}-${stateCodeLower}`;
+    }
+    break;
+
+  case "custom_door_installation_city":
+    title = `Custom Door Installation in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `custom-door-installation-${c.slug}-${stateCodeLower}`;
+    break;
+
+  default:
+    throw new Error(`Unsupported template: ${page_template}`);
+}
+
 
         return {
           location_id: c.id,

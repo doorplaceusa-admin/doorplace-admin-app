@@ -1,24 +1,18 @@
 import { NextResponse } from "next/server";
 
-const SHOPIFY_SITEMAP_INDEX = "https://doorplaceusa.com/sitemap.xml";
+const SHOPIFY_REAL = "https://doorplaceusa.myshopify.com/sitemap.xml";
 
 export async function GET() {
-  const res = await fetch(SHOPIFY_SITEMAP_INDEX, {
+  const res = await fetch(SHOPIFY_REAL, {
     cache: "no-store",
   });
 
   if (!res.ok) {
-    return new NextResponse("Failed to fetch Shopify sitemap index", {
-      status: 500,
-    });
+    return new NextResponse("Shopify sitemap fetch failed", { status: 500 });
   }
 
-  let xml = await res.text();
+  const xml = await res.text();
 
-  // Strip Shopify comments (keeps it clean for Google)
-  xml = xml.replace(/<!--[\s\S]*?-->/g, "");
-
-  // Return EXACT Shopify sitemap index with all 209 partitions
   return new NextResponse(xml, {
     status: 200,
     headers: {

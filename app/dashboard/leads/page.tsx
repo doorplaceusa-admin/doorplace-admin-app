@@ -153,7 +153,9 @@ export default function LeadsPage() {
      RENDER
   ================================ */
   return (
-    <div className="h-[calc(100vh-80px)] flex flex-col bg-gray-50 overflow-x-hidden max-w-[1500px] w-full mx-auto">
+  <div className="min-h-screen flex flex-col bg-gray-50 max-w-[1500px] w-full mx-auto">
+
+
       {/* HEADER */}
       <div className="sticky top-0 bg-white z-30 border-b pb-4">
         <div className="flex justify-between items-center">
@@ -187,7 +189,9 @@ export default function LeadsPage() {
       </div>
 
       {/* TABLE */}
+      <div className="flex-1 min-h-0 overflow-auto"></div>
       <AdminTable<Lead>
+      
   columns={[
     { key: "name", label: "Name" },
     { key: "type", label: "Lead Type" },

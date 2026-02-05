@@ -86,7 +86,7 @@ export async function POST(req: Request) {
         let mount_type: string | null = null;
 
         switch (page_template) {
-  /* -----------------------------
+    /* -----------------------------
      PORCH SWING CORE
   ------------------------------ */
 
@@ -246,6 +246,25 @@ export async function POST(req: Request) {
     slug = `porch-swing-weight-capacity-${c.slug}-${stateCodeLower}`;
     break;
 
+  /* -----------------------------
+     ✅ NEW CASES (Fix Unsupported Templates)
+  ------------------------------ */
+
+  case "porch_swing_size_fit_city":
+    title = `Porch Swing Size & Fit Guide in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-size-fit-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "porch_swing_width_city":
+    title = `Porch Width Needed for a Swing in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-width-${c.slug}-${stateCodeLower}`;
+    break;
+
+  case "porch_swing_depth_city":
+    title = `Porch Swing Depth Guide in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `porch-swing-depth-${c.slug}-${stateCodeLower}`;
+    break;
+
   case "porch_width_for_swing_city":
     title = `Porch Width Needed for a Swing in ${c.city_name}, ${stateCodeUpper}`;
     slug = `porch-width-for-swing-${c.slug}-${stateCodeLower}`;
@@ -269,6 +288,7 @@ export async function POST(req: Request) {
     title = `Porch Swing Style Fit Guide in ${c.city_name}, ${stateCodeUpper}`;
     slug = `porch-swing-style-fit-${c.slug}-${stateCodeLower}`;
     break;
+
 
   /* -----------------------------
      DOOR TEMPLATES

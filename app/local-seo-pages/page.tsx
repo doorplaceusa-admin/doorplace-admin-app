@@ -384,22 +384,47 @@ function PricingCard({
 
 function LeadModal({ onClose }: { onClose: () => void }) {
   const [form, setForm] = useState({
-    full_name: "",
-    email: "",
-    phone: "",
-    business_type: "",
-    street_address: "",
-    city: "",
-    state: "",
-    zip: "",
-    pages_needed: "",
-  });
+  full_name: "",
+  email: "",
+  phone: "",
+  business_type: "",
+  business_website: "",
+  street_address: "",
+  city: "",
+  state: "",
+  zip: "",
+  pages_needed: "",
+});
+
+const inputStyle = {
+  width: "100%",
+  padding: "12px",
+  marginTop: "10px",
+  borderRadius: "10px",
+  border: "1px solid #ddd",
+};
+
+
 
   async function submit() {
-    await supabase.from("tradepilot_page_requests").insert([form]);
-    alert("Submitted! We'll contact you shortly.");
-    onClose();
+  let website = form.business_website.trim();
+
+  // Auto-add https:// if missing
+  if (website && !website.startsWith("http")) {
+    website = "https://" + website;
   }
+
+  const cleanForm = {
+    ...form,
+    business_website: website,
+  };
+
+  await supabase.from("tradepilot_page_requests").insert([cleanForm]);
+
+  alert("Submitted! We'll contact you shortly.");
+  onClose();
+}
+
 
   return (
     <div
@@ -426,23 +451,62 @@ function LeadModal({ onClose }: { onClose: () => void }) {
           Request TradePilot Pages
         </h2>
 
-        {Object.keys(form).map((key) => (
-          <input
-            key={key}
-            placeholder={key.replaceAll("_", " ").toUpperCase()}
-            value={(form as any)[key]}
-            onChange={(e) =>
-              setForm({ ...form, [key]: e.target.value })
-            }
-            style={{
-              width: "100%",
-              padding: "12px",
-              marginTop: "10px",
-              borderRadius: "10px",
-              border: "1px solid #ddd",
-            }}
-          />
-        ))}
+        <input
+  placeholder="Full Name"
+  value={form.full_name}
+  onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+  style={inputStyle}
+/>
+
+<input
+  placeholder="Email Address"
+  value={form.email}
+  onChange={(e) => setForm({ ...form, email: e.target.value })}
+  style={inputStyle}
+/>
+
+<input
+  placeholder="Phone Number"
+  value={form.phone}
+  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+  style={inputStyle}
+/>
+
+<input
+  placeholder="Business Type (ex: Roofing, HVAC, Plumbing)"
+  value={form.business_type}
+  onChange={(e) => setForm({ ...form, business_type: e.target.value })}
+  style={inputStyle}
+/>
+
+<input
+  placeholder="Business Website (ex: https://yourcompany.com)"
+  value={form.business_website}
+  onChange={(e) => setForm({ ...form, business_website: e.target.value })}
+  style={inputStyle}
+/>
+
+<input
+  placeholder="City"
+  value={form.city}
+  onChange={(e) => setForm({ ...form, city: e.target.value })}
+  style={inputStyle}
+/>
+
+<input
+  placeholder="State"
+  value={form.state}
+  onChange={(e) => setForm({ ...form, state: e.target.value })}
+  style={inputStyle}
+/>
+
+<input
+  placeholder="How many pages do you need? (ex: 500, 5,000, 50,000)"
+  value={form.pages_needed}
+  onChange={(e) => setForm({ ...form, pages_needed: e.target.value })}
+  style={inputStyle}
+/>
+
 
         <button
           onClick={submit}

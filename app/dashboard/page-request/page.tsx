@@ -18,6 +18,7 @@ type PageRequest = {
   phone: string;
 
   business_type?: string;
+  business_website?: string;
   pages_needed?: string;
 
   street_address?: string;
@@ -64,6 +65,19 @@ export default function PageRequestsPage() {
     setLoading(false);
   }
 
+async function updateRequestStatus(
+  requestId: string,
+  status: "new" | "contacted" | "closed"
+) {
+  await supabase
+    .from("tradepilot_page_requests")
+    .update({ status })
+    .eq("id", requestId);
+
+  loadRows();
+}
+
+
   useEffect(() => {
     loadRows();
   }, []);
@@ -74,7 +88,8 @@ export default function PageRequestsPage() {
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter((r) =>
-        `${r.full_name} ${r.email} ${r.phone} ${r.business_type}`
+        `${r.full_name} ${r.email} ${r.phone} ${r.business_type} ${r.business_website}`
+
           .toLowerCase()
           .includes(q)
       );
@@ -166,8 +181,34 @@ export default function PageRequestsPage() {
               key={r.id}
               className="border rounded-lg p-4 shadow-sm bg-white space-y-2"
             >
-              <div className="font-semibold text-lg">{r.full_name}</div>
-              <div className="text-xs text-gray-500">{r.email}</div>
+              <div className="flex justify-between items-start">
+  <div>
+    <div className="font-semibold text-lg">{r.full_name}</div>
+    <div className="text-xs text-gray-500">{r.email}</div>
+  </div>
+
+  <select
+    className={`text-xs font-semibold border rounded px-2 py-1 ${
+      r.status === "closed"
+        ? "text-green-700"
+        : r.status === "contacted"
+        ? "text-blue-700"
+        : "text-orange-700"
+    }`}
+    value={r.status || "new"}
+    onChange={(e) =>
+      updateRequestStatus(
+        r.id,
+        e.target.value as "new" | "contacted" | "closed"
+      )
+    }
+  >
+    <option value="new">● New</option>
+    <option value="contacted">● Contacted</option>
+    <option value="closed">● Closed</option>
+  </select>
+</div>
+
 
               <div className="text-xs text-gray-600 space-y-1">
                 <div>
@@ -176,6 +217,24 @@ export default function PageRequestsPage() {
                 <div>
                   <b>Business:</b> {r.business_type || "—"}
                 </div>
+                <div>
+  <b>Website:</b>{" "}
+  {r.business_website ? (
+    <a
+      href={r.business_website}
+      target="_blank"
+      rel="noreferrer"
+      className="text-blue-600 underline"
+    >
+      Visit Site
+    </a>
+  ) : (
+    "—"
+  )}
+</div>
+
+
+
                 <div>
                   <b>Pages Needed:</b> {r.pages_needed || "—"}
                 </div>
@@ -266,6 +325,22 @@ export default function PageRequestsPage() {
                 <b>Business Type:</b> {viewItem.business_type || "—"}
               </p>
               <p>
+  <b>Business Website:</b>{" "}
+  {viewItem.business_website ? (
+    <a
+      href={viewItem.business_website}
+      target="_blank"
+      rel="noreferrer"
+      className="text-blue-600 underline"
+    >
+      {viewItem.business_website}
+    </a>
+  ) : (
+    "—"
+  )}
+</p>
+
+              <p>
                 <b>Pages Needed:</b> {viewItem.pages_needed || "—"}
               </p>
 
@@ -286,9 +361,30 @@ export default function PageRequestsPage() {
 
               <hr />
 
-              <p>
-                <b>Status:</b> {viewItem.status || "new"}
-              </p>
+              <div className="flex items-center gap-2">
+  <b>Status:</b>
+
+  <select
+    className="border rounded px-2 py-1 text-sm"
+    value={viewItem.status || "new"}
+    onChange={async (e) => {
+      const newStatus = e.target.value as
+        | "new"
+        | "contacted"
+        | "closed";
+
+      await updateRequestStatus(viewItem.id, newStatus);
+
+      // Update modal instantly
+      setViewItem({ ...viewItem, status: newStatus });
+    }}
+  >
+    <option value="new">● New</option>
+    <option value="contacted">● Contacted</option>
+    <option value="closed">● Closed</option>
+  </select>
+</div>
+
               <p>
                 <b>Submitted:</b> {formatDate(viewItem.created_at)}
               </p>

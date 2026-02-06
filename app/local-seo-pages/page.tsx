@@ -482,23 +482,49 @@ const inputStyle = {
 <input
   placeholder="Business Website (ex: https://yourcompany.com)"
   value={form.business_website}
-  onChange={(e) => setForm({ ...form, business_website: e.target.value })}
+  onChange={(e) =>
+    setForm({ ...form, business_website: e.target.value })
+  }
   style={inputStyle}
 />
 
 <input
+  placeholder="Street Address"
+  value={form.street_address}
+  onChange={(e) =>
+    setForm({ ...form, street_address: e.target.value })
+  }
+  style={inputStyle}
+/>
+
+
+<input
   placeholder="City"
   value={form.city}
-  onChange={(e) => setForm({ ...form, city: e.target.value })}
+  onChange={(e) =>
+    setForm({ ...form, city: e.target.value })
+  }
   style={inputStyle}
 />
 
 <input
   placeholder="State"
   value={form.state}
-  onChange={(e) => setForm({ ...form, state: e.target.value })}
+  onChange={(e) =>
+    setForm({ ...form, state: e.target.value })
+  }
   style={inputStyle}
 />
+
+<input
+  placeholder="Zip Code"
+  value={form.zip}
+  onChange={(e) =>
+    setForm({ ...form, zip: e.target.value })
+  }
+  style={inputStyle}
+/>
+
 
 <input
   placeholder="How many pages do you need? (ex: 500, 5,000, 50,000)"

@@ -805,6 +805,12 @@ function MobileBottomNav() {
                 onClick={() => setShowMore(false)}
               />
               <MoreTile
+                href="/dashboard/page-request" 
+                icon={<DatabaseIcon size={20} />}
+                label="Page Requests Leads"
+                onClick={() => setShowMore(false)}
+              />
+              <MoreTile
                 href="/dashboard/settings"
                 icon={<Settings size={20} />}
                 label="Settings"

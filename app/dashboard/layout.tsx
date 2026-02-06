@@ -399,6 +399,11 @@ async function askAdminAI() {
     icon={<DatabaseIcon size={18} />}
     label="Google Analytics"
   />
+  <NavLink
+    href="/dashboard/page-request"
+    icon={<DatabaseIcon size={18} />}
+    label="Page Requests leads"
+  />
   
 
 

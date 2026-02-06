@@ -10,6 +10,13 @@ type CleanupResult = {
   dry_run: boolean;
 };
 
+type ShopifyPageResult = {
+  id: string;
+  title: string;
+  handle: string;
+  updatedAt?: string;
+};
+
 export default function Page() {
   const [syncing, setSyncing] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -20,6 +27,53 @@ export default function Page() {
   >("idle");
   const [cleanupMessage, setCleanupMessage] = useState<string | null>(null);
   const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(null);
+
+  /* ======================================================
+     Shopify Page Finder Search Tool
+  ====================================================== */
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchResults, setSearchResults] = useState<ShopifyPageResult[]>([]);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  async function runPageSearch() {
+    if (!searchQuery.trim()) return;
+
+    setSearchLoading(true);
+    setSearchError(null);
+    setSearchResults([]);
+
+    try {
+      const res = await fetch("/api/shopify/search-pages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: searchQuery,
+        }),
+      });
+
+      if (!res.ok) throw new Error(await res.text());
+
+      const data = await res.json();
+      setSearchResults(data.pages || []);
+    } catch (err: any) {
+      setSearchError(err.message);
+    } finally {
+      setSearchLoading(false);
+    }
+  }
+
+  function openShopifyEditor(pageId: string) {
+    const shopDomain = "doorplaceusa"; // <-- change if needed
+
+    window.open(
+      `https://admin.shopify.com/store/${shopDomain}/pages/${pageId}`,
+      "_blank"
+    );
+  }
 
   /* ======================================================
      Shopify Sitemap Sync
@@ -142,6 +196,72 @@ export default function Page() {
         <SendPasswordReset />
       </div>
 
+      {/* Shopify Page Finder */}
+      <div className="border-t pt-6">
+        <h2 className="text-lg font-semibold mb-2">
+          Shopify Page Finder (TradePilot Search)
+        </h2>
+
+        <p className="text-sm text-gray-600 mb-4">
+          Search Shopify pages instantly and open the real Shopify editor.
+          Perfect for stores with thousands of pages.
+        </p>
+
+        <div className="flex gap-2 mb-4">
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search page title or handle..."
+            className="w-full border rounded px-3 py-2 text-sm"
+          />
+
+          <button
+            onClick={runPageSearch}
+            disabled={searchLoading}
+            className={`px-4 py-2 rounded font-medium text-sm transition ${
+              searchLoading
+                ? "bg-gray-300 text-gray-600"
+                : "bg-black text-white hover:bg-gray-800"
+            }`}
+          >
+            {searchLoading ? "Searching…" : "Search"}
+          </button>
+        </div>
+
+        {searchError && (
+          <p className="text-sm text-red-600 mb-3">❌ {searchError}</p>
+        )}
+
+        {searchResults.length > 0 && (
+          <div className="border rounded-md bg-white overflow-hidden">
+            {searchResults.map((p) => (
+              <div
+                key={p.id}
+                className="flex items-center justify-between px-4 py-3 border-b last:border-b-0"
+              >
+                <div>
+                  <p className="font-medium text-sm">{p.title}</p>
+                  <p className="text-xs text-gray-500">{p.handle}</p>
+                </div>
+
+                <button
+                  onClick={() => openShopifyEditor(p.id)}
+                  className="px-3 py-1 rounded bg-blue-600 text-white text-xs hover:bg-blue-700"
+                >
+                  Edit
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {searchResults.length === 0 && !searchLoading && searchQuery && (
+          <p className="text-sm text-gray-500">
+            No pages found. Try another keyword.
+          </p>
+        )}
+      </div>
+
       {/* Shopify Sitemap Sync */}
       <div className="border-t pt-6">
         <h2 className="text-lg font-semibold mb-2">Shopify Sitemap Sync</h2>
@@ -206,7 +326,6 @@ export default function Page() {
         {/* Status Panel */}
         {cleanupPhase !== "idle" && (
           <div className="border rounded-md p-4 bg-gray-50 space-y-2">
-            {/* Progress Bar */}
             <div
               className={`h-2 w-full rounded ${
                 cleanupPhase === "running"

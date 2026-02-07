@@ -27,6 +27,9 @@ export async function POST(req: Request) {
   console.log("SYNC SECRET LOADED:", Boolean(SYNC_SECRET));
 
   try {
+    /* -----------------------------------------
+       AUTH
+    ------------------------------------------ */
     if (!SYNC_SECRET) {
       throw new Error("SITEMAP_SYNC_SECRET not set");
     }
@@ -36,26 +39,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const {
-      sitemapIndex = 0,
-      urlOffset = 0,
-    } = await req.json().catch(() => ({}));
+    /* -----------------------------------------
+       INPUT STATE
+    ------------------------------------------ */
+    const { sitemapIndex = 0, urlOffset = 0 } = await req
+      .json()
+      .catch(() => ({}));
 
     console.log("🚀 SHOPIFY SITEMAP SYNC", { sitemapIndex, urlOffset });
 
     /* -----------------------------------------
-       FETCH SITEMAP INDEX (BROWSER-SAFE)
+       FETCH ROOT SITEMAP INDEX
     ------------------------------------------ */
     const indexRes = await fetch(ROOT_SITEMAP, {
       cache: "no-store",
+      redirect: "follow",
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-          "(KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        Connection: "keep-alive",
+        "User-Agent": "Mozilla/5.0",
+        Accept: "application/xml,text/xml,*/*",
       },
     });
 
@@ -64,16 +65,22 @@ export async function POST(req: Request) {
     }
 
     const indexXml = await indexRes.text();
+
+    console.log("INDEX XML PREVIEW:");
+    console.log(indexXml.slice(0, 300));
+
     const sitemapUrls = extractLocs(indexXml);
 
     if (!sitemapUrls.length) {
-      throw new Error("No child sitemaps found");
+      throw new Error("No child sitemaps found in sitemap index");
     }
 
     /* -----------------------------------------
        FINISHED ALL SITEMAPS
     ------------------------------------------ */
     if (sitemapIndex >= sitemapUrls.length) {
+      console.log("✅ Finished all sitemap sync runs.");
+
       await supabaseAdmin
         .from("shopify_url_inventory")
         .update({ is_active: false })
@@ -90,15 +97,19 @@ export async function POST(req: Request) {
     }
 
     /* -----------------------------------------
-       FETCH CHILD SITEMAP
+       FETCH CURRENT CHILD SITEMAP
     ------------------------------------------ */
     const sitemapUrl = sitemapUrls[sitemapIndex];
     const pageType = inferPageType(sitemapUrl);
 
-    const xml = await fetchXml(sitemapUrl);
-    const entries = extractUrlEntries(xml);
+    console.log("📌 Fetching Child Sitemap:", sitemapUrl);
+
+    const childXml = await fetchXml(sitemapUrl);
+    const entries = extractUrlEntries(childXml);
 
     if (!entries.length) {
+      console.log("⚠️ No URLs found in child sitemap.");
+
       return NextResponse.json({
         success: true,
         done: false,
@@ -108,7 +119,7 @@ export async function POST(req: Request) {
     }
 
     /* -----------------------------------------
-       PROCESS
+       PROCESS URLS IN BATCHES
     ------------------------------------------ */
     const now = new Date().toISOString();
     let batchesRun = 0;
@@ -119,10 +130,7 @@ export async function POST(req: Request) {
       const slice = entries.slice(i, i + BATCH_SIZE);
 
       const rows = slice
-        .filter(
-          (e): e is { loc: string; lastmod?: string } =>
-            typeof e.loc === "string"
-        )
+        .filter((e): e is { loc: string; lastmod?: string } => !!e.loc)
         .map((e) => ({
           url: normalizeUrl(e.loc),
           page_type: pageType,
@@ -139,6 +147,7 @@ export async function POST(req: Request) {
           .upsert(rows, { onConflict: "url" });
 
         if (error) throw error;
+
         upserted += rows.length;
       }
 
@@ -147,6 +156,12 @@ export async function POST(req: Request) {
     }
 
     const doneWithSitemap = i >= entries.length;
+
+    console.log("✅ Batch Upsert Complete:", {
+      upserted,
+      sitemapIndex,
+      doneWithSitemap,
+    });
 
     return NextResponse.json({
       success: true,
@@ -171,13 +186,13 @@ export async function POST(req: Request) {
    HELPERS
 ====================================================== */
 
+/* ---------- Fetch XML ---------- */
 async function fetchXml(url: string): Promise<string> {
   const res = await fetch(url, {
     cache: "no-store",
+    redirect: "follow",
     headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-        "(KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+      "User-Agent": "Mozilla/5.0",
       Accept: "application/xml,text/xml,*/*",
     },
   });
@@ -189,36 +204,39 @@ async function fetchXml(url: string): Promise<string> {
   return res.text();
 }
 
+/* ---------- Strip XML Namespaces ---------- */
 function stripNamespaces(xml: string) {
-  return xml
-    .replace(/xmlns(:\w+)?="[^"]*"/g, "")
-    .replace(/<\/?\w+:/g, "<")
-    .replace(/<\/\w+:/g, "</");
+  return xml.replace(/xmlns(:\w+)?="[^"]*"/g, "");
 }
 
+/* ---------- Extract Child Sitemap URLs ---------- */
 function extractLocs(xml: string): string[] {
   const clean = stripNamespaces(xml);
 
-  return [...clean.matchAll(/<loc>(.*?)<\/loc>/g)]
-    .map((m) => m[1].trim())
-    .filter(Boolean); // ✅ removes empty <loc>
+  const sitemapBlocks = [...clean.matchAll(/<sitemap>([\s\S]*?)<\/sitemap>/g)];
+
+  return sitemapBlocks
+    .map((block) => block[1].match(/<loc>(.*?)<\/loc>/)?.[1]?.trim())
+    .filter((u): u is string => !!u && u.startsWith("http"));
 }
 
-
+/* ---------- Extract URL Entries ---------- */
 function extractUrlEntries(xml: string): SitemapEntry[] {
   const clean = stripNamespaces(xml);
   const urls = [...clean.matchAll(/<url>([\s\S]*?)<\/url>/g)];
 
   return urls.map((block) => ({
-    loc: block[1].match(/<loc>(.*?)<\/loc>/)?.[1],
-    lastmod: block[1].match(/<lastmod>(.*?)<\/lastmod>/)?.[1],
+    loc: block[1].match(/<loc>(.*?)<\/loc>/)?.[1]?.trim(),
+    lastmod: block[1].match(/<lastmod>(.*?)<\/lastmod>/)?.[1]?.trim(),
   }));
 }
 
+/* ---------- Normalize URLs ---------- */
 function normalizeUrl(url: string) {
   return url.replace(/\/$/, "").toLowerCase();
 }
 
+/* ---------- Page Type Detection ---------- */
 function inferPageType(sitemapUrl: string) {
   if (sitemapUrl.includes("products")) return "product";
   if (sitemapUrl.includes("collections")) return "collection";

@@ -3,6 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+/* ✅ LIVE MAP COMPONENT */
+import LiveUSMap from "@/app/components/LiveUSMap";
+
+/* ===============================
+   TYPES
+================================ */
+
 type PageRank = {
   page_url: string;
   total_views: number;
@@ -35,6 +42,10 @@ export default function AdminAnalyticsPage() {
   const [heatmap, setHeatmap] = useState<HeatmapRow[]>([]);
   const [timeline, setTimeline] = useState<TimelinePoint[]>([]);
   const [loading, setLoading] = useState(true);
+
+  /* ✅ LIVE VISITOR MAP DATA */
+  const [liveVisitors, setLiveVisitors] = useState<any[]>([]);
+
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("views");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -46,28 +57,44 @@ export default function AdminAnalyticsPage() {
     inflight.current = true;
 
     try {
-      const [{ data: rankingData }, { data: lastData }, { data: heatData }] =
-        await Promise.all([
-          supabase.from("analytics_page_rankings").select("*").limit(500),
-          supabase.from("analytics_last_page_view").select("*").single(),
-          supabase.from("analytics_hourly_heatmap").select("*"),
-        ]);
+      const [
+        { data: rankingData },
+        { data: lastData },
+        { data: heatData },
+        { data: liveData },
+      ] = await Promise.all([
+        supabase.from("analytics_page_rankings").select("*").limit(500),
+        supabase.from("analytics_last_page_view").select("*").single(),
+        supabase.from("analytics_hourly_heatmap").select("*"),
+
+        /* ✅ LIVE MAP (last 5 minutes clusters) */
+        supabase.from("analytics_live_city_activity").select("*"),
+      ]);
 
       if (rankingData) setRankings(rankingData);
       if (lastData) setLastView(lastData);
       if (heatData) setHeatmap(heatData);
+
+      /* ✅ MAP DATA */
+      if (liveData) setLiveVisitors(liveData);
     } finally {
       inflight.current = false;
       setLoading(false);
     }
   }
 
+  /* ===============================
+     AUTO REFRESH
+  ============================== */
   useEffect(() => {
     loadAll();
     const i = setInterval(loadAll, REFRESH_INTERVAL);
     return () => clearInterval(i);
   }, []);
 
+  /* ===============================
+     REALTIME TIMELINE STREAM
+  ============================== */
   useEffect(() => {
     const channel = supabase
       .channel("page-view-stream")
@@ -104,6 +131,9 @@ export default function AdminAnalyticsPage() {
     });
   }
 
+  /* ===============================
+     FILTER + SORT TOP PAGES
+  ============================== */
   const filteredSortedRankings = useMemo(() => {
     const filtered = rankings.filter((r) =>
       r.page_url.toLowerCase().includes(search.toLowerCase())
@@ -134,6 +164,10 @@ export default function AdminAnalyticsPage() {
 
   const maxHeat = Math.max(...heatmap.map((h) => h.total_views), 1);
   const maxLine = Math.max(...timeline.map((t) => t.count), 1);
+
+  /* ===============================
+     PAGE UI
+  ============================== */
 
   return (
     <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-6 max-w-[1400px] w-full mx-auto">
@@ -199,6 +233,15 @@ export default function AdminAnalyticsPage() {
         </div>
       </div>
 
+      {/* ✅ LIVE VISITOR MAP */}
+      <div className="border rounded p-4 bg-white shadow">
+        <h2 className="font-semibold mb-3">
+          Live Visitors by City (Last 5 Minutes)
+        </h2>
+
+        <LiveUSMap visitors={liveVisitors} />
+      </div>
+
       {/* Heatmap */}
       <div className="border rounded p-4 bg-white shadow">
         <h2 className="font-semibold mb-3">Hourly Heatmap</h2>
@@ -213,7 +256,10 @@ export default function AdminAnalyticsPage() {
                 key={hour}
                 className="h-12 flex items-center justify-center rounded text-white font-medium"
                 style={{
-                  backgroundColor: `rgba(220,38,38,${Math.max(intensity, 0.08)})`,
+                  backgroundColor: `rgba(220,38,38,${Math.max(
+                    intensity,
+                    0.08
+                  )})`,
                 }}
                 title={`${hour}:00 – ${count} views`}
               >

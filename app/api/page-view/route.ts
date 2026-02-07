@@ -1,6 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 
-const supabase = createSupabaseServerClient();
+export const runtime = "nodejs";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,94 +9,71 @@ const corsHeaders = {
 };
 
 export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: corsHeaders,
-  });
+  return new Response(null, { status: 204, headers: corsHeaders });
 }
 
 export async function POST(req: Request) {
-  console.log("🔥 PAGE VIEW ROUTE HIT (LIVE)");
+  console.log("🔥 PAGE VIEW HIT");
 
   try {
+    const supabase = createSupabaseServerClient();
+
     const body = await req.json();
 
-    const {
-      page_key,
-      page_url,
-      partner_id = null,
-      source = "unknown",
-    } = body;
+    const { page_key, page_url, partner_id = null, source = "unknown" } = body;
 
     if (!page_key || !page_url) {
-      return new Response("Invalid payload", {
+      return new Response("Missing page_key/page_url", {
         status: 400,
         headers: corsHeaders,
       });
     }
 
-    /* ============================================
-       ✅ CLOUDFARE GEOLOCATION HEADERS
-    ============================================ */
+    // ✅ SAFE DEFAULTS (NO CLOUDFLARE REQUIRED)
+    let city = null;
+    let state = null;
+    let latitude = null;
+    let longitude = null;
 
-    const city = req.headers.get("cf-ipcity") || null;
-    const state = req.headers.get("cf-region") || null;
+    // Only use CF headers if present
+    if (req.headers.get("cf-ipcity")) {
+      city = req.headers.get("cf-ipcity");
+      state = req.headers.get("cf-region");
 
-    const latitude = req.headers.get("cf-iplatitude")
-      ? parseFloat(req.headers.get("cf-iplatitude")!)
-      : null;
+      latitude = req.headers.get("cf-iplatitude")
+        ? parseFloat(req.headers.get("cf-iplatitude")!)
+        : null;
 
-    const longitude = req.headers.get("cf-iplongitude")
-      ? parseFloat(req.headers.get("cf-iplongitude")!)
-      : null;
+      longitude = req.headers.get("cf-iplongitude")
+        ? parseFloat(req.headers.get("cf-iplongitude")!)
+        : null;
+    }
 
-    const country = req.headers.get("cf-ipcountry") || null;
-    const ip = req.headers.get("cf-connecting-ip") || null;
-
-    console.log("📍 GEO FOUND:", {
-      ip,
-      city,
-      state,
-      latitude,
-      longitude,
-      country,
-    });
-
-    /* ============================================
-       ✅ INSERT FULL EVENT
-    ============================================ */
+    console.log("📍 GEO:", { city, state, latitude, longitude });
 
     const { error } = await supabase.from("page_view_events").insert({
       page_key,
       page_url,
       partner_id,
       source,
-
       city,
       state,
       latitude,
       longitude,
-      country,
-      ip,
     });
 
     if (error) {
-      console.error("❌ SUPABASE INSERT ERROR:", error);
-      return new Response("Insert failed", {
+      console.error("❌ INSERT ERROR:", error);
+      return new Response(JSON.stringify(error), {
         status: 500,
         headers: corsHeaders,
       });
     }
 
-    console.log("✅ PAGE VIEW INSERTED WITH GEO");
-
-    return new Response("OK", {
-      status: 200,
-      headers: corsHeaders,
-    });
+    return new Response("OK", { status: 200, headers: corsHeaders });
   } catch (err) {
     console.error("❌ ROUTE CRASH:", err);
-    return new Response("Server error", {
+    return new Response("Server crash", {
       status: 500,
       headers: corsHeaders,
     });

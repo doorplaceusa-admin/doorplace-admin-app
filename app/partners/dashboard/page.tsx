@@ -90,7 +90,7 @@ const [showMessages, setShowMessages] = useState(false);
 
   window.addEventListener("open-profile", openProfile);
   return () => window.removeEventListener("open-profile", openProfile);
-}, [partner]);
+}, [partner?.partner_id]);
 
 
 useEffect(() => {
@@ -277,8 +277,7 @@ useEffect(() => {
     const { count, error } = await supabase
       .from("page_view_events")
       .select("*", { count: "exact", head: true })
-      .eq("partner_id", partnerId)
-      .eq("page_key", "swing-partner-lead");
+      .eq("partner_id", partnerId);
 
     if (!error && typeof count === "number") {
       setLinkViews(count);
@@ -286,7 +285,9 @@ useEffect(() => {
   }
 
   loadLinkViews();
-}, [partner]);
+}, [partner?.partner_id]);
+
+
 
 
 

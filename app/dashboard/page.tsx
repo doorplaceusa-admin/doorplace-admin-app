@@ -127,7 +127,7 @@ const { count: activePartners } = await supabase
   .select("*", { count: "exact", head: true })
   .eq("status", "active");
 
-  // ================= PARTNER TRACKING LINK VIEWS =================
+  // ================= PARTNER TRACKING LINK VIEWS "GLOBAL" =================
 const { count: partnerTrackingViews } = await supabase
   .from("page_view_events")
   .select("*", { count: "exact", head: true })

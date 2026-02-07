@@ -32,7 +32,7 @@ type TimelinePoint = {
 };
 
 const MAX_TIMELINE_POINTS = 60;
-const REFRESH_INTERVAL = 10000;
+const REFRESH_INTERVAL = 5000;
 
 type SortKey = "views" | "last" | "url";
 
@@ -58,18 +58,19 @@ export default function AdminAnalyticsPage() {
 
     try {
       const [
-        { data: rankingData },
-        { data: lastData },
-        { data: heatData },
-        { data: liveData },
-      ] = await Promise.all([
-        supabase.from("analytics_page_rankings").select("*").limit(500),
-        supabase.from("analytics_last_page_view").select("*").single(),
-        supabase.from("analytics_hourly_heatmap").select("*"),
+  { data: rankingData },
+  { data: lastData },
+  { data: heatData },
+  { data: liveData },
+] = await Promise.all([
+  supabase.from("analytics_page_rankings").select("*").limit(500),
+  supabase.from("analytics_last_page_view").select("*").single(),
+  supabase.from("analytics_hourly_heatmap").select("*"),
 
-        /* ✅ LIVE MAP (last 5 minutes clusters) */
-        supabase.from("analytics_live_city_activity").select("*"),
-      ]);
+  /* ✅ LIVE MAP (real lat/lon from new view) */
+  supabase.from("live_map_visitors").select("*"),
+]);
+
 
       if (rankingData) setRankings(rankingData);
       if (lastData) setLastView(lastData);
@@ -239,7 +240,7 @@ export default function AdminAnalyticsPage() {
           Live Visitors by City (Last 5 Minutes)
         </h2>
 
-        <LiveUSMap visitors={liveVisitors} />
+        <LiveUSMap visitors={liveVisitors || []} />
       </div>
 
       {/* Heatmap */}

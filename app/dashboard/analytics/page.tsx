@@ -31,8 +31,16 @@ type TimelinePoint = {
   count: number;
 };
 
+type LiveVisitor = {
+  city: string;
+  state: string;
+  latitude: number;
+  longitude: number;
+  count: number;
+};
+
 const MAX_TIMELINE_POINTS = 60;
-const REFRESH_INTERVAL = 10000;
+const REFRESH_INTERVAL = 5000; // ✅ refresh every 5 seconds
 
 type SortKey = "views" | "last" | "url";
 
@@ -44,7 +52,7 @@ export default function AdminAnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   /* ✅ LIVE VISITOR MAP DATA */
-  const [liveVisitors, setLiveVisitors] = useState<any[]>([]);
+  const [liveVisitors, setLiveVisitors] = useState<LiveVisitor[]>([]);
 
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("views");
@@ -71,12 +79,12 @@ export default function AdminAnalyticsPage() {
         supabase.from("analytics_live_city_activity").select("*"),
       ]);
 
-      if (rankingData) setRankings(rankingData);
-      if (lastData) setLastView(lastData);
-      if (heatData) setHeatmap(heatData);
+      if (rankingData) setRankings(rankingData as PageRank[]);
+      if (lastData) setLastView(lastData as LastView);
+      if (heatData) setHeatmap(heatData as HeatmapRow[]);
 
       /* ✅ MAP DATA */
-      if (liveData) setLiveVisitors(liveData);
+      if (liveData) setLiveVisitors(liveData as LiveVisitor[]);
     } finally {
       inflight.current = false;
       setLoading(false);

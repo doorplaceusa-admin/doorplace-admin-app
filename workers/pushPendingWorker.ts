@@ -1,4 +1,27 @@
-import "dotenv/config";
+// workers/pushPendingWorker.ts
+
+/* ======================================================
+   ✅ ENV LOADING (FIXED)
+   PM2 + Node workers do NOT auto-load .env.local
+====================================================== */
+
+import dotenv from "dotenv";
+
+// ✅ Force-load the correct env file explicitly
+dotenv.config({ path: "/var/www/doorplace-admin-app/.env.local" });
+
+// ✅ Debug proof (remove later if you want)
+console.log("SHOPIFY ENV CHECK:", {
+  STORE_DOMAIN: process.env.SHOPIFY_STORE_DOMAIN,
+  ACCESS_TOKEN: process.env.SHOPIFY_ACCESS_TOKEN
+    ? process.env.SHOPIFY_ACCESS_TOKEN.slice(0, 10) + "..."
+    : undefined,
+  API_VERSION: process.env.SHOPIFY_API_VERSION,
+});
+
+/* ======================================================
+   IMPORTS
+====================================================== */
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createShopifyPage } from "@/lib/shopify/createShopifyPage";
@@ -9,8 +32,8 @@ import { buildMetaDescription } from "@/lib/seo/build_meta/description";
    WORKER SETTINGS
 ================================ */
 
-const BATCH_SIZE = 20;          // push 20 per cycle
-const INTERVAL_MS = 60_000;     // run every 1 minute
+const BATCH_SIZE = 20; // push 20 per cycle
+const INTERVAL_MS = 60_000; // run every 1 minute
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -24,13 +47,17 @@ function getPageType(template: string) {
   switch (template) {
     case "porch_swing_material_city":
       return "material";
+
     case "porch_swing_size_city":
       return "size";
+
     case "door_city":
     case "custom_door_installation_city":
       return "door";
+
     case "porch_swing_delivery":
       return "install";
+
     default:
       return "general";
   }
@@ -149,17 +176,13 @@ async function pushBatch() {
 
       // Shopify throttle safety
       await sleep(900);
-
     } catch (err: any) {
       const message = err?.message || "";
 
       /* -----------------------------------------
          DUPLICATE HANDLE FIX
       ----------------------------------------- */
-      if (
-        message.includes("handle") &&
-        message.includes("already been taken")
-      ) {
+      if (message.includes("handle") && message.includes("already been taken")) {
         skipped++;
 
         await supabaseAdmin

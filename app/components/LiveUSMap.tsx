@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { geoAlbersUsa, geoPath } from "d3-geo";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
@@ -20,6 +20,22 @@ type LiveVisitor = {
 };
 
 /* ============================================
+   HELPERS
+============================================ */
+
+// Bubble size scaling
+function bubbleRadius(count: number) {
+  return Math.min(34, 10 + count * 3);
+}
+
+// Bubble color scaling (traffic intensity)
+function bubbleColor(count: number) {
+  if (count >= 10) return "#dc2626"; // Red = Hot
+  if (count >= 5) return "#f97316"; // Orange = Medium
+  return "#7c3aed"; // Purple = Light
+}
+
+/* ============================================
    COMPONENT
 ============================================ */
 
@@ -30,6 +46,12 @@ export default function LiveUSMap({
 }) {
   const width = 900;
   const height = 520;
+
+  /* ============================================
+     TOOLTIP STATE
+  ============================================ */
+
+  const [hovered, setHovered] = useState<LiveVisitor | null>(null);
 
   /* ============================================
      PROJECTION
@@ -57,13 +79,17 @@ export default function LiveUSMap({
   }, []);
 
   /* ============================================
-     CLUSTER VISITORS
+     CLUSTER VISITORS (PACK 5 FOUNDATION)
+     - Groups by city/state
+     - Later can upgrade to proximity clustering
   ============================================ */
 
   const clustered = useMemo(() => {
     const grouped: Record<string, LiveVisitor> = {};
 
     visitors.forEach((v) => {
+      if (!v.city || !v.state) return;
+
       const key = `${v.city}-${v.state}`;
 
       if (!grouped[key]) {
@@ -117,7 +143,30 @@ export default function LiveUSMap({
         wheel={{ step: 0.25 }}
         doubleClick={{ disabled: true }}
       >
-        <TransformComponent>
+        <TransformComponent wrapperStyle={{ position: "relative" }}>
+          {/* Tooltip */}
+          {hovered && (
+            <div
+              style={{
+                position: "absolute",
+                top: 18,
+                left: 18,
+                background: "white",
+                padding: "10px 14px",
+                borderRadius: "12px",
+                fontSize: "13px",
+                boxShadow: "0 6px 20px rgba(0,0,0,0.15)",
+                zIndex: 20,
+              }}
+            >
+              <strong>
+                {hovered.city}, {hovered.state}
+              </strong>
+              <div>{hovered.count} visitors</div>
+            </div>
+          )}
+
+          {/* SVG MAP */}
           <svg
             width="100%"
             viewBox={`0 0 ${width} ${height}`}
@@ -144,16 +193,23 @@ export default function LiveUSMap({
 
               const [x, y] = coords;
 
+              const radius = bubbleRadius(v.count);
+              const color = bubbleColor(v.count);
+
               return (
                 <g key={i}>
+                  {/* Bubble */}
                   <circle
                     cx={x}
                     cy={y}
-                    r={16}
-                    fill="#7c3aed"
-                    opacity={0.9}
+                    r={radius}
+                    fill={color}
+                    opacity={0.85}
+                    onMouseEnter={() => setHovered(v)}
+                    onMouseLeave={() => setHovered(null)}
                   />
 
+                  {/* Count Label */}
                   <text
                     x={x}
                     y={y + 5}
@@ -164,6 +220,20 @@ export default function LiveUSMap({
                   >
                     {v.count}
                   </text>
+
+                  {/* City Labels (PACK 4) */}
+                  {v.count >= 2 && (
+                    <text
+                      x={x}
+                      y={y + radius + 16}
+                      textAnchor="middle"
+                      fontSize="11"
+                      fontWeight="600"
+                      fill="#111827"
+                    >
+                      {v.city}
+                    </text>
+                  )}
                 </g>
               );
             })}

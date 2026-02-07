@@ -20,7 +20,6 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    console.log("📦 BODY RECEIVED:", body);
 
     const {
       page_key,
@@ -30,21 +29,56 @@ export async function POST(req: Request) {
     } = body;
 
     if (!page_key || !page_url) {
-      console.error("❌ INVALID PAYLOAD");
       return new Response("Invalid payload", {
         status: 400,
         headers: corsHeaders,
       });
     }
 
-    const { error } = await supabase
-      .from("page_view_events")
-      .insert({
-        page_key,
-        page_url,
-        partner_id,
-        source,
-      });
+    /* ============================================
+       ✅ CLOUDFARE GEOLOCATION HEADERS
+    ============================================ */
+
+    const city = req.headers.get("cf-ipcity") || null;
+    const state = req.headers.get("cf-region") || null;
+
+    const latitude = req.headers.get("cf-iplatitude")
+      ? parseFloat(req.headers.get("cf-iplatitude")!)
+      : null;
+
+    const longitude = req.headers.get("cf-iplongitude")
+      ? parseFloat(req.headers.get("cf-iplongitude")!)
+      : null;
+
+    const country = req.headers.get("cf-ipcountry") || null;
+    const ip = req.headers.get("cf-connecting-ip") || null;
+
+    console.log("📍 GEO FOUND:", {
+      ip,
+      city,
+      state,
+      latitude,
+      longitude,
+      country,
+    });
+
+    /* ============================================
+       ✅ INSERT FULL EVENT
+    ============================================ */
+
+    const { error } = await supabase.from("page_view_events").insert({
+      page_key,
+      page_url,
+      partner_id,
+      source,
+
+      city,
+      state,
+      latitude,
+      longitude,
+      country,
+      ip,
+    });
 
     if (error) {
       console.error("❌ SUPABASE INSERT ERROR:", error);
@@ -54,7 +88,7 @@ export async function POST(req: Request) {
       });
     }
 
-    console.log("✅ PAGE VIEW INSERTED");
+    console.log("✅ PAGE VIEW INSERTED WITH GEO");
 
     return new Response("OK", {
       status: 200,

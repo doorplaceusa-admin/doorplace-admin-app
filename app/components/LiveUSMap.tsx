@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import { geoAlbersUsa, geoPath } from "d3-geo";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
-import * as topojson from "topojson-client";
+import { feature } from "topojson-client";
 import us from "us-atlas/states-10m.json";
 
 /* ============================================
@@ -28,12 +28,12 @@ export default function LiveUSMap({
 }: {
   visitors: LiveVisitor[];
 }) {
-  /* ============================================
-     MAP SETTINGS
-  ============================================ */
-
   const width = 900;
   const height = 520;
+
+  /* ============================================
+     PROJECTION
+  ============================================ */
 
   const projection = useMemo(() => {
     return geoAlbersUsa()
@@ -44,14 +44,14 @@ export default function LiveUSMap({
   const pathGenerator = useMemo(() => geoPath(projection), [projection]);
 
   /* ============================================
-     REAL USA STATES (LOWER 48)
+     LOAD REAL US STATES
   ============================================ */
 
   const states = useMemo(() => {
-    const geo = topojson.feature(
+    const geo = feature(
       us as any,
       (us as any).objects.states
-    );
+    ) as any;
 
     return geo.features;
   }, []);
@@ -100,13 +100,7 @@ export default function LiveUSMap({
           marginBottom: "12px",
         }}
       >
-        <h2
-          style={{
-            fontSize: "18px",
-            fontWeight: 600,
-            color: "#111827",
-          }}
-        >
+        <h2 style={{ fontSize: "18px", fontWeight: 600 }}>
           Visitors Right Now
         </h2>
 
@@ -115,7 +109,7 @@ export default function LiveUSMap({
         </span>
       </div>
 
-      {/* Zoom + Pan Wrapper */}
+      {/* Zoom Wrapper */}
       <TransformWrapper
         initialScale={1}
         minScale={1}
@@ -132,7 +126,7 @@ export default function LiveUSMap({
               background: "#eef2f7",
             }}
           >
-            {/* Real USA Map */}
+            {/* USA STATES */}
             {states.map((state: any, i: number) => (
               <path
                 key={i}
@@ -143,7 +137,7 @@ export default function LiveUSMap({
               />
             ))}
 
-            {/* Visitor Cluster Pins */}
+            {/* Visitor Bubbles */}
             {clustered.map((v, i) => {
               const coords = projection([v.longitude, v.latitude]);
               if (!coords) return null;
@@ -152,7 +146,6 @@ export default function LiveUSMap({
 
               return (
                 <g key={i}>
-                  {/* Bubble */}
                   <circle
                     cx={x}
                     cy={y}
@@ -161,7 +154,6 @@ export default function LiveUSMap({
                     opacity={0.9}
                   />
 
-                  {/* Count */}
                   <text
                     x={x}
                     y={y + 5}

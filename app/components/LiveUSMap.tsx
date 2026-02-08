@@ -210,7 +210,7 @@ const [zoomScale, setZoomScale] = useState(1);
       <div
   style={{
     width: "100%",
-    height: fullscreen ? "100vh" : "300px",
+    height: fullscreen ? "100vh" : "350px",
 
     borderRadius: fullscreen ? "0px" : "22px",
     overflow: "hidden",
@@ -230,7 +230,7 @@ const [zoomScale, setZoomScale] = useState(1);
 >
 
   <TransformWrapper
-    initialScale={1}
+    initialScale={1.15}
     minScale={1}
     maxScale={6}
     wheel={{ step: 0.25 }}

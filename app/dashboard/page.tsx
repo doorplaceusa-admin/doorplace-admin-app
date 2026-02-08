@@ -77,10 +77,11 @@ const [liveVisitors, setLiveVisitors] = useState<any[]>([]);
 
   const [sessionEmail, setSessionEmail] = useState<string>("");
 
-  async function loadLiveMap() {
+ async function loadLiveMap() {
   const { data, error } = await supabase
-    .from("analytics_live_city_activity")
-    .select("*");
+    .from("live_map_visitors") // ✅ SAME AS ANALYTICS PAGE
+    .select("city,state,count,latitude,longitude,page_url,page_key");
+
 
   if (error) {
     console.error("LIVE MAP ERROR:", error);
@@ -300,10 +301,11 @@ const { count: totalAppViews } = await supabase
     }
     load();
 
-// ✅ Refresh live map every 5 seconds
+// ✅ Refresh live map every 30 seconds (Disk I/O safe)
 const interval = setInterval(() => {
   loadLiveMap();
-}, 5000);
+}, 30000);
+
 
 return () => clearInterval(interval);
 
@@ -330,7 +332,14 @@ return () => clearInterval(interval);
 
       </div>
 
-      
+      {/* =================== LIVE VISITOR MAP =================== */}
+<div className="bg-white p-4 rounded shadow mb-6">
+  <h2 className="text-lg font-semibold mb-3" style={{ color: brandRed }}>
+   
+  </h2>
+
+  <LiveUSMap visitors={liveVisitors || []} />
+</div>
 
       {/* =================== SUMMARY CARDS =================== */}
       <div style={gridThree}>
@@ -445,14 +454,7 @@ return () => clearInterval(interval);
   )}
 </div>
 
-{/* =================== LIVE VISITOR MAP =================== */}
-<div className="bg-white p-4 rounded shadow mb-6">
-  <h2 className="text-lg font-semibold mb-3" style={{ color: brandRed }}>
-    Live Visitors Right Now
-  </h2>
 
-  <LiveUSMap visitors={liveVisitors || []} />
-</div>
 
 
 

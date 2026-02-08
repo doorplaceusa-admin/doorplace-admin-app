@@ -32,7 +32,7 @@ type TimelinePoint = {
 };
 
 const MAX_TIMELINE_POINTS = 60;
-const REFRESH_INTERVAL = 5000;
+const REFRESH_INTERVAL = 30000;
 
 type SortKey = "views" | "last" | "url";
 
@@ -78,6 +78,8 @@ export default function AdminAnalyticsPage() {
 
       /* ✅ MAP DATA */
       if (liveData) setLiveVisitors(liveData);
+      console.log("LIVE MAP ROW SAMPLE:", liveData?.[0]);
+
     } finally {
       inflight.current = false;
       setLoading(false);

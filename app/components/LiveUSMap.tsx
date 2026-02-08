@@ -297,17 +297,7 @@ const [zoomScale, setZoomScale] = useState(1);
   </title>
 </circle>
 
-{/* Count Text (always inside bubble) */}
-<text
-  x={x}
-  y={y + 5}
-  textAnchor="middle"
-  fontSize="14"
-  fontWeight="700"
-  fill="white"
->
-  {safeCount}
-</text>
+
 
 {/* City Label (only when zoomed in) */}
 {zoomScale > 2.2 && (

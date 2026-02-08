@@ -229,6 +229,8 @@ const [zoomScale, setZoomScale] = useState(1);
   style={{
     width: "100%",
     height: fullscreen ? "100vh" : "200px",
+    position: "relative",
+
 
     borderRadius: fullscreen ? "0px" : "22px",
     overflow: "hidden",
@@ -399,14 +401,24 @@ const [zoomScale, setZoomScale] = useState(1);
 {selected && (
   <div
     style={{
-      marginTop: "14px",
+      position: fullscreen ? "absolute" : "relative",
+
+      bottom: fullscreen ? "25px" : "auto",
+      left: fullscreen ? "25px" : "auto",
+
+      marginTop: fullscreen ? "0px" : "14px",
+
+      width: fullscreen ? "320px" : "100%",
+
       padding: "14px 16px",
       borderRadius: "14px",
       border: "1px solid #e5e7eb",
       background: "white",
-      boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
+      boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
+      zIndex: 9999,
     }}
   >
+
     {/* Header */}
     <div
       style={{

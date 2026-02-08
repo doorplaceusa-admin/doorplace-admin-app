@@ -357,7 +357,7 @@ return () => clearInterval(interval);
   >
     <StatCard title="Total Orders" value={stats.totalOrders} />
   </div>
-
+<StatCard title="Online" value={totalOnline} />
   <StatCard title="Doorplace Site Views" value={stats.totalSiteViews} />
 
   <StatCard title="Total App Views" value={stats.totalAppViews} />
@@ -366,7 +366,7 @@ return () => clearInterval(interval);
   <StatCard title="Partner Tracking Link Views" value={stats.partnerTrackingViews} />
 
 
-  <StatCard title="Online" value={totalOnline} />
+  
 
 </div>
 

@@ -112,10 +112,20 @@ const [zoomScale, setZoomScale] = useState(1);
   ============================================ */
 
   const projection = useMemo(() => {
-  return geoAlbersUsa()
-    .scale(1200)
-    .translate([width / 2, height / 2]);
+  const proj = geoAlbersUsa();
+
+  // ✅ Auto-fit map with padding so Texas never clips
+  proj.fitExtent(
+    [
+      [20, 20],                 // top-left padding
+      [width - 20, height - 60] // bottom padding (extra space for Texas)
+    ],
+    feature(us as any, (us as any).objects.states) as any
+  );
+
+  return proj;
 }, [width, height]);
+
 
 
   const pathGenerator = useMemo(() => geoPath(projection), [projection]);
@@ -232,6 +242,8 @@ const [zoomScale, setZoomScale] = useState(1);
   <svg
     width="100%"
     viewBox={`0 0 ${width} ${height}`}
+    preserveAspectRatio="xMidYMid meet"
+
     style={{
       flex: 1,
       borderRadius: fullscreen ? "0px" : "18px",

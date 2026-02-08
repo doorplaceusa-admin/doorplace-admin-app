@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useAdminPresence } from "@/app/components/presence/AdminPresenceContext";
 import LiveUSMap from "@/app/components/LiveUSMap";
 
-
-
-
 const brandRed = "#b80d0d";
+
+// ✅ Refresh rates
+const LIVE_MAP_REFRESH_MS = 15000; // 15s (fast)
+const STATS_REFRESH_MS = 300000; // 5 min (slow)
 
 // ================= TYPES =================
 type DashboardStats = {
@@ -20,12 +21,9 @@ type DashboardStats = {
   activePartners: number;
   conversionRate: number;
   totalAppViews: number;
-  
   totalSiteViews: number;
   partnerTrackingViews: number;
-
 };
-
 
 type RecentItem = {
   id: string;
@@ -34,42 +32,38 @@ type RecentItem = {
   amount?: number;
 };
 
-// ================= PAGE =================
 export default function DashboardPage() {
   const [tasksOpen, setTasksOpen] = useState(true);
   const [loading, setLoading] = useState(true);
+
   const [stats, setStats] = useState<DashboardStats>({
-  totalLeads: 0,
-  totalOrders: 0,
-  totalRevenue: 0,
-  pendingCommissions: 0,
-  paidCommissions: 0,
-  activePartners: 0,
-  conversionRate: 0,
-  totalAppViews: 0,
- 
-  totalSiteViews: 0,
-  partnerTrackingViews: 0,
-});
+    totalLeads: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    pendingCommissions: 0,
+    paidCommissions: 0,
+    activePartners: 0,
+    conversionRate: 0,
+    totalAppViews: 0,
+    totalSiteViews: 0,
+    partnerTrackingViews: 0,
+  });
 
   const [partnerSnapshot, setPartnerSnapshot] = useState({
-  total: 0,
-  activated: 0,
-  pending: 0,
-  active: 0,
-});
+    total: 0,
+    activated: 0,
+    pending: 0,
+    active: 0,
+  });
 
-   const { partners, admins, others } = useAdminPresence();
-
-const totalOnline = partners + admins + others;
-
-
-
+  const { partners, admins, others } = useAdminPresence();
+  const totalOnline = partners + admins + others;
 
   const [recentLeads, setRecentLeads] = useState<RecentItem[]>([]);
   const [recentOrders, setRecentOrders] = useState<RecentItem[]>([]);
-  /* ✅ LIVE MAP VISITORS */
-const [liveVisitors, setLiveVisitors] = useState<any[]>([]);
+
+  // ✅ LIVE MAP VISITORS
+  const [liveVisitors, setLiveVisitors] = useState<any[]>([]);
 
   const [partnerPerformance, setPartnerPerformance] = useState<
     { partner_id: string; revenue: number; orders: number }[]
@@ -77,213 +71,231 @@ const [liveVisitors, setLiveVisitors] = useState<any[]>([]);
 
   const [sessionEmail, setSessionEmail] = useState<string>("");
 
- async function loadLiveMap() {
-  const { data, error } = await supabase
-    .from("live_map_visitors") // ✅ SAME AS ANALYTICS PAGE
-    .select("city,state,count,latitude,longitude,page_url,page_key");
+  // ✅ prevent overlapping queries
+  const inflightStats = useRef(false);
+  const inflightMap = useRef(false);
 
+  // ==========================================
+  // ✅ LIVE MAP (FAST)
+  // ==========================================
+  async function loadLiveMap() {
+    if (inflightMap.current) return;
+    inflightMap.current = true;
 
-  if (error) {
-    console.error("LIVE MAP ERROR:", error);
-    return;
+    try {
+      const { data, error } = await supabase
+        .from("live_map_visitors") // ✅ same view as Analytics
+        .select("*"); // ✅ IMPORTANT: let LiveUSMap get whatever fields it needs
+
+      if (error) {
+        console.error("LIVE MAP ERROR:", error);
+        return;
+      }
+
+      // Optional: normalize lat/lon if needed
+      const normalized =
+        (data || []).map((r: any) => ({
+          ...r,
+          latitude:
+            typeof r.latitude === "string" ? parseFloat(r.latitude) : r.latitude,
+          longitude:
+            typeof r.longitude === "string"
+              ? parseFloat(r.longitude)
+              : r.longitude,
+        })) ?? [];
+
+      setLiveVisitors(normalized);
+    } finally {
+      inflightMap.current = false;
+    }
   }
 
-  if (data) {
-    setLiveVisitors(data);
-  }
-}
+  // ==========================================
+  // ✅ DASHBOARD STATS (SLOW)
+  // ==========================================
+  async function loadStatsAndCards() {
+    if (inflightStats.current) return;
+    inflightStats.current = true;
 
-
-  useEffect(() => {
-    async function load() {
-
+    try {
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData.session?.user.id;
 
-      if (!userId) return;
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
 
-       const { data: profile, error } = await supabase
-         .from("profiles")
-           .select("active_company_id, role")
-           .eq("id", userId)
-           .single();
+      const { data: profile, error: profileErr } = await supabase
+        .from("profiles")
+        .select("active_company_id, role")
+        .eq("id", userId)
+        .single();
 
+      if (profileErr || !profile?.active_company_id) {
+        console.error("NO COMPANY ID", profileErr, profile);
+        setLoading(false);
+        return;
+      }
 
+      const companyId = profile.active_company_id;
 
+      const { data: sess } = await supabase.auth.getSession();
+      setSessionEmail(sess.session?.user.email || "");
 
+      // ✅ NOTE:
+      // Some of these are global counts (no company filter) because I don't want to break you
+      // if your partners table doesn't have company_id.
+      // If partners DOES have company_id, tell me and we’ll filter them (big speed-up).
 
+      const [
+  totalPartnersRes,
+  activatedPartnersRes,
+  pendingPartnersRes,
+  activePartnersRes,
 
+  siteMetricsRes,
 
-              if (error || !profile?.active_company_id) {
-              console.error("NO COMPANY ID", error, profile);
+  leadCountRes,
+  orderCountRes,
+  leadsDataRes,
 
- 
+  totalAppViewsRes,
+] = await Promise.all([
 
+        supabase.from("partners").select("*", { count: "estimated", head: true }),
+        supabase
+          .from("partners")
+          .select("*", { count: "estimated", head: true })
+          .not("auth_user_id", "is", null),
+        supabase
+          .from("partners")
+          .select("*", { count: "estimated", head: true })
+          .eq("status", "pending"),
+        supabase
+          .from("partners")
+          .select("*", { count: "estimated", head: true })
+          .eq("status", "active"),
 
-                setLoading(false);
-                 return;
-                      }
-
-
-                      const companyId = profile.active_company_id;
-            await loadLiveMap();
-
-             
-const role = profile.role;
-
-
-      const { data } = await supabase.auth.getSession();
-      setSessionEmail(data.session?.user.email || "");
-
-      // ================= PARTNER FUNNEL SNAPSHOT =================
-const { count: totalPartnersCount } = await supabase
-  .from("partners")
-  .select("*", { count: "exact", head: true });
-
-const { count: activatedPartnersCount } = await supabase
-  .from("partners")
-  .select("*", { count: "exact", head: true })
-  .not("auth_user_id", "is", null);
-
-const { count: pendingPartners } = await supabase
-  .from("partners")
-  .select("*", { count: "exact", head: true })
-  .eq("status", "pending");
-
-const { count: activePartners } = await supabase
-  .from("partners")
-  .select("*", { count: "exact", head: true })
-  .eq("status", "active");
-
-  // ================= PARTNER TRACKING LINK VIEWS "GLOBAL" =================
-const { count: partnerTrackingViews } = await supabase
-  .from("page_view_events")
-  .select("*", { count: "exact", head: true })
-  .not("partner_id", "is", null)
-  .or(`company_id.eq.${companyId},company_id.is.null`);
-
-
-
-
-  // ================= TOTAL SITE VIEWS (DOORPLACE USA) =================
-const { count: totalSiteViews } = await supabase
-  .from("page_view_events")
-  .select("*", { count: "exact", head: true })
-  .or(`company_id.eq.${companyId},company_id.is.null`);
-
-
-
-  
-
-
-
-
-setStats((prev) => ({
-  ...prev,
-  activePartners: activatedPartnersCount || 0,
-}));
-
-// local state for snapshot
-setPartnerSnapshot({
-  total: totalPartnersCount || 0,
-  activated: activatedPartnersCount || 0,
-  pending: pendingPartners || 0,
-  active: activePartners || 0,
-});
-
-
-      // ================= TOTAL LEADS (WIRE THIS) =================
-      // Assumes your leads table is named "leads"
-      const { count: leadCount } = await supabase
-  .from("leads")
-  .select("*", { count: "exact", head: true })
+        // ✅ LIFETIME TOTALS (FAST)
+supabase
+  .from("site_metrics")
+  .select("lifetime_site_views,lifetime_partner_views")
   .eq("company_id", companyId)
-  .neq("submission_type", "partner_order");
+  .maybeSingle(),
 
 
 
-        // ================= TOTAL ORDERS (WIRED HERE) =================
-const { count: orderCount } = await supabase
-  .from("leads")
-  .select("*", { count: "exact", head: true })
-  .eq("company_id", companyId)
-  .eq("submission_type", "partner_order");
+        supabase
+          .from("leads")
+          .select("*", { count: "estimated", head: true })
+          .eq("company_id", companyId)
+          .neq("submission_type", "partner_order"),
+
+        supabase
+          .from("leads")
+          .select("*", { count: "estimated", head: true })
+          .eq("company_id", companyId)
+          .eq("submission_type", "partner_order"),
+
+        supabase
+          .from("leads")
+          .select(
+            `
+            lead_id,
+            created_at,
+            customer_first_name,
+            customer_last_name,
+            email,
+            phone,
+            product_type,
+            swing_size,
+            city,
+            state
+          `
+          )
+          .eq("company_id", companyId)
+          .order("created_at", { ascending: false })
+          .limit(3),
+
+        supabase
+          .from("app_view_logs")
+          .select("*", { count: "estimated", head: true })
+          .or(`company_id.eq.${companyId},company_id.is.null`),
+      ]);
+
+      const totalPartnersCount = totalPartnersRes.count || 0;
+      const activatedPartnersCount = activatedPartnersRes.count || 0;
+      const pendingPartners = pendingPartnersRes.count || 0;
+      const activePartners = activePartnersRes.count || 0;
+
+      // ✅ Lifetime totals from site_metrics
+const totalSiteViews =
+  siteMetricsRes.data?.lifetime_site_views ?? 0;
+
+const partnerTrackingViews =
+  siteMetricsRes.data?.lifetime_partner_views ?? 0;
+
+if (!siteMetricsRes.data) {
+  console.warn("⚠️ No site_metrics row yet for company:", companyId);
+}
 
 
 
 
-      // ================= RECENT LEADS (WIRE THIS) =================
-      // Tries common column names; adjust if your table uses different field names
-      const { data: leadsData } = await supabase
-  .from("leads")
-  .select(`
-  lead_id,
-  created_at,
-  customer_first_name,
-  customer_last_name,
-  email,
-  phone,
-  product_type,
-  swing_size,
-  city,
-  state
-`)
+      const leadCount = leadCountRes.count || 0;
+      const orderCount = orderCountRes.count || 0;
 
-  .eq("company_id", companyId)
-  .order("created_at", { ascending: false })
-  .limit(3);
-
-
+      const leadsData = leadsDataRes.data || [];
 
       const mappedRecentLeads: RecentItem[] = (leadsData || []).map((l: any) => {
-  const who =
-    l.customer_name || l.full_name || l.name || "Lead";
-  const what =
-    l.interest_type || l.product_interest || "Request";
-  const date =
-    l.created_at
-      ? new Date(l.created_at).toISOString().split("T")[0]
-      : "";
+        const who =
+          [l.customer_first_name, l.customer_last_name]
+            .filter(Boolean)
+            .join(" ")
+            .trim() || l.email || l.phone || "Lead";
 
-  return {
-    id: String(l.lead_id),   // ✅ correct
-    label: `${who} – ${what}`,
-    date,
-  };
-});
+        const what =
+          l.product_type || l.swing_size
+            ? `${l.product_type || "Product"}${l.swing_size ? ` • ${l.swing_size}` : ""}`
+            : "Request";
 
+        const date = l.created_at
+          ? new Date(l.created_at).toISOString().split("T")[0]
+          : "";
 
-      // ================= APP VIEW STATS (CDStats) =================
+        return {
+          id: String(l.lead_id),
+          label: `${who} – ${what}`,
+          date,
+        };
+      });
 
-// Total App Views
-const { count: totalAppViews } = await supabase
-  .from("app_view_logs")
-  .select("*", { count: "exact", head: true })
-  .or(`company_id.eq.${companyId},company_id.is.null`);
+      const totalAppViews = totalAppViewsRes.count || 0;
 
+      setPartnerSnapshot({
+        total: totalPartnersCount,
+        activated: activatedPartnersCount,
+        pending: pendingPartners,
+        active: activePartners,
+      });
 
-
-
-
-      // ✅ Keep your existing placeholders for now where you haven’t wired yet
       setStats({
-  totalLeads: leadCount || 0,
-  totalOrders: orderCount || 0,
-  totalRevenue: 0,
-  pendingCommissions: 0,
-  paidCommissions: 0,
-  activePartners: activatedPartnersCount || 0,
-  conversionRate: 0,
-  totalAppViews: totalAppViews || 0,
- 
-  totalSiteViews: totalSiteViews || 0,
-  partnerTrackingViews: partnerTrackingViews || 0,
-});
-
+        totalLeads: leadCount,
+        totalOrders: orderCount,
+        totalRevenue: 0,
+        pendingCommissions: 0,
+        paidCommissions: 0,
+        activePartners: activatedPartnersCount,
+        conversionRate: 0,
+        totalAppViews,
+        totalSiteViews,
+        partnerTrackingViews,
+      });
 
       setRecentLeads(mappedRecentLeads);
 
-      // (kept as-is, per your request)
+      // kept as-is (your placeholder)
       setRecentOrders([
         { id: "1", label: "Twin Swing – Dallas", date: "2025-12-07", amount: 1895 },
         { id: "2", label: "Crib Swing – Houston", date: "2025-12-06", amount: 1295 },
@@ -298,18 +310,33 @@ const { count: totalAppViews } = await supabase
       ]);
 
       setLoading(false);
+    } finally {
+      inflightStats.current = false;
     }
-    load();
+  }
 
-// ✅ Refresh live map every 30 seconds (Disk I/O safe)
-const interval = setInterval(() => {
-  loadLiveMap();
-}, 30000);
+  // ==========================================
+  // ✅ EFFECT: load + refresh loops
+  // ==========================================
+  useEffect(() => {
+    // initial load
+    loadLiveMap();
+    loadStatsAndCards();
 
+    // fast loop: map
+    const mapInterval = setInterval(() => {
+      loadLiveMap();
+    }, LIVE_MAP_REFRESH_MS);
 
-return () => clearInterval(interval);
+    // slow loop: stats/cards
+    const statsInterval = setInterval(() => {
+      loadStatsAndCards();
+    }, STATS_REFRESH_MS);
 
-
+    return () => {
+      clearInterval(mapInterval);
+      clearInterval(statsInterval);
+    };
   }, []);
 
   if (loading) return <div>Loading...</div>;
@@ -319,9 +346,8 @@ return () => clearInterval(interval);
     sessionEmail === "thomas@doorplaceusa.com";
 
   return (
-  <div className="h-[calc(100vh-80px)] flex flex-col bg-gray-50 overflow-x-hidden max-w-[1500px] w-full mx-auto">
-    <div className="px-4 md:px-6 space-y-4">
-
+    <div className="h-[calc(100vh-80px)] flex flex-col bg-gray-50 overflow-x-hidden max-w-[1500px] w-full mx-auto">
+      <div className="px-4 md:px-6 space-y-4">
         <h1 className="text-3xl font-bold" style={{ color: brandRed }}>
           TradePilot
         </h1>
@@ -329,132 +355,118 @@ return () => clearInterval(interval);
         <div className="text-sm font-medium" style={{ color: brandRed }}>
           Powered by Doorplace USA
         </div>
-
       </div>
 
       {/* =================== LIVE VISITOR MAP =================== */}
-<div className="bg-white p-4 rounded shadow mb-6">
-  <h2 className="text-lg font-semibold mb-3" style={{ color: brandRed }}>
-   
-  </h2>
+      <div className="bg-white p-4 rounded shadow mb-6">
+        <h2 className="text-lg font-semibold mb-3" style={{ color: brandRed }}>
+          Live Visitors (Last 5 Minutes)
+        </h2>
 
-  <LiveUSMap visitors={liveVisitors || []} />
-</div>
+        <LiveUSMap visitors={liveVisitors || []} />
+      </div>
 
       {/* =================== SUMMARY CARDS =================== */}
       <div style={gridThree}>
+        <div
+          onClick={() => (window.location.href = "/dashboard/leads")}
+          style={{ cursor: "pointer" }}
+        >
+          <StatCard title="Total Leads" value={stats.totalLeads} />
+        </div>
 
-  <div
-    onClick={() => (window.location.href = "/dashboard/leads")}
-    style={{ cursor: "pointer" }}
-  >
-    <StatCard title="Total Leads" value={stats.totalLeads} />
-  </div>
+        <div
+          onClick={() => (window.location.href = "/dashboard/orders")}
+          style={{ cursor: "pointer" }}
+        >
+          <StatCard title="Total Orders" value={stats.totalOrders} />
+        </div>
 
-  <div
-    onClick={() => (window.location.href = "/dashboard/orders")}
-    style={{ cursor: "pointer" }}
-  >
-    <StatCard title="Total Orders" value={stats.totalOrders} />
-  </div>
-<StatCard title="Online" value={totalOnline} />
-  <StatCard title="Doorplace Site Views" value={stats.totalSiteViews} />
-
-  <StatCard title="Total App Views" value={stats.totalAppViews} />
-
-
-  <StatCard title="Partner Tracking Link Views" value={stats.partnerTrackingViews} />
-
-
-  
-
-</div>
-
-       {/* =================== PARTNER FUNNEL SNAPSHOT =================== */}
-<div className="bg-white p-4 rounded shadow mb-6">
-  <h2 className="text-lg font-semibold mb-2" style={{ color: brandRed }}>
-    Partner Funnel Snapshot
-  </h2>
-
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-    <div>
-      <div className="text-gray-500">Total Partners</div>
-      <div className="text-xl font-bold">{partnerSnapshot.total}</div>
-    </div>
-
-    <div>
-      <div className="text-gray-500">UserPass</div>
-      <div className="text-xl font-bold text-green-700">
-        {partnerSnapshot.activated}
+        <StatCard title="Online" value={totalOnline} />
+        <StatCard title="Doorplace Site Views" value={stats.totalSiteViews} />
+        <StatCard title="Total App Views" value={stats.totalAppViews} />
+        <StatCard
+          title="Partner Tracking Link Views"
+          value={stats.partnerTrackingViews}
+        />
       </div>
-    </div>
 
+      {/* =================== PARTNER FUNNEL SNAPSHOT =================== */}
+      <div className="bg-white p-4 rounded shadow mb-6">
+        <h2 className="text-lg font-semibold mb-2" style={{ color: brandRed }}>
+          Partner Funnel Snapshot
+        </h2>
 
-    <div>
-      <div className="text-gray-500">Active Partners</div>
-      <div className="text-xl font-bold text-green-700">
-        {partnerSnapshot.active}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <div className="text-gray-500">Total Partners</div>
+            <div className="text-xl font-bold">{partnerSnapshot.total}</div>
+          </div>
+
+          <div>
+            <div className="text-gray-500">UserPass</div>
+            <div className="text-xl font-bold text-green-700">
+              {partnerSnapshot.activated}
+            </div>
+          </div>
+
+          <div>
+            <div className="text-gray-500">Active Partners</div>
+            <div className="text-xl font-bold text-green-700">
+              {partnerSnapshot.active}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
 
+      {/* 🟡 TASKS REQUIRING ATTENTION */}
+      <div className="bg-white rounded shadow mb-6 overflow-hidden">
+        <button
+          onClick={() => setTasksOpen(!tasksOpen)}
+          className="w-full flex items-center justify-between px-4 py-3 text-left border-b"
+        >
+          <h2 className="text-lg font-semibold" style={{ color: "#b80d0d" }}>
+            Tasks Requiring Attention
+          </h2>
 
-{/* 🟡 TASKS REQUIRING ATTENTION */}
-<div className="bg-white rounded shadow mb-6 overflow-hidden">
+          <span className="text-sm text-gray-500">
+            {tasksOpen ? "Hide" : "Show"}
+          </span>
+        </button>
 
-  {/* HEADER (CLICK TO TOGGLE) */}
-  <button
-    onClick={() => setTasksOpen(!tasksOpen)}
-    className="w-full flex items-center justify-between px-4 py-3 text-left border-b"
-  >
-    <h2 className="text-lg font-semibold" style={{ color: "#b80d0d" }}>
-      Tasks Requiring Attention
-    </h2>
+        {tasksOpen && (
+          <div className="px-4 py-4">
+            <ul className="space-y-2">
+              <li className="flex justify-between border-b pb-1">
+                <span>Unread Leads</span>
+                <span className="font-bold text-gray-700">0</span>
+              </li>
 
-    <span className="text-sm text-gray-500">
-      {tasksOpen ? "Hide" : "Show"}
-    </span>
-  </button>
+              <li className="flex justify-between border-b pb-1">
+                <span>Orders Missing Measurements</span>
+                <span className="font-bold text-gray-700">0</span>
+              </li>
 
-  {/* CONTENT */}
-  {tasksOpen && (
-    <div className="px-4 py-4">
-      <ul className="space-y-2">
-        <li className="flex justify-between border-b pb-1">
-          <span>Unread Leads</span>
-          <span className="font-bold text-gray-700">0</span>
-        </li>
+              <li className="flex justify-between border-b pb-1">
+                <span>Pending Partner Payouts</span>
+                <span className="font-bold text-gray-700">0</span>
+              </li>
 
-        <li className="flex justify-between border-b pb-1">
-          <span>Orders Missing Measurements</span>
-          <span className="font-bold text-gray-700">0</span>
-        </li>
+              <li className="flex justify-between border-b pb-1">
+                <span>Invoices Needing Approval</span>
+                <span className="font-bold text-gray-700">0</span>
+              </li>
 
-        <li className="flex justify-between border-b pb-1">
-          <span>Pending Partner Payouts</span>
-          <span className="font-bold text-gray-700">0</span>
-        </li>
+              <li className="flex justify-between">
+                <span>Leads Older Than 48 Hours</span>
+                <span className="font-bold text-gray-700">0</span>
+              </li>
+            </ul>
+          </div>
+        )}
+      </div>
 
-        <li className="flex justify-between border-b pb-1">
-          <span>Invoices Needing Approval</span>
-          <span className="font-bold text-gray-700">0</span>
-        </li>
-
-        <li className="flex justify-between">
-          <span>Leads Older Than 48 Hours</span>
-          <span className="font-bold text-gray-700">0</span>
-        </li>
-      </ul>
-    </div>
-  )}
-</div>
-
-
-
-
-
-      {/* =================== SYSTEM HEALTH (leave it) =================== */}
+      {/* =================== SYSTEM HEALTH =================== */}
       <Panel title="System Health" style={{ marginTop: 20 }}>
         <Row label="API Status" value="✅ Online" />
         <Row label="Lead Sync" value="✅ Live" />
@@ -496,7 +508,9 @@ function Panel({
 }) {
   return (
     <div style={{ ...panelStyle, ...style }}>
-      <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 10 }}>{title}</h3>
+      <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 10 }}>
+        {title}
+      </h3>
       {children}
     </div>
   );
@@ -537,30 +551,6 @@ const gridThree = {
   display: "grid",
   gridTemplateColumns: "repeat(3, 1fr)",
   gap: 12,
-};
-
-const gridFour = {
-  display: "grid",
-  gridTemplateColumns: "repeat(4, 1fr)",
-  gap: 12,
-};
-
-
-const gridTwo = {
-  display: "grid",
-  gridTemplateColumns: "repeat(2, 1fr)",
-  gap: 12,
-};
-
-const tableStyle = {
-  width: "100%",
-  borderCollapse: "collapse" as const,
-};
-
-const thTd = {
-  padding: "8px 10px",
-  border: "1px solid #ddd",
-  textAlign: "left" as const,
 };
 
 function fmt(n: number) {

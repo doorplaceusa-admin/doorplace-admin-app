@@ -21,30 +21,37 @@ type LastView = {
   created_at: string;
 };
 
-type HeatmapRow = {
-  hour_of_day: number;
-  total_views: number;
-};
-
 type TimelinePoint = {
   minute: string;
   count: number;
 };
 
 const MAX_TIMELINE_POINTS = 60;
-const REFRESH_INTERVAL = 30000;
+
+/* ===============================
+   REFRESH SPEEDS (MAJOR IO FIX)
+================================ */
+
+// Live visitors refresh fast (map feels live)
+const FAST_REFRESH = 15000; // 15 sec
+
+// Rankings refresh slow (no reason to spam DB)
+const SLOW_REFRESH = 10 * 60 * 1000; // 10 min
 
 type SortKey = "views" | "last" | "url";
 
 export default function AdminAnalyticsPage() {
   const [rankings, setRankings] = useState<PageRank[]>([]);
   const [lastView, setLastView] = useState<LastView | null>(null);
-  const [heatmap, setHeatmap] = useState<HeatmapRow[]>([]);
-  const [timeline, setTimeline] = useState<TimelinePoint[]>([]);
-  const [loading, setLoading] = useState(true);
 
   /* ✅ LIVE VISITOR MAP DATA */
   const [liveVisitors, setLiveVisitors] = useState<any[]>([]);
+
+  /* ✅ LIVE TIMELINE */
+  const [timeline, setTimeline] = useState<TimelinePoint[]>([]);
+
+  const [loading, setLoading] = useState(true);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("views");
@@ -52,47 +59,75 @@ export default function AdminAnalyticsPage() {
 
   const inflight = useRef(false);
 
-  async function loadAll() {
+  /* ============================================
+     ✅ SLOW ANALYTICS LOAD (Top Pages + Last View)
+     Runs only every 10 minutes
+  ============================================ */
+  async function loadSlowAnalytics() {
     if (inflight.current) return;
     inflight.current = true;
 
     try {
-      const [
-  { data: rankingData },
-  { data: lastData },
-  { data: heatData },
-  { data: liveData },
-] = await Promise.all([
-  supabase.from("analytics_page_rankings").select("*").limit(500),
-  supabase.from("analytics_last_page_view").select("*").single(),
-  supabase.from("analytics_hourly_heatmap").select("*"),
+      const [{ data: rankingData, error: rankErr }, { data: lastData, error: lastErr }] =
+        await Promise.all([
+          supabase.from("analytics_page_rankings").select("*").limit(500),
+          supabase.from("analytics_last_page_view").select("*").single(),
+        ]);
 
-  /* ✅ LIVE MAP (real lat/lon from new view) */
-  supabase.from("live_map_visitors").select("*"),
-]);
-
+      if (rankErr) console.error("Rankings error:", rankErr);
+      if (lastErr) console.error("Last view error:", lastErr);
 
       if (rankingData) setRankings(rankingData);
       if (lastData) setLastView(lastData);
-      if (heatData) setHeatmap(heatData);
-
-      /* ✅ MAP DATA */
-      if (liveData) setLiveVisitors(liveData);
-      console.log("LIVE MAP ROW SAMPLE:", liveData?.[0]);
-
     } finally {
       inflight.current = false;
       setLoading(false);
     }
   }
 
+  /* ============================================
+     ✅ FAST LIVE MAP LOAD (SAFE QUERY)
+     Runs every 15 seconds
+     IMPORTANT: We do NOT order by created_at
+     because the view may not have that column.
+  ============================================ */
+  async function loadFastLiveVisitors() {
+    setMapError(null);
+
+    const { data: liveData, error } = await supabase
+      .from("live_map_visitors")
+      .select("*")
+      .limit(500);
+
+    if (error) {
+      console.error("Live map visitors error:", error);
+      setMapError(error.message || "Live map query failed");
+      setLiveVisitors([]);
+      return;
+    }
+
+    setLiveVisitors(liveData || []);
+    console.log("LIVE MAP ROW SAMPLE:", liveData?.[0]);
+  }
+
   /* ===============================
-     AUTO REFRESH
+     AUTO REFRESH SYSTEM (FIXED)
   ============================== */
   useEffect(() => {
-    loadAll();
-    const i = setInterval(loadAll, REFRESH_INTERVAL);
-    return () => clearInterval(i);
+    // Initial load
+    loadSlowAnalytics();
+    loadFastLiveVisitors();
+
+    // Slow refresh (rankings)
+    const slow = setInterval(loadSlowAnalytics, SLOW_REFRESH);
+
+    // Fast refresh (map)
+    const fast = setInterval(loadFastLiveVisitors, FAST_REFRESH);
+
+    return () => {
+      clearInterval(slow);
+      clearInterval(fast);
+    };
   }, []);
 
   /* ===============================
@@ -165,7 +200,6 @@ export default function AdminAnalyticsPage() {
     return sorted.slice(0, 500);
   }, [rankings, search, sortKey, sortDir]);
 
-  const maxHeat = Math.max(...heatmap.map((h) => h.total_views), 1);
   const maxLine = Math.max(...timeline.map((t) => t.count), 1);
 
   /* ===============================
@@ -242,35 +276,13 @@ export default function AdminAnalyticsPage() {
           Live Visitors by City (Last 5 Minutes)
         </h2>
 
+        {mapError && (
+          <div className="text-sm text-red-600 mb-3">
+            Live Map Error: {mapError}
+          </div>
+        )}
+
         <LiveUSMap visitors={liveVisitors || []} />
-      </div>
-
-      {/* Heatmap */}
-      <div className="border rounded p-4 bg-white shadow">
-        <h2 className="font-semibold mb-3">Hourly Heatmap</h2>
-        <div className="grid grid-cols-12 gap-2 text-xs">
-          {Array.from({ length: 24 }).map((_, hour) => {
-            const row = heatmap.find((h) => h.hour_of_day === hour);
-            const count = row?.total_views ?? 0;
-            const intensity = count / maxHeat;
-
-            return (
-              <div
-                key={hour}
-                className="h-12 flex items-center justify-center rounded text-white font-medium"
-                style={{
-                  backgroundColor: `rgba(220,38,38,${Math.max(
-                    intensity,
-                    0.08
-                  )})`,
-                }}
-                title={`${hour}:00 – ${count} views`}
-              >
-                {hour}
-              </div>
-            );
-          })}
-        </div>
       </div>
 
       {/* Top Pages */}
@@ -301,12 +313,10 @@ export default function AdminAnalyticsPage() {
                   </td>
 
                   <td className="block md:table-cell py-1 md:py-2 text-right font-medium">
-                    <span className="md:hidden font-semibold mr-1">Views:</span>
                     {r.total_views.toLocaleString()}
                   </td>
 
                   <td className="block md:table-cell py-1 md:py-2 text-right">
-                    <span className="md:hidden font-semibold mr-1">Last:</span>
                     {new Date(r.last_viewed_at).toLocaleString()}
                   </td>
                 </tr>

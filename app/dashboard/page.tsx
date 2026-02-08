@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useAdminPresence } from "@/app/components/presence/AdminPresenceContext";
+import LiveUSMap from "@/app/components/LiveUSMap";
 
 
 
@@ -67,40 +68,66 @@ const totalOnline = partners + admins + others;
 
   const [recentLeads, setRecentLeads] = useState<RecentItem[]>([]);
   const [recentOrders, setRecentOrders] = useState<RecentItem[]>([]);
+  /* ✅ LIVE MAP VISITORS */
+const [liveVisitors, setLiveVisitors] = useState<any[]>([]);
+
   const [partnerPerformance, setPartnerPerformance] = useState<
     { partner_id: string; revenue: number; orders: number }[]
   >([]);
 
   const [sessionEmail, setSessionEmail] = useState<string>("");
 
+  async function loadLiveMap() {
+  const { data, error } = await supabase
+    .from("analytics_live_city_activity")
+    .select("*");
+
+  if (error) {
+    console.error("LIVE MAP ERROR:", error);
+    return;
+  }
+
+  if (data) {
+    setLiveVisitors(data);
+  }
+}
+
+
   useEffect(() => {
     async function load() {
 
       const { data: sessionData } = await supabase.auth.getSession();
-const userId = sessionData.session?.user.id;
+      const userId = sessionData.session?.user.id;
 
-if (!userId) return;
+      if (!userId) return;
 
-const { data: profile, error } = await supabase
-  .from("profiles")
-  .select("active_company_id, role")
-  .eq("id", userId)
-  .single();
-
-
+       const { data: profile, error } = await supabase
+         .from("profiles")
+           .select("active_company_id, role")
+           .eq("id", userId)
+           .single();
 
 
 
 
 
-if (error || !profile?.active_company_id) {
-  console.error("NO COMPANY ID", error, profile);
-  setLoading(false);
-  return;
-}
 
 
-const companyId = profile.active_company_id;
+              if (error || !profile?.active_company_id) {
+              console.error("NO COMPANY ID", error, profile);
+
+ 
+
+
+                setLoading(false);
+                 return;
+                      }
+
+
+                      const companyId = profile.active_company_id;
+            await loadLiveMap();
+
+             
 const role = profile.role;
 
 
@@ -272,6 +299,15 @@ const { count: totalAppViews } = await supabase
       setLoading(false);
     }
     load();
+
+// ✅ Refresh live map every 5 seconds
+const interval = setInterval(() => {
+  loadLiveMap();
+}, 5000);
+
+return () => clearInterval(interval);
+
+
   }, []);
 
   if (loading) return <div>Loading...</div>;
@@ -409,6 +445,14 @@ const { count: totalAppViews } = await supabase
   )}
 </div>
 
+{/* =================== LIVE VISITOR MAP =================== */}
+<div className="bg-white p-4 rounded shadow mb-6">
+  <h2 className="text-lg font-semibold mb-3" style={{ color: brandRed }}>
+    Live Visitors Right Now
+  </h2>
+
+  <LiveUSMap visitors={liveVisitors || []} />
+</div>
 
 
 

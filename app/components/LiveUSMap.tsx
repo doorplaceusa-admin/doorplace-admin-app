@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+
 import { geoAlbersUsa, geoPath } from "d3-geo";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
@@ -17,13 +18,21 @@ type LiveVisitor = {
   latitude: number;
   longitude: number;
   count: number;
+
+  // ✅ NEW
+  page_title?: string;
+  page_url?: string;
+  page_key?: string;
 };
+
 
 /* ============================================
    ✅ STATE CENTROID FALLBACK (ALL 50 STATES)
    Used when visitor comes in like:
    city = "California", coords missing
 ============================================ */
+
+const brandRed = "#b80d0d";
 
 const STATE_CENTROIDS: Record<string, { lat: number; lon: number }> = {
   Alabama: { lat: 32.8067, lon: -86.7911 },
@@ -89,6 +98,9 @@ export default function LiveUSMap({
 }) {
   const width = 900;
   const height = 520;
+  const [selected, setSelected] = useState<LiveVisitor | null>(null);
+const [zoomScale, setZoomScale] = useState(1);
+
 
   /* ============================================
      PROJECTION
@@ -119,7 +131,8 @@ export default function LiveUSMap({
     const grouped: Record<string, LiveVisitor> = {};
 
     visitors.forEach((v) => {
-      const key = `${v.city}-${v.state}`;
+      const key = `${v.city}-${v.state}-${v.page_url}`;
+
 
       if (!grouped[key]) {
         grouped[key] = { ...v };
@@ -169,6 +182,11 @@ export default function LiveUSMap({
         initialScale={1}
         minScale={1}
         maxScale={6}
+
+        // ✅ Track zoom level
+  onTransformed={(ref) => {
+    setZoomScale(ref.state.scale);
+  }}
         wheel={{ step: 0.25 }}
         doubleClick={{ disabled: true }}
       >
@@ -178,19 +196,22 @@ export default function LiveUSMap({
             viewBox={`0 0 ${width} ${height}`}
             style={{
               borderRadius: "18px",
-              background: "#eef2f7",
+              background: "#f8fafc",
             }}
           >
             {/* USA STATES */}
             {states.map((state: any, i: number) => (
-              <path
-                key={i}
-                d={pathGenerator(state) || ""}
-                fill="#dfe6ef"
-                stroke="#c7ced8"
-                strokeWidth={1}
-              />
-            ))}
+  <path
+    key={i}
+    d={pathGenerator(state) || ""}
+    fill="#f1f5f9"
+
+    // ✅ Doorplace USA Bold Borders
+    stroke="#475569"
+    strokeWidth={1.5}
+  />
+))}
+
 
             {/* Visitor Bubbles */}
             {clustered.map((v, i) => {
@@ -224,17 +245,23 @@ export default function LiveUSMap({
               );
 
               return (
-                <g key={i}>
+  <g
+    key={i}
+    style={{ cursor: "pointer" }}
+    onClick={() => setSelected(v)}
+  >
+
                   {/* Pulse Ring */}
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r={radius + 6}
-                    fill="none"
-                    stroke="#7c3aed"
-                    strokeWidth={2}
-                    opacity={0.35}
-                  >
+<circle
+  cx={x}
+  cy={y}
+  r={radius + 6}
+  fill="none"
+  stroke={brandRed}
+  strokeWidth={2.5}
+  opacity={0.35}
+>
+
                     <animate
                       attributeName="r"
                       values={`${radius};${radius + 18}`}
@@ -248,21 +275,55 @@ export default function LiveUSMap({
                       repeatCount="indefinite"
                     />
                   </circle>
+{/* Soft Glow */}
+<circle
+  cx={x}
+  cy={y}
+  r={radius + 12}
+  fill={brandRed}
+  opacity={0.18}
+/>
 
                   {/* Main Bubble */}
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r={radius}
-                    fill="#7c3aed"
-                    opacity={0.9}
-                  >
-                    <title>
-                      {v.city}, {v.state} — {safeCount} visitors
-                    </title>
-                  </circle>
+<circle
+  cx={x}
+  cy={y}
+  r={radius}
+  fill={brandRed}
+  opacity={0.92}
+>
+  <title>
+    {v.city}, {v.state} — {safeCount} visitors
+  </title>
+</circle>
 
-                  {/* Count Text */}
+{/* Count Text (always inside bubble) */}
+<text
+  x={x}
+  y={y + 5}
+  textAnchor="middle"
+  fontSize="14"
+  fontWeight="700"
+  fill="white"
+>
+  {safeCount}
+</text>
+
+{/* City Label (only when zoomed in) */}
+{zoomScale > 2.2 && (
+  <text
+    x={x}
+    y={y + radius + 18}
+    textAnchor="middle"
+    fontSize="12"
+    fontWeight="700"
+    fill="#111827"
+  >
+    {v.city}
+  </text>
+)}
+
+
                   <text
                     x={x}
                     y={y + 5}
@@ -279,6 +340,80 @@ export default function LiveUSMap({
           </svg>
         </TransformComponent>
       </TransformWrapper>
+{/* ================================
+    CLICK POPUP INFO BOX
+================================ */}
+{selected && (
+  <div
+    style={{
+      marginTop: "14px",
+      padding: "14px 16px",
+      borderRadius: "14px",
+      border: "1px solid #e5e7eb",
+      background: "white",
+      boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
+    }}
+  >
+    {/* Header */}
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: "8px",
+      }}
+    >
+      <strong style={{ fontSize: "15px" }}>
+        {selected.city}, {selected.state}
+      </strong>
+
+      <button
+        onClick={() => setSelected(null)}
+        style={{
+          border: "none",
+          background: "transparent",
+          fontSize: "16px",
+          cursor: "pointer",
+          color: "#6b7280",
+        }}
+      >
+        ✕
+      </button>
+    </div>
+
+    {/* Visitors */}
+    <div style={{ fontSize: "13px", marginBottom: "6px" }}>
+      👀 <strong>{selected.count}</strong> visitors right now
+    </div>
+
+    {/* Page Title */}
+    {selected.page_key && (
+  <div style={{ fontSize: "13px", marginBottom: "6px" }}>
+    📄 <strong>Page:</strong> {selected.page_key}
+  </div>
+)}
+
+
+    {/* Page URL */}
+    {selected.page_url && (
+      <div style={{ fontSize: "13px" }}>
+    🔗{" "}
+    <a
+      href={`https://doorplaceusa.com${selected.page_url}`}
+      target="_blank"
+      rel="noreferrer"
+      style={{
+        color: "#b80d0d",
+        fontWeight: 700,
+        textDecoration: "underline",
+      }}
+    >
+      Open Live Page
+    </a>
+      </div>
+    )}
+  </div>
+)}
 
       {/* Footer */}
       <div

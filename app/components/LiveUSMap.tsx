@@ -91,6 +91,31 @@ const STATE_CENTROIDS: Record<string, { lat: number; lon: number }> = {
    COMPONENT
 ============================================ */
 
+function LegendItem({
+  color,
+  label,
+}: {
+  color: string;
+  label: string;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+      <span
+        style={{
+          width: "12px",
+          height: "12px",
+          borderRadius: "50%",
+          background: color,
+          display: "inline-block",
+        }}
+      />
+      <span>{label}</span>
+    </div>
+  );
+}
+
+
+
 export default function LiveUSMap({
   visitors = [],
   fullscreen = false,
@@ -104,6 +129,30 @@ export default function LiveUSMap({
 const height = fullscreen ? 900 : 550;
 
 const desktop = typeof window !== "undefined" && window.innerWidth > 900;
+
+function getDotColor(v: LiveVisitor) {
+  const key = (v.page_key || "").toLowerCase();
+  const url = (v.page_url || "").toLowerCase();
+
+  // ✅ Porch Swing Pages
+  if (key.includes("swing") || url.includes("swing")) {
+    return "#b80d0d"; // Doorplace Red
+  }
+
+  // ✅ Door Pages
+  if (key.includes("door") || url.includes("door")) {
+    return "#2563eb"; // Blue
+  }
+
+  // ✅ Partner / Funnel Pages
+  if (key.includes("partner") || url.includes("partner")) {
+    return "#16a34a"; // Green
+  }
+
+  // Default fallback
+  return "#7c3aed"; // Purple (other)
+}
+
 
 const viewHeight = fullscreen
   ? 900
@@ -224,11 +273,30 @@ const [zoomScale, setZoomScale] = useState(1);
 
       </div>
 
+
+{/* ✅ Legend */}
+<div
+  style={{
+    display: "flex",
+    gap: "5px",
+    flexWrap: "wrap",
+    fontSize: "9px",
+    marginBottom: "10px",
+    color: "#374151",
+  }}
+>
+  <LegendItem color="#b80d0d" label="Swing Pages" />
+  <LegendItem color="#2563eb" label="Door Pages" />
+  <LegendItem color="#16a34a" label="Partner Funnels" />
+  <LegendItem color="#7c3aed" label="Other Pages" />
+</div>
+
       {/* Zoom Wrapper */}
       <div
   style={{
     width: "100%",
-    height: fullscreen ? "100vh" : "200px",
+    height: fullscreen ? "calc(100vh - 220px)" : "200px",
+
     position: "relative",
 
 
@@ -273,7 +341,7 @@ const [zoomScale, setZoomScale] = useState(1);
   
   <svg
   width="100%"
-  viewBox={`0 0 ${width} ${viewHeight}`}
+  viewBox={`0 0 ${width} ${height}`}
   preserveAspectRatio="xMidYMid meet"
 
 
@@ -312,6 +380,7 @@ const [zoomScale, setZoomScale] = useState(1);
 
       const safeCount = Number(v.count || 1);
       const radius = Math.min(45, 10 + Math.sqrt(safeCount) * 6);
+const dotColor = getDotColor(v);
 
       return (
         <g
@@ -325,7 +394,7 @@ const [zoomScale, setZoomScale] = useState(1);
             cy={y}
             r={radius + 6}
             fill="none"
-            stroke={brandRed}
+            stroke={dotColor}
             strokeWidth={2.5}
             opacity={0.35}
           >
@@ -348,7 +417,8 @@ const [zoomScale, setZoomScale] = useState(1);
             cx={x}
             cy={y}
             r={radius + 12}
-            fill={brandRed}
+           fill={dotColor}
+
             opacity={0.18}
           />
 
@@ -357,7 +427,8 @@ const [zoomScale, setZoomScale] = useState(1);
             cx={x}
             cy={y}
             r={radius}
-            fill={brandRed}
+            fill={dotColor}
+
             opacity={0.92}
           />
 
@@ -445,6 +516,10 @@ const [zoomScale, setZoomScale] = useState(1);
         ✕
       </button>
     </div>
+
+
+
+
 
     {/* Visitors */}
     <div style={{ fontSize: "13px", marginBottom: "6px" }}>

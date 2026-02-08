@@ -16,11 +16,21 @@ type SegmentKey =
   | "pending"
   | "active";
 
+  type FromKey = "partners" | "support" | "info";
+
+
 function requireEnv(name: string) {
   const v = process.env[name];
   if (!v) throw new Error(`Missing env var: ${name}`);
   return v;
 }
+
+const FROM_MAP: Record<FromKey, string> = {
+  partners: `"Doorplace USA Partners" <partners@doorplaceusa.com>`,
+  support: `"Doorplace USA Support" <support@doorplaceusa.com>`,
+  info: `"Doorplace USA" <info@doorplaceusa.com>`,
+};
+
 
 function parseEmails(input: string) {
   // supports commas, semicolons, spaces, newlines
@@ -89,22 +99,25 @@ async function sendSingleEmail({
   to,
   subject,
   html,
+  fromKey,
 }: {
   transporter: nodemailer.Transporter;
   to: string;
   subject: string;
   html: string;
+  fromKey: FromKey;
 }) {
-  const SMTP_FROM = requireEnv("SMTP_FROM");
-
   return transporter.sendMail({
-    from: SMTP_FROM,
+    from: FROM_MAP[fromKey],
     to,
     subject,
     html,
-    replyTo: "partners@doorplaceusa.com",
+
+    // ✅ Replies always go back to support
+    replyTo: "support@doorplaceusa.com",
   });
 }
+
 
 export async function POST(req: Request) {
   try {
@@ -115,6 +128,8 @@ export async function POST(req: Request) {
     const segment = (body?.segment || "all") as SegmentKey; // segment
     const subject = (body?.subject || "") as string;
     const html = (body?.html || "") as string;
+    const fromKey = (body?.from || "support") as FromKey;
+
 
     const delayMs =
       typeof body?.delayMs === "number" ? Math.max(0, body.delayMs) : 2000;
@@ -126,6 +141,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "html required" }, { status: 400 });
     }
     if (mode !== "manual" && mode !== "segment") {
+      if (!["partners", "support", "info"].includes(fromKey)) {
+  return NextResponse.json(
+    { error: "invalid from address" },
+    { status: 400 }
+  );
+}
+
       return NextResponse.json({ error: "invalid mode" }, { status: 400 });
     }
 
@@ -177,7 +199,13 @@ export async function POST(req: Request) {
       const email = recipients[i];
 
       try {
-        await sendSingleEmail({ transporter, to: email, subject, html });
+        await sendSingleEmail({
+  transporter,
+  to: email,
+  subject,
+  html,
+  fromKey,
+});
         results.push({ email, status: "sent" });
       } catch (err: any) {
         results.push({

@@ -365,12 +365,8 @@ return () => clearInterval(interval);
 
   <StatCard title="Partner Tracking Link Views" value={stats.partnerTrackingViews} />
 
-  <StatCard title="Partners Online" value={partners} />
 
-
-  <StatCard title="Others" value={others} />
-
-  <StatCard title="Total Online" value={totalOnline} />
+  <StatCard title="Online" value={totalOnline} />
 
 </div>
 

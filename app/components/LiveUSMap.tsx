@@ -92,12 +92,17 @@ const STATE_CENTROIDS: Record<string, { lat: number; lon: number }> = {
 ============================================ */
 
 export default function LiveUSMap({
-  visitors,
+  visitors = [],
+  fullscreen = false,
 }: {
-  visitors: LiveVisitor[];
+  visitors?: LiveVisitor[];
+  fullscreen?: boolean;
 }) {
+
+
   const width = 900;
-  const height = 520;
+const height = fullscreen ? 900 : 520;
+
   const [selected, setSelected] = useState<LiveVisitor | null>(null);
 const [zoomScale, setZoomScale] = useState(1);
 
@@ -107,10 +112,11 @@ const [zoomScale, setZoomScale] = useState(1);
   ============================================ */
 
   const projection = useMemo(() => {
-    return geoAlbersUsa()
-      .scale(1200)
-      .translate([width / 2, height / 2]);
-  }, []);
+  return geoAlbersUsa()
+    .scale(1200)
+    .translate([width / 2, height / 2]);
+}, [width, height]);
+
 
   const pathGenerator = useMemo(() => geoPath(projection), [projection]);
 
@@ -168,168 +174,181 @@ const [zoomScale, setZoomScale] = useState(1);
           marginBottom: "12px",
         }}
       >
-        <h2 style={{ fontSize: "18px", fontWeight: 600 }}>
-          Visitors Right Now
-        </h2>
+        <h2
+  style={{
+    fontSize: fullscreen ? "26px" : "18px",
+    fontWeight: 700,
+  }}
+>
+  Visitors Right Now
+</h2>
 
-        <span style={{ fontSize: "13px", color: "#6b7280" }}>
-          Live Activity Map (USA)
-        </span>
+
+        <span
+  style={{
+    fontSize: fullscreen ? "16px" : "13px",
+    color: "#6b7280",
+  }}
+>
+  Live Activity Map (USA)
+</span>
+
       </div>
 
       {/* Zoom Wrapper */}
-      <TransformWrapper
-        initialScale={1}
-        minScale={1}
-        maxScale={6}
+      <div
+  style={{
+    width: "100%",
+    height: fullscreen ? "100vh" : "auto",
 
-        // ✅ Track zoom level
-  onTransformed={(ref) => {
-    setZoomScale(ref.state.scale);
+    borderRadius: fullscreen ? "0px" : "22px",
+    overflow: "hidden",
+
+    background: "#f7f8fa",
+
+    border: fullscreen ? "none" : "1px solid #e5e7eb",
+    boxShadow: fullscreen
+      ? "none"
+      : "0 10px 35px rgba(0,0,0,0.08)",
+
+    padding: fullscreen ? "0px" : "18px",
+
+    display: "flex",
+    flexDirection: "column",
   }}
-        wheel={{ step: 0.25 }}
-        doubleClick={{ disabled: true }}
-      >
-        <TransformComponent>
-          <svg
-            width="100%"
-            viewBox={`0 0 ${width} ${height}`}
-            style={{
-              borderRadius: "18px",
-              background: "#f8fafc",
-            }}
+>
+
+  <TransformWrapper
+    initialScale={1}
+    minScale={1}
+    maxScale={6}
+    wheel={{ step: 0.25 }}
+    doubleClick={{ disabled: true }}
+    onTransformed={(ref) => {
+      setZoomScale(ref.state.scale);
+    }}
+  >
+    <TransformComponent>
+  <svg
+    width="100%"
+    viewBox={`0 0 ${width} ${height}`}
+    style={{
+      flex: 1,
+      borderRadius: fullscreen ? "0px" : "18px",
+      background: "#f8fafc",
+    }}
+  >
+    {/* USA STATES */}
+    {states.map((state: any, i: number) => (
+      <path
+        key={i}
+        d={pathGenerator(state) || ""}
+        fill="#f1f5f9"
+        stroke="#475569"
+        strokeWidth={1.5}
+      />
+    ))}
+
+    {/* Visitor Bubbles */}
+    {clustered.map((v, i) => {
+      let lat = v.latitude;
+      let lon = v.longitude;
+
+      if ((!lat || !lon) && STATE_CENTROIDS[v.city]) {
+        lat = STATE_CENTROIDS[v.city].lat;
+        lon = STATE_CENTROIDS[v.city].lon;
+      }
+
+      const coords = projection([lon, lat]);
+      if (!coords) return null;
+
+      const [x, y] = coords;
+
+      const safeCount = Number(v.count || 1);
+      const radius = Math.min(45, 10 + Math.sqrt(safeCount) * 6);
+
+      return (
+        <g
+          key={i}
+          style={{ cursor: "pointer" }}
+          onClick={() => setSelected(v)}
+        >
+          {/* Pulse Ring */}
+          <circle
+            cx={x}
+            cy={y}
+            r={radius + 6}
+            fill="none"
+            stroke={brandRed}
+            strokeWidth={2.5}
+            opacity={0.35}
           >
-            {/* USA STATES */}
-            {states.map((state: any, i: number) => (
-  <path
-    key={i}
-    d={pathGenerator(state) || ""}
-    fill="#f1f5f9"
+            <animate
+              attributeName="r"
+              values={`${radius};${radius + 18}`}
+              dur="1.6s"
+              repeatCount="indefinite"
+            />
+            <animate
+              attributeName="opacity"
+              values="0.4;0"
+              dur="1.6s"
+              repeatCount="indefinite"
+            />
+          </circle>
 
-    // ✅ Doorplace USA Bold Borders
-    stroke="#475569"
-    strokeWidth={1.5}
-  />
-))}
+          {/* Soft Glow */}
+          <circle
+            cx={x}
+            cy={y}
+            r={radius + 12}
+            fill={brandRed}
+            opacity={0.18}
+          />
 
+          {/* Main Bubble */}
+          <circle
+            cx={x}
+            cy={y}
+            r={radius}
+            fill={brandRed}
+            opacity={0.92}
+          />
 
-            {/* Visitor Bubbles */}
-            {clustered.map((v, i) => {
-              /* ============================================
-                 ✅ STATE FALLBACK LOGIC
-              ============================================ */
+          {/* City Label (only when zoomed in) */}
+          {zoomScale > 2.2 && (
+            <text
+              x={x}
+              y={y + radius + 18}
+              textAnchor="middle"
+              fontSize="12"
+              fontWeight="700"
+              fill="#111827"
+            >
+              {v.city}
+            </text>
+          )}
 
-              let lat = v.latitude;
-              let lon = v.longitude;
+          {/* Count */}
+          <text
+            x={x}
+            y={y + 5}
+            textAnchor="middle"
+            fontSize="14"
+            fontWeight="700"
+            fill="white"
+          >
+            {safeCount}
+          </text>
+        </g>
+      );
+    })}
+  </svg>
+</TransformComponent>
 
-              // If coords missing but city is a state name
-              if ((!lat || !lon) && STATE_CENTROIDS[v.city]) {
-                lat = STATE_CENTROIDS[v.city].lat;
-                lon = STATE_CENTROIDS[v.city].lon;
-              }
+  </TransformWrapper>
+</div>
 
-              const coords = projection([lon, lat]);
-              if (!coords) return null;
-
-              const [x, y] = coords;
-
-              /* ============================================
-                 ✅ Bubble Scaling (Safe)
-              ============================================ */
-
-              const safeCount = Number(v.count || 1);
-
-              const radius = Math.min(
-                45,
-                10 + Math.sqrt(safeCount) * 6
-              );
-
-              return (
-  <g
-    key={i}
-    style={{ cursor: "pointer" }}
-    onClick={() => setSelected(v)}
-  >
-
-                  {/* Pulse Ring */}
-<circle
-  cx={x}
-  cy={y}
-  r={radius + 6}
-  fill="none"
-  stroke={brandRed}
-  strokeWidth={2.5}
-  opacity={0.35}
->
-
-                    <animate
-                      attributeName="r"
-                      values={`${radius};${radius + 18}`}
-                      dur="1.6s"
-                      repeatCount="indefinite"
-                    />
-                    <animate
-                      attributeName="opacity"
-                      values="0.4;0"
-                      dur="1.6s"
-                      repeatCount="indefinite"
-                    />
-                  </circle>
-{/* Soft Glow */}
-<circle
-  cx={x}
-  cy={y}
-  r={radius + 12}
-  fill={brandRed}
-  opacity={0.18}
-/>
-
-                  {/* Main Bubble */}
-<circle
-  cx={x}
-  cy={y}
-  r={radius}
-  fill={brandRed}
-  opacity={0.92}
->
-  <title>
-    {v.city}, {v.state} — {safeCount} visitors
-  </title>
-</circle>
-
-
-
-{/* City Label (only when zoomed in) */}
-{zoomScale > 2.2 && (
-  <text
-    x={x}
-    y={y + radius + 18}
-    textAnchor="middle"
-    fontSize="12"
-    fontWeight="700"
-    fill="#111827"
-  >
-    {v.city}
-  </text>
-)}
-
-
-                  <text
-                    x={x}
-                    y={y + 5}
-                    textAnchor="middle"
-                    fontSize="14"
-                    fontWeight="700"
-                    fill="white"
-                  >
-                    {safeCount}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
-        </TransformComponent>
-      </TransformWrapper>
 {/* ================================
     CLICK POPUP INFO BOX
 ================================ */}

@@ -100,8 +100,16 @@ export default function LiveUSMap({
 }) {
 
 
-  const width = fullscreen ? 1400 : 1200;
-const height = fullscreen ? 900 : 480;
+ const width = 1200;
+const height = fullscreen ? 900 : 550;
+
+const desktop = typeof window !== "undefined" && window.innerWidth > 900;
+
+const viewHeight = fullscreen
+  ? 900
+  : desktop
+  ? 700   // desktop bigger
+  : 550;  // mobile stays EXACT
 
 
   const [selected, setSelected] = useState<LiveVisitor | null>(null);
@@ -112,20 +120,30 @@ const [zoomScale, setZoomScale] = useState(1);
      PROJECTION
   ============================================ */
 
-  const projection = useMemo(() => {
+ const projection = useMemo(() => {
   const proj = geoAlbersUsa();
 
-  // ✅ Auto-fit map with padding so Texas never clips
-  proj.fitExtent(
-    [
-      [20, 20],                 // top-left padding
-      [width - 20, height - 60] // bottom padding (extra space for Texas)
-    ],
-    feature(us as any, (us as any).objects.states) as any
-  );
+  // ✅ Correct GeoJSON FeatureCollection
+  const geo = feature(
+    us as any,
+    (us as any).objects.states
+  ) as any;
+
+  // ✅ Auto-fit into the SVG box
+  proj.fitSize([width, height], geo);
+
+  // ✅ Manual fine-tuning controls
+  const t = proj.translate();
+
+  const moveX = -65; // left/right
+  const moveY = -65;  // up/down
+
+  proj.translate([t[0] + moveX, t[1] + moveY]);
 
   return proj;
 }, [width, height]);
+
+
 
 
 
@@ -210,7 +228,7 @@ const [zoomScale, setZoomScale] = useState(1);
       <div
   style={{
     width: "100%",
-    height: fullscreen ? "100vh" : "350px",
+    height: fullscreen ? "100vh" : "200px",
 
     borderRadius: fullscreen ? "0px" : "22px",
     overflow: "hidden",
@@ -249,10 +267,14 @@ const [zoomScale, setZoomScale] = useState(1);
     height: "100%",
   }}
 >
+
+  
   <svg
-    width="100%"
-    viewBox={`0 0 ${width} ${height}`}
-    preserveAspectRatio="xMidYMid meet"
+  width="100%"
+  viewBox={`0 0 ${width} ${viewHeight}`}
+  preserveAspectRatio="xMidYMid meet"
+
+
 
     style={{
       flex: 1,

@@ -210,7 +210,7 @@ const [zoomScale, setZoomScale] = useState(1);
       <div
   style={{
     width: "100%",
-    height: fullscreen ? "100vh" : "460px",
+    height: fullscreen ? "100vh" : "300px",
 
     borderRadius: fullscreen ? "0px" : "22px",
     overflow: "hidden",

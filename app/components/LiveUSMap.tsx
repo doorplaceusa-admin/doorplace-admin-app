@@ -100,8 +100,9 @@ export default function LiveUSMap({
 }) {
 
 
-  const width = 900;
-const height = fullscreen ? 900 : 520;
+  const width = fullscreen ? 1400 : 1200;
+const height = fullscreen ? 900 : 480;
+
 
   const [selected, setSelected] = useState<LiveVisitor | null>(null);
 const [zoomScale, setZoomScale] = useState(1);
@@ -209,7 +210,7 @@ const [zoomScale, setZoomScale] = useState(1);
       <div
   style={{
     width: "100%",
-    height: fullscreen ? "100vh" : "auto",
+    height: fullscreen ? "100vh" : "460px",
 
     borderRadius: fullscreen ? "0px" : "22px",
     overflow: "hidden",
@@ -221,7 +222,7 @@ const [zoomScale, setZoomScale] = useState(1);
       ? "none"
       : "0 10px 35px rgba(0,0,0,0.08)",
 
-    padding: fullscreen ? "0px" : "18px",
+    padding: "0px",
 
     display: "flex",
     flexDirection: "column",
@@ -238,7 +239,16 @@ const [zoomScale, setZoomScale] = useState(1);
       setZoomScale(ref.state.scale);
     }}
   >
-    <TransformComponent>
+    <TransformComponent
+  wrapperStyle={{
+    width: "100%",
+    height: "100%",
+  }}
+  contentStyle={{
+    width: "100%",
+    height: "100%",
+  }}
+>
   <svg
     width="100%"
     viewBox={`0 0 ${width} ${height}`}

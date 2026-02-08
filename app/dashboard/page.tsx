@@ -368,9 +368,6 @@ if (!siteMetricsRes.data) {
 
       {/* =================== LIVE VISITOR MAP =================== */}
       <div className="bg-white p-4 rounded shadow mb-6">
-        <h2 className="text-lg font-semibold mb-3" style={{ color: brandRed }}>
-          Live Visitors (Last 5 Minutes)
-        </h2>
 
         <LiveUSMap visitors={liveVisitors || []} />
       </div>
@@ -428,59 +425,13 @@ if (!siteMetricsRes.data) {
         </div>
       </div>
 
-      {/* 🟡 TASKS REQUIRING ATTENTION */}
-      <div className="bg-white rounded shadow mb-6 overflow-hidden">
-        <button
-          onClick={() => setTasksOpen(!tasksOpen)}
-          className="w-full flex items-center justify-between px-4 py-3 text-left border-b"
-        >
-          <h2 className="text-lg font-semibold" style={{ color: "#b80d0d" }}>
-            Tasks Requiring Attention
-          </h2>
-
-          <span className="text-sm text-gray-500">
-            {tasksOpen ? "Hide" : "Show"}
-          </span>
-        </button>
-
-        {tasksOpen && (
-          <div className="px-4 py-4">
-            <ul className="space-y-2">
-              <li className="flex justify-between border-b pb-1">
-                <span>Unread Leads</span>
-                <span className="font-bold text-gray-700">0</span>
-              </li>
-
-              <li className="flex justify-between border-b pb-1">
-                <span>Orders Missing Measurements</span>
-                <span className="font-bold text-gray-700">0</span>
-              </li>
-
-              <li className="flex justify-between border-b pb-1">
-                <span>Pending Partner Payouts</span>
-                <span className="font-bold text-gray-700">0</span>
-              </li>
-
-              <li className="flex justify-between border-b pb-1">
-                <span>Invoices Needing Approval</span>
-                <span className="font-bold text-gray-700">0</span>
-              </li>
-
-              <li className="flex justify-between">
-                <span>Leads Older Than 48 Hours</span>
-                <span className="font-bold text-gray-700">0</span>
-              </li>
-            </ul>
-          </div>
-        )}
-      </div>
 
       {/* =================== SYSTEM HEALTH =================== */}
       <Panel title="System Health" style={{ marginTop: 20 }}>
         <Row label="API Status" value="✅ Online" />
         <Row label="Lead Sync" value="✅ Live" />
         <Row label="Commission Sync" value="✅ Live" />
-        <Row label="Payout Engine" value="🟡 Simulated Mode" />
+      
       </Panel>
     </div>
   );

@@ -155,10 +155,12 @@ export default function DashboardPage() {
   activePartnersRes,
 
   siteMetricsRes,
+partnerViewsRes,
 
-  leadCountRes,
-  orderCountRes,
-  leadsDataRes,
+leadCountRes,
+orderCountRes,
+leadsDataRes,
+
 
   totalAppViewsRes,
 ] = await Promise.all([
@@ -183,6 +185,13 @@ supabase
   .select("lifetime_site_views,lifetime_partner_views")
   .eq("company_id", companyId)
   .maybeSingle(),
+
+  // ✅ REAL Partner Tracking Views (source of truth)
+supabase
+  .from("page_view_events")
+  .select("*", { count: "exact", head: true })
+  .not("partner_id", "is", null)
+  .or(`company_id.eq.${companyId},company_id.is.null`),
 
 
 
@@ -233,8 +242,8 @@ supabase
 const totalSiteViews =
   siteMetricsRes.data?.lifetime_site_views ?? 0;
 
-const partnerTrackingViews =
-  siteMetricsRes.data?.lifetime_partner_views ?? 0;
+const partnerTrackingViews = partnerViewsRes.count || 0;
+
 
 if (!siteMetricsRes.data) {
   console.warn("⚠️ No site_metrics row yet for company:", companyId);

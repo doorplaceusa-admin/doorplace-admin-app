@@ -2,28 +2,26 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    // ✅ Fetch Shopify sitemap directly
     const res = await fetch("https://doorplaceusa.com/sitemap.xml", {
       headers: {
-        "User-Agent": "Mozilla/5.0",
+        "User-Agent": "TradePilotBot/1.0 (+https://tradepilot.doorplaceusa.com)",
       },
-      cache: "no-store",
+      next: { revalidate: 3600 }, // cache 1 hour
     });
 
     if (!res.ok) {
-      return new Response(
-        `Sitemap fetch failed: ${res.status}`,
-        { status: 500 }
-      );
+      return new Response(`Sitemap fetch failed: ${res.status}`, {
+        status: 500,
+      });
     }
 
     const xml = await res.text();
 
-    // ✅ Return XML directly (no redirect)
     return new Response(xml, {
       status: 200,
       headers: {
-        "Content-Type": "text/xml",
+        "Content-Type": "application/xml; charset=utf-8",
+        "Cache-Control": "public, max-age=3600",
       },
     });
   } catch (err) {

@@ -502,16 +502,17 @@ return {
                 </filter>
               </defs>
 
-              {/* ✅ Ocean backdrop (extended full coverage) */}
+              {/* ✅ Ocean backdrop (TRUE infinite full coverage) */}
 {SHOW_OCEAN && (
   <rect
-    x="0"
-    y="-200"
-    width={width}
-    height={height + 400}
+    x="-3000"
+    y="-3000"
+    width="6000"
+    height="6000"
     fill="url(#oceanGrad)"
   />
 )}
+
 
 
               {/* ✅ Optional faint graticule (very subtle) */}

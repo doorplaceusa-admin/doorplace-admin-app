@@ -577,7 +577,7 @@ return {
                     <path
                       key={i}
                       d={pathGenerator(state) || ""}
-                      fill={isHover ? "#e8eef7" : "url(#landGrad)"}
+                      fill={isHover ? "#ffe5e5" : "url(#landGrad)"}
                       stroke={isHover ? "#334155" : "#475569"}
                       strokeWidth={isHover ? 2.2 : 1.5}
                       style={{

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-const CHUNK_SIZE = 5000;
+const CHUNK_SIZE = 2500;
 
 // ✅ Sitemap files live on TradePilot
 const SITEMAP_HOST = "https://tradepilot.doorplaceusa.com";

@@ -21,8 +21,9 @@ import nationData from "us-atlas/nation-10m.json";
 type LiveVisitor = {
   city: string;
   state: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+longitude: number | null;
+
   count: number;
 
   // ✅ NEW
@@ -699,6 +700,7 @@ if (lat == null || lon == null) {
 }
 
 
+if (lat == null || lon == null) return null;
 
                 const coords = projection([lon, lat]);
                 if (!coords) return null;

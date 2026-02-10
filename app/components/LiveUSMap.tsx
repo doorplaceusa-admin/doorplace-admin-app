@@ -38,6 +38,60 @@ type LiveVisitor = {
 ============================================ */
 
 const brandRed = "#b80d0d";
+// ✅ Convert state abbreviations ("OH") → full state names ("Ohio")
+// Needed because STATE_CENTROIDS uses full names
+const STATE_NAME_BY_ABBR: Record<string, string> = {
+  AL: "Alabama",
+  AK: "Alaska",
+  AZ: "Arizona",
+  AR: "Arkansas",
+  CA: "California",
+  CO: "Colorado",
+  CT: "Connecticut",
+  DE: "Delaware",
+  FL: "Florida",
+  GA: "Georgia",
+  HI: "Hawaii",
+  ID: "Idaho",
+  IL: "Illinois",
+  IN: "Indiana",
+  IA: "Iowa",
+  KS: "Kansas",
+  KY: "Kentucky",
+  LA: "Louisiana",
+  ME: "Maine",
+  MD: "Maryland",
+  MA: "Massachusetts",
+  MI: "Michigan",
+  MN: "Minnesota",
+  MS: "Mississippi",
+  MO: "Missouri",
+  MT: "Montana",
+  NE: "Nebraska",
+  NV: "Nevada",
+  NH: "New Hampshire",
+  NJ: "New Jersey",
+  NM: "New Mexico",
+  NY: "New York",
+  NC: "North Carolina",
+  ND: "North Dakota",
+  OH: "Ohio",
+  OK: "Oklahoma",
+  OR: "Oregon",
+  PA: "Pennsylvania",
+  RI: "Rhode Island",
+  SC: "South Carolina",
+  SD: "South Dakota",
+  TN: "Tennessee",
+  TX: "Texas",
+  UT: "Utah",
+  VT: "Vermont",
+  VA: "Virginia",
+  WA: "Washington",
+  WV: "West Virginia",
+  WI: "Wisconsin",
+  WY: "Wyoming",
+};
 
 const STATE_CENTROIDS: Record<string, { lat: number; lon: number }> = {
   Alabama: { lat: 32.8067, lon: -86.7911 },
@@ -629,10 +683,22 @@ return {
                 let lat = v.latitude;
                 let lon = v.longitude;
 
-                if ((!lat || !lon) && STATE_CENTROIDS[v.city]) {
-                  lat = STATE_CENTROIDS[v.city].lat;
-                  lon = STATE_CENTROIDS[v.city].lon;
-                }
+                // ✅ Fallback ONLY if coords are missing
+// ✅ Fallback ONLY if coords are missing
+// Fixes Ohio dots landing in Illinois
+if (lat == null || lon == null) {
+  // Convert "OH" → "Ohio"
+  const stateName =
+    STATE_NAME_BY_ABBR[v.state] || v.state;
+
+  // Use centroid fallback if available
+  if (STATE_CENTROIDS[stateName]) {
+    lat = STATE_CENTROIDS[stateName].lat;
+    lon = STATE_CENTROIDS[stateName].lon;
+  }
+}
+
+
 
                 const coords = projection([lon, lat]);
                 if (!coords) return null;

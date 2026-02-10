@@ -2,13 +2,15 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const CHUNK_SIZE = 5000;
-const BASE_URL = "https://doorplaceusa.com";
+
+// ✅ Sitemap files live on TradePilot
+const SITEMAP_HOST = "https://tradepilot.doorplaceusa.com";
 
 export async function GET() {
-  console.log("🧭 Generating Sitemap Index...");
+  console.log("🧭 Generating TradePilot Sitemap Index...");
 
   // ======================================================
-  // ✅ Count how many Shopify pages exist
+  // ✅ Count how many indexable Shopify pages exist
   // ======================================================
   const { count, error } = await supabaseAdmin
     .from("shopify_url_inventory")
@@ -22,13 +24,10 @@ export async function GET() {
     return new NextResponse("Supabase count failed", { status: 500 });
   }
 
-  // ======================================================
-  // ✅ Compute number of sitemap chunks needed
-  // ======================================================
   const totalChunks = Math.ceil(count / CHUNK_SIZE);
 
-  console.log(`✅ Total pages: ${count}`);
-  console.log(`✅ Total sitemap chunks: ${totalChunks}`);
+  console.log(`✅ Total URLs: ${count}`);
+  console.log(`✅ Total Chunks: ${totalChunks}`);
 
   // ======================================================
   // ✅ Build Sitemap Index XML
@@ -37,7 +36,7 @@ export async function GET() {
     .map((_, i) => {
       return `
   <sitemap>
-    <loc>${BASE_URL}/sitemap/${i}.xml</loc>
+    <loc>${SITEMAP_HOST}/sitemap/${i}.xml</loc>
   </sitemap>`;
     })
     .join("");

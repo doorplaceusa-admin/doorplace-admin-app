@@ -20,21 +20,63 @@ export async function POST(req: Request) {
 
   try {
     const {
-      city_ids,
-      page_template,
-      hero_image_url = null,
+  city_ids = null,
+  state_ids = null, // ✅ NEW
 
-      // 🔥 VARIANTS
-      size,
-      material,
-      style,
-      usecase,
-      mountType, // 🔥 FIX: ACCEPT THIS
-    } = await req.json();
+  page_template,
+  hero_image_url = null,
 
-    if (!Array.isArray(city_ids) || city_ids.length === 0) {
-      return NextResponse.json({ error: "city_ids required" }, { status: 400 });
+  size,
+  material,
+  style,
+  usecase,
+  mountType,
+} = await req.json();
+
+// ✅ If state_ids provided, expand them into city_ids automatically
+let resolvedCityIds: string[] = [];
+
+if (Array.isArray(city_ids) && city_ids.length > 0) {
+  resolvedCityIds = city_ids;
+}
+
+if (Array.isArray(state_ids) && state_ids.length > 0) {
+  let allIds: string[] = [];
+  let from = 0;
+  let to = 999;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data, error } = await supabaseAdmin
+      .from("us_locations")
+      .select("id")
+      .in("state_id", state_ids)
+      .range(from, to);
+
+    if (error) throw error;
+
+    allIds.push(...data.map((c) => c.id));
+
+    if (data.length < 1000) {
+      hasMore = false;
+    } else {
+      from += 1000;
+      to += 1000;
     }
+  }
+
+  resolvedCityIds = allIds;
+}
+
+
+    if (!resolvedCityIds.length) {
+  return NextResponse.json(
+    { error: "No cities found for selection" },
+    { status: 400 }
+  );
+}
+
+
 
     if (!page_template) {
       return NextResponse.json(
@@ -44,16 +86,16 @@ export async function POST(req: Request) {
     }
 
     await supabaseAdmin.from("page_generation_jobs").insert({
-      id: jobId,
-      total: city_ids.length,
-      status: "running",
-    });
+  id: jobId,
+  total: resolvedCityIds.length,
+  status: "running",
+});
 
-    const totalBatches = Math.ceil(city_ids.length / BATCH_SIZE);
+    const totalBatches = Math.ceil(resolvedCityIds.length / BATCH_SIZE);
     let processed = 0;
 
     for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
-      const batch = city_ids.slice(
+      const batch = resolvedCityIds.slice(
         batchIndex * BATCH_SIZE,
         (batchIndex + 1) * BATCH_SIZE
       );
@@ -349,7 +391,11 @@ export async function POST(req: Request) {
       .update({ status: "completed" })
       .eq("id", jobId);
 
-    return NextResponse.json({ success: true, job_id: jobId });
+    return NextResponse.json({
+  success: true,
+  job_id: jobId,
+  total: resolvedCityIds.length,
+});
   } catch (err: any) {
     await supabaseAdmin
       .from("page_generation_jobs")

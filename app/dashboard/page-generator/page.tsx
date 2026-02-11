@@ -277,6 +277,11 @@ export default function PageGeneratorAdminPage() {
 
 
   const [selectedStateId, setSelectedStateId] = useState<string>("");
+  // ✅ NEW: Multi-state selection (bulk include)
+const [selectedStateIds, setSelectedStateIds] = useState<Set<string>>(
+  new Set()
+);
+
   const [selectedTemplate, setSelectedTemplate] = useState<string>(
     TEMPLATE_OPTIONS[0].value
   );
@@ -410,6 +415,47 @@ const getPageTypeFromTemplate = (template: string) => {
     visibleCityIds.forEach((id) => next.add(id));
     setSelectedCityIds(next);
   };
+// ✅ Select all cities inside multiple selected states
+const selectCitiesInStates = async () => {
+  if (selectedCityIds.size > 0) {
+  showToast("info", "Clear city selection before bulk state generation");
+  return;
+}
+
+  if (selectedStateIds.size === 0) {
+    showToast("info", "Select at least one state first");
+    return;
+  }
+
+  showToast("info", "Selecting all cities in chosen states…");
+
+  try {
+    const res = await fetch("/api/locations/select-by-states", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        state_ids: Array.from(selectedStateIds),
+      }),
+    });
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error);
+
+    // Merge into existing selected cities
+    const next = new Set(selectedCityIds);
+    json.city_ids.forEach((id: string) => next.add(id));
+
+    setSelectedCityIds(next);
+
+    showToast(
+  "success",
+  `Selected ${json.total.toLocaleString()} cities across states`
+);
+
+  } catch (e: any) {
+    showToast("error", e.message);
+  }
+};
 
   const clearSelection = () => setSelectedCityIds(new Set());
 
@@ -480,7 +526,12 @@ useEffect(() => {
 
   const run = async () => {
     setLoadingCities(true);
-    clearSelection();
+
+// ✅ Prevent clearing if bulk states selected
+if (selectedStateIds.size === 0) {
+  clearSelection();
+}
+
 
     let allCities: CityRow[] = [];
     let page = 0;
@@ -507,7 +558,7 @@ useEffect(() => {
   };
 
   run();
-}, [selectedStateId]);
+}, [selectedStateId, selectedStateIds]);
 
 useEffect(() => {
   const loadPendingCount = async () => {
@@ -607,6 +658,100 @@ const selectAllCitiesAllStates = async () => {
                 ))}
               </select>
             </div>
+
+
+
+{/* ✅ NEW: Multi-State Bulk Selector */}
+<div className="mt-4">
+  <label className="block text-sm font-semibold mb-2">
+    Bulk Select States
+  </label>
+
+  <div className="max-h-[180px] overflow-y-auto border rounded-lg p-2 space-y-1 bg-gray-50">
+    {states.map((s) => (
+      <label
+        key={s.id}
+        className="flex items-center gap-2 text-sm"
+      >
+        <input
+          type="checkbox"
+          checked={selectedStateIds.has(s.id)}
+          onChange={() => {
+            const next = new Set(selectedStateIds);
+
+            next.has(s.id) ? next.delete(s.id) : next.add(s.id);
+
+            setSelectedStateIds(next);
+          }}
+        />
+        {s.state_name} ({s.state_code})
+      </label>
+    ))}
+  </div>
+
+  <button
+    onClick={selectCitiesInStates}
+    className="mt-3 w-full rounded-lg bg-black text-white py-2 text-sm"
+  >
+    Select All Cities in Selected States
+  </button>
+
+<button
+  onClick={async () => {
+    if (selectedStateIds.size === 0) {
+      showToast("info", "Select states first");
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      const res = await fetch("/api/pages/generate-job", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          state_ids: Array.from(selectedStateIds), // ✅ THIS IS THE NEW MODE
+          page_template: selectedTemplate,
+          hero_image_url: heroImageUrl || null,
+          ...getTemplateParams(),
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+
+      setJobId(json.job_id);
+      setProgressText("Starting generation...");
+      showToast(
+        "success",
+        `Generation started for ${json.total.toLocaleString()} cities`
+      );
+    } catch (e: any) {
+      showToast("error", e.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  }}
+  className="mt-2 w-full rounded-lg bg-red-600 text-white py-2 text-sm"
+>
+  Generate Pages for Selected States
+</button>
+
+  <button
+  onClick={() => {
+    setSelectedStateIds(new Set());
+    clearSelection();
+    showToast("info", "Bulk state selection cleared");
+  }}
+  className="mt-2 w-full rounded-lg border py-2 text-sm"
+>
+  Clear Selected States
+</button>
+
+
+</div>
+
+
 
            <div>
   <label className="block text-sm font-semibold mb-2">Template</label>
@@ -818,6 +963,7 @@ const selectAllCitiesAllStates = async () => {
               </button>
             </div>
 
+{selectedStateIds.size === 0 && (
             <div className="max-h-[60vh] overflow-y-auto border rounded">
               <ul ref={listRef}>
                 {filteredCities.map((c) => (
@@ -841,6 +987,7 @@ const selectAllCitiesAllStates = async () => {
                 ))}
               </ul>
             </div>
+)}
 
            <div className="mt-4 flex flex-col gap-2">
 
@@ -917,44 +1064,44 @@ const selectAllCitiesAllStates = async () => {
 
 
               <button
-                onClick={async () => {
-                  if (!selectedStateId || selectedCityIds.size === 0) {
-                    showToast("info", "Select cities first");
-                    return;
-                  }
-                  setIsGenerating(true);
-                  try {
-                    const res = await fetch("/api/pages/generate-job", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    state_id: selectedStateId,
-    city_ids: Array.from(selectedCityIds),
-    page_template: selectedTemplate,
-    hero_image_url: heroImageUrl || null,
-    ...getTemplateParams(), // 👈 includes pageType automatically
-  }),
-});
+  onClick={async () => {
+    // ✅ City mode requires cities selected
+    if (selectedCityIds.size === 0) {
+      showToast("info", "Select cities first");
+      return;
+    }
 
+    setIsGenerating(true);
 
+    try {
+      const res = await fetch("/api/pages/generate-job", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          city_ids: Array.from(selectedCityIds),
+          page_template: selectedTemplate,
+          hero_image_url: heroImageUrl || null,
+          ...getTemplateParams(),
+        }),
+      });
 
-                    const json = await res.json();
-                    if (!res.ok) throw new Error(json.error);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
 
-                    setJobId(json.job_id);
-setProgressText("Starting generation...");
-showToast("info", "Generation started");
+      setJobId(json.job_id);
+      setProgressText("Starting generation...");
+      showToast("success", "City generation started");
+    } catch (e: any) {
+      showToast("error", e.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  }}
+  className="bg-red-600 text-white px-4 py-2 rounded"
+>
+  Generate Pages
+</button>
 
-                  } catch (e: any) {
-                    showToast("error", e.message);
-                  } finally {
-                    setIsGenerating(false);
-                  }
-                }}
-                className="bg-red-600 text-white px-4 py-2 rounded"
-              >
-                Generate Pages
-              </button>
 
           
 

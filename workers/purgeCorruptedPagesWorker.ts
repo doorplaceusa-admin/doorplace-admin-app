@@ -1,30 +1,56 @@
 // workers/purgeCorruptedPagesWorker.ts
 
 /* ======================================================
-   ✅ ENV LOADING (PM2 SAFE)
-   Node workers do NOT auto-load .env.local
+   ✅ PURGE CORRUPTED SHOPIFY PAGES WORKER
+   Deletes ONLY pages ending in corrupted suffixes like:
+
+     -oh-oh
+
+   Safe for PM2 + ts-node execution
 ====================================================== */
 
 import dotenv from "dotenv";
 
-// ✅ Force-load correct env file explicitly
-dotenv.config({ path: "/var/www/doorplace-admin-app/.env.local" });
-
-// ✅ Debug proof (remove later)
-console.log("SHOPIFY ENV CHECK:", {
-  STORE_DOMAIN: process.env.SHOPIFY_STORE_DOMAIN,
-  ADMIN_TOKEN: process.env.SHOPIFY_ADMIN_TOKEN
-    ? process.env.SHOPIFY_ADMIN_TOKEN.slice(0, 10) + "..."
-    : undefined,
-});
-
 /* ======================================================
-   CONFIG
+   ✅ ENV LOADING (PM2 SAFE)
+   Node workers do NOT auto-load .env.local
 ====================================================== */
 
-const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
-const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN!;
+dotenv.config({ path: "/var/www/doorplace-admin-app/.env.local" });
+
+/* ======================================================
+   CONFIG (STRICT SAFE)
+====================================================== */
+
+const SHOP = process.env.SHOPIFY_STORE_DOMAIN;
+const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN;
 const API_VERSION = "2024-01";
+
+/* ======================================================
+   HARD STOP IF ENV MISSING
+====================================================== */
+
+if (!SHOP || !TOKEN) {
+  console.error("❌ Missing Shopify ENV vars — exiting immediately");
+  process.exit(1);
+}
+
+/* ======================================================
+   ✅ TypeScript-Safe Constants
+   Prevents "string | undefined" header errors forever
+====================================================== */
+
+const SHOPIFY_STORE = SHOP;
+const SHOPIFY_TOKEN = TOKEN;
+
+/* ======================================================
+   DEBUG CHECK
+====================================================== */
+
+console.log("SHOPIFY ENV CHECK:", {
+  STORE_DOMAIN: SHOPIFY_STORE,
+  TOKEN_PREVIEW: SHOPIFY_TOKEN.slice(0, 10) + "...",
+});
 
 /* ======================================================
    WORKER SETTINGS
@@ -33,7 +59,7 @@ const API_VERSION = "2024-01";
 // ✅ Corrupted suffixes to purge
 const BAD_SUFFIXES = ["-oh-oh"];
 
-// ✅ Safety Limit (prevents runaway deletion)
+// ✅ Safety limit (prevents runaway deletion)
 const DELETE_LIMIT = 100000;
 
 // ✅ Throttle timing
@@ -41,7 +67,7 @@ const DELETE_SLEEP_MS = 1200;
 const BATCH_SLEEP_MS = 2000;
 
 // ✅ Dry Run Mode toggle
-const DRY_RUN = false; // <-- set true first to preview only
+const DRY_RUN = true; // ⚠️ ALWAYS RUN TRUE FIRST
 
 /* ======================================================
    HELPERS
@@ -49,11 +75,11 @@ const DRY_RUN = false; // <-- set true first to preview only
 
 async function shopifyFetch(path: string, options: RequestInit = {}) {
   const res = await fetch(
-    `https://${SHOP}/admin/api/${API_VERSION}${path}`,
+    `https://${SHOPIFY_STORE}/admin/api/${API_VERSION}${path}`,
     {
       ...options,
       headers: {
-        "X-Shopify-Access-Token": TOKEN,
+        "X-Shopify-Access-Token": SHOPIFY_TOKEN,
         "Content-Type": "application/json",
       },
     }
@@ -78,10 +104,9 @@ function sleep(ms: number) {
 
 async function purgeCorruptedPages() {
   console.log("=================================================");
-  console.log("🚀 STARTING WORKER PURGE: CORRUPTED -OH-OH PAGES");
+  console.log("🚀 STARTING PURGE WORKER");
   console.log("=================================================");
   console.log("🧪 Dry Run Mode:", DRY_RUN);
-  console.log("⏳ Shopify Store:", SHOP);
   console.log("🚨 BAD SUFFIXES:", BAD_SUFFIXES);
   console.log("-------------------------------------------------");
 
@@ -97,9 +122,9 @@ async function purgeCorruptedPages() {
     console.log(`📦 FETCHING BATCH #${batchNumber}`);
     console.log("=================================================");
 
-    // ✅ Fetch batch of Shopify pages
+    // ✅ Stable pagination ordering required by Shopify
     const res = await shopifyFetch(
-      `/pages.json?limit=250${
+      `/pages.json?limit=250&order=updated_at asc${
         nextPageInfo ? `&page_info=${nextPageInfo}` : ""
       }`
     );
@@ -182,7 +207,7 @@ async function purgeCorruptedPages() {
   } while (nextPageInfo);
 
   console.log("=================================================");
-  console.log("🎉 WORKER PURGE COMPLETE");
+  console.log("🎉 PURGE WORKER COMPLETE");
   console.log("=================================================");
   console.log("✅ FINAL SUMMARY:");
   console.log("🧾 Total Checked:", checked);
@@ -197,4 +222,12 @@ async function purgeCorruptedPages() {
 
 console.log("🔥 Purge Corrupted Pages Worker Started (PM2 Mode)");
 
-purgeCorruptedPages();
+purgeCorruptedPages()
+  .then(() => {
+    console.log("✅ Purge Worker finished cleanly.");
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error("❌ Purge Worker failed:", err);
+    process.exit(1);
+  });

@@ -13,7 +13,6 @@ import dotenv from "dotenv";
 
 /* ======================================================
    ✅ ENV LOADING (PM2 SAFE)
-   Node workers do NOT auto-load .env.local
 ====================================================== */
 
 dotenv.config({ path: "/var/www/doorplace-admin-app/.env.local" });
@@ -37,7 +36,7 @@ if (!SHOP || !TOKEN) {
 
 /* ======================================================
    ✅ TypeScript-Safe Constants
-   Prevents "string | undefined" header errors forever
+   Prevents string | undefined header errors forever
 ====================================================== */
 
 const SHOPIFY_STORE = SHOP;
@@ -122,14 +121,17 @@ async function purgeCorruptedPages() {
     console.log(`📦 FETCHING BATCH #${batchNumber}`);
     console.log("=================================================");
 
-    // ✅ Stable pagination ordering required by Shopify
+    /* -----------------------------------------
+       FETCH SHOPIFY PAGES (Stable Pagination)
+    ----------------------------------------- */
     const res = await shopifyFetch(
       `/pages.json?limit=250&order=updated_at asc${
         nextPageInfo ? `&page_info=${nextPageInfo}` : ""
       }`
     );
 
-    const data = await res.json();
+    // ✅ FIX TS18046: json() returns unknown
+    const data = (await res.json()) as any;
     const pages = data.pages || [];
 
     console.log(`✅ Loaded ${pages.length} pages`);
@@ -156,20 +158,20 @@ async function purgeCorruptedPages() {
       console.log(`⚠️ Matched: ${matchedSuffix}`);
       console.log(`🆔 Page ID: ${p.id}`);
 
-      // ✅ Dry Run Mode
+      /* ---------- Dry Run ---------- */
       if (DRY_RUN) {
         console.log("🧪 Dry Run ON → NOT deleting");
         continue;
       }
 
-      // ✅ Safety Stop
+      /* ---------- Safety Stop ---------- */
       if (deleted >= DELETE_LIMIT) {
         console.log("🛑 DELETE LIMIT REACHED — STOPPING SAFELY");
         nextPageInfo = null;
         break;
       }
 
-      // ✅ Delete Page
+      /* ---------- Delete Page ---------- */
       console.log(`🔥 Deleting Page ID: ${p.id}...`);
 
       await shopifyFetch(`/pages/${p.id}.json`, {
@@ -181,12 +183,11 @@ async function purgeCorruptedPages() {
       console.log("✅ DELETE SUCCESS");
       console.log(`📉 Deleted Count: ${deleted}`);
 
-      // ✅ Throttle between deletes
       await sleep(DELETE_SLEEP_MS);
     }
 
     /* -----------------------------------------
-       PAGINATION
+       PAGINATION (Shopify Link Header)
     ----------------------------------------- */
     const link = res.headers.get("link");
     const match = link?.match(/page_info=([^&>]+)>; rel="next"/);

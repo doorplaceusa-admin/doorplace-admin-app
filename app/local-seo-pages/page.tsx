@@ -85,6 +85,122 @@ const [activeShot, setActiveShot] = useState<string | null>(null);
             No confusing contracts. No agency retainers. Built for real small
             businesses.
           </p>
+
+          {/* ===========================
+    INSTANT PROOF STRIP (NEW)
+=========================== */}
+<div
+  style={{
+    marginTop: "45px",
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: "18px",
+    maxWidth: "950px",
+    marginLeft: "auto",
+    marginRight: "auto",
+  }}
+>
+  {/* Proof Card 1 */}
+  <div
+    style={{
+      background: "#f8f9fb",
+      borderRadius: "16px",
+      padding: "18px",
+      textAlign: "center",
+      fontWeight: 800,
+      boxShadow: "0 6px 18px rgba(0,0,0,0.05)",
+    }}
+  >
+    🚀 Pages Published Fast  
+    <p style={{ marginTop: "6px", fontWeight: 500, fontSize: "14px", color: "#555" }}>
+      Launch hundreds of city SEO pages directly into Shopify.
+    </p>
+  </div>
+
+  {/* Proof Card 2 */}
+  <div
+    style={{
+      background: "#f8f9fb",
+      borderRadius: "16px",
+      padding: "18px",
+      textAlign: "center",
+      fontWeight: 800,
+      boxShadow: "0 6px 18px rgba(0,0,0,0.05)",
+    }}
+  >
+    📍 Built for Local Customers  
+    <p style={{ marginTop: "6px", fontWeight: 500, fontSize: "14px", color: "#555" }}>
+      Each page targets real searches in real cities.
+    </p>
+  </div>
+
+  {/* Proof Card 3 */}
+  <div
+    style={{
+      background: "#f8f9fb",
+      borderRadius: "16px",
+      padding: "18px",
+      textAlign: "center",
+      fontWeight: 800,
+      boxShadow: "0 6px 18px rgba(0,0,0,0.05)",
+    }}
+  >
+    🔥 Dashboard Included  
+    <p style={{ marginTop: "6px", fontWeight: 500, fontSize: "14px", color: "#555" }}>
+      See traffic + leads happening live inside TradePilot.
+    </p>
+  </div>
+</div>
+
+{/* ===========================
+    MINI SCREENSHOT PREVIEW (NEW)
+=========================== */}
+<div style={{ marginTop: "55px" }}>
+  <h3
+    style={{
+      fontSize: "22px",
+      fontWeight: 900,
+      marginBottom: "18px",
+    }}
+  >
+    Real TradePilot Preview 👇
+  </h3>
+
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+      gap: "16px",
+      maxWidth: "900px",
+      margin: "0 auto",
+    }}
+  >
+    {[
+      "/screenshots/IMG_5903.JPEG",
+      "/screenshots/IMG_5905.JPEG",
+      "/screenshots/IMG_5906.JPEG",
+    ].map((src) => (
+      <img
+        key={src}
+        src={src}
+        alt="TradePilot Preview"
+        onClick={() => setActiveShot(src)}
+        style={{
+          width: "100%",
+          borderRadius: "14px",
+          border: "1px solid #eee",
+          cursor: "pointer",
+          boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+        }}
+      />
+    ))}
+  </div>
+
+  <p style={{ marginTop: "14px", fontSize: "13px", color: "#777" }}>
+    Tap any image to expand full size.
+  </p>
+</div>
+
         </section>
 
         {/* ===========================

@@ -212,6 +212,45 @@ export default function AdminAnalyticsPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
 
+
+{/* Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="border rounded p-4 bg-white shadow">
+          <h2 className="font-semibold mb-1">Last Page Viewed</h2>
+          {lastView && (
+            <>
+              <div className="text-sm break-all">{lastView.page_url}</div>
+              <div className="text-xs text-gray-500">
+                {new Date(lastView.created_at).toLocaleString()}
+              </div>
+            </>
+          )}
+        </div>
+
+        
+      </div>
+
+      {/* ✅ LIVE VISITOR MAP */}
+      <div className="border rounded p-4 bg-white shadow">
+        <h2 className="font-semibold mb-3">
+          Live Visitors by City (Last 5 Minutes)
+        </h2>
+
+        {mapError && (
+          <div className="text-sm text-red-600 mb-3">
+            Live Map Error: {mapError}
+          </div>
+        )}
+
+        <LiveUSMap visitors={liveVisitors || []} />
+      </div>
+
+
+
+
+
+
+
         <div className="flex flex-col md:flex-row gap-2 md:items-center w-full max-w-full overflow-x-hidden">
           <input
             placeholder="Search pages..."
@@ -241,49 +280,7 @@ export default function AdminAnalyticsPage() {
         </div>
       </div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="border rounded p-4 bg-white shadow">
-          <h2 className="font-semibold mb-1">Last Page Viewed</h2>
-          {lastView && (
-            <>
-              <div className="text-sm break-all">{lastView.page_url}</div>
-              <div className="text-xs text-gray-500">
-                {new Date(lastView.created_at).toLocaleString()}
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="border rounded p-4 bg-white shadow md:col-span-2">
-          <h2 className="font-semibold mb-3">Live Traffic (Last 60 min)</h2>
-          <div className="flex items-end gap-1 h-40">
-            {timeline.map((p, i) => (
-              <div
-                key={i}
-                className="bg-blue-600 w-2 rounded-t"
-                style={{ height: `${(p.count / maxLine) * 100}%` }}
-                title={`${p.minute} – ${p.count}`}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ✅ LIVE VISITOR MAP */}
-      <div className="border rounded p-4 bg-white shadow">
-        <h2 className="font-semibold mb-3">
-          Live Visitors by City (Last 5 Minutes)
-        </h2>
-
-        {mapError && (
-          <div className="text-sm text-red-600 mb-3">
-            Live Map Error: {mapError}
-          </div>
-        )}
-
-        <LiveUSMap visitors={liveVisitors || []} />
-      </div>
+      
 
       {/* Top Pages */}
       <div className="border rounded p-4 bg-white shadow">

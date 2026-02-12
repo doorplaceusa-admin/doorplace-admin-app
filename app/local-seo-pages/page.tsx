@@ -1,12 +1,18 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+/* ✅ IMPORT YOUR LIVE MAP COMPONENT */
+import LiveUSMap from "@/app/components/LiveUSMap";
+
+export const dynamic = "force-dynamic";
+
+
 export default function LocalSEOPages() {
   const [showForm, setShowForm] = useState(false);
+// ✅ Screenshot Modal State
+const [activeShot, setActiveShot] = useState<string | null>(null);
 
   return (
     <main
@@ -19,12 +25,12 @@ export default function LocalSEOPages() {
     >
       <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
         {/* ===========================
-            HERO SECTION
+            HERO SECTION (NEW HOOK)
         =========================== */}
         <section
           style={{
             textAlign: "center",
-            padding: "70px 35px",
+            padding: "80px 35px",
             borderRadius: "22px",
             background: "white",
             boxShadow: "0 10px 40px rgba(0,0,0,0.08)",
@@ -34,66 +40,66 @@ export default function LocalSEOPages() {
             style={{
               fontSize: "56px",
               fontWeight: 900,
-              marginBottom: "20px",
+              marginBottom: "18px",
               lineHeight: 1.05,
             }}
           >
-            Launch Thousands of Local SEO Pages <br />
-            and Start Getting More Leads
+            Local SEO Pages for Small Businesses <br />
+            Who Want a Real Shot at More Customers
           </h1>
 
           <p
             style={{
               fontSize: "20px",
               color: "#444",
-              maxWidth: "760px",
+              maxWidth: "820px",
               margin: "0 auto",
-              lineHeight: 1.6,
+              lineHeight: 1.7,
             }}
           >
-            TradePilot is an automated publishing engine that generates
-            high-quality city + service landing pages for contractors and local
-            businesses — helping you rank in Google without paying Angi or
-            overpriced agencies.
+            If you're building a business, trying to get more calls, more
+            customers, and more income — TradePilot helps you show up in Google
+            across dozens (or thousands) of cities without paying expensive SEO
+            agencies.
           </p>
 
-          <div style={{ marginTop: "40px" }}>
+          <div style={{ marginTop: "35px" }}>
             <button
               onClick={() => setShowForm(true)}
               style={{
-                display: "inline-block",
-                padding: "18px 34px",
+                padding: "18px 36px",
                 borderRadius: "12px",
-                background: "black",
+                background: "#000",
                 color: "white",
                 fontSize: "18px",
-                fontWeight: 700,
+                fontWeight: 800,
                 border: "none",
                 cursor: "pointer",
               }}
             >
-              Get More Information →
+              Request Info → Let’s Build Your Pages
             </button>
           </div>
 
           <p style={{ marginTop: "18px", fontSize: "14px", color: "#777" }}>
-            Built for real businesses. Deployed fast. Scales instantly.
+            No confusing contracts. No agency retainers. Built for real small
+            businesses.
           </p>
         </section>
 
         {/* ===========================
-            WHY THIS WORKS
+            SHOPIFY SECTION (NEW TARGET)
         =========================== */}
-        <section style={{ marginTop: "90px" }}>
+        <section style={{ marginTop: "95px" }}>
           <h2
             style={{
-              fontSize: "38px",
-              fontWeight: 800,
+              fontSize: "40px",
+              fontWeight: 900,
               textAlign: "center",
-              marginBottom: "20px",
+              marginBottom: "18px",
             }}
           >
-            Why Local SEO Pages Matter
+            Perfect for Shopify Website Owners
           </h2>
 
           <p
@@ -101,57 +107,40 @@ export default function LocalSEOPages() {
               textAlign: "center",
               fontSize: "18px",
               color: "#555",
-              maxWidth: "850px",
+              maxWidth: "860px",
               margin: "0 auto",
               lineHeight: 1.7,
             }}
           >
-            Most contractors only have 5–10 pages on their website. TradePilot
-            allows you to instantly expand into hundreds of cities, suburbs, and
-            service areas — creating an SEO footprint that captures search
-            traffic and turns it into leads.
+            Already have a Shopify store or service website? TradePilot connects
+            directly into Shopify and launches hundreds of local SEO landing
+            pages that bring customers into your business automatically.
           </p>
-        </section>
-
-        {/* ===========================
-            FEATURES GRID
-        =========================== */}
-        <section style={{ marginTop: "70px" }}>
-          <h2
-            style={{
-              fontSize: "34px",
-              fontWeight: 800,
-              textAlign: "center",
-              marginBottom: "45px",
-            }}
-          >
-            What TradePilot Builds For You
-          </h2>
 
           <div
             style={{
+              marginTop: "35px",
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-              gap: "22px",
+              gap: "20px",
             }}
           >
             {[
+              "Shopify Page Publishing Engine",
               "City + Service Landing Pages",
-              "Instant SEO Footprint Expansion",
-              "Custom Templates for Your Business",
-              "Fast Publishing + Deployment",
-              "Sitemap + Indexing Support",
-              "Optional Tracking Dashboard",
+              "Google Indexing Support",
+              "Optional Live Traffic Dashboard",
+              "Built for Small Business Budgets",
+              "Start With Just 50–100 Pages",
             ].map((item) => (
               <div
                 key={item}
                 style={{
                   background: "white",
-                  padding: "26px",
+                  padding: "22px",
                   borderRadius: "16px",
-                  boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
-                  fontSize: "16px",
-                  fontWeight: 650,
+                  boxShadow: "0 8px 18px rgba(0,0,0,0.06)",
+                  fontWeight: 700,
                 }}
               >
                 ✅ {item}
@@ -161,18 +150,18 @@ export default function LocalSEOPages() {
         </section>
 
         {/* ===========================
-            WHO THIS IS FOR
+            START SMALL SECTION (FUNNEL BOOST)
         =========================== */}
-        <section style={{ marginTop: "100px" }}>
+        <section style={{ marginTop: "110px" }}>
           <h2
             style={{
-              fontSize: "38px",
+              fontSize: "42px",
               fontWeight: 900,
               textAlign: "center",
-              marginBottom: "20px",
+              marginBottom: "18px",
             }}
           >
-            Who TradePilot Pages Are For
+            Start Small — Scale Anytime
           </h2>
 
           <p
@@ -183,14 +172,548 @@ export default function LocalSEOPages() {
               maxWidth: "850px",
               margin: "0 auto",
               lineHeight: 1.7,
+              marginBottom: "45px",
             }}
           >
-            TradePilot is built for real local service businesses that want more
-            inbound leads from Google. If customers search for your service in
-            different cities, TradePilot helps you show up everywhere.
+            TradePilot was built for small businesses that want more customers —
+            without spending thousands upfront.
+            <br />
+            You can start with a small batch of local pages, then grow over time.
           </p>
 
           <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+              gap: "22px",
+              maxWidth: "950px",
+              margin: "0 auto",
+            }}
+          >
+            {[
+              "Start with just 50–100 pages",
+              "No long-term contracts required",
+              "Perfect for new businesses getting started",
+              "Grow into thousands of cities when ready",
+              "Optional monthly traffic monitoring",
+              "Built for real people, not big corporations",
+            ].map((item) => (
+              <div
+                key={item}
+                style={{
+                  background: "white",
+                  padding: "26px",
+                  borderRadius: "16px",
+                  boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
+                  fontSize: "16px",
+                  fontWeight: 700,
+                }}
+              >
+                ✅ {item}
+              </div>
+            ))}
+          </div>
+
+          {/* CTA Button */}
+          <div style={{ textAlign: "center", marginTop: "45px" }}>
+            <button
+              onClick={() => setShowForm(true)}
+              style={{
+                padding: "18px 40px",
+                borderRadius: "14px",
+                background: "black",
+                color: "white",
+                fontSize: "18px",
+                fontWeight: 900,
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Tell Us What You Need →
+            </button>
+
+            <p style={{ marginTop: "12px", fontSize: "14px", color: "#777" }}>
+              Whether you want 50 pages or 50,000 — we’ll build the right rollout.
+            </p>
+          </div>
+        </section>
+
+        {/* ===========================
+            OWNERSHIP SECTION (HUGE TRUST)
+        =========================== */}
+        <section style={{ marginTop: "110px" }}>
+          <h2
+            style={{
+              fontSize: "42px",
+              fontWeight: 900,
+              textAlign: "center",
+              marginBottom: "18px",
+            }}
+          >
+            Once We Build Your Pages… They’re Yours Forever
+          </h2>
+
+          <p
+            style={{
+              textAlign: "center",
+              fontSize: "18px",
+              color: "#555",
+              maxWidth: "850px",
+              margin: "0 auto",
+              lineHeight: 1.7,
+              marginBottom: "45px",
+            }}
+          >
+            TradePilot is not a locked subscription or rental platform.
+            <br />
+            After we generate and publish your local SEO pages onto your website,
+            those pages belong to your business permanently.
+          </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: "22px",
+              maxWidth: "950px",
+              margin: "0 auto",
+            }}
+          >
+            {[
+              "One-time rollout options available",
+              "Flat build cost based on page volume",
+              "Optional monthly monitoring + expansion",
+              "Pages stay on your website forever",
+            ].map((item) => (
+              <div
+                key={item}
+                style={{
+                  background: "white",
+                  padding: "26px",
+                  borderRadius: "16px",
+                  boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
+                  fontSize: "16px",
+                  fontWeight: 700,
+                  textAlign: "center",
+                }}
+              >
+                ✅ {item}
+              </div>
+            ))}
+          </div>
+
+          <div style={{ textAlign: "center", marginTop: "45px" }}>
+            <button
+              onClick={() => setShowForm(true)}
+              style={{
+                padding: "18px 40px",
+                borderRadius: "14px",
+                background: "#b80d0d",
+                color: "white",
+                fontSize: "18px",
+                fontWeight: 900,
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Request My Rollout →
+            </button>
+          </div>
+        </section>
+
+        {/* ===========================
+            EXAMPLE PAGES PREVIEW (FUNNEL BOOST)
+        =========================== */}
+        <section style={{ marginTop: "110px" }}>
+          <h2
+            style={{
+              fontSize: "42px",
+              fontWeight: 900,
+              textAlign: "center",
+              marginBottom: "18px",
+            }}
+          >
+            Example Pages TradePilot Builds
+          </h2>
+
+          <p
+            style={{
+              textAlign: "center",
+              fontSize: "18px",
+              color: "#555",
+              maxWidth: "850px",
+              margin: "0 auto",
+              lineHeight: 1.7,
+              marginBottom: "55px",
+            }}
+          >
+            These are the exact types of pages we generate for small businesses.
+            Each page targets a service + city, designed to rank in Google and
+            bring in real local customers.
+          </p>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gap: "24px",
+              maxWidth: "1000px",
+              margin: "0 auto",
+            }}
+          >
+            {[
+              {
+                title: "Plumber in Dallas, TX",
+                desc: "Local plumbing repair pages built for homeowners searching nearby.",
+                example:
+                  "“Looking for a plumber in Dallas? Our team provides fast emergency plumbing service…”",
+              },
+              {
+                title: "Mobile Detailer in Miami, FL",
+                desc: "Perfect for service businesses that travel to customers.",
+                example:
+                  "“Book a mobile car detailing service in Miami — we come to you…”",
+              },
+              {
+                title: "Barber Shop in Houston, TX",
+                desc: "Great for beauty, personal care, and appointment-based businesses.",
+                example:
+                  "“Need a haircut in Houston? Visit our local barbershop for fades, tapers…”",
+              },
+              {
+                title: "Solar Installer in Phoenix, AZ",
+                desc: "High-ticket home service pages that generate strong inbound leads.",
+                example:
+                  "“Solar panel installation in Phoenix — free estimates and fast setup…”",
+              },
+              {
+                title: "Lawn Care in Atlanta, GA",
+                desc: "Outdoor and recurring service businesses rank extremely well locally.",
+                example:
+                  "“Trusted lawn mowing and landscaping services in Atlanta…”",
+              },
+              {
+                title: "HVAC Repair in Chicago, IL",
+                desc: "Contractor pages built for urgent searches and high conversion calls.",
+                example:
+                  "“AC not working? Call our Chicago HVAC repair team today…”",
+              },
+            ].map((page) => (
+              <div
+                key={page.title}
+                style={{
+                  background: "white",
+                  borderRadius: "18px",
+                  padding: "28px",
+                  boxShadow: "0 8px 22px rgba(0,0,0,0.06)",
+                }}
+              >
+                <h3 style={{ fontSize: "18px", fontWeight: 900 }}>
+                  {page.title}
+                </h3>
+
+                <p
+                  style={{
+                    marginTop: "10px",
+                    fontSize: "15px",
+                    color: "#555",
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {page.desc}
+                </p>
+
+                <div
+                  style={{
+                    marginTop: "16px",
+                    background: "#f8f9fb",
+                    padding: "14px",
+                    borderRadius: "12px",
+                    fontSize: "14px",
+                    color: "#444",
+                    lineHeight: 1.5,
+                    fontStyle: "italic",
+                  }}
+                >
+                  {page.example}
+                </div>
+
+                <p
+                  style={{
+                    marginTop: "14px",
+                    fontSize: "13px",
+                    color: "#777",
+                  }}
+                >
+                  ✅ Built + published directly to your website
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA UNDER EXAMPLES */}
+          <div style={{ textAlign: "center", marginTop: "55px" }}>
+            <button
+              onClick={() => setShowForm(true)}
+              style={{
+                padding: "18px 42px",
+                borderRadius: "14px",
+                background: "black",
+                color: "white",
+                fontSize: "18px",
+                fontWeight: 900,
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Build Pages Like This For My Business →
+            </button>
+
+            <p style={{ marginTop: "12px", fontSize: "14px", color: "#777" }}>
+              Tell us your service + city targets — we’ll handle the rest.
+            </p>
+          </div>
+        </section>
+
+{/* ===========================
+    TRADEPILOT SCREENSHOT PREVIEW
+=========================== */}
+<section style={{ marginTop: "110px" }}>
+  <h2
+    style={{
+      fontSize: "42px",
+      fontWeight: 900,
+      textAlign: "center",
+      marginBottom: "18px",
+    }}
+  >
+    Real TradePilot Screenshots (Live System Preview)
+  </h2>
+
+  <p
+    style={{
+      textAlign: "center",
+      fontSize: "18px",
+      color: "#555",
+      maxWidth: "850px",
+      margin: "0 auto",
+      lineHeight: 1.7,
+      marginBottom: "55px",
+    }}
+  >
+    These are real screenshots from inside TradePilot — showing what business
+    owners actually get access to after we build and launch their SEO pages.
+  </p>
+
+  {/* ✅ Screenshot Grid */}
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+      gap: "22px",
+      maxWidth: "1050px",
+      margin: "0 auto",
+    }}
+  >
+    {[
+      "/screenshots/IMG_5903.JPEG",
+      "/screenshots/IMG_5905.JPEG",
+      "/screenshots/IMG_5906.JPEG",
+      "/screenshots/IMG_5907.JPEG",
+      "/screenshots/IMG_5908.JPEG",
+      "/screenshots/IMG_5909.JPEG",
+    ].map((src) => (
+      <div
+        key={src}
+        style={{
+          background: "white",
+          borderRadius: "18px",
+          padding: "14px",
+          boxShadow: "0 8px 22px rgba(0,0,0,0.08)",
+          textAlign: "center",
+        }}
+      >
+        <img
+  src={src}
+  alt="TradePilot Screenshot Preview"
+  onClick={() => setActiveShot(src)}
+  style={{
+    width: "100%",
+    height: "auto",
+    borderRadius: "14px",
+    border: "1px solid #eee",
+    cursor: "pointer",
+    transition: "0.2s ease",
+  }}
+/>
+
+      </div>
+    ))}
+  </div>
+
+  {/* CTA */}
+  <div style={{ textAlign: "center", marginTop: "55px" }}>
+    <button
+      onClick={() => setShowForm(true)}
+      style={{
+        padding: "18px 42px",
+        borderRadius: "14px",
+        background: "#b80d0d",
+        color: "white",
+        fontSize: "18px",
+        fontWeight: 900,
+        border: "none",
+        cursor: "pointer",
+      }}
+    >
+      Get Pages + Dashboard Access →
+    </button>
+
+    <p style={{ marginTop: "12px", fontSize: "14px", color: "#777" }}>
+      After we publish your pages, they stay on your website forever.
+    </p>
+  </div>
+</section>
+
+        {/* ===========================
+            LIVE MAP DEMO SECTION
+        =========================== */}
+        <section style={{ marginTop: "110px" }}>
+          <h2
+            style={{
+              fontSize: "42px",
+              fontWeight: 900,
+              textAlign: "center",
+              marginBottom: "18px",
+            }}
+          >
+            Watch Local SEO Traffic Happen in Real Time
+          </h2>
+
+          <p
+            style={{
+              textAlign: "center",
+              fontSize: "18px",
+              color: "#555",
+              maxWidth: "850px",
+              margin: "0 auto",
+              lineHeight: 1.7,
+              marginBottom: "45px",
+            }}
+          >
+            This is what business owners see inside TradePilot — visitors landing
+            on SEO pages across the United States.
+          </p>
+
+          <div style={{ maxWidth: "1050px", margin: "0 auto" }}>
+            <LiveUSMap
+              visitors={[
+                {
+                  city: "Los Angeles",
+                  state: "CA",
+                  latitude: 34.0522,
+                  longitude: -118.2437,
+                  count: 6,
+                  page_key: "roofing-company-demo",
+                },
+                {
+                  city: "Dallas",
+                  state: "TX",
+                  latitude: 32.7767,
+                  longitude: -96.797,
+                  count: 4,
+                  page_key: "hvac-leads-demo",
+                },
+                {
+                  city: "Miami",
+                  state: "FL",
+                  latitude: 25.7617,
+                  longitude: -80.1918,
+                  count: 3,
+                  page_key: "plumbing-services-demo",
+                },
+                {
+                  city: "Chicago",
+                  state: "IL",
+                  latitude: 41.8781,
+                  longitude: -87.6298,
+                  count: 5,
+                  page_key: "beauty-business-demo",
+                },
+                {
+                  city: "Denver",
+                  state: "CO",
+                  latitude: 39.7392,
+                  longitude: -104.9903,
+                  count: 3,
+                  page_key: "concrete-demo",
+                },
+                {
+                  city: "New York",
+                  state: "NY",
+                  latitude: 40.7128,
+                  longitude: -74.006,
+                  count: 6,
+                  page_key: "contractor-leads-demo",
+                },
+              ]}
+            />
+          </div>
+
+          <div style={{ textAlign: "center", marginTop: "35px" }}>
+            <button
+              onClick={() => setShowForm(true)}
+              style={{
+                padding: "18px 38px",
+                borderRadius: "14px",
+                background: "#b80d0d",
+                color: "white",
+                fontSize: "18px",
+                fontWeight: 800,
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Build Pages for My Business →
+            </button>
+
+            <p style={{ marginTop: "12px", fontSize: "14px", color: "#777" }}>
+              Start small. Scale anytime. Built for people trying to grow.
+            </p>
+          </div>
+        </section>
+
+        {/* ===========================
+            WHO THIS IS FOR (EXPANDED)
+        =========================== */}
+        <section style={{ marginTop: "110px" }}>
+          <h2
+            style={{
+              fontSize: "42px",
+              fontWeight: 900,
+              textAlign: "center",
+              marginBottom: "20px",
+            }}
+          >
+            Built for Everyday Small Businesses
+          </h2>
+
+          <p
+            style={{
+              textAlign: "center",
+              fontSize: "18px",
+              color: "#555",
+              maxWidth: "860px",
+              margin: "0 auto",
+              lineHeight: 1.7,
+            }}
+          >
+            Whether you're a contractor, barber, nail tech, or service business —
+            if customers search for what you do in Google, TradePilot helps you
+            show up.
+          </p>
+
+                    <div
             style={{
               marginTop: "50px",
               display: "grid",
@@ -199,26 +722,42 @@ export default function LocalSEOPages() {
             }}
           >
             {[
-              "Garage Door Companies",
-              "Custom Door & Entry Installers",
-              "Fence & Gate Contractors",
-              "Roofing Companies",
-              "Concrete & Driveway Pros",
-              "Power Washing Businesses",
-              "HVAC & Air Conditioning",
-              "Plumbing Companies",
-              "Electricians",
-              "Tree Service & Landscaping",
-              "Pool Builders & Pool Cleaning",
-              "Pest Control Companies",
-              "Window & Glass Installers",
-              "Flooring Contractors",
-              "Kitchen Remodelers",
-              "Bathroom Remodelers",
-              "Painters & Drywall Companies",
-              "Moving & Junk Removal Services",
-              "Handyman Businesses",
-              "Any Local Contractor Expanding Cities",
+              "Barbers & Hair Stylists",
+              "Nail Salons & Lash Techs",
+              "Massage Therapists & Wellness Clinics",
+
+              "Personal Trainers & Gym Coaches",
+              "Fitness Studios & Bootcamps",
+              "Martial Arts & Boxing Gyms",
+              "Yoga & Pilates Instructors",
+
+              "Plumbers & Electricians",
+              "HVAC Companies",
+              "Roofers & Remodelers",
+              "Concrete & Driveway Contractors",
+              "Fence & Gate Installers",
+
+              "Lawn Care & Landscaping Businesses",
+              "Tree Cutting & Tree Service",
+              "Pressure Washing Services",
+
+              "House Cleaning Services",
+              "Laundry & Dry Cleaning Businesses",
+              "Car Wash & Mobile Detailing Services",
+
+              "Trash Removal Services",
+              "Junk Removal Companies",
+              "Moving & Delivery Businesses",
+
+              "Solar Panel Installation Companies",
+              "Security System Installers",
+              "TV Mounting & Entertainment Installers",
+              "Smart Home Setup Services",
+
+              "Robotics & Automation Companies",
+              "Commercial Equipment Installers",
+
+              "Any Local Business Expanding Cities",
             ].map((biz) => (
               <div
                 key={biz}
@@ -228,103 +767,221 @@ export default function LocalSEOPages() {
                   borderRadius: "14px",
                   boxShadow: "0 6px 16px rgba(0,0,0,0.06)",
                   fontSize: "16px",
-                  fontWeight: 650,
+                  fontWeight: 700,
                 }}
               >
                 🔥 {biz}
               </div>
             ))}
           </div>
+
         </section>
 
         {/* ===========================
-            PRICING SECTION
+            FAQ CONTENT (SEO BOOST)
         =========================== */}
-        <section style={{ marginTop: "100px" }}>
+        <section style={{ marginTop: "120px" }}>
           <h2
             style={{
-              fontSize: "44px",
+              fontSize: "40px",
               fontWeight: 900,
               textAlign: "center",
-              marginBottom: "15px",
+              marginBottom: "35px",
             }}
           >
-            Simple Pricing Based on Page Volume
+            Frequently Asked Questions
           </h2>
 
-          <p
-            style={{
-              textAlign: "center",
-              fontSize: "18px",
-              color: "#555",
-              marginBottom: "60px",
-            }}
-          >
-            Start small, grow anytime. Most customers begin with the Starter or
-            Growth pack — then scale into thousands of pages.
-          </p>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))",
-              gap: "25px",
-            }}
-          >
-            <PricingCard title="Starter Pack" price="$99" subtitle="50 Pages" />
-            <PricingCard
-              title="Growth Pack ⭐"
-              price="$249"
-              subtitle="250 Pages"
-              highlight
-            />
-            <PricingCard
-              title="Expansion Pack"
-              price="$799"
-              subtitle="1,000 Pages"
-            />
-            <PricingCard
-              title="Domination Pack"
-              price="$1,499"
-              subtitle="3,000 Pages"
-            />
-            <PricingCard
-              title="Enterprise Rollout"
-              price="Custom"
-              subtitle="10,000+ Pages"
-            />
-          </div>
+          {[
+            {
+              q: "Do I need a big budget?",
+              a: "No. TradePilot is designed so small businesses can start with just a small batch of pages and grow over time.",
+            },
+            {
+              q: "What if I only want 100 pages?",
+              a: "That’s totally fine. Many businesses start small — we can build exactly what you need.",
+            },
+            {
+              q: "Does this work for Shopify stores?",
+              a: "Yes. TradePilot was built on Shopify and connects perfectly for fast publishing and indexing.",
+            },
+            {
+              q: "Do I need to understand SEO?",
+              a: "No. We handle the page building, structure, publishing, and indexing support for you.",
+            },
+          ].map((item) => (
+            <div
+              key={item.q}
+              style={{
+                background: "white",
+                padding: "24px",
+                borderRadius: "16px",
+                boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
+                marginBottom: "18px",
+              }}
+            >
+              <h3 style={{ fontSize: "18px", fontWeight: 800 }}>
+                {item.q}
+              </h3>
+              <p style={{ marginTop: "8px", color: "#555", lineHeight: 1.6 }}>
+                {item.a}
+              </p>
+            </div>
+          ))}
         </section>
+
+       {/* ===========================
+    INDEXING + OWNERSHIP DISCLAIMER (SaaS Legal Fine Print)
+=========================== */}
+<section style={{ marginTop: "90px" }}>
+  <div
+    style={{
+      maxWidth: "980px",
+      margin: "0 auto",
+      background: "#f9fafb",
+      border: "1px solid #e5e7eb",
+      borderRadius: "18px",
+      padding: "28px 30px",
+      fontSize: "13.5px",
+      color: "#666",
+      lineHeight: 1.85,
+    }}
+  >
+    <p style={{ margin: 0 }}>
+      <strong style={{ color: "#111" }}>
+        Important Notice (SEO + Indexing):
+      </strong>{" "}
+      TradePilot provides automated local SEO page generation and publishing
+      services designed to help businesses improve their online visibility.
+      <br />
+      <br />
+      While we follow proven SEO structure and best practices,{" "}
+      <strong style={{ color: "#111" }}>
+        Google and other search engines independently determine
+      </strong>{" "}
+      whether pages are indexed, ranked, or shown in search results. Indexing,
+      traffic, and lead volume are not guaranteed and may vary based on market
+      competition, website authority, content relevance, and algorithm updates.
+      <br />
+      <br />
+      <strong style={{ color: "#111" }}>
+        Ownership & Deliverables:
+      </strong>{" "}
+      Once pages are generated and published onto your website (including Shopify
+      or other supported platforms), those pages become part of your site
+      permanently. You retain full ownership and control of all published
+      content.
+      <br />
+      <br />
+      Optional monitoring, reporting, or ongoing expansion services may be
+      offered separately, but continued service is never required for page
+      ownership.
+    </p>
+
+    {/* Divider */}
+    <div
+      style={{
+        margin: "18px 0",
+        height: "1px",
+        background: "#e5e7eb",
+      }}
+    />
+
+    <p style={{ margin: 0, fontSize: "12.5px", color: "#777" }}>
+      By requesting TradePilot services, you acknowledge that SEO outcomes are
+      influenced by third-party search engines and cannot be fully controlled or
+      guaranteed. TradePilot does not provide legal, financial, or marketing
+      performance guarantees.
+      <br />
+      <br />
+      <span style={{ fontStyle: "italic" }}>
+        Terms apply. Page publishing availability may vary depending on platform
+        access and website configuration.
+      </span>
+    </p>
+{/* ✅ Legal Footer Links */}
+<p
+  style={{
+    marginTop: "18px",
+    fontSize: "12.5px",
+    color: "#777",
+    textAlign: "center",
+  }}
+>
+  <a
+    href="/privacy"
+    style={{
+      color: "#444",
+      textDecoration: "underline",
+      fontWeight: 600,
+      marginRight: "10px",
+    }}
+  >
+    Privacy Policy
+  </a>
+
+  •
+
+  <a
+    href="/terms"
+    style={{
+      color: "#444",
+      textDecoration: "underline",
+      fontWeight: 600,
+      marginLeft: "10px",
+    }}
+  >
+    Terms of Service
+  </a>
+
+  
+</p>
+
+    <p
+      style={{
+        marginTop: "14px",
+        fontSize: "12px",
+        color: "#888",
+        textAlign: "right",
+      }}
+    >
+      TradePilot™ — Updated {new Date().getFullYear()}
+    </p>
+  </div>
+</section>
+
+
 
         {/* FINAL CTA */}
         <section
           style={{
-            marginTop: "110px",
+            marginTop: "120px",
             textAlign: "center",
-            padding: "75px 35px",
+            padding: "80px 35px",
             borderRadius: "22px",
             background: "black",
             color: "white",
           }}
         >
-          <h2 style={{ fontSize: "40px", fontWeight: 900 }}>
-            Ready to Get Started?
+          <h2 style={{ fontSize: "42px", fontWeight: 900 }}>
+            Want More Customers From Google?
           </h2>
 
           <p style={{ fontSize: "18px", marginTop: "15px", opacity: 0.9 }}>
-            Click below and submit your info — we’ll reach out with next steps.
+            Tell us what kind of business you have, and how many pages you want.
+            We’ll reach out with next steps.
           </p>
 
           <button
             onClick={() => setShowForm(true)}
             style={{
-              marginTop: "25px",
-              padding: "18px 36px",
+              marginTop: "28px",
+              padding: "18px 38px",
               borderRadius: "12px",
               background: "white",
               color: "black",
               fontSize: "18px",
-              fontWeight: 800,
+              fontWeight: 900,
               border: "none",
               cursor: "pointer",
             }}
@@ -336,75 +993,100 @@ export default function LocalSEOPages() {
         {/* FOOTER */}
         <p style={{ textAlign: "center", marginTop: "60px", color: "#777" }}>
           TradePilot © {new Date().getFullYear()}
+          · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a>
+
         </p>
 
-        {/* MODAL FORM */}
         {showForm && <LeadModal onClose={() => setShowForm(false)} />}
+
+{/* ===========================
+    SCREENSHOT EXPAND MODAL
+=========================== */}
+{activeShot && (
+  <div
+    onClick={() => setActiveShot(null)}
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.85)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 99999,
+      padding: "30px",
+    }}
+  >
+    {/* Modal Content */}
+    <div
+      onClick={(e) => e.stopPropagation()}
+      style={{
+  position: "relative",
+  maxWidth: "720px",
+  width: "100%",
+  maxHeight: "90vh",
+  overflow: "auto",
+  borderRadius: "18px",
+  boxShadow: "0 15px 50px rgba(0,0,0,0.4)",
+}}
+
+    >
+      {/* Close Button */}
+      <button
+        onClick={() => setActiveShot(null)}
+        style={{
+          position: "absolute",
+          top: "12px",
+          right: "12px",
+          background: "white",
+          border: "none",
+          borderRadius: "50%",
+          width: "38px",
+          height: "38px",
+          fontSize: "18px",
+          fontWeight: 900,
+          cursor: "pointer",
+        }}
+      >
+        ✕
+      </button>
+
+      {/* Full Screenshot */}
+      <img
+        src={activeShot}
+        alt="Expanded TradePilot Screenshot"
+        style={{
+          width: "100%",
+          height: "auto",
+          display: "block",
+        }}
+      />
+    </div>
+  </div>
+)}
+
+
       </div>
     </main>
   );
 }
 
 /* ===========================
-   PRICING CARD
-=========================== */
-
-function PricingCard({
-  title,
-  price,
-  subtitle,
-  highlight = false,
-}: {
-  title: string;
-  price: string;
-  subtitle: string;
-  highlight?: boolean;
-}) {
-  return (
-    <div
-      style={{
-        background: highlight ? "black" : "white",
-        color: highlight ? "white" : "black",
-        borderRadius: "18px",
-        padding: "30px",
-        boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
-        transform: highlight ? "scale(1.04)" : "none",
-      }}
-    >
-      <h3 style={{ fontSize: "20px", fontWeight: 800 }}>{title}</h3>
-      <p style={{ fontSize: "34px", fontWeight: 900 }}>{price}</p>
-      <p style={{ opacity: 0.8 }}>{subtitle}</p>
-    </div>
-  );
-}
-
-/* ===========================
-   MODAL FORM
+   MODAL FORM (UNCHANGED)
 =========================== */
 
 function LeadModal({ onClose }: { onClose: () => void }) {
   const [form, setForm] = useState({
-  full_name: "",
-  email: "",
-  phone: "",
-  business_type: "",
-  business_website: "",
-  street_address: "",
-  city: "",
-  state: "",
-  zip: "",
-  pages_needed: "",
-});
-
-const inputStyle = {
-  width: "100%",
-  padding: "12px",
-  marginTop: "10px",
-  borderRadius: "10px",
-  border: "1px solid #ddd",
-};
-
-
+    full_name: "",
+    email: "",
+    phone: "",
+    business_type: "",
+    business_website: "",
+    street_address: "",
+    city: "",
+    state: "",
+    zip: "",
+    pages_needed: "",
+  });
 
   async function submit() {
   let website = form.business_website.trim();
@@ -451,88 +1133,23 @@ const inputStyle = {
           Request TradePilot Pages
         </h2>
 
-        <input
-  placeholder="Full Name"
-  value={form.full_name}
-  onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-  style={inputStyle}
-/>
-
-<input
-  placeholder="Email Address"
-  value={form.email}
-  onChange={(e) => setForm({ ...form, email: e.target.value })}
-  style={inputStyle}
-/>
-
-<input
-  placeholder="Phone Number"
-  value={form.phone}
-  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-  style={inputStyle}
-/>
-
-<input
-  placeholder="Business Type (ex: Roofing, HVAC, Plumbing)"
-  value={form.business_type}
-  onChange={(e) => setForm({ ...form, business_type: e.target.value })}
-  style={inputStyle}
-/>
-
-<input
-  placeholder="Business Website (ex: https://yourcompany.com)"
-  value={form.business_website}
-  onChange={(e) =>
-    setForm({ ...form, business_website: e.target.value })
-  }
-  style={inputStyle}
-/>
-
-<input
-  placeholder="Street Address"
-  value={form.street_address}
-  onChange={(e) =>
-    setForm({ ...form, street_address: e.target.value })
-  }
-  style={inputStyle}
-/>
-
-
-<input
-  placeholder="City"
-  value={form.city}
-  onChange={(e) =>
-    setForm({ ...form, city: e.target.value })
-  }
-  style={inputStyle}
-/>
-
-<input
-  placeholder="State"
-  value={form.state}
-  onChange={(e) =>
-    setForm({ ...form, state: e.target.value })
-  }
-  style={inputStyle}
-/>
-
-<input
-  placeholder="Zip Code"
-  value={form.zip}
-  onChange={(e) =>
-    setForm({ ...form, zip: e.target.value })
-  }
-  style={inputStyle}
-/>
-
-
-<input
-  placeholder="How many pages do you need? (ex: 500, 5,000, 50,000)"
-  value={form.pages_needed}
-  onChange={(e) => setForm({ ...form, pages_needed: e.target.value })}
-  style={inputStyle}
-/>
-
+        {Object.entries(form).map(([key, value]) => (
+          <input
+            key={key}
+            placeholder={key.replaceAll("_", " ").toUpperCase()}
+            value={value}
+            onChange={(e) =>
+              setForm({ ...form, [key]: e.target.value })
+            }
+            style={{
+              width: "100%",
+              padding: "12px",
+              marginTop: "10px",
+              borderRadius: "10px",
+              border: "1px solid #ddd",
+            }}
+          />
+        ))}
 
         <button
           onClick={submit}
@@ -543,7 +1160,7 @@ const inputStyle = {
             borderRadius: "10px",
             background: "black",
             color: "white",
-            fontWeight: 800,
+            fontWeight: 900,
             border: "none",
           }}
         >

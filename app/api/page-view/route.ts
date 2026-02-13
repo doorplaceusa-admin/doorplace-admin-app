@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabaseServer";
+import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
 
@@ -22,7 +22,6 @@ function detectCrawler(userAgent: string, source: string) {
   const ua = (userAgent || "").toLowerCase();
 
   // Shopify internal traffic
-  if (source === "shopify") return "shopify";
 
   // Major search engines
   if (ua.includes("googlebot")) return "googlebot";
@@ -40,7 +39,7 @@ function detectCrawler(userAgent: string, source: string) {
   if (ua.includes("crawler")) return "crawler";
   if (ua.includes("spider")) return "spider";
 
-  // Safe "bot" match (prevents robot/bottom false hits)
+  // Safe bot match
   if (ua.includes(" bot") || ua.includes("bot/")) return "bot";
 
   return null;
@@ -48,10 +47,12 @@ function detectCrawler(userAgent: string, source: string) {
 
 /* ======================================================
    POST /api/page-view
+   (SERVICE ROLE SAFE - NO RLS FAILURES)
 ====================================================== */
 export async function POST(req: Request) {
   try {
-    const supabase = createSupabaseServerClient();
+    // ✅ Always use service-role Supabase client
+    const supabase = supabaseAdmin;
 
     /* ============================================
        1) READ BODY

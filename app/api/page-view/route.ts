@@ -6,14 +6,20 @@ export const runtime = "nodejs";
    CORS
 ====================================================== */
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://doorplaceusa.com",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Credentials": "true",
 };
 
+
 export async function OPTIONS() {
-  return new Response(null, { status: 204, headers: corsHeaders });
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
 }
+
 
 /* ======================================================
    BOT / CRAWLER DETECTOR

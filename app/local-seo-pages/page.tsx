@@ -47,6 +47,18 @@ const [activeShot, setActiveShot] = useState<string | null>(null);
             Local SEO Pages for Small Businesses <br />
             Who Want a Real Shot at More Customers
           </h1>
+{/* ✅ Punchline Under Headline */}
+<p
+  style={{
+    marginTop: "-6px",
+    fontSize: "18px",
+    fontWeight: 800,
+    color: "#b80d0d",
+    letterSpacing: "0.2px",
+  }}
+>
+  🚀 Hundreds of city pages launched in days — not months.
+</p>
 
           <p
             style={{
@@ -200,6 +212,148 @@ const [activeShot, setActiveShot] = useState<string | null>(null);
     Tap any image to expand full size.
   </p>
 </div>
+{/* ===========================
+    MINI LIVE MAP PREVIEW (NEW)
+=========================== */}
+<div
+  style={{
+    marginTop: "55px",
+    background: "#f8f9fb",
+    borderRadius: "18px",
+    padding: "22px",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.06)",
+    maxWidth: "980px",
+    marginLeft: "auto",
+    marginRight: "auto",
+  }}
+>
+  <h3
+    style={{
+      fontSize: "22px",
+      fontWeight: 900,
+      marginBottom: "10px",
+      textAlign: "center",
+    }}
+  >
+    Live Visitor Traffic Preview 🌎
+  </h3>
+
+  <p
+    style={{
+      textAlign: "center",
+      fontSize: "14px",
+      color: "#666",
+      marginBottom: "18px",
+      lineHeight: 1.6,
+      maxWidth: "720px",
+      marginLeft: "auto",
+      marginRight: "auto",
+    }}
+  >
+    This is a real example of what business owners see inside TradePilot —
+    customers landing on SEO pages across the country in real time.
+  </p>
+
+  {/* MINI MAP BOX */}
+  <div
+    style={{
+      width: "100%",
+      height: "320px",
+      borderRadius: "16px",
+      overflow: "hidden",
+      border: "1px solid #eee",
+      background: "white",
+    }}
+  >
+    <LiveUSMap
+      visitors={[
+        {
+          city: "Dallas",
+          state: "TX",
+          latitude: 32.7767,
+          longitude: -96.797,
+          count: 4,
+          page_key: "dallas-demo",
+        },
+        {
+          city: "Miami",
+          state: "FL",
+          latitude: 25.7617,
+          longitude: -80.1918,
+          count: 3,
+          page_key: "miami-demo",
+        },
+        {
+          city: "Chicago",
+          state: "IL",
+          latitude: 41.8781,
+          longitude: -87.6298,
+          count: 5,
+          page_key: "chicago-demo",
+        },
+        {
+          city: "Los Angeles",
+          state: "CA",
+          latitude: 34.0522,
+          longitude: -118.2437,
+          count: 6,
+          page_key: "la-demo",
+        },
+      ]}
+    />
+  </div>
+
+  <p
+    style={{
+      marginTop: "14px",
+      fontSize: "13px",
+      textAlign: "center",
+      color: "#777",
+    }}
+  >
+    Full live dashboard access is included after launch.
+  </p>
+</div>
+{/* ===========================
+    TRUSTED BUSINESS TYPES STRIP
+=========================== */}
+<div
+  style={{
+    marginTop: "38px",
+    display: "flex",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: "12px",
+    fontSize: "13px",
+    color: "#666",
+    fontWeight: 700,
+  }}
+>
+  {[
+    "Plumbers",
+    "HVAC Companies",
+    "Mobile Detailers",
+    "Solar Installers",
+    "Tree Services",
+    "Fitness Trainers",
+    "Security Installers",
+    "Local Contractors",
+  ].map((biz) => (
+    <span
+      key={biz}
+      style={{
+        padding: "8px 14px",
+        background: "white",
+        border: "1px solid #eee",
+        borderRadius: "999px",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
+      }}
+    >
+      {biz}
+    </span>
+  ))}
+</div>
+
 
         </section>
 

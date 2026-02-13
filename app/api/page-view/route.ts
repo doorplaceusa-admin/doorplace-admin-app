@@ -2,6 +2,9 @@ import { createSupabaseServerClient } from "@/lib/supabaseServer";
 
 export const runtime = "nodejs";
 
+/* ======================================================
+   CORS
+====================================================== */
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -12,45 +15,55 @@ export async function OPTIONS() {
   return new Response(null, { status: 204, headers: corsHeaders });
 }
 
-export async function POST(req: Request) {
-  console.log("🔥 PAGE VIEW HIT");
+/* ======================================================
+   BOT / CRAWLER DETECTOR
+====================================================== */
+function detectCrawler(userAgent: string, source: string) {
+  const ua = (userAgent || "").toLowerCase();
 
+  // Shopify internal traffic
+  if (source === "shopify") return "shopify";
+
+  // Major search engines
+  if (ua.includes("googlebot")) return "googlebot";
+  if (ua.includes("bingbot")) return "bingbot";
+  if (ua.includes("duckduckbot")) return "duckduckbot";
+  if (ua.includes("yandex")) return "yandexbot";
+  if (ua.includes("baiduspider")) return "baiduspider";
+
+  // SEO tools
+  if (ua.includes("ahrefs")) return "ahrefs";
+  if (ua.includes("semrush")) return "semrush";
+  if (ua.includes("mj12bot")) return "mj12bot";
+
+  // Generic crawler words
+  if (ua.includes("crawler")) return "crawler";
+  if (ua.includes("spider")) return "spider";
+
+  // Safe "bot" match (prevents robot/bottom false hits)
+  if (ua.includes(" bot") || ua.includes("bot/")) return "bot";
+
+  return null;
+}
+
+/* ======================================================
+   POST /api/page-view
+====================================================== */
+export async function POST(req: Request) {
   try {
     const supabase = createSupabaseServerClient();
 
-    // ======================================================
-    // ✅ 1. BOT DETECTION (STOP GOOGLE INDEXING SPAM)
-    // ======================================================
-   
-const ua = (req.headers.get("user-agent") || "").toLowerCase();
-
-    const isBot =
-      ua.includes("Googlebot") ||
-      ua.includes("bingbot") ||
-      ua.includes("AhrefsBot") ||
-      ua.includes("SemrushBot") ||
-      ua.includes("DuckDuckBot") ||
-      ua.includes("YandexBot") ||
-      ua.includes("MJ12bot") ||
-      ua.includes("crawler") ||
-      ua.includes("spider");
-      ua.includes("googlebot")
-
-
-    if (isBot) {
-      console.log("🤖 BOT SKIPPED:", ua);
-      return new Response("Bot skipped", {
-        status: 200,
-        headers: corsHeaders,
-      });
-    }
-
-    // ======================================================
-    // ✅ 2. READ BODY
-    // ======================================================
+    /* ============================================
+       1) READ BODY
+    ============================================ */
     const body = await req.json();
 
-    const { page_key, page_url, partner_id = null, source = "unknown" } = body;
+    const {
+      page_key,
+      page_url,
+      partner_id = null,
+      source = "unknown",
+    } = body;
 
     if (!page_key || !page_url) {
       return new Response("Missing page_key/page_url", {
@@ -59,38 +72,53 @@ const ua = (req.headers.get("user-agent") || "").toLowerCase();
       });
     }
 
-    // ======================================================
-    // ✅ 3. THROTTLE DUPLICATES (1 VIEW PER 10 MINUTES)
-    // ======================================================
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    /* ============================================
+       2) USER AGENT + CLASSIFY
+    ============================================ */
+    const ua = req.headers.get("user-agent") || "";
+    const crawler = detectCrawler(ua, source);
 
-    const { data: recentHit } = await supabase
-      .from("page_view_events")
-      .select("id")
-      .eq("page_url", page_url)
-      .eq("partner_id", partner_id)
-      .gte("created_at", tenMinutesAgo)
-      .limit(1)
-      .maybeSingle();
+    /* ============================================
+       3) BOT → LOG SEO EVENT (BLUE DOTS)
+    ============================================ */
+    if (crawler) {
+      console.log("🔵 SEO BOT HIT:", crawler, page_url);
 
-    if (recentHit) {
-      console.log("⏳ DUPLICATE VIEW SKIPPED:", page_url);
-      return new Response("Duplicate skipped", {
+      // Minute bucket dedupe
+      const view_bucket = new Date().toISOString().slice(0, 16);
+
+      const { error: crawlError } = await supabase
+        .from("seo_crawl_events")
+        .insert({
+          page_url,
+          page_key,
+          crawler,
+          user_agent: ua,
+          view_bucket,
+        });
+
+      if (crawlError) {
+        console.error("❌ SEO BOT INSERT ERROR:", crawlError);
+      }
+
+      return new Response("Crawler logged", {
         status: 200,
         headers: corsHeaders,
       });
     }
 
-    // ======================================================
-    // ✅ SAFE DEFAULTS (NO CLOUDFLARE REQUIRED)
-    // ======================================================
-    let city = null;
-    let state = null;
-    let latitude = null;
-    let longitude = null;
+    /* ============================================
+       4) GEO (HUMANS ONLY)
+    ============================================ */
+    let city: string | null = null;
+    let state: string | null = null;
+    let latitude: number | null = null;
+    let longitude: number | null = null;
 
-    if (req.headers.get("cf-ipcity")) {
-      city = req.headers.get("cf-ipcity");
+    const cfCity = req.headers.get("cf-ipcity");
+
+    if (cfCity) {
+      city = cfCity;
       state = req.headers.get("cf-region");
 
       latitude = req.headers.get("cf-iplatitude")
@@ -102,33 +130,40 @@ const ua = (req.headers.get("user-agent") || "").toLowerCase();
         : null;
     }
 
-    console.log("📍 GEO:", { city, state, latitude, longitude });
+    console.log("🟢 HUMAN VIEW:", page_url, city, state);
 
-    // ======================================================
-    // ✅ 4. INSERT EVENT (REAL VISITOR ONLY)
-    // ======================================================
-    const { error } = await supabase.from("page_view_events").insert({
-      page_key,
-      page_url,
-      partner_id,
-      source,
-      city,
-      state,
-      latitude,
-      longitude,
-    });
+    /* ============================================
+       5) HUMAN → LOG PAGE VIEW EVENT (GREEN DOTS)
+    ============================================ */
+    const { error: humanError } = await supabase
+      .from("page_view_events")
+      .insert({
+        page_key,
+        page_url,
+        partner_id,
+        source,
+        city,
+        state,
+        latitude,
+        longitude,
+      });
 
-    if (error) {
-      console.error("❌ INSERT ERROR:", error);
-      return new Response(JSON.stringify(error), {
+    if (humanError) {
+      console.error("❌ HUMAN INSERT ERROR:", humanError);
+
+      return new Response("DB error", {
         status: 500,
         headers: corsHeaders,
       });
     }
 
-    return new Response("OK", { status: 200, headers: corsHeaders });
+    return new Response("OK", {
+      status: 200,
+      headers: corsHeaders,
+    });
   } catch (err) {
     console.error("❌ ROUTE CRASH:", err);
+
     return new Response("Server crash", {
       status: 500,
       headers: corsHeaders,

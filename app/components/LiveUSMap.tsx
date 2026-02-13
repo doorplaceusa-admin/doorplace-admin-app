@@ -1,97 +1,83 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { geoAlbersUsa, geoPath, geoCentroid } from "d3-geo";
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-
+import { TransformWrapper, TransformComponent, ReactZoomPanPinchRef, ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import { feature } from "topojson-client";
-import us from "us-atlas/states-10m.json";
 
+import us from "us-atlas/states-10m.json";
 import nationData from "us-atlas/nation-10m.json";
 
-
-
-
-
-/* ============================================
+/* ======================================================
    TYPES
-============================================ */
+====================================================== */
 
 type LiveVisitor = {
   city: string;
-  state: string;
+  state: string; // "TX" or "Texas"
   latitude: number | null;
-longitude: number | null;
-
+  longitude: number | null;
   count: number;
-
-  // ✅ NEW
+  source?: string;
   page_title?: string;
   page_url?: string;
   page_key?: string;
 };
 
-/* ============================================
-   ✅ STATE CENTROID FALLBACK (ALL 50 STATES)
-   Used when visitor comes in like:
-   city = "California", coords missing
-============================================ */
+type Category = "swing" | "door" | "partner" | "crawler" | "other";
 
-const brandRed = "#b80d0d";
-// ✅ Convert state abbreviations ("OH") → full state names ("Ohio")
-// Needed because STATE_CENTROIDS uses full names
+type Dot = {
+  id: string;
+  city: string;
+  state: string;
+  lat: number;
+  lon: number;
+  count: number;
+  page_key?: string;
+  page_url?: string;
+  category: Category;
+};
+
+type Cluster = {
+  id: string;
+  x: number;
+  y: number;
+  lat: number;
+  lon: number;
+  total: number;
+  category: Category;
+  items: Dot[];
+  topLabel: string; // “Dallas, TX”
+};
+
+/* ======================================================
+   BRAND / THEME
+====================================================== */
+const brandRed = "#ef4444";
+
+const COLORS: Record<Category, string> = {
+  swing: brandRed,
+  door: "#2563eb",
+  partner: "#16a34a",
+  crawler: "#0ea5e9", // 🔵 SEO bots
+  other: "#7c3aed",
+};
+
+
+/* ======================================================
+   STATE FALLBACKS
+====================================================== */
+
 const STATE_NAME_BY_ABBR: Record<string, string> = {
-  AL: "Alabama",
-  AK: "Alaska",
-  AZ: "Arizona",
-  AR: "Arkansas",
-  CA: "California",
-  CO: "Colorado",
-  CT: "Connecticut",
-  DE: "Delaware",
-  FL: "Florida",
-  GA: "Georgia",
-  HI: "Hawaii",
-  ID: "Idaho",
-  IL: "Illinois",
-  IN: "Indiana",
-  IA: "Iowa",
-  KS: "Kansas",
-  KY: "Kentucky",
-  LA: "Louisiana",
-  ME: "Maine",
-  MD: "Maryland",
-  MA: "Massachusetts",
-  MI: "Michigan",
-  MN: "Minnesota",
-  MS: "Mississippi",
-  MO: "Missouri",
-  MT: "Montana",
-  NE: "Nebraska",
-  NV: "Nevada",
-  NH: "New Hampshire",
-  NJ: "New Jersey",
-  NM: "New Mexico",
-  NY: "New York",
-  NC: "North Carolina",
-  ND: "North Dakota",
-  OH: "Ohio",
-  OK: "Oklahoma",
-  OR: "Oregon",
-  PA: "Pennsylvania",
-  RI: "Rhode Island",
-  SC: "South Carolina",
-  SD: "South Dakota",
-  TN: "Tennessee",
-  TX: "Texas",
-  UT: "Utah",
-  VT: "Vermont",
-  VA: "Virginia",
-  WA: "Washington",
-  WV: "West Virginia",
-  WI: "Wisconsin",
-  WY: "Wyoming",
+  AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California", CO: "Colorado",
+  CT: "Connecticut", DE: "Delaware", FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho",
+  IL: "Illinois", IN: "Indiana", IA: "Iowa", KS: "Kansas", KY: "Kentucky", LA: "Louisiana",
+  ME: "Maine", MD: "Maryland", MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi",
+  MO: "Missouri", MT: "Montana", NE: "Nebraska", NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey",
+  NM: "New Mexico", NY: "New York", NC: "North Carolina", ND: "North Dakota", OH: "Ohio", OK: "Oklahoma",
+  OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island", SC: "South Carolina", SD: "South Dakota",
+  TN: "Tennessee", TX: "Texas", UT: "Utah", VT: "Vermont", VA: "Virginia", WA: "Washington",
+  WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming", DC: "District of Columbia",
 };
 
 const STATE_CENTROIDS: Record<string, { lat: number; lon: number }> = {
@@ -145,104 +131,260 @@ const STATE_CENTROIDS: Record<string, { lat: number; lon: number }> = {
   "West Virginia": { lat: 38.4912, lon: -80.9545 },
   Wisconsin: { lat: 44.2685, lon: -89.6165 },
   Wyoming: { lat: 42.756, lon: -107.3025 },
+  "District of Columbia": { lat: 38.9072, lon: -77.0369 },
 };
-
-/* ============================================
-   ✅ STATE ABBREVIATIONS (FIPS ID → ABBR)
-   states-10m features typically have numeric FIPS ids
-============================================ */
 
 const STATE_ABBR_BY_FIPS: Record<string, string> = {
-  "01": "AL",
-  "02": "AK",
-  "04": "AZ",
-  "05": "AR",
-  "06": "CA",
-  "08": "CO",
-  "09": "CT",
-  "10": "DE",
-  "11": "DC",
-  "12": "FL",
-  "13": "GA",
-  "15": "HI",
-  "16": "ID",
-  "17": "IL",
-  "18": "IN",
-  "19": "IA",
-  "20": "KS",
-  "21": "KY",
-  "22": "LA",
-  "23": "ME",
-  "24": "MD",
-  "25": "MA",
-  "26": "MI",
-  "27": "MN",
-  "28": "MS",
-  "29": "MO",
-  "30": "MT",
-  "31": "NE",
-  "32": "NV",
-  "33": "NH",
-  "34": "NJ",
-  "35": "NM",
-  "36": "NY",
-  "37": "NC",
-  "38": "ND",
-  "39": "OH",
-  "40": "OK",
-  "41": "OR",
-  "42": "PA",
-  "44": "RI",
-  "45": "SC",
-  "46": "SD",
-  "47": "TN",
-  "48": "TX",
-  "49": "UT",
-  "50": "VT",
-  "51": "VA",
-  "53": "WA",
-  "54": "WV",
-  "55": "WI",
-  "56": "WY",
+  "01": "AL", "02": "AK", "04": "AZ", "05": "AR", "06": "CA", "08": "CO", "09": "CT", "10": "DE",
+  "11": "DC", "12": "FL", "13": "GA", "15": "HI", "16": "ID", "17": "IL", "18": "IN", "19": "IA",
+  "20": "KS", "21": "KY", "22": "LA", "23": "ME", "24": "MD", "25": "MA", "26": "MI", "27": "MN",
+  "28": "MS", "29": "MO", "30": "MT", "31": "NE", "32": "NV", "33": "NH", "34": "NJ", "35": "NM",
+  "36": "NY", "37": "NC", "38": "ND", "39": "OH", "40": "OK", "41": "OR", "42": "PA", "44": "RI",
+  "45": "SC", "46": "SD", "47": "TN", "48": "TX", "49": "UT", "50": "VT", "51": "VA", "53": "WA",
+  "54": "WV", "55": "WI", "56": "WY",
 };
-/* ============================================
-   ✅ STATE LABEL OFFSETS (PIXEL NUDGES)
-   Fixes weird centroid placements like Florida
-============================================ */
 
 const STATE_LABEL_OFFSETS: Record<string, { dx: number; dy: number }> = {
   "12": { dx: 18, dy: 10 }, // Florida
-
   "22": { dx: -9, dy: -10 }, // Louisiana
 };
 
+/* ======================================================
+   PURE HELPERS
+====================================================== */
 
-/* ============================================
-   COMPONENT
-============================================ */
+function normalizeStateName(input: string): string {
+  const trimmed = (input || "").trim();
+  if (!trimmed) return "";
+  if (trimmed.length === 2) return STATE_NAME_BY_ABBR[trimmed.toUpperCase()] || trimmed;
+  return trimmed;
+}
 
-function LegendItem({
-  color,
+function getCategory(v: LiveVisitor): Category {
+  const source = (v.source || "").toLowerCase();
+
+  // ✅ ALL crawler types (from your backend)
+  const crawlerSources = [
+    "crawler",
+    "shopify",
+    "googlebot",
+    "bingbot",
+    "duckduckbot",
+    "yandexbot",
+    "baiduspider",
+    "ahrefs",
+    "semrush",
+    "mj12bot",
+    "bot",
+    "spider",
+  ];
+
+  if (crawlerSources.includes(source)) {
+    return "crawler";
+  }
+
+  // Otherwise classify by page content
+  const key = (v.page_key || "").toLowerCase();
+  const url = (v.page_url || "").toLowerCase();
+
+  if (key.includes("swing") || url.includes("swing")) return "swing";
+  if (key.includes("door") || url.includes("door")) return "door";
+  if (key.includes("partner") || url.includes("partner")) return "partner";
+
+  return "other";
+}
+
+
+
+function safeInt(n: any, fallback = 1) {
+  const x = Number(n);
+  return Number.isFinite(x) && x > 0 ? Math.floor(x) : fallback;
+}
+
+function makeDotId(v: LiveVisitor) {
+  // Stable ID so React doesn’t thrash when array order changes
+  return `${(v.city || "").toLowerCase()}|${(v.state || "").toLowerCase()}|${(v.page_url || "").toLowerCase()}|${(v.page_key || "").toLowerCase()}`;
+}
+
+function clamp(n: number, a: number, b: number) {
+  return Math.max(a, Math.min(b, n));
+}
+
+/**
+ * Enterprise clustering:
+ * - project each dot to x/y
+ * - group dots within `pixelRadius` distance
+ * - accumulate total + keep items
+ */
+function clusterByPixels(
+  dots: Dot[],
+  project: (lon: number, lat: number) => [number, number] | null,
+  pixelRadius: number
+): Cluster[] {
+  const r2 = pixelRadius * pixelRadius;
+
+  // Very fast bucket grid to avoid O(n^2) in spikes
+  const cellSize = pixelRadius * 1.25;
+  const buckets = new Map<string, number[]>();
+
+  const pts = dots
+    .map((d, idx) => {
+      const p = project(d.lon, d.lat);
+      if (!p) return null;
+      return { idx, x: p[0], y: p[1] };
+    })
+    .filter(Boolean) as Array<{ idx: number; x: number; y: number }>;
+
+  for (const p of pts) {
+    const cx = Math.floor(p.x / cellSize);
+    const cy = Math.floor(p.y / cellSize);
+    const key = `${cx}:${cy}`;
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key)!.push(p.idx);
+  }
+
+  const visited = new Array(dots.length).fill(false);
+  const clusters: Cluster[] = [];
+
+  const neighborCells = [
+    [-1, -1], [0, -1], [1, -1],
+    [-1, 0],  [0, 0],  [1, 0],
+    [-1, 1],  [0, 1],  [1, 1],
+  ];
+
+  function getBucketIndices(x: number, y: number) {
+    const cx = Math.floor(x / cellSize);
+    const cy = Math.floor(y / cellSize);
+    const out: number[] = [];
+    for (const [dx, dy] of neighborCells) {
+      const k = `${cx + dx}:${cy + dy}`;
+      const arr = buckets.get(k);
+      if (arr) out.push(...arr);
+    }
+    return out;
+  }
+
+  for (const p of pts) {
+    if (visited[p.idx]) continue;
+
+    const seedDot = dots[p.idx];
+    const items: Dot[] = [seedDot];
+    visited[p.idx] = true;
+
+    let sumX = p.x * seedDot.count;
+    let sumY = p.y * seedDot.count;
+    let sumCount = seedDot.count;
+
+    // Expand cluster by scanning nearby candidates
+    const candidates = getBucketIndices(p.x, p.y);
+
+    for (const ci of candidates) {
+      if (visited[ci]) continue;
+
+      const d = dots[ci];
+      const pp = project(d.lon, d.lat);
+      if (!pp) continue;
+
+      const dx = pp[0] - p.x;
+      const dy = pp[1] - p.y;
+      if (dx * dx + dy * dy <= r2) {
+        visited[ci] = true;
+        items.push(d);
+        sumX += pp[0] * d.count;
+        sumY += pp[1] * d.count;
+        sumCount += d.count;
+      }
+    }
+
+    const x = sumX / Math.max(1, sumCount);
+    const y = sumY / Math.max(1, sumCount);
+
+    // Pick dominant category
+    const catTotals: Record<Category, number> = { swing: 0, door: 0, partner: 0, crawler: 0, other: 0 };
+    for (const it of items) catTotals[it.category] += it.count;
+
+    const category = (Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || "other") as Category;
+
+    // pick top label (most count item)
+    const top = items.slice().sort((a, b) => b.count - a.count)[0];
+    const topLabel = `${top.city || "Unknown"}, ${top.state || ""}`.trim();
+
+    clusters.push({
+      id: `c_${top.id}_${Math.round(x)}_${Math.round(y)}`,
+      x,
+      y,
+      lat: top.lat,
+      lon: top.lon,
+      total: sumCount,
+      category,
+      items,
+      topLabel,
+    });
+  }
+
+  return clusters;
+}
+
+/* ======================================================
+   UI PIECES
+====================================================== */
+
+function Pill({
+  active,
   label,
+  color,
+  onClick,
 }: {
-  color: string;
+  active: boolean;
   label: string;
+  color: string;
+  onClick: () => void;
 }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-      <span
-        style={{
-          width: "12px",
-          height: "12px",
-          borderRadius: "50%",
-          background: color,
-          display: "inline-block",
-        }}
-      />
-      <span>{label}</span>
+    <button
+      onClick={onClick}
+      style={{
+        border: `1px solid ${active ? color : "#e5e7eb"}`,
+        background: active ? `${color}15` : "white",
+        color: active ? "#111827" : "#374151",
+        padding: "7px 10px",
+        borderRadius: "999px",
+        fontSize: "12px",
+        fontWeight: 700,
+        cursor: "pointer",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "8px",
+        transition: "all 120ms ease",
+      }}
+    >
+      <span style={{ width: 10, height: 10, borderRadius: 999, background: color, display: "inline-block" }} />
+      {label}
+    </button>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div
+      style={{
+        background: "white",
+        border: "1px solid #e5e7eb",
+        borderRadius: 16,
+        padding: "10px 12px",
+        minWidth: 140,
+        boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
+      }}
+    >
+      <div style={{ fontSize: 11, fontWeight: 800, color: "#6b7280", letterSpacing: 0.4 }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 900, color: "#0f172a", marginTop: 2 }}>{value}</div>
     </div>
   );
 }
+
+/* ======================================================
+   MAIN COMPONENT
+====================================================== */
 
 export default function LiveUSMap({
   visitors = [],
@@ -256,626 +398,705 @@ export default function LiveUSMap({
 
   const desktop = typeof window !== "undefined" && window.innerWidth > 900;
 
-  function getDotColor(v: LiveVisitor) {
-    const key = (v.page_key || "").toLowerCase();
-    const url = (v.page_url || "").toLowerCase();
-
-    // ✅ Porch Swing Pages
-    if (key.includes("swing") || url.includes("swing")) {
-      return "#b80d0d"; // Doorplace Red
-    }
-
-    // ✅ Door Pages
-    if (key.includes("door") || url.includes("door")) {
-      return "#2563eb"; // Blue
-    }
-
-    // ✅ Partner / Funnel Pages
-    if (key.includes("partner") || url.includes("partner")) {
-      return "#16a34a"; // Green
-    }
-
-    // Default fallback
-    return "#7c3aed"; // Purple (other)
-  }
-
   const viewHeight = fullscreen ? 900 : desktop ? 700 : 550;
 
-  const [selected, setSelected] = useState<LiveVisitor | null>(null);
-  const [zoomScale, setZoomScale] = useState(1);
+  // “Enterprise mode” rendering controls
+  const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(null);
+  const [hoverCluster, setHoverCluster] = useState<Cluster | null>(null);
 
-  // ✅ UI-only state for hover effects (design upgrade)
+  const [zoomScale, setZoomScale] = useState(1);
   const [hoveredStateKey, setHoveredStateKey] = useState<string | null>(null);
 
-  // ✅ Design toggles (you can flip these anytime)
-  const SHOW_OCEAN = true;
-  const SHOW_STATE_LABELS = true;
-  const SHOW_GRATICULE = false; // keep false by default (super subtle if true)
+  // Filters
+  const [show, setShow] = useState<Record<Category, boolean>>({
+  swing: true,
+  door: true,
+  partner: true,
+  crawler: true, // 🔵
+  other: true,
+});
 
-  /* ============================================
-     PROJECTION
-  ============================================ */
+  // Search query for filtering dots
+  const [query, setQuery] = useState<string>("");
+
+
+
+  // Spike protection: buffer incoming visitors, update map at most every 250ms
+  const bufferRef = useRef<LiveVisitor[]>(visitors);
+  const [renderVisitors, setRenderVisitors] = useState<LiveVisitor[]>(visitors);
+
+  useEffect(() => {
+    bufferRef.current = visitors;
+  }, [visitors]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setRenderVisitors(bufferRef.current);
+    }, 250);
+    return () => window.clearInterval(id);
+  }, []);
+
+  /* ==========================
+     GEO / PROJECTION
+  ========================== */
 
   const projection = useMemo(() => {
     const proj = geoAlbersUsa();
-
-    // ✅ Correct GeoJSON FeatureCollection
     const geo = feature(us as any, (us as any).objects.states) as any;
-
-    // ✅ Auto-fit into the SVG box
     proj.fitSize([width, height], geo);
 
-    // ✅ Manual fine-tuning controls
+    // Keep your same “move” feel but slightly refined
     const t = proj.translate();
-
-    const moveX = -65; // left/right
-    const moveY = -65; // up/down
-
-    proj.translate([t[0] + moveX, t[1] + moveY]);
-
+    proj.translate([t[0] - 55, t[1] - 60]);
     return proj;
   }, [width, height]);
 
   const pathGenerator = useMemo(() => geoPath(projection), [projection]);
 
-  /* ============================================
-     LOAD REAL US STATES
-  ============================================ */
-
   const states = useMemo(() => {
     const geo = feature(us as any, (us as any).objects.states) as any;
     return geo.features;
   }, []);
-/* ============================================
-   ✅ USA OUTLINE (REAL COASTLINE)
-============================================ */
 
-const nation = useMemo(() => {
-  const geo = feature(
-    nationData as any,
-    (nationData as any).objects.nation
-  ) as any;
-
-  return geo;
-}, []);
-
-
-
-
-
-
-
-
-
-  /* ============================================
-     ✅ STATE LABEL POINTS (ABBREVIATIONS)
-     Uses geoCentroid(feature) projected into your SVG
-  ============================================ */
+  const nation = useMemo(() => {
+    const geo = feature(nationData as any, (nationData as any).objects.nation) as any;
+    return geo;
+  }, []);
 
   const stateLabels = useMemo(() => {
     return states
       .map((s: any) => {
-        // states-10m usually gives a numeric id (FIPS)
         const rawId = s.id;
         const fips = String(rawId).padStart(2, "0");
         const abbr = STATE_ABBR_BY_FIPS[fips];
-
         if (!abbr) return null;
 
-        // centroid in lon/lat
         const [lon, lat] = geoCentroid(s);
         const coords = projection([lon, lat]);
         if (!coords) return null;
 
         const [x, y] = coords;
+        const offset = STATE_LABEL_OFFSETS[fips] || { dx: 0, dy: 0 };
 
-// ✅ Apply manual offset if needed (Florida fix)
-const offset = STATE_LABEL_OFFSETS[fips] || { dx: 0, dy: 0 };
-
-return {
-  key: fips,
-  abbr,
-  x: x + offset.dx,
-  y: y + offset.dy,
-};
-
+        return { key: fips, abbr, x: x + offset.dx, y: y + offset.dy };
       })
       .filter(Boolean) as Array<{ key: string; abbr: string; x: number; y: number }>;
   }, [states, projection]);
 
-  /* ============================================
-     CLUSTER VISITORS
-  ============================================ */
+  const projectLonLat = useCallback(
+    (lon: number, lat: number) => {
+      const p = projection([lon, lat]);
+      if (!p) return null;
+      return [p[0], p[1]] as [number, number];
+    },
+    [projection]
+  );
 
-  const clustered = useMemo(() => {
-    const grouped: Record<string, LiveVisitor> = {};
+  /* ==========================
+     NORMALIZE DOTS
+  ========================== */
 
-    visitors.forEach((v) => {
-      const key = `${v.city}-${v.state}-${v.page_url}`;
+  const dots = useMemo<Dot[]>(() => {
+    const q = query.trim().toLowerCase();
 
-      if (!grouped[key]) {
-        grouped[key] = { ...v };
-      } else {
-        grouped[key].count += v.count;
+    const out: Dot[] = [];
+    for (const v of renderVisitors) {
+      const count = safeInt(v.count, 1);
+      const category = getCategory(v);
+
+      if (!show[category]) continue;
+
+      // Search filter (city/state/page)
+      if (q) {
+        const hay = `${v.city || ""} ${v.state || ""} ${v.page_key || ""} ${v.page_url || ""}`.toLowerCase();
+        if (!hay.includes(q)) continue;
       }
-    });
 
-    return Object.values(grouped);
-  }, [visitors]);
+      let lat = v.latitude;
+      let lon = v.longitude;
 
-  /* ============================================
+      // Only fallback if coords missing
+      if (lat == null || lon == null) {
+        const stateName = normalizeStateName(v.state);
+        const fallback = STATE_CENTROIDS[stateName];
+        if (fallback) {
+          lat = fallback.lat;
+          lon = fallback.lon;
+        }
+      }
+
+      if (lat == null || lon == null) continue;
+
+      out.push({
+        id: makeDotId(v),
+        city: v.city || "Unknown",
+        state: v.state || "",
+        lat,
+        lon,
+        count,
+        page_key: v.page_key,
+        page_url: v.page_url,
+        category,
+      });
+    }
+
+    return out;
+  }, [renderVisitors, query, show]);
+
+  /* ==========================
+     CLUSTERING (PIXEL BASED)
+     - The higher zoom, the smaller cluster radius (more separation)
+  ========================== */
+
+  const clusters = useMemo(() => {
+    // Bigger radius when zoomed out so you don’t get dot soup
+    const base = zoomScale <= 1.2 ? 34 : zoomScale <= 1.8 ? 26 : zoomScale <= 2.6 ? 18 : 12;
+    return clusterByPixels(dots, projectLonLat, base);
+  }, [dots, projectLonLat, zoomScale]);
+
+  /* ==========================
+     KPI / SIDEBAR
+  ========================== */
+
+  const totals = useMemo(() => {
+    let totalVisitors = 0;
+const byCat: Record<Category, number> = {
+  swing: 0,
+  door: 0,
+  partner: 0,
+  other: 0,
+  crawler: 0,
+};
+    for (const d of dots) {
+      totalVisitors += d.count;
+      byCat[d.category] += d.count;
+    }
+    return { totalVisitors, byCat };
+  }, [dots]);
+
+  const topClusters = useMemo(() => {
+    return clusters
+      .slice()
+      .sort((a, b) => b.total - a.total)
+      .slice(0, fullscreen ? 10 : 6);
+  }, [clusters, fullscreen]);
+
+  /* ==========================
+     ZOOM CONTROLS
+  ========================== */
+
+  const zoomRef = useRef<ReactZoomPanPinchRef | ReactZoomPanPinchContentRef | null>(null);
+
+  const resetView = useCallback(() => {
+    zoomRef.current?.resetTransform();
+    setSelectedCluster(null);
+  }, []);
+
+  const zoomToCluster = useCallback((c: Cluster) => {
+  const ref = zoomRef.current;
+
+  if (!ref) return;
+
+  // ✅ Find the cluster DOM element
+  const el = document.getElementById(`cluster-${c.id}`);
+
+  if (!el) return;
+
+  // ✅ This zooms perfectly to the dot
+  ref.zoomToElement(el, 1.8, 300);
+
+  setSelectedCluster(c);
+}, []);
+
+
+  /* ==========================
      RENDER
-  ============================================ */
+  ========================== */
+
+  const mapHeightCss = fullscreen
+    ? "calc(100vh - 220px)"
+    : desktop
+    ? "520px"
+    : "260px";
+
+  const panelWidth = fullscreen ? 420 : 360;
 
   return (
     <div
       style={{
         width: "100%",
-        borderRadius: "22px",
+        borderRadius: 24,
         overflow: "hidden",
         background: "#f7f8fa",
         border: "1px solid #e5e7eb",
-        boxShadow: "0 10px 35px rgba(0,0,0,0.08)",
-        padding: "18px",
+        boxShadow: "0 14px 44px rgba(0,0,0,0.10)",
       }}
     >
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: "12px",
-        }}
-      >
-        <h2
-          style={{
-            fontSize: fullscreen ? "26px" : "18px",
-            fontWeight: 700,
-          }}
-        >
-          Visitors Right Now
-        </h2>
+      {/* ======================================================
+          HEADER (KPI STRIP)
+      ======================================================= */}
+      <div style={{ padding: 18 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontSize: fullscreen ? 28 : 20, fontWeight: 950, letterSpacing: -0.4, color: "#0f172a" }}>
+              Live Visitors
+            </div>
+            <div style={{ marginTop: 4, fontSize: 13, color: "#64748b", fontWeight: 700 }}>
+              Real-time activity map • built for bot spikes
+            </div>
+          </div>
 
-        <span
-          style={{
-            fontSize: fullscreen ? "16px" : "13px",
-            color: "#6b7280",
-          }}
-        >
-          Live Activity Map (USA)
-        </span>
-      </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <StatCard label="TOTAL RIGHT NOW" value={totals.totalVisitors.toLocaleString()} />
+            <StatCard label="ACTIVE LOCATIONS" value={clusters.length.toLocaleString()} />
+          </div>
+        </div>
 
-      {/* ✅ Legend */}
-      <div
-        style={{
-          display: "flex",
-          gap: "5px",
-          flexWrap: "wrap",
-          fontSize: "9px",
-          marginBottom: "10px",
-          color: "#374151",
-        }}
-      >
-        <LegendItem color="#b80d0d" label="Swing Pages" />
-        <LegendItem color="#2563eb" label="Door Pages" />
-        <LegendItem color="#16a34a" label="Partner Funnels" />
-        <LegendItem color="#7c3aed" label="Other Pages" />
-      </div>
-
-      {/* Zoom Wrapper */}
-      <div
-        style={{
-          width: "100%",
-          height: fullscreen
-  ? "calc(100vh - 220px)"
-  : desktop
-  ? "475px"
-  : "200px",
-
-          position: "relative",
-
-          borderRadius: fullscreen ? "0px" : "22px",
-          overflow: "hidden",
-
-          background: "#f7f8fa",
-
-          border: fullscreen ? "none" : "1px solid #e5e7eb",
-          boxShadow: fullscreen ? "none" : "0 10px 35px rgba(0,0,0,0.08)",
-
-          padding: "0px",
-
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <TransformWrapper
-          initialScale={1.15}
-          minScale={1}
-          maxScale={6}
-          wheel={{ step: 0.25 }}
-          doubleClick={{ disabled: true }}
-          onTransformed={(ref) => {
-            setZoomScale(ref.state.scale);
-          }}
-        >
-          <TransformComponent
-            wrapperStyle={{
-              width: "100%",
-              height: "100%",
-            }}
-            contentStyle={{
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            <svg
-              width="100%"
-              height="100%"
-              viewBox={`0 0 ${width} ${height}`}
-              preserveAspectRatio="xMidYMid meet"
+        {/* Filters row */}
+        <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ flex: "1 1 260px", minWidth: 220 }}>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search city, state, page key, or URL…"
               style={{
-                flex: 1,
-                display: "block",
-                borderRadius: fullscreen ? "0px" : "18px",
-                background: "#f8fafc",
+                width: "100%",
+                padding: "10px 12px",
+                borderRadius: 14,
+                border: "1px solid #e5e7eb",
+                outline: "none",
+                fontSize: 13,
+                fontWeight: 700,
+                color: "#111827",
+                background: "white",
               }}
-            >
-              {/* ============================
-                  ✅ SVG DEFS (DESIGN UPGRADE)
-              ============================ */}
-              <defs>
-                {/* soft ocean gradient */}
-                <linearGradient id="oceanGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#e8f2ff" />
-                  <stop offset="100%" stopColor="#f8fafc" />
-                </linearGradient>
+            />
+          </div>
 
-                {/* land subtle gradient */}
-                <linearGradient id="landGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#f6f8fb" />
-                  <stop offset="100%" stopColor="#eef2f7" />
-                </linearGradient>
-
-                {/* hover glow */}
-                <filter id="hoverGlow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feGaussianBlur stdDeviation="2.2" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                {/* subtle map shadow */}
-                <filter id="mapSoftShadow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#0f172a" floodOpacity="0.12" />
-                </filter>
-
-                {/* bubble shadow */}
-                <filter id="bubbleShadow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feDropShadow dx="0" dy="2" stdDeviation="2.2" floodColor="#0f172a" floodOpacity="0.22" />
-                </filter>
-              </defs>
-
-              {/* ✅ Ocean backdrop (TRUE infinite full coverage) */}
-{SHOW_OCEAN && (
-  <rect
-    x="-3000"
-    y="-3000"
-    width="6000"
-    height="6000"
-    fill="url(#oceanGrad)"
-  />
-)}
-
-
-
-              {/* ✅ Optional faint graticule (very subtle) */}
-              {SHOW_GRATICULE && (
-                <g opacity={0.18}>
-                  {Array.from({ length: 13 }).map((_, i) => {
-                    const x = (i * width) / 12;
-                    return (
-                      <line
-                        key={`gx-${i}`}
-                        x1={x}
-                        y1={0}
-                        x2={x}
-                        y2={height}
-                        stroke="#94a3b8"
-                        strokeWidth={1}
-                        strokeDasharray="4 10"
-                      />
-                    );
-                  })}
-                  {Array.from({ length: 9 }).map((_, i) => {
-                    const y = (i * height) / 8;
-                    return (
-                      <line
-                        key={`gy-${i}`}
-                        x1={0}
-                        y1={y}
-                        x2={width}
-                        y2={y}
-                        stroke="#94a3b8"
-                        strokeWidth={1}
-                        strokeDasharray="4 10"
-                      />
-                    );
-                  })}
-                </g>
-              )}
-
-              {/* ✅ States group w/ soft shadow */}
-              {/* ✅ USA COASTLINE OUTLINE */}
-<path
-  d={pathGenerator(nation) || ""}
-  fill="url(#landGrad)"
-  stroke="#334155"
-  strokeWidth={2}
-  filter="url(#mapSoftShadow)"
+          <Pill
+            label={`Swing (${totals.byCat.swing})`}
+            color={COLORS.swing}
+            active={show.swing}
+            onClick={() => setShow((s) => ({ ...s, swing: !s.swing }))}
+          />
+          <Pill
+            label={`Door (${totals.byCat.door})`}
+            color={COLORS.door}
+            active={show.door}
+            onClick={() => setShow((s) => ({ ...s, door: !s.door }))}
+          />
+          <Pill
+            label={`Partner (${totals.byCat.partner})`}
+            color={COLORS.partner}
+            active={show.partner}
+            onClick={() => setShow((s) => ({ ...s, partner: !s.partner }))}
+          />
+          <Pill
+            label={`Other (${totals.byCat.other})`}
+            color={COLORS.other}
+            active={show.other}
+            onClick={() => setShow((s) => ({ ...s, other: !s.other }))}
+          />
+          <Pill
+  label={`Crawlers (${totals.byCat.crawler})`}
+  color={COLORS.crawler}
+  active={show.crawler}
+  onClick={() => setShow((s) => ({ ...s, crawler: !s.crawler }))}
 />
 
 
-
-
-
-
-              <g filter="url(#mapSoftShadow)">
-                {/* USA STATES */}
-                {states.map((state: any, i: number) => {
-                  const rawId = state.id;
-                  const fips = String(rawId).padStart(2, "0");
-                  const isHover = hoveredStateKey === fips;
-
-                  return (
-                    <path
-                      key={i}
-                      d={pathGenerator(state) || ""}
-                      fill={isHover ? "#ffe5e5" : "url(#landGrad)"}
-                      stroke={isHover ? "#334155" : "#475569"}
-                      strokeWidth={isHover ? 2.2 : 1.5}
-                      style={{
-                        transition: "all 120ms ease",
-                        cursor: "default",
-                      }}
-                      filter={isHover ? "url(#hoverGlow)" : undefined}
-                      onMouseEnter={() => setHoveredStateKey(fips)}
-                      onMouseLeave={() => setHoveredStateKey(null)}
-                    />
-                  );
-                })}
-              </g>
-
-              {/* ✅ State Abbreviation Labels */}
-              {SHOW_STATE_LABELS && (
-                <g style={{ pointerEvents: "none" }}>
-                  {stateLabels.map((l) => {
-                    // Keep labels readable but not loud:
-                    // - Slightly fade out when zoomed way in (so bubbles dominate)
-                    const labelOpacity =
-                      zoomScale > 3.2 ? 0.12 : zoomScale > 2.2 ? 0.18 : 0.28;
-
-                    return (
-                      <text
-                        key={l.key}
-                        x={l.x}
-                        y={l.y}
-                        textAnchor="middle"
-                        dominantBaseline="central"
-                        fontSize={zoomScale > 2.2 ? 9 : 10}
-                        fontWeight={800}
-                        fill="#0f172a"
-                        opacity={labelOpacity}
-                        style={{
-                          letterSpacing: "0.6px",
-                          textShadow: "0 1px 0 rgba(255,255,255,0.65)",
-                        }}
-                      >
-                        {l.abbr}
-                      </text>
-                    );
-                  })}
-                </g>
-              )}
-
-              {/* Visitor Bubbles */}
-              {clustered.map((v, i) => {
-                let lat = v.latitude;
-                let lon = v.longitude;
-
-                // ✅ Fallback ONLY if coords are missing
-// ✅ Fallback ONLY if coords are missing
-// Fixes Ohio dots landing in Illinois
-if (lat == null || lon == null) {
-  // Convert "OH" → "Ohio"
-  const stateName =
-    STATE_NAME_BY_ABBR[v.state] || v.state;
-
-  // Use centroid fallback if available
-  if (STATE_CENTROIDS[stateName]) {
-    lat = STATE_CENTROIDS[stateName].lat;
-    lon = STATE_CENTROIDS[stateName].lon;
-  }
-}
-
-
-if (lat == null || lon == null) return null;
-
-                const coords = projection([lon, lat]);
-                if (!coords) return null;
-
-                const [x, y] = coords;
-
-                const safeCount = Number(v.count || 1);
-                const radius = Math.min(45, 10 + Math.sqrt(safeCount) * 6);
-                const dotColor = getDotColor(v);
-
-                return (
-                  <g
-                    key={i}
-                    style={{ cursor: "pointer" }}
-                    onClick={() => setSelected(v)}
-                    filter="url(#bubbleShadow)"
-                  >
-                    {/* Pulse Ring */}
-                    <circle
-                      cx={x}
-                      cy={y}
-                      r={radius + 6}
-                      fill="none"
-                      stroke={dotColor}
-                      strokeWidth={2.5}
-                      opacity={0.35}
-                    >
-                      <animate
-                        attributeName="r"
-                        values={`${radius};${radius + 18}`}
-                        dur="1.6s"
-                        repeatCount="indefinite"
-                      />
-                      <animate
-                        attributeName="opacity"
-                        values="0.4;0"
-                        dur="1.6s"
-                        repeatCount="indefinite"
-                      />
-                    </circle>
-
-                    {/* Soft Glow */}
-                    <circle cx={x} cy={y} r={radius + 12} fill={dotColor} opacity={0.18} />
-
-                    {/* Main Bubble */}
-                    <circle cx={x} cy={y} r={radius} fill={dotColor} opacity={0.92} />
-
-                    {/* City Label (only when zoomed in) */}
-                    {zoomScale > 2.2 && (
-                      <text
-                        x={x}
-                        y={y + radius + 18}
-                        textAnchor="middle"
-                        fontSize="12"
-                        fontWeight="700"
-                        fill="#111827"
-                      >
-                        {v.city}
-                      </text>
-                    )}
-
-                    {/* Count */}
-                    <text
-                      x={x}
-                      y={y + 5}
-                      textAnchor="middle"
-                      fontSize="14"
-                      fontWeight="700"
-                      fill="white"
-                    >
-                      {safeCount}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-          </TransformComponent>
-        </TransformWrapper>
-      </div>
-
-      {/* ================================
-          CLICK POPUP INFO BOX
-      ================================ */}
-      {selected && (
-        <div
-          style={{
-            position: fullscreen ? "absolute" : "relative",
-
-            bottom: fullscreen ? "25px" : "auto",
-            left: fullscreen ? "25px" : "auto",
-
-            marginTop: fullscreen ? "0px" : "14px",
-
-            width: fullscreen ? "320px" : "100%",
-
-            padding: "14px 16px",
-            borderRadius: "14px",
-            border: "1px solid #e5e7eb",
-            background: "white",
-            boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
-            zIndex: 9999,
-          }}
-        >
-          {/* Header */}
-          <div
+          <button
+            onClick={resetView}
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "8px",
+              marginLeft: "auto",
+              border: "1px solid #e5e7eb",
+              background: "white",
+              padding: "10px 12px",
+              borderRadius: 14,
+              fontSize: 13,
+              fontWeight: 900,
+              cursor: "pointer",
+              color: "#0f172a",
             }}
           >
-            <strong style={{ fontSize: "15px" }}>
-              {selected.city}, {selected.state}
-            </strong>
-
-            <button
-              onClick={() => setSelected(null)}
-              style={{
-                border: "none",
-                background: "transparent",
-                fontSize: "16px",
-                cursor: "pointer",
-                color: "#6b7280",
-              }}
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Visitors */}
-          <div style={{ fontSize: "13px", marginBottom: "6px" }}>
-            👀 <strong>{selected.count}</strong> visitors right now
-          </div>
-
-          {/* Page Title */}
-          {selected.page_key && (
-            <div style={{ fontSize: "13px", marginBottom: "6px" }}>
-              📄 <strong>Page:</strong> {selected.page_key}
-            </div>
-          )}
-
-          {/* Page URL */}
-          {selected.page_url && (
-            <div style={{ fontSize: "13px" }}>
-              🔗{" "}
-              <a
-                href={`https://doorplaceusa.com${selected.page_url}`}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  color: "#b80d0d",
-                  fontWeight: 700,
-                  textDecoration: "underline",
-                }}
-              >
-                Open Live Page
-              </a>
-            </div>
-          )}
+            Reset View
+          </button>
         </div>
-      )}
+      </div>
 
-      {/* Footer */}
+      {/* ======================================================
+          MAIN BODY (MAP + SIDE PANEL)
+      ======================================================= */}
       <div
         style={{
-          marginTop: "14px",
-          display: "flex",
-          justifyContent: "space-between",
-          fontSize: "13px",
-          color: "#6b7280",
+          display: "grid",
+          gridTemplateColumns: fullscreen ? `1fr ${panelWidth}px` : "1fr",
+          gap: 0,
+          borderTop: "1px solid #e5e7eb",
+          background: "#f8fafc",
         }}
       >
-        <span>Scroll or pinch to zoom</span>
-        <span>{clustered.length} active locations</span>
+        {/* MAP */}
+        <div style={{ position: "relative", padding: 14 }}>
+          <div
+            style={{
+              width: "100%",
+              height: mapHeightCss,
+              borderRadius: 22,
+              overflow: "hidden",
+              border: "1px solid #e5e7eb",
+              background: "white",
+              boxShadow: "0 12px 34px rgba(0,0,0,0.10)",
+            }}
+          >
+            <TransformWrapper
+              ref={(ref) => {
+                // assign to ref without returning a value to satisfy Ref callback type
+                zoomRef.current = ref;
+              }}
+              initialScale={1.15}
+              minScale={1}
+              maxScale={6}
+              wheel={{ step: 0.25 }}
+              doubleClick={{ disabled: true }}
+              onTransformed={(ref) => setZoomScale(ref.state.scale)}
+            >
+              <TransformComponent
+                wrapperStyle={{ width: "100%", height: "100%" }}
+                contentStyle={{ width: "100%", height: "100%" }}
+              >
+                <svg
+                  width="100%"
+                  height="100%"
+                  viewBox={`0 0 ${width} ${height}`}
+                  preserveAspectRatio="xMidYMid meet"
+                  style={{ display: "block", background: "#f8fafc" }}
+                >
+                  <defs>
+                    <linearGradient id="oceanGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#e8f2ff" />
+                      <stop offset="100%" stopColor="#f8fafc" />
+                    </linearGradient>
+
+                    <linearGradient id="landGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f7fafc" />
+                      <stop offset="100%" stopColor="#eef2f7" />
+                    </linearGradient>
+
+                    <filter id="mapSoftShadow" x="-30%" y="-30%" width="160%" height="160%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#0f172a" floodOpacity="0.12" />
+                    </filter>
+
+                    <filter id="bubbleShadow" x="-30%" y="-30%" width="160%" height="160%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="2.2" floodColor="#0f172a" floodOpacity="0.22" />
+                    </filter>
+
+                    <filter id="hoverGlow" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="2.2" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  {/* Ocean */}
+                  <rect x="-3000" y="-3000" width="6000" height="6000" fill="url(#oceanGrad)" />
+
+                  {/* Coastline */}
+                  <path
+                    d={pathGenerator(nation) || ""}
+                    fill="url(#landGrad)"
+                    stroke="#334155"
+                    strokeWidth={2}
+                    filter="url(#mapSoftShadow)"
+                  />
+
+                  {/* States */}
+                  <g filter="url(#mapSoftShadow)">
+                    {states.map((state: any, i: number) => {
+                      const fips = String(state.id).padStart(2, "0");
+                      const isHover = hoveredStateKey === fips;
+
+                      return (
+                        <path
+                          key={i}
+                          d={pathGenerator(state) || ""}
+                          fill={isHover ? "#ffe5e5" : "url(#landGrad)"}
+                          stroke={isHover ? "#334155" : "#475569"}
+                          strokeWidth={isHover ? 2.2 : 1.4}
+                          style={{ transition: "all 120ms ease", cursor: "default" }}
+                          filter={isHover ? "url(#hoverGlow)" : undefined}
+                          onMouseEnter={() => setHoveredStateKey(fips)}
+                          onMouseLeave={() => setHoveredStateKey(null)}
+                        />
+                      );
+                    })}
+                  </g>
+
+                  {/* State labels */}
+                  <g style={{ pointerEvents: "none" }}>
+                    {stateLabels.map((l) => {
+                      const labelOpacity = zoomScale > 3.2 ? 0.12 : zoomScale > 2.2 ? 0.18 : 0.28;
+                      return (
+                        <text
+                          key={l.key}
+                          x={l.x}
+                          y={l.y}
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          fontSize={zoomScale > 2.2 ? 9 : 10}
+                          fontWeight={900}
+                          fill="#0f172a"
+                          opacity={labelOpacity}
+                          style={{ letterSpacing: "0.6px", textShadow: "0 1px 0 rgba(255,255,255,0.65)" }}
+                        >
+                          {l.abbr}
+                        </text>
+                      );
+                    })}
+                  </g>
+
+                  {/* Clusters */}
+                  {clusters.map((c) => {
+                    const safeCount = safeInt(c.total, 1);
+                    const radius = clamp(10 + Math.sqrt(safeCount) * 6, 10, 52);
+                    const dotColor = COLORS[c.category];
+
+                    return (
+                      <g
+                        id={`cluster-${c.id}`}
+                         key={c.id}
+                         style={{ cursor: "pointer" }}
+                        filter="url(#bubbleShadow)"
+                        onMouseEnter={() => setHoverCluster(c)}
+                        onMouseLeave={() => setHoverCluster((prev) => (prev?.id === c.id ? null : prev))}
+                        onClick={() => {
+                          setSelectedCluster(c);
+                        }}
+                      >
+                        {/* Pulse ring */}
+                        <circle cx={c.x} cy={c.y} r={radius + 6} fill="none" stroke={dotColor} strokeWidth={2.6} opacity={0.35}>
+                          <animate attributeName="r" values={`${radius};${radius + 18}`} dur="1.6s" repeatCount="indefinite" />
+                          <animate attributeName="opacity" values="0.4;0" dur="1.6s" repeatCount="indefinite" />
+                        </circle>
+
+                        {/* Glow */}
+                        <circle cx={c.x} cy={c.y} r={radius + 12} fill={dotColor} opacity={0.18} />
+
+                        {/* Main */}
+                        <circle cx={c.x} cy={c.y} r={radius} fill={dotColor} opacity={0.92} />
+
+                        {/* Count */}
+                        <text x={c.x} y={c.y + 5} textAnchor="middle" fontSize="14" fontWeight="900" fill="white">
+                          {safeCount}
+                        </text>
+
+                        {/* Label (zoom in) */}
+                        {zoomScale > 2.2 && (
+                          <text
+                            x={c.x}
+                            y={c.y + radius + 18}
+                            textAnchor="middle"
+                            fontSize="12"
+                            fontWeight="900"
+                            fill="#111827"
+                          >
+                            {c.topLabel}
+                          </text>
+                        )}
+                      </g>
+                    );
+                  })}
+                </svg>
+              </TransformComponent>
+            </TransformWrapper>
+          </div>
+
+          {/* Hover tooltip */}
+          {hoverCluster && !selectedCluster && (
+            <div
+              style={{
+                position: "absolute",
+                right: 22,
+                top: 22,
+                width: 280,
+                background: "rgba(255,255,255,0.96)",
+                border: "1px solid #e5e7eb",
+                borderRadius: 16,
+                boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
+                padding: 12,
+                pointerEvents: "none",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                <div style={{ fontWeight: 950, color: "#0f172a" }}>{hoverCluster.topLabel}</div>
+                <div style={{ fontWeight: 950, color: COLORS[hoverCluster.category] }}>
+                  {hoverCluster.total.toLocaleString()}
+                </div>
+              </div>
+              <div style={{ marginTop: 6, fontSize: 12, color: "#475569", fontWeight: 700 }}>
+                {hoverCluster.items.length} event{hoverCluster.items.length === 1 ? "" : "s"} in this cluster
+              </div>
+            </div>
+          )}
+
+          {/* Selected drawer */}
+          {selectedCluster && (
+            <div
+              style={{
+                position: fullscreen ? "absolute" : "relative",
+                marginTop: fullscreen ? 0 : 14,
+                left: fullscreen ? 18 : "auto",
+                bottom: fullscreen ? 18 : "auto",
+                width: fullscreen ? 420 : "100%",
+                background: "white",
+                border: "1px solid #e5e7eb",
+                borderRadius: 18,
+                boxShadow: "0 14px 40px rgba(0,0,0,0.18)",
+                padding: 14,
+                zIndex: 50,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 950, color: "#0f172a" }}>{selectedCluster.topLabel}</div>
+                  <div style={{ marginTop: 2, fontSize: 12, color: "#64748b", fontWeight: 800 }}>
+                    Cluster total: {selectedCluster.total.toLocaleString()}
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => zoomToCluster(selectedCluster)}
+                    style={{
+                      border: "1px solid #e5e7eb",
+                      background: "white",
+                      padding: "9px 10px",
+                      borderRadius: 14,
+                      fontWeight: 900,
+                      cursor: "pointer",
+                      fontSize: 12,
+                    }}
+                  >
+                    Zoom Here
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedCluster(null)}
+                    style={{
+                      border: "none",
+                      background: "transparent",
+                      fontSize: 18,
+                      cursor: "pointer",
+                      color: "#6b7280",
+                      padding: "4px 8px",
+                    }}
+                    aria-label="Close"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
+                {selectedCluster.items
+                  .slice()
+                  .sort((a, b) => b.count - a.count)
+                  .slice(0, 10)
+                  .map((it) => (
+                    <div
+                      key={it.id}
+                      style={{
+                        border: "1px solid #e5e7eb",
+                        borderRadius: 14,
+                        padding: "10px 10px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 10,
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 900, color: "#0f172a", fontSize: 13 }}>
+                          {it.city}, {it.state}
+                        </div>
+                        <div style={{ marginTop: 2, fontSize: 12, color: "#64748b", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {it.page_key || it.page_url || "Unknown page"}
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ fontWeight: 950, color: COLORS[it.category] }}>{it.count}</div>
+                        {it.page_url && (
+                          <a
+                            href={`https://doorplaceusa.com${it.page_url}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ color: brandRed, fontWeight: 950, textDecoration: "underline", fontSize: 12 }}
+                          >
+                            Open
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div
+            style={{
+              marginTop: 12,
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 13,
+              color: "#64748b",
+              fontWeight: 700,
+              padding: "0 6px",
+            }}
+          >
+            <span>Scroll / pinch to zoom • spikes throttled (250ms)</span>
+            <span>{clusters.length.toLocaleString()} clustered locations</span>
+          </div>
+        </div>
+
+        {/* SIDE PANEL (enterprise navigation) */}
+        {fullscreen && (
+          <div style={{ borderLeft: "1px solid #e5e7eb", padding: 14, background: "#f8fafc" }}>
+            <div style={{ fontSize: 13, fontWeight: 950, color: "#0f172a" }}>Top Live Locations</div>
+            <div style={{ marginTop: 8, display: "grid", gap: 10 }}>
+              {topClusters.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => zoomToCluster(c)}
+                  style={{
+                    textAlign: "left",
+                    width: "100%",
+                    borderRadius: 18,
+                    border: "1px solid #e5e7eb",
+                    background: "white",
+                    padding: 12,
+                    cursor: "pointer",
+                    boxShadow: "0 10px 26px rgba(0,0,0,0.08)",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontWeight: 950, color: "#0f172a", fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {c.topLabel}
+                      </div>
+                      <div style={{ marginTop: 3, fontSize: 12, color: "#64748b", fontWeight: 800 }}>
+                        {c.items.length} events • {c.category.toUpperCase()}
+                      </div>
+                    </div>
+                    <div style={{ fontWeight: 950, color: COLORS[c.category] }}>{c.total.toLocaleString()}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

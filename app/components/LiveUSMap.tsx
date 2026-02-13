@@ -165,19 +165,19 @@ function getCategory(v: LiveVisitor): Category {
 
   // ✅ ALL crawler types (from your backend)
   const crawlerSources = [
-    "crawler",
-    "shopify",
-    "googlebot",
-    "bingbot",
-    "duckduckbot",
-    "yandexbot",
-    "baiduspider",
-    "ahrefs",
-    "semrush",
-    "mj12bot",
-    "bot",
-    "spider",
-  ];
+  "crawler",
+  "googlebot",
+  "bingbot",
+  "duckduckbot",
+  "yandexbot",
+  "baiduspider",
+  "ahrefs",
+  "semrush",
+  "mj12bot",
+  "bot",
+  "spider",
+];
+
 
   if (crawlerSources.includes(source)) {
     return "crawler";
@@ -525,11 +525,15 @@ export default function LiveUSMap({
         }
       }
 
-      if (lat == null || lon == null) continue;
+      if (lat == null || lon == null) {
+  // TEMP fallback so dots always show
+  lat = 39;
+  lon = -98;
+}
 
       out.push({
         id: makeDotId(v),
-        city: v.city || "Unknown",
+        city: v.city || v.state || "Unknown",
         state: v.state || "",
         lat,
         lon,

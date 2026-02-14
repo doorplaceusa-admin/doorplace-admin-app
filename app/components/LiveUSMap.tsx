@@ -589,6 +589,14 @@ export default function LiveUSMap({
       .slice(0, fullscreen ? 10 : 6);
   }, [clusters, fullscreen]);
 
+  // Remove duplicate URLs inside the selected cluster (keeps first instance)
+  const uniqueItems = useMemo(() => {
+    if (!selectedCluster) return [] as Dot[];
+    return Array.from(
+      new Map(selectedCluster.items.map((it) => [((it.page_url || "") as string).toLowerCase(), it])).values()
+    );
+  }, [selectedCluster]);
+
   /* ==========================
      ZOOM CONTROLS
   ========================== */
@@ -1008,11 +1016,11 @@ export default function LiveUSMap({
               </div>
 
               <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-                {selectedCluster.items
-                  .slice()
-                  .sort((a, b) => b.count - a.count)
-                  .slice(0, 10)
-                  .map((it) => (
+                {uniqueItems
+                    .slice()
+                    .sort((a, b) => b.count - a.count)
+                    .map((it) => (
+
                     <div
                       key={it.id}
                       style={{
@@ -1028,9 +1036,20 @@ export default function LiveUSMap({
                         <div style={{ fontWeight: 900, color: "#0f172a", fontSize: 13 }}>
                           {it.city}, {it.state}
                         </div>
-                        <div style={{ marginTop: 2, fontSize: 12, color: "#64748b", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {it.page_key || it.page_url || "Unknown page"}
-                        </div>
+                        <div
+  style={{
+    marginTop: 2,
+    fontSize: 12,
+    color: "#475569",
+    fontWeight: 700,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  }}
+>
+  {it.page_url || "Unknown URL"}
+</div>
+
                       </div>
 
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

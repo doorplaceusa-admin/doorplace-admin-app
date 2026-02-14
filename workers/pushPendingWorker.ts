@@ -25,7 +25,7 @@ const CONCURRENCY = 3; // process 3 per chunk (NOT parallel)
 const INTERVAL_MS = 30_000; // run every 30 seconds
 
 // ✅ Shopify throttle-safe delay
-const SHOPIFY_DELAY_MS = 950;
+const SHOPIFY_DELAY_MS = 960;
 
 /* ======================================================
    HELPERS

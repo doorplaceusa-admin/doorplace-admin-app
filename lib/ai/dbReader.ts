@@ -68,12 +68,29 @@ export async function readTable(
         .order(orderBy, { ascending })
         .limit(limit);
 
-    case "page_view_events":
-      return supabaseAdmin
-        .from("page_view_events")
-        .select("url, session_id, created_at, source")
-        .order(orderBy, { ascending })
-        .limit(limit);
+    case "page_view_events": {
+  const sixHoursAgo = new Date(
+    Date.now() - 6 * 60 * 60 * 1000
+  ).toISOString();
+
+  return supabaseAdmin
+    .from("page_view_events")
+    .select(`
+      id,
+      page_key,
+      page_url,
+      city,
+      state,
+      latitude,
+      longitude,
+      source,
+      created_at
+    `)
+    .gte("created_at", sixHoursAgo)
+    .order("created_at", { ascending: false })
+    .limit(500);
+}
+
 
     case "profiles":
       return supabaseAdmin

@@ -339,7 +339,7 @@ useEffect(() => {
 
 if (showLegalGate && partner) {
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-9999 bg-black/60 flex items-center justify-center p-4">
 
       <div className="bg-white rounded-lg w-full max-w-3xl max-h-[70vh] flex flex-col shadow-xl">
 

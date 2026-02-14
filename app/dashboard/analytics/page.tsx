@@ -207,7 +207,7 @@ export default function AdminAnalyticsPage() {
   ============================== */
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-6 max-w-[1400px] w-full mx-auto">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-6 max-w-350 w-full mx-auto">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
@@ -287,7 +287,7 @@ export default function AdminAnalyticsPage() {
         <h2 className="font-semibold mb-2">Top Pages</h2>
         {loading && <div className="text-sm text-gray-500">Loading…</div>}
 
-        <div className="max-h-[500px] overflow-y-auto">
+        <div className="max-h-125 overflow-y-auto">
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-white border-b hidden md:table-header-group">
               <tr>

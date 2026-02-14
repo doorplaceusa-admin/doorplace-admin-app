@@ -300,7 +300,10 @@ function clusterByPixels(
     const y = sumY / Math.max(1, sumCount);
 
     // Pick dominant category
-    const catTotals: Record<Category, number> = { swing: 0, door: 0, partner: 0, crawler: 0, other: 0 };
+    const catTotals: Record<Category, number> = {
+      swing: 0, door: 0, partner: 0, other: 0,
+      crawler: 0
+    };
     for (const it of items) catTotals[it.category] += it.count;
 
     const category = (Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || "other") as Category;
@@ -526,10 +529,11 @@ export default function LiveUSMap({
       }
 
       if (lat == null || lon == null) {
-  // TEMP fallback so dots always show
-  lat = 39;
-  lon = -98;
+  // ✅ FINAL fallback: always Texas (Doorplace USA home base)
+  lat = 31.0545;
+  lon = -97.5635;
 }
+
 
       out.push({
         id: makeDotId(v),
@@ -563,14 +567,14 @@ export default function LiveUSMap({
   ========================== */
 
   const totals = useMemo(() => {
-    let totalVisitors = 0;
-const byCat: Record<Category, number> = {
-  swing: 0,
-  door: 0,
-  partner: 0,
-  other: 0,
-  crawler: 0,
-};
+      let totalVisitors = 0;
+  const byCat: Record<Category, number> = {
+    swing: 0,
+    door: 0,
+    partner: 0,
+    other: 0,
+    crawler: 0,
+  };
     for (const d of dots) {
       totalVisitors += d.count;
       byCat[d.category] += d.count;

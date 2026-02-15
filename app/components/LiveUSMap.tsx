@@ -592,11 +592,13 @@ return [
   }, [dots]);
 
   const topClusters = useMemo(() => {
-    return clusters
-      .slice()
-      .sort((a, b) => b.total - a.total)
-      .slice(0, fullscreen ? 10 : 6);
-  }, [clusters, fullscreen]);
+  return clusters
+    .filter((c) => c.category !== "crawler") // ✅ REMOVE CRAWLERS
+    .slice()
+    .sort((a, b) => b.total - a.total)
+    .slice(0, fullscreen ? 10 : 6);
+}, [clusters, fullscreen]);
+
 
   // Remove duplicate URLs inside the selected cluster (keeps first instance)
   const uniqueItems = useMemo(() => {

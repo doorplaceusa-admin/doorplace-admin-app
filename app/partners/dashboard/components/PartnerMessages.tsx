@@ -226,64 +226,19 @@ export default function PartnerMessages({
     }
   }
 
-  // Realtime (so it works reliably without polling)
   useEffect(() => {
-    if (!partnerId) return;
+  if (!partnerId) return;
 
-    loadPartner();
+  loadPartner();
+  loadMessages();
+
+  const interval = setInterval(() => {
     loadMessages();
+  }, 3000);
 
-    const channel = supabase
-      .channel(`partner-messages-${partnerId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "partner_messages",
-          filter: `partner_id=eq.${partnerId}`,
-        },
-        (payload) => {
-          const row = payload.new as any as Message;
-          setMessages((prev) => {
-            // de-dupe
-            if (prev.some((x) => x.id === row.id)) return prev;
-            return [...prev, row];
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "DELETE",
-          schema: "public",
-          table: "partner_messages",
-          filter: `partner_id=eq.${partnerId}`,
-        },
-        (payload) => {
-          const oldRow = payload.old as any;
-          setMessages((prev) => prev.filter((m) => m.id !== oldRow.id));
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "partner_messages",
-          filter: `partner_id=eq.${partnerId}`,
-        },
-        (payload) => {
-          const row = payload.new as any as Message;
-          setMessages((prev) => prev.map((m) => (m.id === row.id ? row : m)));
-        }
-      )
-      .subscribe();
+  return () => clearInterval(interval);
+}, [partnerId]);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [partnerId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -418,7 +373,12 @@ export default function PartnerMessages({
           placeholder="Type your message…"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+          onKeyDown={(e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    sendMessage();
+  }
+}}
         />
 
         <input

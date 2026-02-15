@@ -72,7 +72,7 @@ export default function AdminChatInboxPage() {
   }, [rows, search, sortMode, showUnreadOnly]);
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col bg-gray-50 max-w-[1200px] mx-auto">
+    <div className="h-[calc(100vh-64px)] flex flex-col bg-gray-50 max-w-300 mx-auto">
       <div className="sticky top-0 bg-white border-b p-4 z-20">
         <h1 className="text-xl font-bold text-red-700">
           Partner Messages

@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import PartnerMessages from "app/partners/dashboard/components/PartnerMessages";
+
 
 type MessageRow = {
   id: string;
@@ -104,32 +106,18 @@ export default function AdminChatThreadPage() {
       : "Partner";
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col bg-white max-w-[1200px] mx-auto">
+    <div className="h-[calc(100vh-64px)] flex flex-col bg-white max-w-300 mx-auto">
       {/* HEADER */}
       <div className="border-b p-4">
         <div className="text-lg font-semibold">{partnerName}</div>
         <div className="text-xs text-gray-500">{partner_id}</div>
       </div>
 
-      {/* MESSAGES */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`max-w-[75%] p-3 rounded border text-sm ${
-              m.sender === "admin"
-                ? "ml-auto bg-gray-100 border-gray-400"
-                : "bg-white"
-            }`}
-          >
-            <div>{m.message}</div>
-            <div className="text-[10px] opacity-60 mt-1">
-              {new Date(m.created_at).toLocaleString()}
-            </div>
-          </div>
-        ))}
-        <div ref={bottomRef} />
-      </div>
+      {/* CHAT (TEXT + IMAGES) */}
+<div className="flex-1 p-4">
+  <PartnerMessages partnerId={partner_id} isAdmin />
+</div>
+
 
       {/* COMPOSER */}
       <div className="border-t p-3 flex gap-2">

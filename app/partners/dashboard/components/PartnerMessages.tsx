@@ -240,7 +240,7 @@ export default function PartnerMessages({
 
 
   <div
-    className="whitespace-pre-wrap break-words max-w-full"
+    className="whitespace-pre-wrap wrap-break-word max-w-full"
     style={{
       overflowWrap: "anywhere",
       wordBreak: "break-word",
@@ -268,7 +268,7 @@ export default function PartnerMessages({
         <div className="mt-2 relative w-fit">
           <img
             src={previewUrl}
-            className="max-w-[200px] max-h-[200px] object-contain rounded border"
+            className="max-w-50 max-h-50 object-contain rounded border"
           />
           <button
             onClick={() => {
@@ -350,7 +350,7 @@ function ChatImage({ path }: { path: string }) {
     <img
       src={url}
       alt="upload"
-      className="max-w-[260px] max-h-[320px] object-contain rounded border mb-1"
+      className="max-w-65 max-h-80 object-contain rounded border mb-1"
     />
   );
 }

@@ -1,23 +1,11 @@
 // workers/pushPendingWorker.ts
 
 /* ======================================================
-   ✅ ENV LOADING (FIXED)
-   PM2 + Node workers do NOT auto-load .env.local
+   ✅ ENV LOADING (PM2 SAFE)
 ====================================================== */
 
 import dotenv from "dotenv";
-
-// ✅ Force-load the correct env file explicitly
 dotenv.config({ path: "/var/www/doorplace-admin-app/.env.local" });
-
-// ✅ Debug proof (remove later if you want)
-console.log("SHOPIFY ENV CHECK:", {
-  STORE_DOMAIN: process.env.SHOPIFY_STORE_DOMAIN,
-  ACCESS_TOKEN: process.env.SHOPIFY_ACCESS_TOKEN
-    ? process.env.SHOPIFY_ACCESS_TOKEN.slice(0, 10) + "..."
-    : undefined,
-  API_VERSION: process.env.SHOPIFY_API_VERSION,
-});
 
 /* ======================================================
    IMPORTS
@@ -28,20 +16,28 @@ import { createShopifyPage } from "@/lib/shopify/createShopifyPage";
 import { renderPageTemplateHTML } from "@/lib/renderers/renderPageTemplateHTML";
 import { buildMetaDescription } from "@/lib/seo/build_meta/description";
 
-/* ===============================
-   WORKER SETTINGS
-================================ */
+/* ======================================================
+   ENTERPRISE SETTINGS
+====================================================== */
 
-const BATCH_SIZE = 40; // push 20 per cycle
-const INTERVAL_MS = 60_000; // run every 1 minute
+const BATCH_SIZE = 40;
+const INTERVAL_MS = 60_000;
+
+const SHOPIFY_DELAY_MS = 1200;
+const COOLDOWN_MS = 60_000;
+const MAX_RETRIES = 10;
+
+/* ======================================================
+   HELPERS
+====================================================== */
 
 function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((res) => setTimeout(res, ms));
 }
 
-/* ===============================
-   SINGLE SOURCE OF TRUTH
-================================ */
+/* ======================================================
+   PAGE TYPE ROUTER
+====================================================== */
 
 function getPageType(template: string) {
   switch (template) {
@@ -63,16 +59,49 @@ function getPageType(template: string) {
   }
 }
 
-/* ===============================
-   PUSH ONE BATCH
-================================ */
+/* ======================================================
+   ✅ SAFE SHOPIFY PUSH (RETRY + COOLDOWN)
+====================================================== */
 
-async function pushBatch() {
-  console.log("🚀 PUSH WORKER RUNNING...");
+async function safeCreateShopifyPage(payload: any) {
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await createShopifyPage(payload);
+    } catch (err: any) {
+      const msg = err?.message || "";
 
-  /* -----------------------------------------
-     FETCH ONLY VALID, NON-DUPLICATE PAGES
-  ----------------------------------------- */
+      const isThrottle =
+        msg.includes("429") ||
+        msg.includes("Too Many Requests") ||
+        msg.includes("Exceeded 2 calls per second");
+
+      if (isThrottle) {
+        console.log(`⏳ Shopify throttled… retrying (${attempt}/${MAX_RETRIES})`);
+
+        await sleep(2000 * attempt);
+
+        if (attempt >= 6) {
+          console.log("🛑 Cooldown wall triggered… sleeping 60s");
+          await sleep(COOLDOWN_MS);
+        }
+
+        continue;
+      }
+
+      throw err;
+    }
+  }
+
+  return { throttled_out: true };
+}
+
+/* ======================================================
+   ✅ CLAIM + LOCK PAGES FIRST
+====================================================== */
+
+async function claimPages() {
+  console.log("🔍 Claiming pending pages...");
+
   const { data: pages, error } = await supabaseAdmin
     .from("generated_pages")
     .select(
@@ -96,136 +125,147 @@ async function pushBatch() {
 
   if (error) {
     console.error("❌ Supabase fetch error:", error.message);
-    return;
+    return [];
   }
 
   if (!pages || pages.length === 0) {
-    console.log("✅ NO PENDING PAGES LEFT");
+    return [];
+  }
+
+  // ✅ Lock them immediately
+  const ids = pages.map((p) => p.id);
+
+  await supabaseAdmin
+    .from("generated_pages")
+    .update({ status: "publishing" })
+    .in("id", ids);
+
+  console.log(`✅ Locked ${pages.length} pages`);
+
+  return pages;
+}
+
+/* ======================================================
+   PUBLISH ONE PAGE
+====================================================== */
+
+async function publishOne(page: any) {
+  const city = page.us_locations?.city_name;
+  const state = page.us_locations?.us_states?.state_name;
+  const stateCode = page.us_locations?.us_states?.state_code;
+
+  if (!city || !state || !stateCode) return;
+
+  /* ---------- Render HTML ---------- */
+  const html = renderPageTemplateHTML({
+    page_template: page.page_template,
+    variant_key: page.variant_key ?? null,
+    city,
+    state,
+    stateCode,
+    slug: page.slug,
+    heroImageUrl: page.hero_image_url,
+  });
+
+  if (!html || html.trim().length < 50) return;
+
+  /* ---------- SEO Meta ---------- */
+  const pageType = getPageType(page.page_template);
+
+  const seoDescription = buildMetaDescription({
+    pageType,
+    city,
+    stateCode,
+    material: pageType === "material" ? page.variant_key : undefined,
+    size: pageType === "size" ? page.variant_key : undefined,
+    template: page.page_template,
+  });
+
+  /* ---------- Shopify Push ---------- */
+  const shopifyPage = await safeCreateShopifyPage({
+    title: page.title,
+    handle: page.slug,
+    body_html: html,
+    template_suffix: page.template_suffix || null,
+    meta_description: seoDescription,
+  });
+
+  // ✅ If throttle wall → requeue instead of failing
+  if (shopifyPage?.throttled_out) {
+    console.log(`🟡 Throttle wall → requeueing ${page.slug}`);
+
+    await supabaseAdmin
+      .from("generated_pages")
+      .update({
+        status: "generated",
+        publish_error: "Throttle wall — retry later",
+      })
+      .eq("id", page.id);
+
+    return;
+  }
+
+  /* ---------- Update Supabase ---------- */
+  await supabaseAdmin
+    .from("generated_pages")
+    .update({
+      shopify_page_id: shopifyPage.id,
+      status: "published",
+      published_at: new Date().toISOString(),
+      publish_error: null,
+    })
+    .eq("id", page.id);
+
+  console.log(`✅ Published → ${page.slug}`);
+}
+
+/* ======================================================
+   ENTERPRISE BATCH LOOP
+====================================================== */
+
+async function runBatch() {
+  console.log("🚀 PUSH WORKER RUNNING...");
+
+  const pages = await claimPages();
+
+  if (!pages.length) {
+    console.log("✅ No pending pages left.");
     return;
   }
 
   console.log(`📦 Processing ${pages.length} pages...`);
 
-  let published = 0;
-  let skipped = 0;
-  let failed = 0;
-
-  /* -----------------------------------------
-     PROCESS BATCH
-  ----------------------------------------- */
   for (const page of pages) {
     try {
-      const city = page.us_locations?.city_name;
-      const state = page.us_locations?.us_states?.state_name;
-      const stateCode = page.us_locations?.us_states?.state_code;
-
-      if (!city || !state || !stateCode) {
-        skipped++;
-        continue;
-      }
-
-      /* ---------- Render HTML ---------- */
-      const html = renderPageTemplateHTML({
-        page_template: page.page_template,
-        variant_key: page.variant_key ?? null,
-        city,
-        state,
-        stateCode,
-        slug: page.slug,
-        heroImageUrl: page.hero_image_url,
-      });
-
-      if (!html || html.trim().length < 50) {
-        skipped++;
-        continue;
-      }
-
-      /* ---------- SEO Meta ---------- */
-      const pageType = getPageType(page.page_template);
-
-      const seoDescription = buildMetaDescription({
-        pageType,
-        city,
-        stateCode,
-        material: pageType === "material" ? page.variant_key : undefined,
-        size: pageType === "size" ? page.variant_key : undefined,
-        template: page.page_template,
-      });
-
-      /* ---------- Push Shopify Page ---------- */
-      const shopifyPage = await createShopifyPage({
-        title: page.title,
-        handle: page.slug,
-        body_html: html,
-        template_suffix: page.template_suffix || null,
-        meta_description: seoDescription,
-      });
-
-      /* ---------- Update Supabase ---------- */
-      await supabaseAdmin
-        .from("generated_pages")
-        .update({
-          shopify_page_id: shopifyPage.id,
-          status: "published",
-          published_at: new Date().toISOString(),
-        })
-        .eq("id", page.id);
-
-      published++;
-      console.log(`✅ Published → ${page.title}`);
-
-      // Shopify throttle safety
-      await sleep(900);
+      await publishOne(page);
+      await sleep(SHOPIFY_DELAY_MS);
     } catch (err: any) {
-      const message = err?.message || "";
-
-      /* -----------------------------------------
-         DUPLICATE HANDLE FIX
-      ----------------------------------------- */
-      if (message.includes("handle") && message.includes("already been taken")) {
-        skipped++;
-
-        await supabaseAdmin
-          .from("generated_pages")
-          .update({
-            is_duplicate: true,
-            status: "skipped",
-            publish_error: "duplicate handle exists in Shopify",
-          })
-          .eq("slug", page.slug);
-
-        console.log(`⏭️ Marked duplicate → ${page.slug}`);
-        continue;
-      }
-
-      console.error(`❌ FAILED → ${page.title}`, message);
-
-      failed++;
+      console.error(`❌ FAILED → ${page.slug}`, err?.message);
 
       await supabaseAdmin
         .from("generated_pages")
         .update({
           status: "error",
-          publish_error: message,
+          publish_error: err?.message || "Unknown error",
         })
         .eq("id", page.id);
     }
   }
 
-  console.log("🏁 Batch Complete:", {
-    published,
-    skipped,
-    failed,
-  });
+  console.log("🏁 Batch complete.");
 }
 
-/* ===============================
-   RUN FOREVER (NO RECURSION)
-================================ */
+/* ======================================================
+   ✅ RUN FOREVER (NO OVERLAP)
+====================================================== */
 
-console.log("🔥 Push Pending Worker Started (PM2 Mode)");
+console.log("🔥 Push Pending Worker Started (Enterprise Mode)");
 
-pushBatch();
+async function runForever() {
+  while (true) {
+    await runBatch();
+    await sleep(INTERVAL_MS);
+  }
+}
 
-// Repeat forever every minute
-setInterval(pushBatch, INTERVAL_MS);
+runForever();

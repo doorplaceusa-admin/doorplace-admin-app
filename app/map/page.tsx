@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 import LiveUSMap from "@/app/components/LiveUSMap";
 
-const REFRESH_INTERVAL = 4000;
+const REFRESH_INTERVAL = 8000;
 
 export default function MapWallPage() {
   const [liveVisitors, setLiveVisitors] = useState<any[]>([]);

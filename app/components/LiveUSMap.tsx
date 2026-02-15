@@ -13,16 +13,21 @@ import nationData from "us-atlas/nation-10m.json";
 ====================================================== */
 
 type LiveVisitor = {
-  city: string;
-  state: string; // "TX" or "Texas"
+  city: string | null;
+  state: string;
   latitude: number | null;
   longitude: number | null;
   count: number;
-  source?: string;
-  page_title?: string;
+
+  /* NEW unified feed fields */
+  source: "human" | "crawler";
+
+  crawler_name?: string | null;
+
   page_url?: string;
   page_key?: string;
 };
+
 
 type Category = "swing" | "door" | "partner" | "crawler" | "other";
 
@@ -35,6 +40,7 @@ type Dot = {
   count: number;
   page_key?: string;
   page_url?: string;
+  crawler_name?: string | null;
   category: Category;
 };
 
@@ -161,29 +167,10 @@ function normalizeStateName(input: string): string {
 }
 
 function getCategory(v: LiveVisitor): Category {
-  const source = (v.source || "").toLowerCase();
+  // ✅ Crawlers come directly from SQL
+  if (v.source === "crawler") return "crawler";
 
-  // ✅ ALL crawler types (from your backend)
-  const crawlerSources = [
-  "crawler",
-  "googlebot",
-  "bingbot",
-  "duckduckbot",
-  "yandexbot",
-  "baiduspider",
-  "ahrefs",
-  "semrush",
-  "mj12bot",
-  "bot",
-  "spider",
-];
-
-
-  if (crawlerSources.includes(source)) {
-    return "crawler";
-  }
-
-  // Otherwise classify by page content
+  // ✅ Humans classified by URL/page content
   const key = (v.page_key || "").toLowerCase();
   const url = (v.page_url || "").toLowerCase();
 
@@ -202,9 +189,11 @@ function safeInt(n: any, fallback = 1) {
 }
 
 function makeDotId(v: LiveVisitor) {
-  // Stable ID so React doesn’t thrash when array order changes
-  return `${(v.city || "").toLowerCase()}|${(v.state || "").toLowerCase()}|${(v.page_url || "").toLowerCase()}|${(v.page_key || "").toLowerCase()}`;
+  return v.source === "crawler"
+    ? `crawler|${v.state}|${v.crawler_name || "bot"}|${v.page_url || ""}`
+    : `human|${v.city}|${v.state}|${v.page_url || ""}`;
 }
+
 
 function clamp(n: number, a: number, b: number) {
   return Math.max(a, Math.min(b, n));
@@ -310,7 +299,12 @@ function clusterByPixels(
 
     // pick top label (most count item)
     const top = items.slice().sort((a, b) => b.count - a.count)[0];
-    const topLabel = `${top.city || "Unknown"}, ${top.state || ""}`.trim();
+    const topLabel =
+  top.category === "crawler"
+    ? `🕷 ${top.crawler_name || "Crawler"} • ${top.state}`
+    : `${top.city || "Unknown"}, ${top.state}`;
+
+
 
     clusters.push({
       id: `c_${top.id}_${Math.round(x)}_${Math.round(y)}`,
@@ -529,23 +523,30 @@ export default function LiveUSMap({
       }
 
       if (lat == null || lon == null) {
-  // ✅ FINAL fallback: always Texas (Doorplace USA home base)
+  if (v.source === "crawler") continue; // ❌ skip bad crawler rows
   lat = 31.0545;
   lon = -97.5635;
 }
 
 
+
       out.push({
-        id: makeDotId(v),
-        city: v.city || v.state || "Unknown",
-        state: v.state || "",
-        lat,
-        lon,
-        count,
-        page_key: v.page_key,
-        page_url: v.page_url,
-        category,
-      });
+  id: makeDotId(v),
+
+  city: v.city || "Unknown",
+  state: v.state || "",
+
+  lat,
+  lon,
+  count,
+
+  page_key: v.page_key,
+  page_url: v.page_url,
+  category,
+
+  crawler_name: v.crawler_name || null, // ✅ ADD
+});
+
     }
 
     return out;
@@ -559,7 +560,13 @@ export default function LiveUSMap({
   const clusters = useMemo(() => {
     // Bigger radius when zoomed out so you don’t get dot soup
     const base = zoomScale <= 1.2 ? 34 : zoomScale <= 1.8 ? 26 : zoomScale <= 2.6 ? 18 : 12;
-    return clusterByPixels(dots, projectLonLat, base);
+    const humanDots = dots.filter((d) => d.category !== "crawler");
+const crawlerDots = dots.filter((d) => d.category === "crawler");
+
+return [
+  ...clusterByPixels(humanDots, projectLonLat, base),
+  ...clusterByPixels(crawlerDots, projectLonLat, base * 1.4),
+];
   }, [dots, projectLonLat, zoomScale]);
 
   /* ==========================
@@ -576,7 +583,9 @@ export default function LiveUSMap({
     crawler: 0,
   };
     for (const d of dots) {
-      totalVisitors += d.count;
+      if (d.category !== "crawler") {
+  totalVisitors += d.count;
+}
       byCat[d.category] += d.count;
     }
     return { totalVisitors, byCat };
@@ -874,9 +883,21 @@ export default function LiveUSMap({
                   </g>
 
                   {/* Clusters */}
-                  {clusters.map((c) => {
+                  {clusters
+  .slice()
+  .sort((a, b) => {
+    // ✅ Crawlers always render underneath
+    if (a.category === "crawler" && b.category !== "crawler") return -1;
+    if (a.category !== "crawler" && b.category === "crawler") return 1;
+    return b.total - a.total;
+  })
+  .map((c) => {
                     const safeCount = safeInt(c.total, 1);
-                    const radius = clamp(10 + Math.sqrt(safeCount) * 6, 10, 52);
+                    const radius =
+  c.category === "crawler"
+    ? clamp(6 + Math.log10(safeCount + 1) * 8, 6, 18)
+    : clamp(10 + Math.sqrt(safeCount) * 6, 10, 52);
+
                     const dotColor = COLORS[c.category];
 
                     return (
@@ -891,22 +912,64 @@ export default function LiveUSMap({
                           setSelectedCluster(c);
                         }}
                       >
-                        {/* Pulse ring */}
-                        <circle cx={c.x} cy={c.y} r={radius + 6} fill="none" stroke={dotColor} strokeWidth={2.6} opacity={0.35}>
-                          <animate attributeName="r" values={`${radius};${radius + 18}`} dur="1.6s" repeatCount="indefinite" />
-                          <animate attributeName="opacity" values="0.4;0" dur="1.6s" repeatCount="indefinite" />
-                        </circle>
+                       {/* Pulse ring (humans only) */}
+{c.category !== "crawler" && (
+  <circle
+    cx={c.x}
+    cy={c.y}
+    r={radius + 6}
+    fill="none"
+    stroke={dotColor}
+    strokeWidth={2.6}
+    opacity={0.35}
+  >
+    <animate
+      attributeName="r"
+      values={`${radius};${radius + 18}`}
+      dur="1.6s"
+      repeatCount="indefinite"
+    />
+      <animate
+        attributeName="opacity"
+        values="0.4;0"
+        dur="1.6s"
+        repeatCount="indefinite"
+      />
+  </circle>
+)}
 
-                        {/* Glow */}
-                        <circle cx={c.x} cy={c.y} r={radius + 12} fill={dotColor} opacity={0.18} />
 
-                        {/* Main */}
-                        <circle cx={c.x} cy={c.y} r={radius} fill={dotColor} opacity={0.92} />
+                        {/* Glow (crawler is softer) */}
+<circle
+  cx={c.x}
+  cy={c.y}
+  r={radius + 12}
+  fill={dotColor}
+  opacity={c.category === "crawler" ? 0.08 : 0.18}
+/>
+
+                       {/* Main bubble */}
+<circle
+  cx={c.x}
+  cy={c.y}
+  r={radius}
+  fill={dotColor}
+  opacity={c.category === "crawler" ? 0.55 : 0.92}
+/>
+
 
                         {/* Count */}
-                        <text x={c.x} y={c.y + 5} textAnchor="middle" fontSize="14" fontWeight="900" fill="white">
-                          {safeCount}
-                        </text>
+                        <text
+  x={c.x}
+  y={c.y + 5}
+  textAnchor="middle"
+  fontSize={c.category === "crawler" ? "16" : "14"}
+  fontWeight="900"
+  fill="white"
+>
+  {c.category === "crawler" ? "🕷" : safeCount}
+</text>
+
 
                         {/* Label (zoom in) */}
                         {zoomScale > 2.2 && (
@@ -1034,8 +1097,11 @@ export default function LiveUSMap({
                     >
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 900, color: "#0f172a", fontSize: 13 }}>
-                          {it.city}, {it.state}
-                        </div>
+  {it.category === "crawler"
+    ? `${it.city} (${it.state})`
+    : `${it.city}, ${it.state}`}
+</div>
+
                         <div
   style={{
     marginTop: 2,

@@ -84,7 +84,8 @@ export default function DashboardPage() {
 
     try {
       const { data, error } = await supabase
-        .from("live_map_visitors") // ✅ same view as Analytics
+        .from("live_map_activity")
+ // ✅ same view as Analytics
         .select("*"); // ✅ IMPORTANT: let LiveUSMap get whatever fields it needs
 
       if (error) {

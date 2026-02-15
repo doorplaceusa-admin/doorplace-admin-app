@@ -23,7 +23,11 @@ type AllowedTable =
   // ✅ NEW SCANNER TABLES
   | "site_sitemap_urls"
   | "page_scan_jobs"
-  | "page_scan_results";
+  | "page_scan_results"
+
+  // ✅ LIVE MAP FEEDS
+  | "seo_crawl_events"
+  | "live_map_activity";
 
 type ReadOptions = {
   limit?: number;
@@ -40,6 +44,10 @@ export async function readTable(
   const ascending = options.ascending ?? false;
 
   switch (table) {
+    /* ============================
+       SHOPIFY + CORE TABLES
+    ============================= */
+
     case "existing_shopify_pages":
       return supabaseAdmin
         .from("existing_shopify_pages")
@@ -68,29 +76,79 @@ export async function readTable(
         .order(orderBy, { ascending })
         .limit(limit);
 
+    /* ============================
+       HUMAN VISITOR EVENTS
+    ============================= */
+
     case "page_view_events": {
-  const sixHoursAgo = new Date(
-    Date.now() - 6 * 60 * 60 * 1000
-  ).toISOString();
+      const sixHoursAgo = new Date(
+        Date.now() - 6 * 60 * 60 * 1000
+      ).toISOString();
 
-  return supabaseAdmin
-    .from("page_view_events")
-    .select(`
-      id,
-      page_key,
-      page_url,
-      city,
-      state,
-      latitude,
-      longitude,
-      source,
-      created_at
-    `)
-    .gte("created_at", sixHoursAgo)
-    .order("created_at", { ascending: false })
-    .limit(500);
-}
+      return supabaseAdmin
+        .from("page_view_events")
+        .select(`
+          id,
+          page_key,
+          page_url,
+          city,
+          state,
+          latitude,
+          longitude,
+          created_at
+        `)
+        .gte("created_at", sixHoursAgo)
+        .order("created_at", { ascending: false })
+        .limit(500);
+    }
 
+    /* ============================
+       🔵 SEO CRAWLER EVENTS
+    ============================= */
+
+    case "seo_crawl_events": {
+      const sixHoursAgo = new Date(
+        Date.now() - 6 * 60 * 60 * 1000
+      ).toISOString();
+
+      return supabaseAdmin
+        .from("seo_crawl_events")
+        .select(`
+          id,
+          page_url,
+          crawler,
+          user_agent,
+          created_at
+        `)
+        .gte("created_at", sixHoursAgo)
+        .order("created_at", { ascending: false })
+        .limit(500);
+    }
+
+    /* ============================
+       ✅ UNIFIED LIVE MAP FEED
+       Humans + Crawlers Combined
+    ============================= */
+
+    case "live_map_activity":
+      return supabaseAdmin
+        .from("live_map_activity")
+        .select(`
+          city,
+          state,
+          latitude,
+          longitude,
+          count,
+          page_url,
+          page_key,
+          source,
+          crawler_name
+        `)
+        .limit(500);
+
+    /* ============================
+       USERS / PARTNERS
+    ============================= */
 
     case "profiles":
       return supabaseAdmin
@@ -148,11 +206,13 @@ export async function readTable(
     case "page_scan_results":
       return supabaseAdmin
         .from("page_scan_results")
-        .select(
-          "id, page_url, title, http_status, content_length, scanned_at"
-        )
+        .select("id, page_url, title, http_status, content_length, scanned_at")
         .order("scanned_at", { ascending: false })
         .limit(limit);
+
+    /* ============================
+       SAFETY DEFAULT
+    ============================= */
 
     default:
       throw new Error("Table not allowed for AI access");

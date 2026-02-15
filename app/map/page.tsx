@@ -17,7 +17,8 @@ export default function MapWallPage() {
 
     try {
       const { data } = await supabase
-        .from("live_map_visitors")
+        .from("live_map_activity")
+
         .select("*");
 
       if (data) setLiveVisitors(data);

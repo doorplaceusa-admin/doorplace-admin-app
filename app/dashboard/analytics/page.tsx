@@ -95,7 +95,8 @@ export default function AdminAnalyticsPage() {
     setMapError(null);
 
     const { data: liveData, error } = await supabase
-      .from("live_map_visitors")
+      .from("live_map_activity")
+
       .select("*")
       .limit(500);
 

@@ -12,7 +12,6 @@ const corsHeaders = {
   "Access-Control-Allow-Credentials": "true",
 };
 
-
 export async function OPTIONS() {
   return new Response(null, {
     status: 204,
@@ -20,32 +19,25 @@ export async function OPTIONS() {
   });
 }
 
-
 /* ======================================================
    BOT / CRAWLER DETECTOR
 ====================================================== */
-function detectCrawler(userAgent: string, source: string) {
+function detectCrawler(userAgent: string) {
   const ua = (userAgent || "").toLowerCase();
 
-  // Shopify internal traffic
-
-  // Major search engines
   if (ua.includes("googlebot")) return "googlebot";
   if (ua.includes("bingbot")) return "bingbot";
   if (ua.includes("duckduckbot")) return "duckduckbot";
   if (ua.includes("yandex")) return "yandexbot";
   if (ua.includes("baiduspider")) return "baiduspider";
 
-  // SEO tools
   if (ua.includes("ahrefs")) return "ahrefs";
   if (ua.includes("semrush")) return "semrush";
   if (ua.includes("mj12bot")) return "mj12bot";
 
-  // Generic crawler words
   if (ua.includes("crawler")) return "crawler";
   if (ua.includes("spider")) return "spider";
 
-  // Safe bot match
   if (ua.includes(" bot") || ua.includes("bot/")) return "bot";
 
   return null;
@@ -53,24 +45,17 @@ function detectCrawler(userAgent: string, source: string) {
 
 /* ======================================================
    POST /api/page-view
-   (SERVICE ROLE SAFE - NO RLS FAILURES)
 ====================================================== */
 export async function POST(req: Request) {
   try {
-    // ✅ Always use service-role Supabase client
     const supabase = supabaseAdmin;
 
     /* ============================================
-       1) READ BODY
+       1) BODY
     ============================================ */
     const body = await req.json();
 
-    const {
-      page_key,
-      page_url,
-      partner_id = null,
-      source = "unknown",
-    } = body;
+    const { page_key, page_url, partner_id = null } = body;
 
     if (!page_key || !page_url) {
       return new Response("Missing page_key/page_url", {
@@ -80,32 +65,29 @@ export async function POST(req: Request) {
     }
 
     /* ============================================
-       2) USER AGENT + CLASSIFY
+       2) USER AGENT + BOT CHECK
     ============================================ */
     const ua = req.headers.get("user-agent") || "";
-    const crawler = detectCrawler(ua, source);
+    const crawler = detectCrawler(ua);
 
     /* ============================================
-       3) BOT → LOG SEO EVENT (BLUE DOTS)
+       3) BOT → LOG SEO EVENT (CORRECT)
     ============================================ */
     if (crawler) {
       console.log("🔵 SEO BOT HIT:", crawler, page_url);
 
-      // Minute bucket dedupe
       const view_bucket = new Date().toISOString().slice(0, 16);
 
-      const { error: crawlError } = await supabase
-        .from("seo_crawl_events")
-        .insert({
-          page_url,
-          page_key,
-          crawler,
-          user_agent: ua,
-          view_bucket,
-        });
+      const { error } = await supabase.from("seo_crawl_events").insert({
+        page_url,
+        page_key,
+        crawler,
+        user_agent: ua,
+        view_bucket,
+      });
 
-      if (crawlError) {
-        console.error("❌ SEO BOT INSERT ERROR:", crawlError);
+      if (error) {
+        console.error("❌ SEO BOT INSERT ERROR:", error);
       }
 
       return new Response("Crawler logged", {
@@ -115,7 +97,7 @@ export async function POST(req: Request) {
     }
 
     /* ============================================
-       4) GEO (HUMANS ONLY)
+       4) HUMAN GEO (Cloudflare)
     ============================================ */
     let city: string | null = null;
     let state: string | null = null;
@@ -140,23 +122,21 @@ export async function POST(req: Request) {
     console.log("🟢 HUMAN VIEW:", page_url, city, state);
 
     /* ============================================
-       5) HUMAN → LOG PAGE VIEW EVENT (GREEN DOTS)
+       5) HUMAN → LOG EVENT
     ============================================ */
-    const { error: humanError } = await supabase
-      .from("page_view_events")
-      .insert({
-        page_key,
-        page_url,
-        partner_id,
-        source,
-        city,
-        state,
-        latitude,
-        longitude,
-      });
+    const { error } = await supabase.from("page_view_events").insert({
+      page_key,
+      page_url,
+      partner_id,
+      city,
+      state,
+      latitude,
+      longitude,
+      source: "human",
+    });
 
-    if (humanError) {
-      console.error("❌ HUMAN INSERT ERROR:", humanError);
+    if (error) {
+      console.error("❌ HUMAN INSERT ERROR:", error);
 
       return new Response("DB error", {
         status: 500,

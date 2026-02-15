@@ -20,7 +20,7 @@ import { buildMetaDescription } from "@/lib/seo/build_meta/description";
    ENTERPRISE SETTINGS
 ====================================================== */
 
-const BATCH_SIZE = 50;
+const BATCH_SIZE = 70;
 const INTERVAL_MS = 60_000;
 
 const SHOPIFY_DELAY_MS = 1200;

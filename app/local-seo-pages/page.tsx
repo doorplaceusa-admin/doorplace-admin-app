@@ -272,32 +272,36 @@ const [activeShot, setActiveShot] = useState<string | null>(null);
           state: "TX",
           latitude: 32.7767,
           longitude: -96.797,
-          count: 4,
-          page_key: "dallas-demo",
+              count: 4,
+              page_key: "dallas-demo",
+              source: "human",
         },
         {
           city: "Miami",
           state: "FL",
           latitude: 25.7617,
           longitude: -80.1918,
-          count: 3,
-          page_key: "miami-demo",
+              count: 3,
+              page_key: "miami-demo",
+              source: "human",
         },
         {
           city: "Chicago",
           state: "IL",
           latitude: 41.8781,
           longitude: -87.6298,
-          count: 5,
-          page_key: "chicago-demo",
+              count: 5,
+              page_key: "chicago-demo",
+              source: "human",
         },
         {
           city: "Los Angeles",
           state: "CA",
           latitude: 34.0522,
           longitude: -118.2437,
-          count: 6,
-          page_key: "la-demo",
+              count: 6,
+              page_key: "la-demo",
+              source: "human",
         },
       ]}
     />
@@ -885,6 +889,7 @@ const [activeShot, setActiveShot] = useState<string | null>(null);
                   longitude: -118.2437,
                   count: 6,
                   page_key: "roofing-company-demo",
+                  source: "human",
                 },
                 {
                   city: "Dallas",
@@ -893,6 +898,7 @@ const [activeShot, setActiveShot] = useState<string | null>(null);
                   longitude: -96.797,
                   count: 4,
                   page_key: "hvac-leads-demo",
+                  source: "human",
                 },
                 {
                   city: "Miami",
@@ -901,6 +907,7 @@ const [activeShot, setActiveShot] = useState<string | null>(null);
                   longitude: -80.1918,
                   count: 3,
                   page_key: "plumbing-services-demo",
+                  source: "human",
                 },
                 {
                   city: "Chicago",
@@ -909,6 +916,7 @@ const [activeShot, setActiveShot] = useState<string | null>(null);
                   longitude: -87.6298,
                   count: 5,
                   page_key: "beauty-business-demo",
+                  source: "human",
                 },
                 {
                   city: "Denver",
@@ -917,6 +925,7 @@ const [activeShot, setActiveShot] = useState<string | null>(null);
                   longitude: -104.9903,
                   count: 3,
                   page_key: "concrete-demo",
+                  source: "human",
                 },
                 {
                   city: "New York",
@@ -925,6 +934,7 @@ const [activeShot, setActiveShot] = useState<string | null>(null);
                   longitude: -74.006,
                   count: 6,
                   page_key: "contractor-leads-demo",
+                  source: "human",
                 },
               ]}
             />

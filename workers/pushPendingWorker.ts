@@ -32,7 +32,7 @@ import { buildMetaDescription } from "@/lib/seo/build_meta/description";
    WORKER SETTINGS
 ================================ */
 
-const BATCH_SIZE = 20; // push 20 per cycle
+const BATCH_SIZE = 40; // push 20 per cycle
 const INTERVAL_MS = 60_000; // run every 1 minute
 
 function sleep(ms: number) {

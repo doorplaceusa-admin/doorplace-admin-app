@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SendPasswordReset from "./components/SendPasswordReset";
 import { supabase } from "@/lib/supabaseClient";
-import { useEffect } from "react";
+
 
 
 type CleanupResult = {
@@ -30,16 +30,17 @@ export default function Page() {
   >("idle");
   const [cleanupMessage, setCleanupMessage] = useState<string | null>(null);
   const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(null);
-/* ======================================================
-   LIVE MAP INTERVAL SETTINGS
-====================================================== */
+  /* ======================================================
+     LIVE MAP INTERVAL SETTINGS
+  ====================================================== */
 
-const [humanMinutes, setHumanMinutes] = useState(360);
-const [crawlerSeconds, setCrawlerSeconds] = useState(300);
+  const [humanMinutes, setHumanMinutes] = useState(360);
+  const [crawlerSeconds, setCrawlerSeconds] = useState(300);
 
-const [intervalLoading, setIntervalLoading] = useState(true);
-const [intervalSaving, setIntervalSaving] = useState(false);
-const [intervalStatus, setIntervalStatus] = useState<string | null>(null);
+  const [intervalLoading, setIntervalLoading] = useState(true);
+  const [intervalSaving, setIntervalSaving] = useState(false);
+  const [intervalStatus, setIntervalStatus] = useState<string | null>(null);
+
   /* ======================================================
      LOAD LIVE MAP INTERVAL SETTINGS (STEP 3)
   ====================================================== */
@@ -52,15 +53,16 @@ const [intervalStatus, setIntervalStatus] = useState<string | null>(null);
         .from("map_interval_settings")
         .select("human_window_minutes, crawler_window_seconds")
         .eq("id", 1)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        console.error(error);
-        setIntervalStatus("❌ Failed to load map interval settings");
-      } else {
-        setHumanMinutes(data.human_window_minutes);
-        setCrawlerSeconds(data.crawler_window_seconds);
-      }
+  console.error(error);
+  setIntervalStatus("❌ Failed to load map interval settings");
+} else if (data) {
+  setHumanMinutes(data.human_window_minutes);
+  setCrawlerSeconds(data.crawler_window_seconds);
+}
+
 
       setIntervalLoading(false);
     }
@@ -132,13 +134,19 @@ const [intervalStatus, setIntervalStatus] = useState<string | null>(null);
       .eq("id", 1);
 
     if (error) {
-      console.error(error);
-      setIntervalStatus("❌ Failed to save settings");
-    } else {
-      setIntervalStatus("✅ Map intervals updated instantly");
-    }
+  console.error(error);
+  setIntervalStatus("❌ Failed to save settings");
+} else {
+  setIntervalStatus("✅ Map intervals updated instantly");
 
-    setIntervalSaving(false);
+  // ✅ FIX #5: Auto refresh so map updates immediately
+  setTimeout(() => {
+    window.location.reload();
+  }, 500);
+}
+
+setIntervalSaving(false);
+
   }
 
   /* ======================================================
@@ -285,13 +293,15 @@ const [intervalStatus, setIntervalStatus] = useState<string | null>(null);
               </label>
 
               <input
-                type="number"
-                value={humanMinutes}
-                onChange={(e) =>
-                  setHumanMinutes(Number(e.target.value))
-                }
-                className="w-full border rounded px-3 py-2 text-sm"
-              />
+  type="number"
+  min={1}
+  value={humanMinutes}
+  onChange={(e) =>
+    setHumanMinutes(Number(e.target.value))
+  }
+  className="w-full border rounded px-3 py-2 text-sm"
+/>
+
 
               <p className="text-xs text-gray-500 mt-1">
                 Example: 360 = 6 hours, 60 = 1 hour
@@ -305,13 +315,15 @@ const [intervalStatus, setIntervalStatus] = useState<string | null>(null);
               </label>
 
               <input
-                type="number"
-                value={crawlerSeconds}
-                onChange={(e) =>
-                  setCrawlerSeconds(Number(e.target.value))
-                }
-                className="w-full border rounded px-3 py-2 text-sm"
-              />
+  type="number"
+  min={5}
+  value={crawlerSeconds}
+  onChange={(e) =>
+    setCrawlerSeconds(Number(e.target.value))
+  }
+  className="w-full border rounded px-3 py-2 text-sm"
+/>
+
 
               <p className="text-xs text-gray-500 mt-1">
                 Example: 300 = 5 minutes, 30 = last 30 seconds

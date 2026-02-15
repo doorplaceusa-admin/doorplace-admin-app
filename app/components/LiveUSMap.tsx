@@ -302,7 +302,7 @@ function clusterByPixels(
     const topLabel =
   top.category === "crawler"
     ? `🕷 ${top.crawler_name || "Crawler"} • ${top.state}`
-    : `${top.city || "Unknown"}, ${top.state}`;
+    : `${top.city || top.page_key || "Unknown"}, ${top.state}`;
 
 
 
@@ -512,15 +512,17 @@ export default function LiveUSMap({
       let lat = v.latitude;
       let lon = v.longitude;
 
-      // Only fallback if coords missing
-      if (lat == null || lon == null) {
-        const stateName = normalizeStateName(v.state);
-        const fallback = STATE_CENTROIDS[stateName];
-        if (fallback) {
-          lat = fallback.lat;
-          lon = fallback.lon;
-        }
-      }
+      // Only fallback if coords missing (humans only)
+if ((lat == null || lon == null) && v.source === "human") {
+  const stateName = normalizeStateName(v.state);
+  const fallback = STATE_CENTROIDS[stateName];
+
+  if (fallback) {
+    lat = fallback.lat;
+    lon = fallback.lon;
+  }
+}
+
 
       if (lat == null || lon == null) {
   if (v.source === "crawler") continue; // ❌ skip bad crawler rows
@@ -533,7 +535,7 @@ export default function LiveUSMap({
       out.push({
   id: makeDotId(v),
 
-  city: v.city || "Unknown",
+  city: v.city || v.page_key || "Unknown Location",
   state: v.state || "",
 
   lat,
@@ -1100,9 +1102,10 @@ return [
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 900, color: "#0f172a", fontSize: 13 }}>
   {it.category === "crawler"
-    ? `${it.city} (${it.state})`
+    ? `🕷 ${it.crawler_name || "Crawler"} • ${it.state}`
     : `${it.city}, ${it.state}`}
 </div>
+
 
                         <div
   style={{

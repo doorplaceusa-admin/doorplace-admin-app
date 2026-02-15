@@ -220,7 +220,7 @@ useEffect(() => {
   if (loading) return null;
 
   return (
-<div className="min-h-[100dvh] bg-gray-100 text-gray-900 flex max-w-full">
+<div className="min-h-dvh bg-gray-100 text-gray-900 flex max-w-full">
 
 
 
@@ -388,14 +388,7 @@ useEffect(() => {
 
       {/* CHAT BODY */}
       <div className="flex-1 overflow-y-auto p-3">
-        <PartnerMessages
-  partnerId={profilePartner.partner_id}
-  onNewMessage={() => {
-    if (!chatOpen) {
-      setHasUnread(true);
-    }
-  }}
-/>
+        <PartnerMessages partnerId={profilePartner.partner_id} />
 
       </div>
 
@@ -414,7 +407,7 @@ useEffect(() => {
 
 
 
-  <div className="space-y-4 max-w-[1300px] w-full mx-auto">
+  <div className="space-y-4 max-w-325 w-full mx-auto">
 
     {children}
     {/* ===== TINY LEGAL FOOTER ===== */}

@@ -23,7 +23,7 @@ import { buildMetaDescription } from "@/lib/seo/build_meta/description";
 const BATCH_SIZE = 150;
 const INTERVAL_MS = 60_000;
 
-const SHOPIFY_DELAY_MS = 1200;
+const SHOPIFY_DELAY_MS = 1000;
 const COOLDOWN_MS = 60_000;
 const MAX_RETRIES = 10;
 
@@ -31,7 +31,7 @@ const MAX_RETRIES = 10;
    HELPERS
 ====================================================== */
 
-function sleep(ms: number) {
+function sleep(ms: number) { 
   return new Promise((res) => setTimeout(res, ms));
 }
 

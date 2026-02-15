@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import PartnerMessages from "./dashboard/components/PartnerMessages";
 import { useAppViewTracker } from "@/lib/useAppViewTracker";
 
@@ -68,6 +68,7 @@ const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
 
 useEffect(() => {
   if (!profilePartner?.partner_id) return;
+  if (chatOpen) return; // ✅ DO NOT POLL while chat is open
 
   const interval = setInterval(async () => {
     const { data } = await supabase
@@ -82,13 +83,12 @@ useEffect(() => {
     if (
       latest &&
       latest.sender === "admin" &&
-      latest.id !== lastAdminMessageRef.current &&
-      !chatOpen
+      latest.id !== lastAdminMessageRef.current
     ) {
       setHasUnread(true);
       lastAdminMessageRef.current = latest.id;
     }
-  }, 3000);
+  }, 8000); // slower polling
 
   return () => clearInterval(interval);
 }, [profilePartner?.partner_id, chatOpen]);
@@ -218,6 +218,17 @@ useEffect(() => {
   }
 
   if (loading) return null;
+
+
+
+  // ✅ Prevent chat from resetting on layout rerenders
+const ChatPanel = useMemo(() => {
+  if (!profilePartner?.partner_id) return null;
+
+  return (
+    <PartnerMessages partnerId={profilePartner.partner_id} />
+  );
+}, [profilePartner?.partner_id]);
 
   return (
 <div className="min-h-dvh bg-gray-100 text-gray-900 flex max-w-full">
@@ -389,9 +400,9 @@ useEffect(() => {
 
       {/* CHAT BODY */}
       <div className="flex-1 overflow-y-auto p-3">
-        <PartnerMessages partnerId={profilePartner.partner_id} />
+  {ChatPanel}
+</div>
 
-      </div>
 
     </div>
   </div>

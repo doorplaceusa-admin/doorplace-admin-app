@@ -33,7 +33,7 @@ export default function PartnerMessages({
   showHeader = false,
   headerName,
   allowDelete = isAdmin,
-  allowEdit = true,
+  allowEdit = isAdmin,
 }: {
   partnerId: string;
   isAdmin?: boolean;
@@ -177,6 +177,7 @@ export default function PartnerMessages({
   }
 
   async function deleteMessage(messageId: string) {
+  if (!isAdmin) return; // 🚫 Partners can never delete
     setErrorMsg(null);
     try {
       const { error } = await supabase
@@ -374,15 +375,15 @@ export default function PartnerMessages({
                         Edit
                       </button>
                     )}
-                    {allowDelete && (
-                      <button
-                        className="underline text-[10px]"
-                        onClick={() => deleteMessage(m.id)}
-                        type="button"
-                      >
-                        Delete
-                      </button>
-                    )}
+                    {isAdmin && allowDelete && (
+  <button
+    className="underline text-[10px]"
+    onClick={() => deleteMessage(m.id)}
+  >
+    Delete
+  </button>
+)}
+
                   </div>
                 )}
               </div>

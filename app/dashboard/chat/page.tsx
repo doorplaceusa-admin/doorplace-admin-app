@@ -51,22 +51,17 @@ export default function AdminChatInboxPage() {
     }
   }
 
-  useEffect(() => {
+ useEffect(() => {
+  loadInbox();
+
+  // ✅ Safe polling instead of realtime
+  const interval = setInterval(() => {
     loadInbox();
+  }, 3000);
 
-    const channel = supabase
-      .channel("admin-partner-inbox")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "partner_messages" },
-        loadInbox
-      )
-      .subscribe();
+  return () => clearInterval(interval);
+}, []);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
 
   const filteredRows = useMemo(() => {
     let data = [...rows];

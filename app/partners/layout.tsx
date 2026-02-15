@@ -355,11 +355,12 @@ useEffect(() => {
   )}
 </button>
 <button
-  onClick={() => window.location.reload()}
+  onClick={() => router.refresh()}
   className="text-sm text-gray-500 hover:text-black"
 >
   ↻ Refresh
 </button>
+
 
 
 

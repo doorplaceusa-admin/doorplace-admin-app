@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import SendPasswordReset from "./components/SendPasswordReset";
+import { supabase } from "@/lib/supabaseClient";
+import { useEffect } from "react";
+
 
 type CleanupResult = {
   pages_scanned: number;
@@ -27,6 +30,43 @@ export default function Page() {
   >("idle");
   const [cleanupMessage, setCleanupMessage] = useState<string | null>(null);
   const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(null);
+/* ======================================================
+   LIVE MAP INTERVAL SETTINGS
+====================================================== */
+
+const [humanMinutes, setHumanMinutes] = useState(360);
+const [crawlerSeconds, setCrawlerSeconds] = useState(300);
+
+const [intervalLoading, setIntervalLoading] = useState(true);
+const [intervalSaving, setIntervalSaving] = useState(false);
+const [intervalStatus, setIntervalStatus] = useState<string | null>(null);
+  /* ======================================================
+     LOAD LIVE MAP INTERVAL SETTINGS (STEP 3)
+  ====================================================== */
+
+  useEffect(() => {
+    async function loadIntervals() {
+      setIntervalLoading(true);
+
+      const { data, error } = await supabase
+        .from("map_interval_settings")
+        .select("human_window_minutes, crawler_window_seconds")
+        .eq("id", 1)
+        .single();
+
+      if (error) {
+        console.error(error);
+        setIntervalStatus("❌ Failed to load map interval settings");
+      } else {
+        setHumanMinutes(data.human_window_minutes);
+        setCrawlerSeconds(data.crawler_window_seconds);
+      }
+
+      setIntervalLoading(false);
+    }
+
+    loadIntervals();
+  }, []);
 
   /* ======================================================
      Shopify Page Finder Search Tool
@@ -73,6 +113,32 @@ export default function Page() {
       `https://admin.shopify.com/store/${shopDomain}/pages/${pageId}`,
       "_blank"
     );
+  }
+  /* ======================================================
+     SAVE LIVE MAP INTERVAL SETTINGS (STEP 4)
+  ====================================================== */
+
+  async function saveIntervals() {
+    setIntervalSaving(true);
+    setIntervalStatus(null);
+
+    const { error } = await supabase
+      .from("map_interval_settings")
+      .update({
+        human_window_minutes: humanMinutes,
+        crawler_window_seconds: crawlerSeconds,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", 1);
+
+    if (error) {
+      console.error(error);
+      setIntervalStatus("❌ Failed to save settings");
+    } else {
+      setIntervalStatus("✅ Map intervals updated instantly");
+    }
+
+    setIntervalSaving(false);
   }
 
   /* ======================================================
@@ -194,6 +260,87 @@ export default function Page() {
           Send a secure password reset link to a partner.
         </p>
         <SendPasswordReset />
+      </div>
+      {/* Live Map Interval Controls */}
+      <div className="border-t pt-6">
+        <h2 className="text-lg font-semibold mb-2">
+          Live Map Traffic Window Controls
+        </h2>
+
+        <p className="text-sm text-gray-600 mb-4">
+          Control how far back the Live Map shows human visitors and crawler bot
+          activity. These settings update instantly without editing SQL.
+        </p>
+
+        {intervalLoading ? (
+          <p className="text-sm text-gray-500">
+            Loading interval settings…
+          </p>
+        ) : (
+          <div className="space-y-4">
+            {/* Human Window */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Human Visitor Window (minutes)
+              </label>
+
+              <input
+                type="number"
+                value={humanMinutes}
+                onChange={(e) =>
+                  setHumanMinutes(Number(e.target.value))
+                }
+                className="w-full border rounded px-3 py-2 text-sm"
+              />
+
+              <p className="text-xs text-gray-500 mt-1">
+                Example: 360 = 6 hours, 60 = 1 hour
+              </p>
+            </div>
+
+            {/* Crawler Window */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Crawler Activity Window (seconds)
+              </label>
+
+              <input
+                type="number"
+                value={crawlerSeconds}
+                onChange={(e) =>
+                  setCrawlerSeconds(Number(e.target.value))
+                }
+                className="w-full border rounded px-3 py-2 text-sm"
+              />
+
+              <p className="text-xs text-gray-500 mt-1">
+                Example: 300 = 5 minutes, 30 = last 30 seconds
+              </p>
+            </div>
+
+            {/* Save Button */}
+            <button
+              onClick={saveIntervals}
+              disabled={intervalSaving}
+              className={`px-4 py-2 rounded font-medium text-sm transition ${
+                intervalSaving
+                  ? "bg-gray-300 text-gray-600"
+                  : "bg-black text-white hover:bg-gray-800"
+              }`}
+            >
+              {intervalSaving
+                ? "Saving…"
+                : "Save Map Interval Settings"}
+            </button>
+
+            {/* Status */}
+            {intervalStatus && (
+              <p className="text-sm mt-2 text-gray-700">
+                {intervalStatus}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Shopify Page Finder */}

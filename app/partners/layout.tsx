@@ -221,15 +221,7 @@ useEffect(() => {
 
 
 
-  // ✅ Prevent chat from resetting on layout rerenders
-const ChatPanel = useMemo(() => {
-  if (!profilePartner?.partner_id) return null;
-
-  return (
-    <PartnerMessages partnerId={profilePartner.partner_id} />
-  );
-}, [profilePartner?.partner_id]);
-
+  
   return (
 <div className="min-h-dvh bg-gray-100 text-gray-900 flex max-w-full">
 
@@ -400,9 +392,9 @@ const ChatPanel = useMemo(() => {
 
       {/* CHAT BODY */}
       <div className="flex-1 overflow-y-auto p-3">
-  {ChatPanel}
-</div>
+        <PartnerMessages partnerId={profilePartner.partner_id} />
 
+      </div>
 
     </div>
   </div>

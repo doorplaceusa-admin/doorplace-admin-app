@@ -32,7 +32,7 @@ export default function PartnerMessages({
   isAdmin = false,
   showHeader = false,
   headerName,
-  allowDelete = true,
+  allowDelete = isAdmin,
   allowEdit = true,
 }: {
   partnerId: string;

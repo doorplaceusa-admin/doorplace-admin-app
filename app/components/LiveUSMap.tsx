@@ -514,39 +514,34 @@ export default function LiveUSMap({
       let lat = v.latitude;
       let lon = v.longitude;
 
-      // Only fallback if coords missing (humans only)
-if ((lat == null || lon == null) && v.source === "human") {
+      
 
-  // ✅ Other category never uses state centroid
+
+
+     if (lat == null || lon == null) {
+  if (v.source === "crawler") continue; // ❌ skip bad crawler rows
+
+  // ✅ Other → US center
   if (category === "other") {
     lat = US_CENTER.lat;
     lon = US_CENTER.lon;
-  } else {
+  }
+
+  // ✅ Swing/Door/Partner → State centroid
+  else {
     const stateName = normalizeStateName(v.state);
     const fallback = STATE_CENTROIDS[stateName];
 
     if (fallback) {
       lat = fallback.lat;
       lon = fallback.lon;
+    } else {
+      lat = US_CENTER.lat;
+      lon = US_CENTER.lon;
     }
   }
 }
 
-
-
-      if (lat == null || lon == null) {
-  if (v.source === "crawler") continue; // ❌ skip bad crawler rows
-
-  // ✅ "Other" goes to US center (NOT Texas)
-  if (category === "other") {
-    lat = US_CENTER.lat;
-    lon = US_CENTER.lon;
-  } else {
-    // ✅ Humans fallback stays state-based
-    lat = 31.0545;
-    lon = -97.5635;
-  }
-}
 
 
 

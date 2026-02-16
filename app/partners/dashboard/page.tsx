@@ -274,9 +274,9 @@ useEffect(() => {
   if (!partnerId) return;
 
   async function loadLinkViews() {
-    // ✅ Last 30 days only
+    // ✅ Last 15 days only
     const since = new Date();
-    since.setDate(since.getDate() - 30);
+    since.setDate(since.getDate() - 15);
 
     const { count, error } = await supabase
       .from("page_view_events")

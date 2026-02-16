@@ -149,6 +149,8 @@ const STATE_ABBR_BY_FIPS: Record<string, string> = {
   "45": "SC", "46": "SD", "47": "TN", "48": "TX", "49": "UT", "50": "VT", "51": "VA", "53": "WA",
   "54": "WV", "55": "WI", "56": "WY",
 };
+// ✅ US Center fallback (for "Other" category)
+const US_CENTER = { lat: 39.8283, lon: -98.5795 };
 
 const STATE_LABEL_OFFSETS: Record<string, { dx: number; dy: number }> = {
   "12": { dx: 18, dy: 10 }, // Florida
@@ -514,21 +516,38 @@ export default function LiveUSMap({
 
       // Only fallback if coords missing (humans only)
 if ((lat == null || lon == null) && v.source === "human") {
-  const stateName = normalizeStateName(v.state);
-  const fallback = STATE_CENTROIDS[stateName];
 
-  if (fallback) {
-    lat = fallback.lat;
-    lon = fallback.lon;
+  // ✅ Other category never uses state centroid
+  if (category === "other") {
+    lat = US_CENTER.lat;
+    lon = US_CENTER.lon;
+  } else {
+    const stateName = normalizeStateName(v.state);
+    const fallback = STATE_CENTROIDS[stateName];
+
+    if (fallback) {
+      lat = fallback.lat;
+      lon = fallback.lon;
+    }
   }
 }
 
 
+
       if (lat == null || lon == null) {
   if (v.source === "crawler") continue; // ❌ skip bad crawler rows
-  lat = 31.0545;
-  lon = -97.5635;
+
+  // ✅ "Other" goes to US center (NOT Texas)
+  if (category === "other") {
+    lat = US_CENTER.lat;
+    lon = US_CENTER.lon;
+  } else {
+    // ✅ Humans fallback stays state-based
+    lat = 31.0545;
+    lon = -97.5635;
+  }
 }
+
 
 
 

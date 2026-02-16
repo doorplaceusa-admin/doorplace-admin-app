@@ -274,10 +274,25 @@ useEffect(() => {
   if (!partnerId) return;
 
   async function loadLinkViews() {
+    // ✅ Last 30 days only
+    const since = new Date();
+    since.setDate(since.getDate() - 30);
+
     const { count, error } = await supabase
       .from("page_view_events")
       .select("*", { count: "exact", head: true })
-      .eq("partner_id", partnerId);
+
+      // ✅ Only this partner
+      .eq("partner_id", partnerId)
+
+      // ✅ Only real humans
+      .eq("source", "human")
+
+      // ✅ Only tracking page clicks
+      .ilike("page_url", "%swing-partner-lead%")
+
+      // ✅ Only last 30 days
+      .gte("created_at", since.toISOString());
 
     if (!error && typeof count === "number") {
       setLinkViews(count);
@@ -286,6 +301,7 @@ useEffect(() => {
 
   loadLinkViews();
 }, [partner?.partner_id]);
+
 
 
 

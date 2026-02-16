@@ -169,19 +169,26 @@ function normalizeStateName(input: string): string {
 }
 
 function getCategory(v: LiveVisitor): Category {
-  // ✅ Crawlers come directly from SQL
   if (v.source === "crawler") return "crawler";
 
-  // ✅ Humans classified by URL/page content
   const key = (v.page_key || "").toLowerCase();
   const url = (v.page_url || "").toLowerCase();
 
-  if (key.includes("swing") || url.includes("swing")) return "swing";
-  if (key.includes("door") || url.includes("door")) return "door";
+  // ✅ HARD LOCK
+  if (url.includes("swing-partner-lead")) return "partner";
+
+  // ✅ Partner pages MUST win first
   if (key.includes("partner") || url.includes("partner")) return "partner";
+
+  // ✅ Then swing
+  if (key.includes("swing") || url.includes("swing")) return "swing";
+
+  // ✅ Then door
+  if (key.includes("door") || url.includes("door")) return "door";
 
   return "other";
 }
+
 
 
 

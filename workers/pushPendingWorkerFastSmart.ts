@@ -1,21 +1,20 @@
-// workers/pushPendingWorkerFastSmart.ts
+// workers/pushPendingWorkerFastSafe.ts
 
 /* ======================================================
-   ✅ FAST SMART BURST PUSH WORKER
-   - Pushes pages in aggressive bursts
-   - Stops instantly on Shopify throttle
-   - Sleeps (cooldown) then resumes blasting
+   ✅ FAST SMART PUSH WORKER (SAFE UPGRADE)
+   Built directly on your WORKING pushPendingWorker.ts
+
+   - Same env loading
+   - Same Supabase logic
+   - Same Shopify retry wrapper
+   - Just faster burst mode + throttle rest
 ====================================================== */
 
 import dotenv from "dotenv";
 dotenv.config({ path: "/var/www/doorplace-admin-app/.env.local" });
-console.log("ENV CHECK:", {
-  SUPABASE_URL: process.env.SUPABASE_URL ? "YES" : "NO",
-  SERVICE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? "YES" : "NO",
-});
 
 /* ======================================================
-   IMPORTS
+   IMPORTS (UNCHANGED)
 ====================================================== */
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
@@ -24,26 +23,18 @@ import { renderPageTemplateHTML } from "@/lib/renderers/renderPageTemplateHTML";
 import { buildMetaDescription } from "@/lib/seo/build_meta/description";
 
 /* ======================================================
-   ⚡ FAST MODE SETTINGS
+   ⚡ FAST SETTINGS (ONLY CHANGE)
 ====================================================== */
 
-/** How many pages to grab per burst */
-const BURST_SIZE = 200;
+const BATCH_SIZE = 200;          // bigger bursts
+const FAST_DELAY_MS = 250;       // faster push speed
 
-/** How fast we fire pages inside a burst */
-const FAST_DELAY_MS = 250;
+const THROTTLE_REST_MS = 90_000; // rest if Shopify throttles
+const BURST_REST_MS = 10_000;    // short rest between bursts
 
-/** Rest time after a throttle hit */
-const THROTTLE_REST_MS = 90_000;
+const INTERVAL_MS = 5_000;       // loop faster than stable worker
 
-/** Normal rest between bursts */
-const BURST_REST_MS = 15_000;
-
-/** Loop interval */
-const LOOP_INTERVAL_MS = 10_000;
-
-/** Retry attempts per page */
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 10;
 
 /* ======================================================
    HELPERS
@@ -54,7 +45,7 @@ function sleep(ms: number) {
 }
 
 /* ======================================================
-   PAGE TYPE ROUTER
+   PAGE TYPE ROUTER (UNCHANGED)
 ====================================================== */
 
 function getPageType(template: string) {
@@ -63,22 +54,25 @@ function getPageType(template: string) {
       return "material";
     case "porch_swing_size_city":
       return "size";
+
     case "door_city":
     case "custom_door_installation_city":
       return "door";
+
     case "porch_swing_delivery":
       return "install";
+
     default:
       return "general";
   }
 }
 
 /* ======================================================
-   ✅ SMART SHOPIFY PUSH
-   - Throws special throttle flag immediately
+   ✅ SAFE SHOPIFY PUSH (UNCHANGED)
+   + GLOBAL THROTTLE FLAG
 ====================================================== */
 
-async function smartShopifyPush(payload: any) {
+async function safeCreateShopifyPage(payload: any) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       return await createShopifyPage(payload);
@@ -88,19 +82,15 @@ async function smartShopifyPush(payload: any) {
       const isThrottle =
         msg.includes("429") ||
         msg.includes("Too Many Requests") ||
-        msg.includes("Exceeded") ||
+        msg.includes("Exceeded 2 calls per second") ||
         msg.includes("throttled");
 
       if (isThrottle) {
-        console.log("🛑 SHOPIFY THROTTLE DETECTED!");
+        console.log("🛑 THROTTLE HIT — STOPPING BURST");
         return { throttle_hit: true };
       }
 
-      console.log(
-        `⚠️ Page error retrying (${attempt}/${MAX_RETRIES}) →`,
-        msg
-      );
-
+      console.log(`⚠️ Error retrying (${attempt}/${MAX_RETRIES}) → ${msg}`);
       await sleep(500 * attempt);
     }
   }
@@ -109,11 +99,11 @@ async function smartShopifyPush(payload: any) {
 }
 
 /* ======================================================
-   ✅ CLAIM PAGES (LOCK THEM)
+   ✅ CLAIM + LOCK PAGES (UNCHANGED)
 ====================================================== */
 
-async function claimBurstPages() {
-  console.log("🔍 Claiming burst pages...");
+async function claimPages() {
+  console.log("🔍 Claiming pending pages...");
 
   const { data: pages, error } = await supabaseAdmin
     .from("generated_pages")
@@ -134,7 +124,7 @@ async function claimBurstPages() {
     .is("shopify_page_id", null)
     .eq("is_duplicate", false)
     .order("created_at", { ascending: true })
-    .limit(BURST_SIZE);
+    .limit(BATCH_SIZE);
 
   if (error) {
     console.error("❌ Supabase fetch error:", error.message);
@@ -150,13 +140,13 @@ async function claimBurstPages() {
     .update({ status: "publishing" })
     .in("id", ids);
 
-  console.log(`⚡ Locked ${pages.length} pages for FAST burst`);
+  console.log(`⚡ Locked ${pages.length} pages`);
 
   return pages;
 }
 
 /* ======================================================
-   🚀 PUBLISH ONE PAGE
+   PUBLISH ONE PAGE (UNCHANGED)
 ====================================================== */
 
 async function publishOne(page: any) {
@@ -164,9 +154,8 @@ async function publishOne(page: any) {
   const state = page.us_locations?.us_states?.state_name;
   const stateCode = page.us_locations?.us_states?.state_code;
 
-  if (!city || !state || !stateCode) return null;
+  if (!city || !state || !stateCode) return "SKIP";
 
-  /* ---------- Render HTML ---------- */
   const html = renderPageTemplateHTML({
     page_template: page.page_template,
     variant_key: page.variant_key ?? null,
@@ -177,9 +166,8 @@ async function publishOne(page: any) {
     heroImageUrl: page.hero_image_url,
   });
 
-  if (!html || html.trim().length < 50) return null;
+  if (!html || html.trim().length < 50) return "SKIP";
 
-  /* ---------- SEO ---------- */
   const pageType = getPageType(page.page_template);
 
   const seoDescription = buildMetaDescription({
@@ -191,8 +179,7 @@ async function publishOne(page: any) {
     template: page.page_template,
   });
 
-  /* ---------- Shopify Push ---------- */
-  const result = await smartShopifyPush({
+  const shopifyPage = await safeCreateShopifyPage({
     title: page.title,
     handle: page.slug,
     body_html: html,
@@ -200,19 +187,14 @@ async function publishOne(page: any) {
     meta_description: seoDescription,
   });
 
-  if (result?.throttle_hit) {
-    return "THROTTLE";
-  }
+  if (shopifyPage?.throttle_hit) return "THROTTLE";
 
-  if (result?.failed_out) {
-    throw new Error("Page failed after retries");
-  }
+  if (shopifyPage?.failed_out) throw new Error("Failed after retries");
 
-  /* ---------- Save Published ---------- */
   await supabaseAdmin
     .from("generated_pages")
     .update({
-      shopify_page_id: result.id,
+      shopify_page_id: shopifyPage.id,
       status: "published",
       published_at: new Date().toISOString(),
       publish_error: null,
@@ -220,6 +202,7 @@ async function publishOne(page: any) {
     .eq("id", page.id);
 
   console.log(`✅ FAST Published → ${page.slug}`);
+
   return "OK";
 }
 
@@ -227,13 +210,13 @@ async function publishOne(page: any) {
    ⚡ FAST BURST LOOP
 ====================================================== */
 
-async function runFastBurst() {
-  console.log("🚀 FAST BURST WORKER RUNNING...");
+async function runBurst() {
+  console.log("🚀 FAST PUSH WORKER RUNNING...");
 
-  const pages = await claimBurstPages();
+  const pages = await claimPages();
 
   if (!pages.length) {
-    console.log("✅ No pages left.");
+    console.log("✅ No pending pages.");
     return;
   }
 
@@ -241,13 +224,12 @@ async function runFastBurst() {
 
   for (const page of pages) {
     try {
-      const status = await publishOne(page);
+      const result = await publishOne(page);
 
-      if (status === "THROTTLE") {
-        console.log("🛑 BURST STOPPED — RESTING...");
-        await sleep(THROTTLE_REST_MS);
+      if (result === "THROTTLE") {
+        console.log(`😴 Resting ${THROTTLE_REST_MS / 1000}s...`);
 
-        // Requeue unfinished page
+        // Requeue current page
         await supabaseAdmin
           .from("generated_pages")
           .update({
@@ -256,6 +238,7 @@ async function runFastBurst() {
           })
           .eq("id", page.id);
 
+        await sleep(THROTTLE_REST_MS);
         return;
       }
 
@@ -273,20 +256,20 @@ async function runFastBurst() {
     }
   }
 
-  console.log("🏁 FAST BURST COMPLETE.");
+  console.log("🏁 Burst complete.");
   await sleep(BURST_REST_MS);
 }
 
 /* ======================================================
-   ✅ RUN FOREVER
+   RUN FOREVER
 ====================================================== */
 
-console.log("🔥 FAST SMART PUSH WORKER STARTED");
+console.log("🔥 Fast Safe Push Worker Started");
 
 async function runForever() {
   while (true) {
-    await runFastBurst();
-    await sleep(LOOP_INTERVAL_MS);
+    await runBurst();
+    await sleep(INTERVAL_MS);
   }
 }
 

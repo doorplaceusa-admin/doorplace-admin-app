@@ -72,7 +72,8 @@ const COLORS: Record<Category, string> = {
   door: "#2563eb",
   partner: "#16a34a",
 
-  partner_coverage: "#f59e0b", // 🟠 Partner Coverage
+  partner_coverage: "rgba(180,140,40,0.28)",
+ // 👥 Coverage (soft outline)
 
   crawler: "#0ea5e9",
   other: "#7c3aed",
@@ -388,7 +389,17 @@ function Pill({
         transition: "all 120ms ease",
       }}
     >
-      <span style={{ width: 10, height: 10, borderRadius: 999, background: color, display: "inline-block" }} />
+      <span
+  style={{
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+    background: "transparent",
+    border: `2px solid ${color}`,
+    display: "inline-block",
+    opacity: 0.55,
+  }}
+/>
       {label}
     </button>
   );
@@ -640,8 +651,14 @@ for (const p of partnerCoverage) {
     city: p.city,
     state: p.state,
 
-    lat: Number(p.latitude),
-    lon: Number(p.longitude),
+   lat: p.latitude
+  ? Number(p.latitude)
+  : (STATE_CENTROIDS[normalizeStateName(p.state)]?.lat ?? US_CENTER.lat) + (Math.random() - 0.5) * 1.2,
+
+lon: p.longitude
+  ? Number(p.longitude)
+  : (STATE_CENTROIDS[normalizeStateName(p.state)]?.lon ?? US_CENTER.lon) + (Math.random() - 0.5) * 1.2,
+
 
     count: safeInt(p.partner_count, 1),
 
@@ -1038,7 +1055,7 @@ return [
                         }}
                       >
                        {/* Pulse ring (humans only) */}
-{c.category !== "crawler" && (
+{c.category !== "crawler" && c.category !== "partner_coverage" && (
   <circle
     cx={c.x}
     cy={c.y}
@@ -1062,50 +1079,59 @@ return [
       />
   </circle>
 )}
+{/* ======================================================
+   COVERAGE CLUSTER (SUBTLE WATERMARK STYLE)
+====================================================== */}
 
+{/* Soft halo glow */}
+{c.category === "partner_coverage" && (
+  <circle
+    cx={c.x}
+    cy={c.y}
+    r={radius + 10}
+    fill={dotColor}
+    opacity={0.05}
+  />
+)}
 
-                        {/* Glow (crawler is softer) */}
-<circle
-  cx={c.x}
-  cy={c.y}
-  r={radius + 12}
-  fill={dotColor}
-  opacity={c.category === "crawler" ? 0.08 : 0.18}
-/>
-
-                       {/* Main bubble */}
+{/* Main Coverage Outline Bubble */}
 <circle
   cx={c.x}
   cy={c.y}
   r={radius}
-  fill={dotColor}
-  opacity={c.category === "crawler" ? 0.55 : 0.92}
+  fill={c.category === "partner_coverage" ? "transparent" : dotColor}
+  stroke={c.category === "partner_coverage" ? dotColor : "none"}
+  strokeWidth={c.category === "partner_coverage" ? 1.6 : 0}
+  opacity={
+    c.category === "crawler"
+      ? 0.50
+      : c.category === "partner_coverage"
+      ? 0.25
+      : 0.92
+  }
 />
 
+{/* Icon/Text */}
+<text
+  x={c.x}
+  y={c.y + 3}
+  textAnchor="middle"
+  fontSize={c.category === "partner_coverage" ? "9" : "14"}
+  fontWeight="900"
+  fill={
+    c.category === "partner_coverage"
+      ? "rgba(180,120,0,0.55)"
+      : "white"
+  }
+  opacity={c.category === "partner_coverage" ? 0.55 : 1}
+>
+  {c.category === "crawler"
+    ? "🕷"
+    : c.category === "partner_coverage"
+    ? "👥"
+    : safeCount.toString()}
+</text>
 
-                        {/* Count */}
-                        <text
-                          x={c.x}
-                          y={c.y + 5}
-                          textAnchor="middle"
-                          fontSize={
-                            c.category === "crawler"
-                              ? "16"
-                              : c.category === "partner_coverage"
-                              ? "16"
-                              : "14"
-                          }
-                          fontWeight="900"
-                          fill="white"
-                        >
-                          {c.category === "crawler"
-                            ? "🕷"
-                            : c.category === "partner_coverage"
-                            ? safeCount < 10
-                              ? "👥"
-                              : `👥${safeCount}`
-                            : safeCount.toString()}
-                        </text>
 
 
 

@@ -513,6 +513,8 @@ export default function LiveUSMap({
     for (const v of renderVisitors) {
       const count = safeInt(v.count, 1);
       const category = getCategory(v);
+// ❌ Skip login noise completely
+if ((v.page_url || "").includes("account/login")) continue;
 
       if (!show[category]) continue;
 
@@ -632,8 +634,13 @@ return [
   const uniqueItems = useMemo(() => {
     if (!selectedCluster) return [] as Dot[];
     return Array.from(
-      new Map(selectedCluster.items.map((it) => [((it.page_url || "") as string).toLowerCase(), it])).values()
-    );
+  new Map(
+    selectedCluster.items
+      .filter((it) => !(it.page_url || "").includes("account/login"))
+      .map((it) => [((it.page_url || "") as string).toLowerCase(), it])
+  ).values()
+);
+
   }, [selectedCluster]);
 
   /* ==========================

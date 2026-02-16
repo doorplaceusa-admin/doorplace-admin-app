@@ -150,21 +150,19 @@ export default function DashboardPage() {
       // If partners DOES have company_id, tell me and we’ll filter them (big speed-up).
 
       const [
-  totalPartnersRes,
-  activatedPartnersRes,
-  pendingPartnersRes,
-  activePartnersRes,
+        totalPartnersRes,
+        activatedPartnersRes,
+        pendingPartnersRes,
+        activePartnersRes,
 
-  siteMetricsRes,
-partnerViewsRes,
+        siteMetricsRes,
 
-leadCountRes,
-orderCountRes,
-leadsDataRes,
+        leadCountRes,
+        orderCountRes,
+        leadsDataRes,
 
-
-  totalAppViewsRes,
-] = await Promise.all([
+        totalAppViewsRes,
+      ] = await Promise.all([
 
         supabase.from("partners").select("*", { count: "estimated", head: true }),
         supabase
@@ -187,12 +185,7 @@ supabase
   .eq("company_id", companyId)
   .maybeSingle(),
 
-  // ✅ REAL Partner Tracking Views (source of truth)
-supabase
-  .from("page_view_events")
-  .select("*", { count: "exact", head: true })
-  .not("partner_id", "is", null)
-  .or(`company_id.eq.${companyId},company_id.is.null`),
+ 
 
 
 
@@ -239,12 +232,12 @@ supabase
       const pendingPartners = pendingPartnersRes.count || 0;
       const activePartners = activePartnersRes.count || 0;
 
-      // ✅ Lifetime totals from site_metrics
+      // ✅ Lifetime totals from site_metrics (stable forever)
 const totalSiteViews =
   siteMetricsRes.data?.lifetime_site_views ?? 0;
 
-const partnerTrackingViews = partnerViewsRes.count || 0;
-
+const partnerTrackingViews =
+  siteMetricsRes.data?.lifetime_partner_views ?? 0;
 
 if (!siteMetricsRes.data) {
   console.warn("⚠️ No site_metrics row yet for company:", companyId);
@@ -281,7 +274,7 @@ if (!siteMetricsRes.data) {
         };
       });
 
-      const totalAppViews = totalAppViewsRes.count || 0;
+      const totalAppViews = (totalAppViewsRes as any)?.count || 0;
 
       setPartnerSnapshot({
         total: totalPartnersCount,

@@ -9,6 +9,10 @@
 
 import dotenv from "dotenv";
 dotenv.config({ path: "/var/www/doorplace-admin-app/.env.local" });
+console.log("ENV CHECK:", {
+  SUPABASE_URL: process.env.SUPABASE_URL ? "YES" : "NO",
+  SERVICE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? "YES" : "NO",
+});
 
 /* ======================================================
    IMPORTS

@@ -640,16 +640,15 @@ for (const p of partnerCoverage) {
     city: p.city,
     state: p.state,
 
-    // ✅ REAL city coordinates from Supabase
     lat: Number(p.latitude),
     lon: Number(p.longitude),
 
-    // ✅ Correct field name
-    count: p.partner_count,
+    count: safeInt(p.partner_count, 1),
 
     category: "partner_coverage",
   });
 }
+
 
 
     return out;

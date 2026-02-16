@@ -29,7 +29,13 @@ type LiveVisitor = {
 };
 
 
-type Category = "swing" | "door" | "partner" | "crawler" | "other";
+type Category =
+  | "swing"
+  | "door"
+  | "partner"
+  | "partner_coverage" // 👥 COVERAGE DOTS (anonymous)
+  | "crawler"
+  | "other";
 
 type Dot = {
   id: string;
@@ -65,9 +71,13 @@ const COLORS: Record<Category, string> = {
   swing: brandRed,
   door: "#2563eb",
   partner: "#16a34a",
-  crawler: "#0ea5e9", // 🔵 SEO bots
+
+  partner_coverage: "#f59e0b", // 🟠 Partner Coverage
+
+  crawler: "#0ea5e9",
   other: "#7c3aed",
 };
+
 
 
 /* ======================================================
@@ -303,9 +313,16 @@ function clusterByPixels(
 
     // Pick dominant category
     const catTotals: Record<Category, number> = {
-      swing: 0, door: 0, partner: 0, other: 0,
-      crawler: 0
-    };
+  swing: 0,
+  door: 0,
+  partner: 0,
+
+  partner_coverage: 0, // 👥 NEW
+
+  other: 0,
+  crawler: 0,
+};
+
     for (const it of items) catTotals[it.category] += it.count;
 
     const category = (Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || "other") as Category;
@@ -315,7 +332,10 @@ function clusterByPixels(
     const topLabel =
   top.category === "crawler"
     ? `🕷 ${top.crawler_name || "Crawler"} • ${top.state}`
+    : top.category === "partner_coverage"
+    ? `👥 ${sumCount} Partners • ${top.city}, ${top.state}`
     : `${top.city || top.page_key || "Unknown"}, ${top.state}`;
+
 
 
 
@@ -422,12 +442,42 @@ export default function LiveUSMap({
   swing: true,
   door: true,
   partner: true,
-  crawler: true, // 🔵
+
+  partner_coverage: true, // 👥 NEW
+
+  crawler: true,
   other: true,
 });
 
+
   // Search query for filtering dots
   const [query, setQuery] = useState<string>("");
+// 👥 Partner Coverage Points
+const [partnerCoverage, setPartnerCoverage] = useState<
+  {
+    city: string;
+    state: string;
+    partner_count: number;
+    latitude: number;
+    longitude: number;
+  }[]
+>([]);
+
+useEffect(() => {
+  async function loadPartnerCoverage() {
+    try {
+      const res = await fetch("/api/map/partners");
+      const data = await res.json();
+
+      setPartnerCoverage(data || []);
+
+    } catch (err) {
+      console.error("Partner coverage fetch failed", err);
+    }
+  }
+
+  loadPartnerCoverage();
+}, []);
 
 
 
@@ -578,9 +628,32 @@ const fallback = stateName ? STATE_CENTROIDS[stateName] : null;
 });
 
     }
+// ======================================================
+// 👥 PARTNER COVERAGE DOTS (anonymous)
+// ======================================================
+for (const p of partnerCoverage) {
+  if (!show.partner_coverage) continue;
+
+  out.push({
+    id: `partnercov|${p.city}|${p.state}`,
+
+    city: p.city,
+    state: p.state,
+
+    // ✅ REAL city coordinates from Supabase
+    lat: Number(p.latitude),
+    lon: Number(p.longitude),
+
+    // ✅ Correct field name
+    count: p.partner_count,
+
+    category: "partner_coverage",
+  });
+}
+
 
     return out;
-  }, [renderVisitors, query, show]);
+  }, [renderVisitors, query, show, partnerCoverage]);
 
   /* ==========================
      CLUSTERING (PIXEL BASED)
@@ -606,12 +679,16 @@ return [
   const totals = useMemo(() => {
       let totalVisitors = 0;
   const byCat: Record<Category, number> = {
-    swing: 0,
-    door: 0,
-    partner: 0,
-    other: 0,
-    crawler: 0,
-  };
+  swing: 0,
+  door: 0,
+  partner: 0,
+
+  partner_coverage: 0, // 👥 NEW
+
+  other: 0,
+  crawler: 0,
+};
+
     for (const d of dots) {
       if (d.category !== "crawler") {
   totalVisitors += d.count;
@@ -753,6 +830,18 @@ return [
             active={show.partner}
             onClick={() => setShow((s) => ({ ...s, partner: !s.partner }))}
           />
+          <Pill
+  label={`Coverage (${totals.byCat.partner_coverage})`}
+  color={COLORS.partner_coverage}
+  active={show.partner_coverage}
+  onClick={() =>
+    setShow((s) => ({
+      ...s,
+      partner_coverage: !s.partner_coverage,
+    }))
+  }
+/>
+
           <Pill
             label={`Other (${totals.byCat.other})`}
             color={COLORS.other}
@@ -997,15 +1086,28 @@ return [
 
                         {/* Count */}
                         <text
-  x={c.x}
-  y={c.y + 5}
-  textAnchor="middle"
-  fontSize={c.category === "crawler" ? "16" : "14"}
-  fontWeight="900"
-  fill="white"
->
-  {c.category === "crawler" ? "🕷" : safeCount}
-</text>
+                          x={c.x}
+                          y={c.y + 5}
+                          textAnchor="middle"
+                          fontSize={
+                            c.category === "crawler"
+                              ? "16"
+                              : c.category === "partner_coverage"
+                              ? "16"
+                              : "14"
+                          }
+                          fontWeight="900"
+                          fill="white"
+                        >
+                          {c.category === "crawler"
+                            ? "🕷"
+                            : c.category === "partner_coverage"
+                            ? safeCount < 10
+                              ? "👥"
+                              : `👥${safeCount}`
+                            : safeCount.toString()}
+                        </text>
+
 
 
                         {/* Label (zoom in) */}

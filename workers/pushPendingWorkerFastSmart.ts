@@ -2,12 +2,17 @@
 
 /* ======================================================
    ✅ FAST SMART PUSH WORKER (SAFE UPGRADE)
-   Built directly on your WORKING pushPendingWorker.ts
+   Built directly from your WORKING pushPendingWorker.ts
 
-   - Same env loading
-   - Same Supabase logic
-   - Same Shopify retry wrapper
-   - Just faster burst mode + throttle rest
+   Upgrades:
+   - Bigger bursts
+   - Faster per-page delay
+   - Stops instantly on Shopify throttle
+   - Sleeps hard, then resumes
+====================================================== */
+
+/* ======================================================
+   ✅ ENV LOADING (PM2 SAFE)
 ====================================================== */
 
 import dotenv from "dotenv";
@@ -23,16 +28,16 @@ import { renderPageTemplateHTML } from "@/lib/renderers/renderPageTemplateHTML";
 import { buildMetaDescription } from "@/lib/seo/build_meta/description";
 
 /* ======================================================
-   ⚡ FAST SETTINGS (ONLY CHANGE)
+   ⚡ FAST SETTINGS (ONLY SPEED CHANGES)
 ====================================================== */
 
-const BATCH_SIZE = 200;          // bigger bursts
-const FAST_DELAY_MS = 250;       // faster push speed
+const BATCH_SIZE = 200;          // was 150
+const INTERVAL_MS = 5_000;       // was 60s (loop faster)
 
-const THROTTLE_REST_MS = 90_000; // rest if Shopify throttles
+const SHOPIFY_DELAY_MS = 250;    // was 1000ms (4x faster)
+
+const THROTTLE_REST_MS = 90_000; // rest hard if Shopify throttles
 const BURST_REST_MS = 10_000;    // short rest between bursts
-
-const INTERVAL_MS = 5_000;       // loop faster than stable worker
 
 const MAX_RETRIES = 10;
 
@@ -52,6 +57,7 @@ function getPageType(template: string) {
   switch (template) {
     case "porch_swing_material_city":
       return "material";
+
     case "porch_swing_size_city":
       return "size";
 
@@ -68,8 +74,8 @@ function getPageType(template: string) {
 }
 
 /* ======================================================
-   ✅ SAFE SHOPIFY PUSH (UNCHANGED)
-   + GLOBAL THROTTLE FLAG
+   ✅ SAFE SHOPIFY PUSH (SAME LOGIC)
+   + Instant Global Throttle Stop
 ====================================================== */
 
 async function safeCreateShopifyPage(payload: any) {
@@ -85,12 +91,14 @@ async function safeCreateShopifyPage(payload: any) {
         msg.includes("Exceeded 2 calls per second") ||
         msg.includes("throttled");
 
+      // ✅ FAST MODE: Stop immediately on first throttle
       if (isThrottle) {
-        console.log("🛑 THROTTLE HIT — STOPPING BURST");
+        console.log("🛑 SHOPIFY THROTTLE HIT — STOPPING BURST");
         return { throttle_hit: true };
       }
 
-      console.log(`⚠️ Error retrying (${attempt}/${MAX_RETRIES}) → ${msg}`);
+      console.log(`⚠️ Shopify error retrying (${attempt}/${MAX_RETRIES}) → ${msg}`);
+
       await sleep(500 * attempt);
     }
   }
@@ -99,7 +107,7 @@ async function safeCreateShopifyPage(payload: any) {
 }
 
 /* ======================================================
-   ✅ CLAIM + LOCK PAGES (UNCHANGED)
+   ✅ CLAIM + LOCK PAGES FIRST (UNCHANGED)
 ====================================================== */
 
 async function claimPages() {
@@ -133,6 +141,7 @@ async function claimPages() {
 
   if (!pages || pages.length === 0) return [];
 
+  // ✅ Lock them immediately
   const ids = pages.map((p) => p.id);
 
   await supabaseAdmin
@@ -156,6 +165,7 @@ async function publishOne(page: any) {
 
   if (!city || !state || !stateCode) return "SKIP";
 
+  /* ---------- Render HTML ---------- */
   const html = renderPageTemplateHTML({
     page_template: page.page_template,
     variant_key: page.variant_key ?? null,
@@ -168,6 +178,7 @@ async function publishOne(page: any) {
 
   if (!html || html.trim().length < 50) return "SKIP";
 
+  /* ---------- SEO Meta ---------- */
   const pageType = getPageType(page.page_template);
 
   const seoDescription = buildMetaDescription({
@@ -179,6 +190,7 @@ async function publishOne(page: any) {
     template: page.page_template,
   });
 
+  /* ---------- Shopify Push ---------- */
   const shopifyPage = await safeCreateShopifyPage({
     title: page.title,
     handle: page.slug,
@@ -187,10 +199,12 @@ async function publishOne(page: any) {
     meta_description: seoDescription,
   });
 
+  // 🛑 Global throttle stop
   if (shopifyPage?.throttle_hit) return "THROTTLE";
 
   if (shopifyPage?.failed_out) throw new Error("Failed after retries");
 
+  /* ---------- Update Supabase ---------- */
   await supabaseAdmin
     .from("generated_pages")
     .update({
@@ -210,13 +224,13 @@ async function publishOne(page: any) {
    ⚡ FAST BURST LOOP
 ====================================================== */
 
-async function runBurst() {
+async function runBatch() {
   console.log("🚀 FAST PUSH WORKER RUNNING...");
 
   const pages = await claimPages();
 
   if (!pages.length) {
-    console.log("✅ No pending pages.");
+    console.log("✅ No pending pages left.");
     return;
   }
 
@@ -226,8 +240,9 @@ async function runBurst() {
     try {
       const result = await publishOne(page);
 
+      // 🛑 If throttle → stop entire burst and rest
       if (result === "THROTTLE") {
-        console.log(`😴 Resting ${THROTTLE_REST_MS / 1000}s...`);
+        console.log(`😴 Throttle rest: sleeping ${THROTTLE_REST_MS / 1000}s`);
 
         // Requeue current page
         await supabaseAdmin
@@ -242,15 +257,15 @@ async function runBurst() {
         return;
       }
 
-      await sleep(FAST_DELAY_MS);
+      await sleep(SHOPIFY_DELAY_MS);
     } catch (err: any) {
-      console.error(`❌ FAILED → ${page.slug}`, err.message);
+      console.error(`❌ FAILED → ${page.slug}`, err?.message);
 
       await supabaseAdmin
         .from("generated_pages")
         .update({
           status: "error",
-          publish_error: err.message,
+          publish_error: err?.message || "Unknown error",
         })
         .eq("id", page.id);
     }
@@ -261,14 +276,14 @@ async function runBurst() {
 }
 
 /* ======================================================
-   RUN FOREVER
+   ✅ RUN FOREVER
 ====================================================== */
 
 console.log("🔥 Fast Safe Push Worker Started");
 
 async function runForever() {
   while (true) {
-    await runBurst();
+    await runBatch();
     await sleep(INTERVAL_MS);
   }
 }

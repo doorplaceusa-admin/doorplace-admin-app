@@ -174,8 +174,12 @@ function getCategory(v: LiveVisitor): Category {
   const key = (v.page_key || "").toLowerCase();
   const url = (v.page_url || "").toLowerCase();
 
-  // ✅ HARD LOCK
-  if (url.includes("swing-partner-lead")) return "partner";
+ // ✅ HARD LOCK
+if (url.includes("swing-partner-lead")) return "partner";
+
+// ✅ HARD LOCK homepage + login as OTHER
+if (url === "/" || url.includes("account/login")) return "other";
+
 
   // ✅ Partner pages MUST win first
   if (key.includes("partner") || url.includes("partner")) return "partner";
@@ -536,8 +540,9 @@ export default function LiveUSMap({
 
   // ✅ Swing/Door/Partner → State centroid
   else {
-    const stateName = normalizeStateName(v.state);
-    const fallback = STATE_CENTROIDS[stateName];
+    const stateName = normalizeStateName(v.state || "");
+const fallback = stateName ? STATE_CENTROIDS[stateName] : null;
+
 
     if (fallback) {
       lat = fallback.lat;

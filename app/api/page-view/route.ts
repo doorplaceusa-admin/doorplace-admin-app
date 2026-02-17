@@ -97,6 +97,23 @@ export async function POST(req: Request) {
     ============================================ */
     if (crawler) {
       console.log("🔵 SEO BOT HIT:", crawler, page_url);
+      /* ============================================
+         CRAWLER LOGGING TOGGLE CHECK
+      ============================================ */
+      const { data: settings } = await supabase
+        .from("system_settings")
+        .select("crawl_logging_enabled")
+        .limit(1)
+        .maybeSingle();
+
+      if (!settings?.crawl_logging_enabled) {
+        console.log("🚫 Crawl logging disabled — skipping DB insert");
+
+        return new Response("Crawler logging disabled", {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
 
       const view_bucket = new Date().toISOString();
 

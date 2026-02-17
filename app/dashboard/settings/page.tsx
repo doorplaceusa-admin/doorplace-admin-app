@@ -40,6 +40,16 @@ export default function Page() {
   const [intervalLoading, setIntervalLoading] = useState(true);
   const [intervalSaving, setIntervalSaving] = useState(false);
   const [intervalStatus, setIntervalStatus] = useState<string | null>(null);
+  /* ======================================================
+     CRAWLER LOGGING TOGGLE
+  ====================================================== */
+
+  const [crawlLoggingEnabled, setCrawlLoggingEnabled] = useState(false);
+  const [crawlToggleLoading, setCrawlToggleLoading] = useState(true);
+  const [crawlToggleSaving, setCrawlToggleSaving] = useState(false);
+  const [crawlToggleStatus, setCrawlToggleStatus] = useState<string | null>(
+    null
+  );
 
   /* ======================================================
      LOAD LIVE MAP INTERVAL SETTINGS (STEP 3)
@@ -68,6 +78,32 @@ export default function Page() {
     }
 
     loadIntervals();
+  }, []);
+  /* ======================================================
+     LOAD CRAWLER LOGGING TOGGLE
+  ====================================================== */
+
+  useEffect(() => {
+    async function loadCrawlerToggle() {
+      setCrawlToggleLoading(true);
+
+      const { data, error } = await supabase
+        .from("system_settings")
+        .select("crawl_logging_enabled")
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error(error);
+        setCrawlToggleStatus("❌ Failed to load crawler toggle");
+      } else if (data) {
+        setCrawlLoggingEnabled(data.crawl_logging_enabled);
+      }
+
+      setCrawlToggleLoading(false);
+    }
+
+    loadCrawlerToggle();
   }, []);
 
   /* ======================================================
@@ -147,6 +183,36 @@ export default function Page() {
 
 setIntervalSaving(false);
 
+  }
+  /* ======================================================
+     SAVE CRAWLER LOGGING TOGGLE
+  ====================================================== */
+
+  async function toggleCrawlerLogging(newValue: boolean) {
+    setCrawlToggleSaving(true);
+    setCrawlToggleStatus(null);
+
+    setCrawlLoggingEnabled(newValue);
+
+    const { error } = await supabase
+      .from("system_settings")
+      .update({
+        crawl_logging_enabled: newValue,
+        updated_at: new Date().toISOString(),
+      });
+
+    if (error) {
+      console.error(error);
+      setCrawlToggleStatus("❌ Failed to update crawler logging");
+    } else {
+      setCrawlToggleStatus(
+        newValue
+          ? "✅ Crawler logging is now ON"
+          : "🚫 Crawler logging is now OFF (Google still crawls)"
+      );
+    }
+
+    setCrawlToggleSaving(false);
   }
 
   /* ======================================================
@@ -293,14 +359,14 @@ setIntervalSaving(false);
               </label>
 
               <input
-  type="number"
-  min={1}
-  value={humanMinutes}
-  onChange={(e) =>
-    setHumanMinutes(Number(e.target.value))
-  }
-  className="w-full border rounded px-3 py-2 text-sm"
-/>
+              type="number"
+               min={1}
+                  value={humanMinutes}
+                 onChange={(e) =>
+                          setHumanMinutes(Number(e.target.value))
+                      }
+                            className="w-full border rounded px-3 py-2 text-sm"
+                        />
 
 
               <p className="text-xs text-gray-500 mt-1">
@@ -352,6 +418,51 @@ setIntervalSaving(false);
               </p>
             )}
           </div>
+        )}
+      </div>
+      {/* Crawler Logging Toggle */}
+      <div className="border-t pt-6">
+        <h2 className="text-lg font-semibold mb-2">
+          Google Crawl Logging Control
+        </h2>
+
+        <p className="text-sm text-gray-600 mb-4">
+          Google will continue crawling your pages normally. This switch only
+          controls whether TradePilot logs crawler activity into Supabase.
+        </p>
+
+        {crawlToggleLoading ? (
+          <p className="text-sm text-gray-500">Loading crawler setting…</p>
+        ) : (
+          <div className="flex items-center justify-between border rounded-md px-4 py-3 bg-white">
+            <div>
+              <p className="font-medium text-sm">Crawler Logging</p>
+              <p className="text-xs text-gray-500">
+                {crawlLoggingEnabled
+                  ? "Logging crawler hits into database"
+                  : "Crawler logging disabled (recommended during heavy crawl)"}
+              </p>
+            </div>
+
+            {/* Toggle Switch */}
+            <button
+              disabled={crawlToggleSaving}
+              onClick={() => toggleCrawlerLogging(!crawlLoggingEnabled)}
+              className={`w-14 h-8 flex items-center rounded-full px-1 transition ${
+                crawlLoggingEnabled ? "bg-green-600" : "bg-gray-300"
+              }`}
+            >
+              <div
+                className={`w-6 h-6 bg-white rounded-full shadow transform transition ${
+                  crawlLoggingEnabled ? "translate-x-6" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+        )}
+
+        {crawlToggleStatus && (
+          <p className="text-sm mt-3 text-gray-700">{crawlToggleStatus}</p>
         )}
       </div>
 

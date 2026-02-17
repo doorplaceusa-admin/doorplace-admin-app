@@ -225,7 +225,24 @@ supabase
           .from("app_view_logs")
           .select("*", { count: "estimated", head: true })
           .or(`company_id.eq.${companyId},company_id.is.null`),
+
+
       ]);
+      // ================================
+      // ✅ STEP 1 DEBUG LOGS (PASTE HERE)
+      // ================================
+
+      console.log("🔥 companyId:", companyId);
+
+      console.log("🔥 siteMetricsRes:", {
+        data: siteMetricsRes.data,
+        error: siteMetricsRes.error,
+      });
+
+      console.log("🔥 totalAppViewsRes:", {
+        count: (totalAppViewsRes as any)?.count,
+        error: (totalAppViewsRes as any)?.error,
+      });
 
       const totalPartnersCount = totalPartnersRes.count || 0;
       const activatedPartnersCount = activatedPartnersRes.count || 0;

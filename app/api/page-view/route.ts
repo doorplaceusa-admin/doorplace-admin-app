@@ -96,44 +96,13 @@ export async function POST(req: Request) {
        3) BOT → LOG SEO EVENT (CORRECT)
     ============================================ */
     if (crawler) {
-      console.log("🔵 SEO BOT HIT:", crawler, page_url);
-      /* ============================================
-         CRAWLER LOGGING TOGGLE CHECK
-      ============================================ */
-      const { data: settings } = await supabase
-        .from("system_settings")
-        .select("crawl_logging_enabled")
-        .limit(1)
-        .maybeSingle();
+  // 🚫 DO NOT TOUCH SUPABASE AT ALL
+  return new Response("OK", {
+    status: 204,
+    headers: corsHeaders,
+  });
+}
 
-      if (!settings?.crawl_logging_enabled) {
-        console.log("🚫 Crawl logging disabled — skipping DB insert");
-
-        return new Response("Crawler logging disabled", {
-          status: 200,
-          headers: corsHeaders,
-        });
-      }
-
-      const view_bucket = new Date().toISOString();
-
-      const { error } = await supabase.from("seo_crawl_events").insert({
-        page_url,
-        page_key,
-        crawler,
-        user_agent: ua,
-        view_bucket,
-      });
-
-      if (error) {
-        console.error("❌ SEO BOT INSERT ERROR:", error);
-      }
-
-      return new Response("Crawler logged", {
-        status: 200,
-        headers: corsHeaders,
-      });
-    }
 
     /* ============================================
        4) HUMAN GEO (Cloudflare)

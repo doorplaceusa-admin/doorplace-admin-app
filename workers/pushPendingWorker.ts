@@ -21,10 +21,10 @@ import { buildMetaDescription } from "@/lib/seo/build_meta/description";
    ENTERPRISE SETTINGS
 ====================================================== */
 
-const BATCH_SIZE = 150;
+const BATCH_SIZE = 50;
 const INTERVAL_MS = 60_000;
 
-const SHOPIFY_DELAY_MS = 1000;
+const SHOPIFY_DELAY_MS = 1500;
 const COOLDOWN_MS = 60_000;
 const MAX_RETRIES = 10;
 
@@ -71,16 +71,6 @@ async function safeCreateShopifyPage(payload: any) {
     } catch (err: any) {
       const msg = err?.message || "";
 
-      // ✅ HANDLE TAKEN FIRST
-      const isHandleTaken =
-        msg.includes("handle") &&
-        msg.includes("has already been taken");
-
-      if (isHandleTaken) {
-        return { handle_taken: true };
-      }
-
-      // ✅ THROTTLE SECOND
       const isThrottle =
         msg.includes("429") ||
         msg.includes("Too Many Requests") ||
@@ -99,13 +89,20 @@ async function safeCreateShopifyPage(payload: any) {
         continue;
       }
 
-      throw err;
+      const isHandleTaken =
+  msg.includes("handle") &&
+  msg.includes("has already been taken");
+
+if (isHandleTaken) {
+  return { handle_taken: true };
+}
+
+throw err;
     }
   }
 
   return { throttled_out: true };
 }
-
 
 /* ======================================================
    ✅ CLAIM + LOCK PAGES FIRST (WITH RECLAIM)
@@ -231,24 +228,17 @@ if (shopifyPage?.handle_taken) {
   const existing = await getShopifyPageByHandle(page.slug);
 
   if (existing?.id) {
-    const { error: linkError } = await supabaseAdmin
-  .from("generated_pages")
-  .update({
-    shopify_page_id: existing.id,
-    status: "published",
-    published_at: new Date().toISOString(),
-    publish_error: null,
-  })
-  .eq("id", page.id);
+    await supabaseAdmin
+      .from("generated_pages")
+      .update({
+        shopify_page_id: existing.id,
+        status: "published",
+        published_at: new Date().toISOString(),
+        publish_error: null,
+      })
+      .eq("id", page.id);
 
-if (linkError) {
-  console.error("❌ FAILED TO LINK IN SUPABASE:", linkError.message);
-  return;
-}
-
-console.log(`✅ Linked existing Shopify page → ${page.slug}`);
-return;
-
+    console.log(`✅ Linked existing Shopify page → ${page.slug}`);
     return;
   }
 

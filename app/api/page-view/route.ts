@@ -96,12 +96,13 @@ export async function POST(req: Request) {
        3) BOT → LOG SEO EVENT (CORRECT)
     ============================================ */
     if (crawler) {
-  // 🚫 DO NOT TOUCH SUPABASE AT ALL
-  return new Response("OK", {
+  // 🚫 Emergency mode: do not touch Supabase at all
+  return new Response(null, {
     status: 204,
     headers: corsHeaders,
   });
 }
+
 
 
     /* ============================================

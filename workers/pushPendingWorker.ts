@@ -102,26 +102,14 @@ async function safeCreateShopifyPage(payload: any) {
 async function claimPages() {
   console.log("🔍 Claiming pending pages...");
 
-  // ✅ Reclaim anything stuck in "publishing" longer than 10 minutes
   const tenMinutesAgo = new Date(
     Date.now() - 10 * 60 * 1000
   ).toISOString();
 
+  // ✅ FAST CLAIM (NO JOIN)
   const { data: pages, error } = await supabaseAdmin
     .from("generated_pages")
-    .select(
-      `
-      *,
-      us_locations (
-        city_name,
-        slug,
-        us_states (
-          state_name,
-          state_code
-        )
-      )
-    `
-    )
+    .select("id, slug, title, page_template, variant_key, template_suffix, hero_image_url")
     .or(
       `status.eq.generated,and(status.eq.publishing,publishing_started_at.lt.${tenMinutesAgo})`
     )
@@ -139,7 +127,7 @@ async function claimPages() {
     return [];
   }
 
-  // ✅ Lock them immediately with timestamp
+  // ✅ Lock immediately
   const ids = pages.map((p) => p.id);
 
   await supabaseAdmin
@@ -156,11 +144,35 @@ async function claimPages() {
 }
 
 
+
 /* ======================================================
    PUBLISH ONE PAGE
 ====================================================== */
 
 async function publishOne(page: any) {
+    // ✅ Load full relational data AFTER claim
+  const { data: fullPage, error } = await supabaseAdmin
+    .from("generated_pages")
+    .select(
+      `
+      *,
+      us_locations (
+        city_name,
+        slug,
+        us_states (
+          state_name,
+          state_code
+        )
+      )
+    `
+    )
+    .eq("id", page.id)
+    .single();
+
+  if (error || !fullPage) return;
+
+  page = fullPage;
+
   const city = page.us_locations?.city_name;
   const state = page.us_locations?.us_states?.state_name;
   const stateCode = page.us_locations?.us_states?.state_code;

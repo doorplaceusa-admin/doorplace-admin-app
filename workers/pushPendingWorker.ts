@@ -231,17 +231,24 @@ if (shopifyPage?.handle_taken) {
   const existing = await getShopifyPageByHandle(page.slug);
 
   if (existing?.id) {
-    await supabaseAdmin
-      .from("generated_pages")
-      .update({
-        shopify_page_id: existing.id,
-        status: "published",
-        published_at: new Date().toISOString(),
-        publish_error: null,
-      })
-      .eq("id", page.id);
+    const { error: linkError } = await supabaseAdmin
+  .from("generated_pages")
+  .update({
+    shopify_page_id: existing.id,
+    status: "published",
+    published_at: new Date().toISOString(),
+    publish_error: null,
+  })
+  .eq("id", page.id);
 
-    console.log(`✅ Linked existing Shopify page → ${page.slug}`);
+if (linkError) {
+  console.error("❌ FAILED TO LINK IN SUPABASE:", linkError.message);
+  return;
+}
+
+console.log(`✅ Linked existing Shopify page → ${page.slug}`);
+return;
+
     return;
   }
 

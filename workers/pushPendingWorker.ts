@@ -10,6 +10,7 @@ dotenv.config({ path: "/var/www/doorplace-admin-app/.env.local" });
 /* ======================================================
    IMPORTS
 ====================================================== */
+import { getShopifyPageByHandle } from "@/lib/shopify/getShopifyPageByHandle";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createShopifyPage } from "@/lib/shopify/createShopifyPage";
@@ -70,6 +71,16 @@ async function safeCreateShopifyPage(payload: any) {
     } catch (err: any) {
       const msg = err?.message || "";
 
+      // ✅ HANDLE TAKEN FIRST
+      const isHandleTaken =
+        msg.includes("handle") &&
+        msg.includes("has already been taken");
+
+      if (isHandleTaken) {
+        return { handle_taken: true };
+      }
+
+      // ✅ THROTTLE SECOND
       const isThrottle =
         msg.includes("429") ||
         msg.includes("Too Many Requests") ||
@@ -94,6 +105,7 @@ async function safeCreateShopifyPage(payload: any) {
 
   return { throttled_out: true };
 }
+
 
 /* ======================================================
    ✅ CLAIM + LOCK PAGES FIRST (WITH RECLAIM)
@@ -212,6 +224,38 @@ async function publishOne(page: any) {
     template_suffix: page.template_suffix || null,
     meta_description: seoDescription,
   });
+// ✅ HANDLE ALREADY EXISTS → LINK IT INSTEAD OF FAILING
+if (shopifyPage?.handle_taken) {
+  console.log(`🟡 Handle already exists → fetching page: ${page.slug}`);
+
+  const existing = await getShopifyPageByHandle(page.slug);
+
+  if (existing?.id) {
+    await supabaseAdmin
+      .from("generated_pages")
+      .update({
+        shopify_page_id: existing.id,
+        status: "published",
+        published_at: new Date().toISOString(),
+        publish_error: null,
+      })
+      .eq("id", page.id);
+
+    console.log(`✅ Linked existing Shopify page → ${page.slug}`);
+    return;
+  }
+
+  // If we can't find it, mark error
+  await supabaseAdmin
+    .from("generated_pages")
+    .update({
+      status: "error",
+      publish_error: "Handle taken but page not found in Shopify",
+    })
+    .eq("id", page.id);
+
+  return;
+}
 
   // ✅ If throttle wall → requeue instead of failing
   if (shopifyPage?.throttled_out) {

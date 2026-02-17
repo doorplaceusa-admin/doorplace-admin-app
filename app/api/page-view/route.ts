@@ -20,21 +20,42 @@ export async function OPTIONS() {
 }
 
 /* ======================================================
-   BOT / CRAWLER DETECTOR
+   BOT / CRAWLER DETECTOR (EXPANDED + SAFE)
 ====================================================== */
 function detectCrawler(userAgent: string) {
   const ua = (userAgent || "").toLowerCase();
 
+  /* -------------------------------
+     Major Search Engine Crawlers
+  -------------------------------- */
   if (ua.includes("googlebot")) return "googlebot";
   if (ua.includes("bingbot")) return "bingbot";
   if (ua.includes("duckduckbot")) return "duckduckbot";
   if (ua.includes("yandex")) return "yandexbot";
   if (ua.includes("baiduspider")) return "baiduspider";
 
+  /* -------------------------------
+     SEO Tools / Scrapers
+  -------------------------------- */
   if (ua.includes("ahrefs")) return "ahrefs";
   if (ua.includes("semrush")) return "semrush";
   if (ua.includes("mj12bot")) return "mj12bot";
 
+  /* -------------------------------
+     Social + Link Preview Bots
+     (These were being logged as HUMAN)
+  -------------------------------- */
+  if (ua.includes("facebookexternalhit")) return "facebook";
+  if (ua.includes("facebot")) return "facebook";
+  if (ua.includes("twitterbot")) return "twitter";
+  if (ua.includes("slackbot")) return "slack";
+  if (ua.includes("discordbot")) return "discord";
+  if (ua.includes("linkedinbot")) return "linkedin";
+  if (ua.includes("pinterest")) return "pinterest";
+
+  /* -------------------------------
+     Generic Bot Keywords
+  -------------------------------- */
   if (ua.includes("crawler")) return "crawler";
   if (ua.includes("spider")) return "spider";
 
@@ -42,6 +63,7 @@ function detectCrawler(userAgent: string) {
 
   return null;
 }
+
 
 /* ======================================================
    POST /api/page-view
@@ -76,7 +98,7 @@ export async function POST(req: Request) {
     if (crawler) {
       console.log("🔵 SEO BOT HIT:", crawler, page_url);
 
-      const view_bucket = new Date().toISOString().slice(0, 16);
+      const view_bucket = new Date().toISOString();
 
       const { error } = await supabase.from("seo_crawl_events").insert({
         page_url,

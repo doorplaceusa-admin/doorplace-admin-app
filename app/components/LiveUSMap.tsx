@@ -677,11 +677,7 @@ lon: p.longitude
   const clusters = useMemo(() => {
     // Bigger radius when zoomed out so you don’t get dot soup
     const base = zoomScale <= 1.2 ? 34 : zoomScale <= 1.8 ? 26 : zoomScale <= 2.6 ? 18 : 12;
-    const humanDots = dots.filter(
-  (d) =>
-    d.category !== "crawler" &&
-    d.category !== "partner_coverage" // ✅ remove coverage from clustering
-);
+    const humanDots = dots.filter((d) => d.category !== "crawler");
 const crawlerDots = dots.filter((d) => d.category === "crawler");
 
 return [
@@ -708,18 +704,10 @@ return [
 };
 
     for (const d of dots) {
-      if (
-  d.category !== "crawler" &&
-  d.category !== "partner_coverage"
-) {
+      if (d.category !== "crawler") {
   totalVisitors += d.count;
 }
-
-      if (d.category === "partner_coverage") {
-  byCat.partner_coverage += 1; // ✅ count cities, not partners
-} else {
-  byCat[d.category] += d.count;
-}
+      byCat[d.category] += d.count;
     }
     return { totalVisitors, byCat };
   }, [dots]);
@@ -1033,39 +1021,6 @@ return [
                       );
                     })}
                   </g>
-{/* ======================================================
-    PARTNER COVERAGE LAYER (BACKGROUND RINGS)
-    - Only shows when zoomed OUT
-====================================================== */}
-{zoomScale < 2.2 &&
-  dots
-    .filter((d) => d.category === "partner_coverage")
-    .map((d) => {
-      const p = projectLonLat(d.lon, d.lat);
-      if (!p) return null;
-
-      const [x, y] = p;
-
-      const ringSize = clamp(
-        10 + Math.sqrt(d.count) * 6,
-        12,
-        40
-      );
-
-      return (
-        <circle
-          key={d.id}
-          cx={x}
-          cy={y}
-          r={ringSize}
-          fill="rgba(245,158,11,0.04)"
-          stroke="#f59e0b"
-          strokeWidth={2}
-          opacity={0.18}
-        />
-      );
-    })}
-
 
                   {/* Clusters */}
                   {clusters
@@ -1122,6 +1077,73 @@ return [
       />
   </circle>
 )}
+{/* ======================================================
+   COVERAGE CLUSTER (SUBTLE WATERMARK STYLE)
+====================================================== */}
+
+{/* Soft halo glow */}
+{c.category === "partner_coverage" && (
+  <circle
+    cx={c.x}
+    cy={c.y}
+    r={radius + 10}
+    fill={dotColor}
+    opacity={0.05}
+  />
+)}
+
+{/* Main Coverage Outline Bubble */}
+<circle
+  cx={c.x}
+  cy={c.y}
+  r={radius}
+  fill={c.category === "partner_coverage" ? "transparent" : dotColor}
+  stroke={c.category === "partner_coverage" ? dotColor : "none"}
+  strokeWidth={c.category === "partner_coverage" ? 1.6 : 0}
+  opacity={
+    c.category === "crawler"
+      ? 0.50
+      : c.category === "partner_coverage"
+      ? 0.25
+      : 0.92
+  }
+/>
+
+{/* Icon/Text */}
+<text
+  x={c.x}
+  y={c.y + 4}
+  textAnchor="middle"
+  fontWeight="900"
+  fontSize={
+    c.category === "partner_coverage"
+      ? 16   // ✅ bigger dot
+      : c.category === "crawler"
+      ? 14
+      : 14
+  }
+  fill={
+    c.category === "partner_coverage"
+      ? "#f59e0b" // ✅ strong amber
+      : c.category === "crawler"
+      ? "white"
+      : "white"
+  }
+  opacity={
+    c.category === "partner_coverage"
+      ? 0.85 // ✅ visible but subtle
+      : 1
+  }
+>
+  {c.category === "crawler"
+    ? "🕷"
+    : c.category === "partner_coverage"
+    ? "●"
+    : safeCount.toString()}
+</text>
+
+
+
 
 
                         {/* Label (zoom in) */}

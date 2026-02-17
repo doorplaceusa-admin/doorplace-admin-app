@@ -150,84 +150,77 @@ export default function DashboardPage() {
       // If partners DOES have company_id, tell me and we’ll filter them (big speed-up).
 
       const [
-        totalPartnersRes,
-        activatedPartnersRes,
-        pendingPartnersRes,
-        activePartnersRes,
+  totalPartnersRes,
+  activatedPartnersRes,
+  pendingPartnersRes,
+  activePartnersRes,
 
-        siteMetricsRes,
+  siteMetricsRes,
 
-        leadCountRes,
-        orderCountRes,
-        leadsDataRes,
+  leadCountRes,
+  orderCountRes,
+  leadsDataRes,
+] = await Promise.all([
+  supabase.from("partners").select("*", { count: "estimated", head: true }),
 
-        totalAppViewsRes,
-      ] = await Promise.all([
+  supabase
+    .from("partners")
+    .select("*", { count: "estimated", head: true })
+    .not("auth_user_id", "is", null),
 
-        supabase.from("partners").select("*", { count: "estimated", head: true }),
-        supabase
-          .from("partners")
-          .select("*", { count: "estimated", head: true })
-          .not("auth_user_id", "is", null),
-        supabase
-          .from("partners")
-          .select("*", { count: "estimated", head: true })
-          .eq("status", "pending"),
-        supabase
-          .from("partners")
-          .select("*", { count: "estimated", head: true })
-          .eq("status", "active"),
+  supabase
+    .from("partners")
+    .select("*", { count: "estimated", head: true })
+    .eq("status", "pending"),
 
-        // ✅ LIFETIME TOTALS (FAST)
-supabase
-  .from("site_metrics")
-  .select("lifetime_site_views,lifetime_partner_views")
-  .eq("company_id", companyId)
-  .maybeSingle(),
+  supabase
+    .from("partners")
+    .select("*", { count: "estimated", head: true })
+    .eq("status", "active"),
 
- 
+  // ✅ LIFETIME TOTALS (FAST)
+  supabase
+    .from("site_metrics")
+    .select(
+      "lifetime_site_views,lifetime_partner_views,lifetime_app_views"
+    )
+    .eq("company_id", companyId)
+    .maybeSingle(),
 
+  supabase
+    .from("leads")
+    .select("*", { count: "estimated", head: true })
+    .eq("company_id", companyId)
+    .neq("submission_type", "partner_order"),
 
+  supabase
+    .from("leads")
+    .select("*", { count: "estimated", head: true })
+    .eq("company_id", companyId)
+    .eq("submission_type", "partner_order"),
 
-        supabase
-          .from("leads")
-          .select("*", { count: "estimated", head: true })
-          .eq("company_id", companyId)
-          .neq("submission_type", "partner_order"),
-
-        supabase
-          .from("leads")
-          .select("*", { count: "estimated", head: true })
-          .eq("company_id", companyId)
-          .eq("submission_type", "partner_order"),
-
-        supabase
-          .from("leads")
-          .select(
-            `
-            lead_id,
-            created_at,
-            customer_first_name,
-            customer_last_name,
-            email,
-            phone,
-            product_type,
-            swing_size,
-            city,
-            state
-          `
-          )
-          .eq("company_id", companyId)
-          .order("created_at", { ascending: false })
-          .limit(3),
-
-        supabase
-          .from("app_view_logs")
-          .select("*", { count: "estimated", head: true })
-          .or(`company_id.eq.${companyId},company_id.is.null`),
+  supabase
+    .from("leads")
+    .select(
+      `
+      lead_id,
+      created_at,
+      customer_first_name,
+      customer_last_name,
+      email,
+      phone,
+      product_type,
+      swing_size,
+      city,
+      state
+    `
+    )
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: false })
+    .limit(3),
+]);
 
 
-      ]);
       // ================================
       // ✅ STEP 1 DEBUG LOGS (PASTE HERE)
       // ================================
@@ -239,10 +232,7 @@ supabase
         error: siteMetricsRes.error,
       });
 
-      console.log("🔥 totalAppViewsRes:", {
-        count: (totalAppViewsRes as any)?.count,
-        error: (totalAppViewsRes as any)?.error,
-      });
+      
 
       const totalPartnersCount = totalPartnersRes.count || 0;
       const activatedPartnersCount = activatedPartnersRes.count || 0;
@@ -291,7 +281,8 @@ if (!siteMetricsRes.data) {
         };
       });
 
-      const totalAppViews = (totalAppViewsRes as any)?.count || 0;
+      const totalAppViews =
+  siteMetricsRes.data?.lifetime_app_views ?? 0;
 
       setPartnerSnapshot({
         total: totalPartnersCount,

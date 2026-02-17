@@ -454,7 +454,7 @@ export default function LiveUSMap({
   door: true,
   partner: false,
   partner_coverage: false, // 👥 NEW
-  crawler: false,
+  crawler: true,
   other: false,
 });
 

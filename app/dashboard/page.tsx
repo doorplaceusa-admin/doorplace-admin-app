@@ -246,6 +246,10 @@ const totalSiteViews =
 const partnerTrackingViews =
   siteMetricsRes.data?.lifetime_partner_views ?? 0;
 
+const totalAppViews =
+  siteMetricsRes.data?.lifetime_app_views ?? 0;
+
+
 if (!siteMetricsRes.data) {
   console.warn("⚠️ No site_metrics row yet for company:", companyId);
 }
@@ -281,8 +285,7 @@ if (!siteMetricsRes.data) {
         };
       });
 
-      const totalAppViews =
-  siteMetricsRes.data?.lifetime_app_views ?? 0;
+      
 
       setPartnerSnapshot({
         total: totalPartnersCount,

@@ -96,11 +96,16 @@ async function safeCreateShopifyPage(payload: any) {
 }
 
 /* ======================================================
-   ✅ CLAIM + LOCK PAGES FIRST
+   ✅ CLAIM + LOCK PAGES FIRST (WITH RECLAIM)
 ====================================================== */
 
 async function claimPages() {
   console.log("🔍 Claiming pending pages...");
+
+  // ✅ Reclaim anything stuck in "publishing" longer than 10 minutes
+  const tenMinutesAgo = new Date(
+    Date.now() - 10 * 60 * 1000
+  ).toISOString();
 
   const { data: pages, error } = await supabaseAdmin
     .from("generated_pages")
@@ -117,7 +122,9 @@ async function claimPages() {
       )
     `
     )
-    .eq("status", "generated")
+    .or(
+      `status.eq.generated,and(status.eq.publishing,publishing_started_at.lt.${tenMinutesAgo})`
+    )
     .is("shopify_page_id", null)
     .eq("is_duplicate", false)
     .order("created_at", { ascending: true })
@@ -132,18 +139,22 @@ async function claimPages() {
     return [];
   }
 
-  // ✅ Lock them immediately
+  // ✅ Lock them immediately with timestamp
   const ids = pages.map((p) => p.id);
 
   await supabaseAdmin
     .from("generated_pages")
-    .update({ status: "publishing" })
+    .update({
+      status: "publishing",
+      publishing_started_at: new Date().toISOString(),
+    })
     .in("id", ids);
 
   console.log(`✅ Locked ${pages.length} pages`);
 
   return pages;
 }
+
 
 /* ======================================================
    PUBLISH ONE PAGE

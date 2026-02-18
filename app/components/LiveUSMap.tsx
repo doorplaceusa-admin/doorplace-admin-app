@@ -168,6 +168,7 @@ const STATE_LABEL_OFFSETS: Record<string, { dx: number; dy: number }> = {
   "22": { dx: -9, dy: -10 }, // Louisiana
 };
 
+
 /* ======================================================
    PURE HELPERS
 ====================================================== */
@@ -461,6 +462,10 @@ export default function LiveUSMap({
 
   // Search query for filtering dots
   const [query, setQuery] = useState<string>("");
+  // ✅ Human window counter (adjustable)
+const [humanWindowMinutes, setHumanWindowMinutes] = useState<number>(30);
+const [humanCount, setHumanCount] = useState<number>(0);
+
 // 👥 Partner Coverage Points
 const [partnerCoverage, setPartnerCoverage] = useState<
   {
@@ -488,6 +493,34 @@ useEffect(() => {
   loadPartnerCoverage();
 }, []);
 
+// ✅ Human views counter (last X minutes)
+useEffect(() => {
+  async function loadHumanCount() {
+    try {
+      const res = await fetch(
+        `/api/analytics/humans-last-window?minutes=${humanWindowMinutes}`
+      );
+
+      const json = await res.json();
+      setHumanCount(json.count || 0);
+    } catch (err) {
+      console.error("Human count fetch failed", err);
+    }
+  }
+
+  loadHumanCount();
+
+  // Refresh every 30 seconds
+  const refreshMs =
+  humanWindowMinutes <= 10 ? 15000 :
+  humanWindowMinutes <= 60 ? 30000 :
+  60000;
+
+const id = setInterval(loadHumanCount, refreshMs);
+
+
+  return () => clearInterval(id);
+}, [humanWindowMinutes]);
 
 
   // Spike protection: buffer incoming visitors, update map at most every 250ms
@@ -799,10 +832,17 @@ return [
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
-            <StatCard label="TOTAL RIGHT NOW" value={totals.totalVisitors.toLocaleString()} />
-            <StatCard label="ACTIVE LOCATIONS" value={clusters.length.toLocaleString()} />
-          </div>
+         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
+  <StatCard label="TOTAL RIGHT NOW" value={totals.totalVisitors.toLocaleString()} />
+  <StatCard label="ACTIVE LOCATIONS" value={clusters.length.toLocaleString()} />
+
+  {/* ✅ Humans in selected window */}
+  <StatCard
+    label={`HUMANS (LAST ${humanWindowMinutes} MIN)`}
+    value={humanCount.toLocaleString()}
+  />
+</div>
+
         </div>
 
         {/* Filters row */}
@@ -825,6 +865,27 @@ return [
               }}
             />
           </div>
+<select
+  value={humanWindowMinutes}
+  onChange={(e) => setHumanWindowMinutes(Number(e.target.value))}
+  style={{
+    padding: "10px 12px",
+    borderRadius: 14,
+    border: "1px solid #e5e7eb",
+    fontSize: 13,
+    fontWeight: 800,
+    background: "white",
+    cursor: "pointer",
+  }}
+>
+  <option value={1}>Last 1 min</option>
+  <option value={10}>Last 10 min</option>
+  <option value={30}>Last 30 min</option>
+  <option value={60}>Last 1 hour</option>
+  <option value={120}>Last 2 hours</option>
+  <option value={360}>Last 6 hours</option>
+  <option value={1440}>Last 24 hours</option>
+</select>
 
           <Pill
             label={`Swing (${totals.byCat.swing})`}

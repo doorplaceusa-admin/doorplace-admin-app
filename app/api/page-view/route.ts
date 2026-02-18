@@ -96,13 +96,59 @@ export async function POST(req: Request) {
        3) BOT → LOG SEO EVENT (CORRECT)
     ============================================ */
     if (crawler) {
-  // 🚫 Emergency mode: do not touch Supabase at all
-  return new Response(null, {
-    status: 204,
+  // ✅ Always log crawler hits
+  console.log("🔵 SEO BOT HIT:", crawler, page_url);
+
+  /* ============================================
+     ✅ MASTER SAFE MODE (NO DB, NO MAP)
+     Toggle OFF = completely silent in Supabase
+  ============================================ */
+  if (process.env.CRAWLER_LOG_ONLY === "true") {
+    return new Response("Crawler detected (log only)", {
+      status: 200,
+      headers: corsHeaders,
+    });
+  }
+
+  /* ============================================
+     ✅ ONLY NOW do we check dashboard toggle
+     (because toggle ON means DB allowed)
+  ============================================ */
+  const { data: settings } = await supabase
+    .from("system_settings")
+    .select("crawl_logging_enabled")
+    .limit(1)
+    .maybeSingle();
+
+  if (!settings?.crawl_logging_enabled) {
+    console.log("🚫 Crawl toggle OFF — skipping DB insert");
+
+    return new Response("Crawler logging disabled", {
+      status: 200,
+      headers: corsHeaders,
+    });
+  }
+
+  /* ============================================
+     ✅ Toggle ON → insert + map feed
+  ============================================ */
+  const { error } = await supabase.from("seo_crawl_events").insert({
+    page_url,
+    page_key,
+    crawler,
+    user_agent: ua,
+    view_bucket: new Date().toISOString(),
+  });
+
+  if (error) {
+    console.error("❌ SEO BOT INSERT ERROR:", error);
+  }
+
+  return new Response("Crawler logged", {
+    status: 200,
     headers: corsHeaders,
   });
 }
-
 
 
     /* ============================================

@@ -24,7 +24,7 @@ import { buildMetaDescription } from "@/lib/seo/build_meta/description";
 const BATCH_SIZE = 50;
 const INTERVAL_MS = 60_000;
 
-const SHOPIFY_DELAY_MS = 1000;
+const SHOPIFY_DELAY_MS = 2500;
 const COOLDOWN_MS = 60_000;
 const MAX_RETRIES = 10;
 

@@ -41,12 +41,20 @@ export async function GET() {
 
   /* ============================================
      ✅ 4) RETURN TRUE SSE RESPONSE HEADERS
+     (Kamatera + Nginx Safe)
   ============================================ */
   return new Response(stream, {
     headers: {
       "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
+
+      // ✅ Prevent caching + transformation
+      "Cache-Control": "no-cache, no-transform",
+
+      // ✅ Keep connection open
       Connection: "keep-alive",
+
+      // ✅ REQUIRED for Nginx/Kamatera streaming
+      "X-Accel-Buffering": "no",
     },
   });
 }

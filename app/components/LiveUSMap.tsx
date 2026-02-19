@@ -216,9 +216,10 @@ function safeInt(n: any, fallback = 1) {
 
 function makeDotId(v: LiveVisitor) {
   return v.source === "crawler"
-    ? `crawler|${v.state}|${v.crawler_name || "bot"}|${v.page_url || ""}`
+    ? `crawler|${crypto.randomUUID()}`
     : `human|${v.city}|${v.state}|${v.page_url || ""}`;
 }
+
 
 
 function clamp(n: number, a: number, b: number) {
@@ -785,7 +786,6 @@ return [
 
   const topClusters = useMemo(() => {
   return clusters
-    .filter((c) => c.category !== "crawler") // ✅ REMOVE CRAWLERS
     .slice()
     .sort((a, b) => b.total - a.total)
     .slice(0, fullscreen ? 10 : 6);

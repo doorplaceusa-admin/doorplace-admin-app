@@ -173,6 +173,18 @@ const STATE_LABEL_OFFSETS: Record<string, { dx: number; dy: number }> = {
 /* ======================================================
    PURE HELPERS
 ====================================================== */
+function extractStateFromUrl(pageUrl?: string): string | null {
+  if (!pageUrl) return null;
+
+  // Match "-tx" "-va" "-nc" at the very end of slug
+  const match = pageUrl.toLowerCase().match(/-([a-z]{2})$/);
+
+  if (!match) return null;
+
+  const abbr = match[1].toUpperCase();
+
+  return STATE_NAME_BY_ABBR[abbr] || null;
+}
 
 function normalizeStateName(input: string): string {
   const trimmed = (input || "").trim();
@@ -457,7 +469,7 @@ export default function LiveUSMap({
   door: true,
   partner: false,
   partner_coverage: false, // 👥 NEW
-  crawler: false,
+  crawler: true,
   other: false,
 });
 
@@ -660,11 +672,24 @@ if ((v.page_url || "").includes("account/login")) continue;
 
     if (lat == null || lon == null) {
 
-  // ✅ Crawlers always fallback to US center
-  if (v.source === "crawler") {
+  // ✅ Crawlers → State centroid from URL
+if (v.source === "crawler") {
+  const stateName = extractStateFromUrl(v.page_url);
+
+  if (stateName && STATE_CENTROIDS[stateName]) {
+    lat = STATE_CENTROIDS[stateName].lat;
+    lon = STATE_CENTROIDS[stateName].lon;
+
+    // Optional: tiny jitter so bots don't stack perfectly
+    lat += (Math.random() - 0.5) * 1.0;
+    lon += (Math.random() - 0.5) * 1.0;
+  } else {
+    // fallback if parsing fails
     lat = US_CENTER.lat;
     lon = US_CENTER.lon;
   }
+}
+
 
   // ✅ Other pages → US center
   else if (category === "other") {
@@ -695,7 +720,10 @@ if ((v.page_url || "").includes("account/login")) continue;
   id: makeDotId(v),
 
   city: v.city || v.page_key || "Unknown Location",
-  state: v.state || "",
+  state:
+  v.source === "crawler"
+    ? extractStateFromUrl(v.page_url) || ""
+    : v.state || "",
 
   lat,
   lon,

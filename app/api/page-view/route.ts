@@ -189,7 +189,7 @@ export async function POST(req: Request) {
         : null;
     }
 
-    console.log("🔥🔥🔥🔥 HUMAN VIEW:", page_url, city, state);
+    console.log("🔥🔥🔥🔥 HUMAN VIEW🔥🔥🔥🔥:", page_url, city, state);
 
     /* ============================================
        5) HUMAN → INSERT REAL PAGE VIEW

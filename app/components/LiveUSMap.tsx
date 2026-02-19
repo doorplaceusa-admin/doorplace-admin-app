@@ -452,7 +452,7 @@ export default function LiveUSMap({
   // Filters
   const [show, setShow] = useState<Record<Category, boolean>>({
   swing: true,
-  door: false,
+  door: true,
   partner: false,
   partner_coverage: false, // 👥 NEW
   crawler: false,
@@ -462,6 +462,9 @@ export default function LiveUSMap({
 
   // Search query for filtering dots
   const [query, setQuery] = useState<string>("");
+  // ✅ Live crawlers (ephemeral, no DB)
+const [liveCrawlers, setLiveCrawlers] = useState<LiveVisitor[]>([]);
+
   // ✅ Human window counter (adjustable)
 const [humanWindowMinutes, setHumanWindowMinutes] = useState<number>(30);
 const [humanCount, setHumanCount] = useState<number>(0);
@@ -476,6 +479,25 @@ const [partnerCoverage, setPartnerCoverage] = useState<
     longitude: number;
   }[]
 >([]);
+// ✅ Listen for live crawler hits (NO DATABASE)
+useEffect(() => {
+  const stream = new EventSource("/api/live-crawlers");
+
+  stream.onmessage = (event) => {
+    const hit = JSON.parse(event.data);
+
+    setLiveCrawlers((prev) => [...prev, hit]);
+
+    // ✅ Remove crawler dot after 30 seconds
+    setTimeout(() => {
+      setLiveCrawlers((prev) =>
+        prev.filter((x: any) => x.id !== hit.id)
+      );
+    }, 30000);
+  };
+
+  return () => stream.close();
+}, []);
 
 useEffect(() => {
   async function loadPartnerCoverage() {
@@ -526,10 +548,15 @@ const id = setInterval(loadHumanCount, refreshMs);
   // Spike protection: buffer incoming visitors, update map at most every 250ms
   const bufferRef = useRef<LiveVisitor[]>(visitors);
   const [renderVisitors, setRenderVisitors] = useState<LiveVisitor[]>(visitors);
+// ✅ Merge DB humans + live crawlers
+const mergedVisitors = useMemo(() => {
+  return [...visitors, ...liveCrawlers];
+}, [visitors, liveCrawlers]);
 
   useEffect(() => {
-    bufferRef.current = visitors;
-  }, [visitors]);
+  bufferRef.current = mergedVisitors;
+}, [mergedVisitors]);
+
 
   useEffect(() => {
     const id = window.setInterval(() => {

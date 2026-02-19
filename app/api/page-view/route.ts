@@ -1,6 +1,4 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { broadcastCrawler } from "@/lib/liveCrawlerBus";
-import crypto from "crypto";
 
 export const runtime = "nodejs";
 
@@ -121,33 +119,52 @@ export async function POST(req: Request) {
     /* ============================================
        3) BOT → SEO CRAWL EVENT ONLY (NEVER HUMAN)
     ============================================ */
-    /* ============================================
-   3) BOT → LIVE ONLY (NO DATABASE WRITES)
-============================================ */
-if (crawler) {
-  console.log("🔵 LIVE SEO BOT HIT:", crawler, page_url);
+    if (crawler) {
+      console.log("🔵 SEO BOT HIT:", crawler, page_url);
 
-  // ✅ LIVE MAP BROADCAST (NO DATABASE)
-  broadcastCrawler({
-  id: crypto.randomUUID(),
-  source: "crawler",
-  city: null,
-  state: "US",
-  latitude: 39.8283,
-  longitude: -98.5795,
-  crawler_name: crawler,
-  page_url,
-  page_key,
-  count: 1,
-});
+      /* ✅ MASTER SAFE MODE */
+      if (process.env.CRAWLER_LOG_ONLY === "true") {
+        return new Response("Crawler detected (log only)", {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
 
+      /* ✅ Dashboard Toggle */
+      const { data: settings } = await supabase
+        .from("system_settings")
+        .select("crawl_logging_enabled")
+        .limit(1)
+        .maybeSingle();
 
-  return new Response("Crawler detected (live only)", {
-    status: 200,
-    headers: corsHeaders,
-  });
-}
+      if (!settings?.crawl_logging_enabled) {
+        console.log("🚫 Crawl toggle OFF — skipping DB insert");
 
+        return new Response("Crawler logging disabled", {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
+
+      /* ✅ Insert Crawl Event */
+      const { error } = await supabase.from("seo_crawl_events").insert({
+        page_url,
+        page_key,
+        crawler,
+        user_agent: ua,
+        ip_address: ip,
+        view_bucket: new Date().toISOString(),
+      });
+
+      if (error) {
+        console.error("❌ SEO BOT INSERT ERROR:", error);
+      }
+
+      return new Response("Crawler logged", {
+        status: 200,
+        headers: corsHeaders,
+      });
+    }
 
     /* ============================================
        4) HUMAN GEO (Cloudflare)

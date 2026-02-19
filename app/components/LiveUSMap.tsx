@@ -493,31 +493,11 @@ const [partnerCoverage, setPartnerCoverage] = useState<
     longitude: number;
   }[]
 >([]);
-// ✅ Listen for live crawler hits (NO DATABASE)
-useEffect(() => {
-  const stream = new EventSource("/api/live-crawlers");
-
-  stream.onmessage = (event) => {
-    const raw = JSON.parse(event.data);
-
-const hit = {
-  ...raw,
-  id: crypto.randomUUID(), // ✅ ensure removal works
-};
-
-setLiveCrawlers((prev) => [...prev, hit]);
 
 
-    // ✅ Remove crawler dot after 30 seconds
-    setTimeout(() => {
-      setLiveCrawlers((prev) =>
-        prev.filter((x: any) => x.id !== hit.id)
-      );
-    }, 30000);
-  };
 
-  return () => stream.close();
-}, []);
+
+
 
 useEffect(() => {
   async function loadPartnerCoverage() {

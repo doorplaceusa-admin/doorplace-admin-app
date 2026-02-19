@@ -452,10 +452,10 @@ export default function LiveUSMap({
   // Filters
   const [show, setShow] = useState<Record<Category, boolean>>({
   swing: true,
-  door: true,
+  door: false,
   partner: false,
   partner_coverage: false, // 👥 NEW
-  crawler: true,
+  crawler: false,
   other: false,
 });
 

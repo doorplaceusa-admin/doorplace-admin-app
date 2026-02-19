@@ -8,10 +8,16 @@ export async function GET() {
       const encoder = new TextEncoder();
 
       const unsubscribe = subscribeCrawler((hit) => {
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify(hit)}\n\n`)
-        );
-      });
+  try {
+    controller.enqueue(
+      encoder.encode(`data: ${JSON.stringify(hit)}\n\n`)
+    );
+  } catch (err) {
+    // ✅ Client disconnected — stop sending
+    unsubscribe();
+  }
+});
+
 
       return () => unsubscribe();
     },

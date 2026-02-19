@@ -20,7 +20,7 @@ export async function OPTIONS() {
 }
 
 /* ======================================================
-   BOT / CRAWLER DETECTOR (EXPANDED + SAFE)
+   BOT / CRAWLER DETECTOR (FINAL + HARDENED)
 ====================================================== */
 function detectCrawler(userAgent: string) {
   const ua = (userAgent || "").toLowerCase();
@@ -43,7 +43,6 @@ function detectCrawler(userAgent: string) {
 
   /* -------------------------------
      Social + Link Preview Bots
-     (These were being logged as HUMAN)
   -------------------------------- */
   if (ua.includes("facebookexternalhit")) return "facebook";
   if (ua.includes("facebot")) return "facebook";
@@ -52,6 +51,21 @@ function detectCrawler(userAgent: string) {
   if (ua.includes("discordbot")) return "discord";
   if (ua.includes("linkedinbot")) return "linkedin";
   if (ua.includes("pinterest")) return "pinterest";
+
+  /* -------------------------------
+     Messaging Preview Bots
+  -------------------------------- */
+  if (ua.includes("whatsapp")) return "whatsapp";
+  if (ua.includes("telegrambot")) return "telegram";
+  if (ua.includes("skypeuripreview")) return "skype";
+  if (ua.includes("applebot")) return "applebot";
+
+  /* -------------------------------
+     Headless + Auditing Tools
+  -------------------------------- */
+  if (ua.includes("headless")) return "headless";
+  if (ua.includes("lighthouse")) return "lighthouse";
+  if (ua.includes("chrome-lighthouse")) return "lighthouse";
 
   /* -------------------------------
      Generic Bot Keywords
@@ -64,9 +78,8 @@ function detectCrawler(userAgent: string) {
   return null;
 }
 
-
 /* ======================================================
-   POST /api/page-view
+   POST /api/page-view  (FINAL LOCKED VERSION)
 ====================================================== */
 export async function POST(req: Request) {
   try {
@@ -76,7 +89,6 @@ export async function POST(req: Request) {
        1) BODY
     ============================================ */
     const body = await req.json();
-
     const { page_key, page_url, partner_id = null } = body;
 
     if (!page_key || !page_url) {
@@ -87,69 +99,72 @@ export async function POST(req: Request) {
     }
 
     /* ============================================
-       2) USER AGENT + BOT CHECK
+       2) USER AGENT + IP + BOT CHECK
     ============================================ */
     const ua = req.headers.get("user-agent") || "";
+
+    const ip =
+      req.headers.get("cf-connecting-ip") ||
+      req.headers.get("x-forwarded-for") ||
+      null;
+
     const crawler = detectCrawler(ua);
 
+    console.log("🔎 VIEW CHECK:", {
+      crawler: crawler || "human",
+      page_url,
+      ip,
+    });
+
     /* ============================================
-       3) BOT → LOG SEO EVENT (CORRECT)
+       3) BOT → SEO CRAWL EVENT ONLY (NEVER HUMAN)
     ============================================ */
     if (crawler) {
-  // ✅ Always log crawler hits
-  console.log("🔵 SEO BOT HIT:", crawler, page_url);
+      console.log("🔵 SEO BOT HIT:", crawler, page_url);
 
-  /* ============================================
-     ✅ MASTER SAFE MODE (NO DB, NO MAP)
-     Toggle OFF = completely silent in Supabase
-  ============================================ */
-  if (process.env.CRAWLER_LOG_ONLY === "true") {
-    return new Response("Crawler detected (log only)", {
-      status: 200,
-      headers: corsHeaders,
-    });
-  }
+      /* ✅ MASTER SAFE MODE */
+      if (process.env.CRAWLER_LOG_ONLY === "true") {
+        return new Response("Crawler detected (log only)", {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
 
-  /* ============================================
-     ✅ ONLY NOW do we check dashboard toggle
-     (because toggle ON means DB allowed)
-  ============================================ */
-  const { data: settings } = await supabase
-    .from("system_settings")
-    .select("crawl_logging_enabled")
-    .limit(1)
-    .maybeSingle();
+      /* ✅ Dashboard Toggle */
+      const { data: settings } = await supabase
+        .from("system_settings")
+        .select("crawl_logging_enabled")
+        .limit(1)
+        .maybeSingle();
 
-  if (!settings?.crawl_logging_enabled) {
-    console.log("🚫 Crawl toggle OFF — skipping DB insert");
+      if (!settings?.crawl_logging_enabled) {
+        console.log("🚫 Crawl toggle OFF — skipping DB insert");
 
-    return new Response("Crawler logging disabled", {
-      status: 200,
-      headers: corsHeaders,
-    });
-  }
+        return new Response("Crawler logging disabled", {
+          status: 200,
+          headers: corsHeaders,
+        });
+      }
 
-  /* ============================================
-     ✅ Toggle ON → insert + map feed
-  ============================================ */
-  const { error } = await supabase.from("seo_crawl_events").insert({
-    page_url,
-    page_key,
-    crawler,
-    user_agent: ua,
-    view_bucket: new Date().toISOString(),
-  });
+      /* ✅ Insert Crawl Event */
+      const { error } = await supabase.from("seo_crawl_events").insert({
+        page_url,
+        page_key,
+        crawler,
+        user_agent: ua,
+        ip_address: ip,
+        view_bucket: new Date().toISOString(),
+      });
 
-  if (error) {
-    console.error("❌ SEO BOT INSERT ERROR:", error);
-  }
+      if (error) {
+        console.error("❌ SEO BOT INSERT ERROR:", error);
+      }
 
-  return new Response("Crawler logged", {
-    status: 200,
-    headers: corsHeaders,
-  });
-}
-
+      return new Response("Crawler logged", {
+        status: 200,
+        headers: corsHeaders,
+      });
+    }
 
     /* ============================================
        4) HUMAN GEO (Cloudflare)
@@ -176,9 +191,8 @@ export async function POST(req: Request) {
 
     console.log("🔥 HUMAN VIEW:", page_url, city, state);
 
-
     /* ============================================
-       5) HUMAN → LOG EVENT
+       5) HUMAN → INSERT REAL PAGE VIEW
     ============================================ */
     const { error } = await supabase.from("page_view_events").insert({
       page_key,
@@ -188,6 +202,8 @@ export async function POST(req: Request) {
       state,
       latitude,
       longitude,
+      ip_address: ip,
+      user_agent: ua,
       source: "human",
     });
 

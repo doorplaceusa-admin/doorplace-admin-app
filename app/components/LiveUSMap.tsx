@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { geoAlbersUsa, geoPath, geoCentroid } from "d3-geo";
 import { TransformWrapper, TransformComponent, ReactZoomPanPinchRef, ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import { feature } from "topojson-client";
+import crypto from "crypto";
 
 import us from "us-atlas/states-10m.json";
 import nationData from "us-atlas/nation-10m.json";
@@ -484,9 +485,15 @@ useEffect(() => {
   const stream = new EventSource("/api/live-crawlers");
 
   stream.onmessage = (event) => {
-    const hit = JSON.parse(event.data);
+    const raw = JSON.parse(event.data);
 
-    setLiveCrawlers((prev) => [...prev, hit]);
+const hit = {
+  ...raw,
+  id: crypto.randomUUID(), // ✅ ensure removal works
+};
+
+setLiveCrawlers((prev) => [...prev, hit]);
+
 
     // ✅ Remove crawler dot after 30 seconds
     setTimeout(() => {
@@ -650,20 +657,24 @@ if ((v.page_url || "").includes("account/login")) continue;
 
 
 
-     if (lat == null || lon == null) {
-  if (v.source === "crawler") continue; // ❌ skip bad crawler rows
+    if (lat == null || lon == null) {
 
-  // ✅ Other → US center
-  if (category === "other") {
+  // ✅ Crawlers always fallback to US center
+  if (v.source === "crawler") {
     lat = US_CENTER.lat;
     lon = US_CENTER.lon;
   }
 
-  // ✅ Swing/Door/Partner → State centroid
+  // ✅ Other pages → US center
+  else if (category === "other") {
+    lat = US_CENTER.lat;
+    lon = US_CENTER.lon;
+  }
+
+  // ✅ Swing/Door/Partner → State centroid fallback
   else {
     const stateName = normalizeStateName(v.state || "");
-const fallback = stateName ? STATE_CENTROIDS[stateName] : null;
-
+    const fallback = stateName ? STATE_CENTROIDS[stateName] : null;
 
     if (fallback) {
       lat = fallback.lat;

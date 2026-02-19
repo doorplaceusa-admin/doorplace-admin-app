@@ -129,17 +129,18 @@ if (crawler) {
 
   // ✅ LIVE MAP BROADCAST (NO DATABASE)
   broadcastCrawler({
-    id: crypto.randomUUID(),
-    source: "crawler",
-    city: null,
-    state: "US",
-    latitude: 39.8283,
-    longitude: -98.5795,
-    crawler_name: crawler,
-    page_url,
-    page_key,
-    count: 1,
-  });
+  id: crypto.randomUUID(),
+  source: "crawler",
+  city: null,
+  state: "US",
+  latitude: 39.8283,
+  longitude: -98.5795,
+  crawler_name: crawler,
+  page_url,
+  page_key,
+  count: 1,
+});
+
 
   return new Response("Crawler detected (live only)", {
     status: 200,

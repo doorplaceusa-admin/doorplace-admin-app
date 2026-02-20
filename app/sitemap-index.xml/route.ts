@@ -3,13 +3,16 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 
-const CHUNK_SIZE = 50000; // Google max
+const CHUNK_SIZE = 50000; // Google maximum per sitemap
 const SITEMAP_HOST = "https://tradepilot.doorplaceusa.com";
 
 export async function GET() {
   try {
     console.log("🧭 Generating TradePilot Sitemap Index...");
 
+    // ======================================================
+    // Count indexable URLs (fast head count)
+    // ======================================================
     const { count, error } = await supabaseAdmin
       .from("shopify_url_inventory")
       .select("id", { count: "exact", head: true })
@@ -17,16 +20,22 @@ export async function GET() {
       .eq("is_active", true)
       .eq("is_indexable", true);
 
-    if (error || count === null) {
-      console.error("❌ Sitemap count error:", error);
+    if (error) {
+      console.error("❌ Supabase count error:", error.message);
       return new NextResponse("Supabase count failed", { status: 500 });
     }
 
-    const totalChunks = Math.max(1, Math.ceil(count / CHUNK_SIZE));
+    const totalUrls = count ?? 0;
 
-    console.log(`✅ Total URLs: ${count}`);
+    const totalChunks =
+      totalUrls === 0 ? 1 : Math.ceil(totalUrls / CHUNK_SIZE);
+
+    console.log(`✅ Total URLs: ${totalUrls}`);
     console.log(`✅ Total Chunks: ${totalChunks}`);
 
+    // ======================================================
+    // Build Sitemap Index
+    // ======================================================
     const sitemapLinks = Array.from({ length: totalChunks })
       .map(
         (_, i) => `
@@ -44,11 +53,11 @@ ${sitemapLinks}
     return new NextResponse(xml, {
       headers: {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=600",
+        "Cache-Control": "public, max-age=600, stale-while-revalidate=60",
       },
     });
-  } catch (err) {
-    console.error("❌ Sitemap index generation error:", err);
+  } catch (err: any) {
+    console.error("❌ Sitemap index generation error:", err?.message);
     return new NextResponse("Internal server error", { status: 500 });
   }
 }

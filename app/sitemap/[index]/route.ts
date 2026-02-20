@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 
-const CHUNK_SIZE = 50000; // Google max
+const CHUNK_SIZE = 50000; // Google maximum
 
 export async function GET(
   req: Request,
@@ -22,6 +22,7 @@ export async function GET(
     console.log(`📂 Generating sitemap chunk ${indexNum}`);
     console.log(`📦 Range: ${from} → ${to}`);
 
+    // IMPORTANT: Make sure url column has an index
     const { data, error } = await supabaseAdmin
       .from("shopify_url_inventory")
       .select("url,last_modified")
@@ -32,11 +33,19 @@ export async function GET(
       .range(from, to);
 
     if (error) {
-      console.error("❌ Supabase error:", error);
+      console.error("❌ Supabase error:", error.message);
       return new NextResponse("Supabase error", { status: 500 });
     }
 
-    const urls = data || [];
+    const urls = data ?? [];
+
+    if (urls.length === 0) {
+      return new NextResponse("<?xml version=\"1.0\" encoding=\"UTF-8\"?><urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\"></urlset>", {
+        headers: {
+          "Content-Type": "application/xml; charset=utf-8",
+        },
+      });
+    }
 
     const xmlBody = urls
       .map((row) => {
@@ -60,11 +69,11 @@ ${xmlBody}
     return new NextResponse(xml, {
       headers: {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=600",
+        "Cache-Control": "public, max-age=600, stale-while-revalidate=60",
       },
     });
-  } catch (err) {
-    console.error("❌ Sitemap chunk generation error:", err);
+  } catch (err: any) {
+    console.error("❌ Sitemap chunk generation error:", err?.message);
     return new NextResponse("Internal server error", { status: 500 });
   }
 }

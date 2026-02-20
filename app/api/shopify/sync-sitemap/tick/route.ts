@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 const ROOT_SITEMAP = "https://doorplaceusa.com/sitemap.xml";
-const BATCH_SIZE = 500;
-const MAX_BATCHES_PER_TICK = 3;
+const BATCH_SIZE = 150;
+const MAX_BATCHES_PER_TICK = 2;
 const LOCK_SECONDS = 60;
 
 const SYNC_SECRET = process.env.SITEMAP_SYNC_SECRET;

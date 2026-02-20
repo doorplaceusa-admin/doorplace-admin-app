@@ -51,6 +51,16 @@ export default function Page() {
     null
   );
 
+
+/* ======================================================
+   SITEMAP SYNC JOB STATE
+====================================================== */
+
+const [job, setJob] = useState<any>(null);
+const [jobLoading, setJobLoading] = useState(true);
+const [jobActionLoading, setJobActionLoading] = useState(false);
+
+
   /* ======================================================
      LOAD LIVE MAP INTERVAL SETTINGS (STEP 3)
   ====================================================== */
@@ -152,6 +162,37 @@ export default function Page() {
       "_blank"
     );
   }
+
+/* ======================================================
+   LOAD SITEMAP JOB STATUS
+====================================================== */
+
+useEffect(() => {
+  let interval: any;
+
+  async function loadJob() {
+    try {
+      const res = await fetch("/api/shopify/sync-sitemap/status");
+      const data = await res.json();
+
+      if (data.success) {
+        setJob(data.job);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setJobLoading(false);
+    }
+  }
+
+  loadJob();
+
+  interval = setInterval(loadJob, 2000); // live polling
+
+  return () => clearInterval(interval);
+}, []);
+
+
   /* ======================================================
      SAVE LIVE MAP INTERVAL SETTINGS (STEP 4)
   ====================================================== */
@@ -215,62 +256,7 @@ setIntervalSaving(false);
     setCrawlToggleSaving(false);
   }
 
-  /* ======================================================
-     Shopify Sitemap Sync
-  ====================================================== */
-
-  async function runSitemapSync() {
-    if (syncing) return;
-
-    setSyncing(true);
-    setStatus("Starting sitemap sync…");
-
-    let sitemapIndex = 0;
-    let urlOffset = 0;
-    let done = false;
-
-    try {
-      while (!done) {
-        const res = await fetch("/api/shopify/sync-sitemap", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-
-            // ✅ REQUIRED SECRET HEADER
-            "x-sync-secret":
-              process.env.NEXT_PUBLIC_SITEMAP_SYNC_SECRET || "",
-          },
-          body: JSON.stringify({ sitemapIndex, urlOffset }),
-        });
-
-        if (!res.ok) {
-          throw new Error(await res.text());
-        }
-
-        const data = await res.json();
-
-        // ✅ Finished all sitemaps
-        if (data.done) {
-          setStatus("✅ Sitemap sync complete");
-          break;
-        }
-
-        // Continue from returned offsets
-        sitemapIndex = data.sitemapIndex;
-        urlOffset = data.urlOffset;
-
-        setStatus(
-          `Syncing sitemap ${sitemapIndex + 1} of ${
-            data.total_sitemaps
-          }… (${data.upserted} URLs saved)`
-        );
-      }
-    } catch (err: any) {
-      setStatus(`❌ Error: ${err.message}`);
-    } finally {
-      setSyncing(false);
-    }
-  }
+  
 
   /* ======================================================
      Shopify Duplicate Cleanup
@@ -312,6 +298,75 @@ setIntervalSaving(false);
       setCleanupRunning(false);
     }
   }
+
+
+  async function startSitemapSync() {
+  if (jobActionLoading) return;
+
+  setJobActionLoading(true);
+
+  try {
+    const res = await fetch("/api/shopify/sync-sitemap/start", {
+      method: "POST",
+      headers: {
+        "x-sync-secret":
+          process.env.NEXT_PUBLIC_SITEMAP_SYNC_SECRET || "",
+      },
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+  } catch (err: any) {
+    alert(err.message);
+  } finally {
+    setJobActionLoading(false);
+  }
+}
+
+
+async function cancelSitemapSync() {
+  if (jobActionLoading) return;
+
+  setJobActionLoading(true);
+
+  try {
+    const res = await fetch("/api/shopify/sync-sitemap/cancel", {
+      method: "POST",
+      headers: {
+        "x-sync-secret":
+          process.env.NEXT_PUBLIC_SITEMAP_SYNC_SECRET || "",
+      },
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+  } catch (err: any) {
+    alert(err.message);
+  } finally {
+    setJobActionLoading(false);
+  }
+}
+
+
+async function resumeSitemapSync() {
+  if (jobActionLoading) return;
+
+  setJobActionLoading(true);
+
+  try {
+    const res = await fetch("/api/shopify/sync-sitemap/resume", {
+      method: "POST",
+      headers: {
+        "x-sync-secret":
+          process.env.NEXT_PUBLIC_SITEMAP_SYNC_SECRET || "",
+      },
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+  } catch (err: any) {
+    alert(err.message);
+  } finally {
+    setJobActionLoading(false);
+  }
+}
 
   /* ======================================================
      PAGE UI
@@ -533,28 +588,108 @@ setIntervalSaving(false);
       </div>
 
       {/* Shopify Sitemap Sync */}
-      <div className="border-t pt-6">
-        <h2 className="text-lg font-semibold mb-2">Shopify Sitemap Sync</h2>
+<div className="border-t pt-6">
+  <h2 className="text-lg font-semibold mb-2">
+    Shopify Sitemap Sync
+  </h2>
 
-        <p className="text-sm text-gray-600 mb-4">
-          Sync all existing Shopify pages into TradePilot. Handles very large
-          sitemaps (200k+ pages) safely.
-        </p>
+  <p className="text-sm text-gray-600 mb-4">
+    Background job that syncs Shopify sitemap into TradePilot.
+    Progress persists across refresh and devices.
+  </p>
 
+  {jobLoading ? (
+    <p className="text-sm text-gray-500">Loading job status…</p>
+  ) : (
+    <>
+      {/* Status Panel */}
+      {job && (
+        <div className="border rounded-md p-4 bg-gray-50 space-y-2 mb-4">
+
+          <div
+            className={`h-2 w-full rounded ${
+              job.status === "running"
+                ? "bg-blue-500 animate-pulse"
+                : job.status === "completed"
+                ? "bg-green-500"
+                : job.status === "failed"
+                ? "bg-red-500"
+                : job.status === "canceled"
+                ? "bg-yellow-500"
+                : "bg-gray-300"
+            }`}
+          />
+
+          <p className="text-sm">
+            <strong>Status:</strong> {job.status}
+          </p>
+
+          <p className="text-sm">
+            <strong>Progress:</strong>{" "}
+            {job.total_sitemaps
+              ? `${Math.min(job.sitemap_index, job.total_sitemaps)} / ${job.total_sitemaps} sitemaps`
+              : `${job.sitemap_index}`}
+          </p>
+
+          <p className="text-sm">
+            <strong>URLs Processed:</strong>{" "}
+            {job.total_urls_processed?.toLocaleString()}
+          </p>
+
+          {job.current_sitemap_url && (
+            <p className="text-xs text-gray-600 break-all">
+              <strong>Current:</strong>{" "}
+              {job.current_sitemap_url}
+            </p>
+          )}
+
+          {job.last_error && (
+            <p className="text-sm text-red-600">
+              <strong>Error:</strong> {job.last_error}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Buttons */}
+      <div className="flex gap-3">
+
+        {/* Start */}
         <button
-          onClick={runSitemapSync}
-          disabled={syncing}
-          className={`px-4 py-2 rounded font-medium text-sm transition ${
-            syncing
-              ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-              : "bg-black text-white hover:bg-gray-800"
-          }`}
+          onClick={startSitemapSync}
+          disabled={jobActionLoading || job?.status === "running"}
+          className="px-4 py-2 rounded bg-black text-white text-sm disabled:bg-gray-300"
         >
-          {syncing ? "Syncing Sitemap…" : "Sync Shopify Sitemap"}
+          Start
         </button>
 
-        {status && <p className="mt-3 text-sm text-gray-700">{status}</p>}
+        {/* Cancel */}
+        <button
+          onClick={cancelSitemapSync}
+          disabled={
+            jobActionLoading || job?.status !== "running"
+          }
+          className="px-4 py-2 rounded bg-yellow-600 text-white text-sm disabled:bg-gray-300"
+        >
+          Cancel
+        </button>
+
+        {/* Resume */}
+        <button
+          onClick={resumeSitemapSync}
+          disabled={
+            jobActionLoading ||
+            !["canceled", "failed"].includes(job?.status)
+          }
+          className="px-4 py-2 rounded bg-blue-600 text-white text-sm disabled:bg-gray-300"
+        >
+          Resume
+        </button>
+
       </div>
+    </>
+  )}
+</div>
 
       {/* Duplicate Page Cleanup */}
       <div className="border-t pt-6">

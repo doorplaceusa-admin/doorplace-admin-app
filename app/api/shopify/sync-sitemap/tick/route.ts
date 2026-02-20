@@ -19,53 +19,71 @@ function token() {
 }
 
 export async function POST(req: Request) {
-  if (!SYNC_SECRET) {
-    return NextResponse.json(
-      { success: false, error: "Missing SITEMAP_SYNC_SECRET" },
-      { status: 500 }
-    );
-  }
-
-  const headerSecret = req.headers.get("x-sync-secret");
-  if (headerSecret !== SYNC_SECRET) {
-    return NextResponse.json(
-      { success: false, error: "Unauthorized" },
-      { status: 401 }
-    );
-  }
-
-  const lockToken = token();
-  const job = await getJob();
-
-  if (!job) {
-    return NextResponse.json({ success: false, error: "No job row found" });
-  }
-
-  // 🔒 Lock check
-  if (job.lock_expires_at && new Date(job.lock_expires_at) > new Date()) {
-    return NextResponse.json({ success: true, locked: true });
-  }
-
-  await updateJob({
-    lock_token: lockToken,
-    lock_expires_at: new Date(Date.now() + LOCK_SECONDS * 1000).toISOString(),
-  });
-
   try {
+    if (!SYNC_SECRET) {
+      return NextResponse.json(
+        { success: false, error: "Missing SITEMAP_SYNC_SECRET" },
+        { status: 500 }
+      );
+    }
+
+    const headerSecret = req.headers.get("x-sync-secret");
+    if (headerSecret !== SYNC_SECRET) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const lockToken = token();
+    const job = await getJob();
+
+    if (!job) {
+      return NextResponse.json(
+        { success: false, error: "No job row found" },
+        { status: 500 }
+      );
+    }
+
+    // 🔒 LOCK CHECK
+    if (job.lock_expires_at && new Date(job.lock_expires_at) > new Date()) {
+      return NextResponse.json({
+        success: true,
+        locked: true,
+      });
+    }
+
+    // Acquire lock
+    await updateJob({
+      lock_token: lockToken,
+      lock_expires_at: new Date(Date.now() + LOCK_SECONDS * 1000).toISOString(),
+    });
+
     const currentJob = await getJob();
 
+    // 🚨 If job not running, return status + last_error
     if (currentJob.status !== "running") {
       return NextResponse.json({
         success: true,
         status: currentJob.status,
         total_urls_processed: currentJob.total_urls_processed ?? 0,
+        last_error: currentJob.last_error ?? null,
       });
     }
 
+    // ==========================================
+    // FETCH ROOT SITEMAP
+    // ==========================================
     const indexRes = await fetch(ROOT_SITEMAP, {
       cache: "no-store",
-      headers: { "User-Agent": "DoorplaceUSA-SitemapSync/1.0" },
+      headers: {
+        "User-Agent": "DoorplaceUSA-SitemapSync/1.0",
+      },
     });
+
+    if (!indexRes.ok) {
+      throw new Error(`Root sitemap fetch failed: ${indexRes.status}`);
+    }
 
     const indexXml = await indexRes.text();
     const sitemapUrls = extractLocs(indexXml);
@@ -74,6 +92,9 @@ export async function POST(req: Request) {
       await updateJob({ total_sitemaps: sitemapUrls.length });
     }
 
+    // ==========================================
+    // COMPLETE?
+    // ==========================================
     if (currentJob.sitemap_index >= sitemapUrls.length) {
       await updateJob({
         status: "completed",
@@ -87,10 +108,23 @@ export async function POST(req: Request) {
       });
     }
 
+    // ==========================================
+    // PROCESS CHILD SITEMAP
+    // ==========================================
     const sitemapUrl = sitemapUrls[currentJob.sitemap_index];
-    const childRes = await fetch(sitemapUrl, { cache: "no-store" });
+
+    const childRes = await fetch(sitemapUrl, {
+      cache: "no-store",
+    });
+
+    if (!childRes.ok) {
+      throw new Error(
+        `Child sitemap fetch failed (${sitemapUrl}): ${childRes.status}`
+      );
+    }
 
     const childXml = await childRes.text();
+
     const entries = extractUrlEntries(childXml).filter(
       (e) => !!e.loc
     ) as { loc: string; lastmod?: string }[];
@@ -116,7 +150,9 @@ export async function POST(req: Request) {
         .from("shopify_url_inventory")
         .upsert(rows, { onConflict: "url" });
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(`Supabase upsert failed: ${error.message}`);
+      }
 
       upserted += rows.length;
       i += BATCH_SIZE;
@@ -149,13 +185,19 @@ export async function POST(req: Request) {
     });
 
   } catch (e: any) {
+    console.error("🚨 TICK ROUTE ERROR:", e);
+
     await updateJob({
       status: "failed",
-      last_error: e.message,
+      last_error: e?.message ?? "Unknown error",
     });
 
     return NextResponse.json(
-      { success: false, error: e.message },
+      {
+        success: false,
+        status: "failed",
+        error: e?.message ?? "Unknown error",
+      },
       { status: 500 }
     );
   } finally {

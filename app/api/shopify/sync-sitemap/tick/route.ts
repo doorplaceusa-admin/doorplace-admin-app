@@ -35,17 +35,14 @@ export async function POST(req: Request) {
   }
 
   const lockToken = token();
-
   const job = await getJob();
+
   if (!job) {
     return NextResponse.json({ success: false, error: "No job row found" });
   }
 
-  // Lock check
-  if (
-    job.lock_expires_at &&
-    new Date(job.lock_expires_at) > new Date()
-  ) {
+  // 🔒 Lock check
+  if (job.lock_expires_at && new Date(job.lock_expires_at) > new Date()) {
     return NextResponse.json({ success: true, locked: true });
   }
 
@@ -58,14 +55,16 @@ export async function POST(req: Request) {
     const currentJob = await getJob();
 
     if (currentJob.status !== "running") {
-      return NextResponse.json({ success: true, status: currentJob.status });
+      return NextResponse.json({
+        success: true,
+        status: currentJob.status,
+        total_urls_processed: currentJob.total_urls_processed ?? 0,
+      });
     }
 
     const indexRes = await fetch(ROOT_SITEMAP, {
       cache: "no-store",
-      headers: {
-        "User-Agent": "DoorplaceUSA-SitemapSync/1.0",
-      },
+      headers: { "User-Agent": "DoorplaceUSA-SitemapSync/1.0" },
     });
 
     const indexXml = await indexRes.text();
@@ -81,13 +80,15 @@ export async function POST(req: Request) {
         finished_at: new Date().toISOString(),
       });
 
-      return NextResponse.json({ success: true, done: true });
+      return NextResponse.json({
+        success: true,
+        done: true,
+        total_urls_processed: currentJob.total_urls_processed ?? 0,
+      });
     }
 
     const sitemapUrl = sitemapUrls[currentJob.sitemap_index];
-    const childRes = await fetch(sitemapUrl, {
-      cache: "no-store",
-    });
+    const childRes = await fetch(sitemapUrl, { cache: "no-store" });
 
     const childXml = await childRes.text();
     const entries = extractUrlEntries(childXml).filter(
@@ -126,13 +127,15 @@ export async function POST(req: Request) {
 
     const doneWithSitemap = i >= entries.length;
 
+    const newTotal =
+      (currentJob.total_urls_processed ?? 0) + upserted;
+
     await updateJob({
       sitemap_index: doneWithSitemap
         ? currentJob.sitemap_index + 1
         : currentJob.sitemap_index,
       url_offset: doneWithSitemap ? 0 : i,
-      total_urls_processed:
-        (currentJob.total_urls_processed ?? 0) + upserted,
+      total_urls_processed: newTotal,
       updated_at: new Date().toISOString(),
     });
 
@@ -140,7 +143,11 @@ export async function POST(req: Request) {
       success: true,
       done: false,
       upserted,
+      total_urls_processed: newTotal,
+      sitemap_index: currentJob.sitemap_index,
+      total_sitemaps: currentJob.total_sitemaps,
     });
+
   } catch (e: any) {
     await updateJob({
       status: "failed",

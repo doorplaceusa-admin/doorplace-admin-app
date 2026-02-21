@@ -13,12 +13,11 @@ export async function GET() {
     // ======================================================
     // Count indexable URLs (fast head count)
     // ======================================================
-    const { count, error } = await supabaseAdmin
-      .from("shopify_url_inventory")
-      .select("id", { count: "exact", head: true })
-      .eq("page_type", "page")
-      .eq("is_active", true)
-      .eq("is_indexable", true);
+   const { count, error } = await supabaseAdmin
+  .from("shopify_url_inventory")
+  .select("id", { count: "exact", head: true })
+  .eq("is_active", true)
+  .eq("is_indexable", true);
 
     if (error) {
       console.error("❌ Supabase count error:", error.message);

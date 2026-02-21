@@ -21,13 +21,12 @@ export async function GET(
   const to = from + CHUNK_SIZE - 1;
 
   const { data, error } = await supabaseAdmin
-    .from("shopify_url_inventory")
-    .select("url,last_modified")
-    .eq("page_type", "page")
-    .eq("is_active", true)
-    .eq("is_indexable", true)
-    .order("url", { ascending: true })
-    .range(from, to);
+  .from("shopify_url_inventory")
+  .select("url,last_modified")
+  .eq("is_active", true)
+  .eq("is_indexable", true)
+  .order("url", { ascending: true })
+  .range(from, to);
 
   if (error) {
     console.error("Supabase error:", error.message);

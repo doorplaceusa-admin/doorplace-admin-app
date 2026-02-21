@@ -19,7 +19,7 @@ export async function GET(
 
   try {
     // ----------------------------------------------------
-    // 1️⃣ Get total row count (estimated = FAST + scalable)
+    // 1️⃣ Fast total count (estimated)
     // ----------------------------------------------------
     const { count, error: countError } = await supabaseAdmin
       .from("shopify_url_inventory")
@@ -44,8 +44,8 @@ export async function GET(
       to = totalRows - 1;
     }
 
-    // If index is beyond available rows, return empty sitemap
-    if (from >= totalRows) {
+    // If chunk is beyond dataset → return empty sitemap
+    if (from >= totalRows || totalRows === 0) {
       const emptyXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`;
 
@@ -57,14 +57,14 @@ export async function GET(
     }
 
     // ----------------------------------------------------
-    // 3️⃣ Fetch actual chunk
+    // 3️⃣ Fetch chunk (ORDER BY ID = FAST + INDEXED)
     // ----------------------------------------------------
     const { data, error } = await supabaseAdmin
       .from("shopify_url_inventory")
       .select("url,last_modified")
       .eq("is_active", true)
       .eq("is_indexable", true)
-      .order("url", { ascending: true })
+      .order("id", { ascending: true })   // 🔥 critical fix
       .range(from, to);
 
     if (error) {

@@ -66,8 +66,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const url = new URL(req.url);
-    const mode = url.searchParams.get("mode") || "full";
+    const requestUrl = new URL(req.url);
+    const mode = requestUrl.searchParams.get("mode") || "full"; // "full" | "incremental"
 
     lockToken = token();
     const job = await getJob();
@@ -79,11 +79,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // LOCK CHECK
+    // 🔒 LOCK CHECK
     if (job.lock_expires_at && new Date(job.lock_expires_at) > new Date()) {
       return NextResponse.json({ success: true, locked: true });
     }
 
+    // Acquire lock
     await updateJob({
       lock_token: lockToken,
       lock_expires_at: new Date(Date.now() + LOCK_SECONDS * 1000).toISOString(),
@@ -91,6 +92,7 @@ export async function POST(req: Request) {
 
     const currentJob = await getJob();
 
+    // 🛑 If job not running, return status
     if (currentJob.status !== "running") {
       return NextResponse.json({
         success: true,
@@ -108,46 +110,51 @@ export async function POST(req: Request) {
 
     let sitemapUrls = extractLocs(indexXml);
 
+    // ✅ incremental scans only last N sitemap files
     if (mode === "incremental") {
       sitemapUrls = sitemapUrls.slice(
         Math.max(0, sitemapUrls.length - INCREMENTAL_SITEMAPS_TO_SCAN)
       );
     }
 
-    if (!currentJob.total_sitemaps) {
-      await updateJob({ total_sitemaps: sitemapUrls.length });
-    }
+    // keep total_sitemaps updated per mode run
+    await updateJob({ total_sitemaps: sitemapUrls.length });
 
     // =========================
     // COMPLETE
     // =========================
     if (currentJob.sitemap_index >= sitemapUrls.length) {
+      const nowIso = new Date().toISOString();
+
       if (mode === "incremental") {
+        // ✅ For incremental: reset cursor, keep status running (or you can set completed if you want)
         await updateJob({
           sitemap_index: 0,
           url_offset: 0,
-          updated_at: new Date().toISOString(),
+          updated_at: nowIso,
+          // ✅ Elite mode: advance watermark after successful incremental run
+          last_successful_sync_at: nowIso,
         });
 
         return NextResponse.json({
           success: true,
           done: true,
           incremental: true,
-          total_urls_processed:
-            currentJob.total_urls_processed ?? 0,
+          total_urls_processed: currentJob.total_urls_processed ?? 0,
         });
       }
 
+      // ✅ For full: mark completed + advance watermark
       await updateJob({
         status: "completed",
-        finished_at: new Date().toISOString(),
+        finished_at: nowIso,
+        last_successful_sync_at: nowIso,
       });
 
       return NextResponse.json({
         success: true,
         done: true,
-        total_urls_processed:
-          currentJob.total_urls_processed ?? 0,
+        total_urls_processed: currentJob.total_urls_processed ?? 0,
       });
     }
 
@@ -166,30 +173,48 @@ export async function POST(req: Request) {
     let upserted = 0;
     let batches = 0;
 
+    // ✅ Elite watermark: only used in incremental mode
+    const lastSync =
+      mode === "incremental" && currentJob.last_successful_sync_at
+        ? new Date(currentJob.last_successful_sync_at)
+        : null;
+
     while (i < entries.length && batches < MAX_BATCHES_PER_TICK) {
       const slice = entries.slice(i, i + BATCH_SIZE);
 
-      let rows = slice.map((e) => ({
-        url: e.loc!.replace(/\/$/, "").toLowerCase(),
-        page_type: "unknown",
-        last_modified: e.lastmod ?? null,
-        last_seen: new Date().toISOString(),
-        is_active: true,
-        source: "shopify_sitemap",
-        updated_at: new Date().toISOString(),
-      }));
+      // ✅ Only filter by lastmod in incremental mode
+      let rows = slice
+        .filter((e) => {
+          if (mode !== "incremental") return true; // full mode: take all
+          if (!e.lastmod) return true; // safety: include if missing
+          if (!lastSync) return true; // safety: include if no watermark
+          return new Date(e.lastmod) > lastSync;
+        })
+        .map((e) => ({
+          url: e.loc!.replace(/\/$/, "").toLowerCase(),
+          page_type: "unknown",
+          last_modified: e.lastmod ?? null,
+          last_seen: new Date().toISOString(),
+          is_active: true,
+          source: "shopify_sitemap",
+          updated_at: new Date().toISOString(),
+        }));
 
       rows = dedupeByUrl(rows);
 
-      const { error } = await supabaseAdmin
-        .from("shopify_url_inventory")
-        .upsert(rows, { onConflict: "url" });
+      // ✅ If nothing new in this slice (common in incremental), skip DB call
+      if (rows.length > 0) {
+        const { error } = await supabaseAdmin
+          .from("shopify_url_inventory")
+          .upsert(rows, { onConflict: "url" });
 
-      if (error) {
-        throw new Error(`Supabase upsert failed: ${error.message}`);
+        if (error) {
+          throw new Error(`Supabase upsert failed: ${error.message}`);
+        }
+
+        upserted += rows.length;
       }
 
-      upserted += rows.length;
       i += BATCH_SIZE;
       batches++;
 
@@ -197,8 +222,7 @@ export async function POST(req: Request) {
     }
 
     const doneWithSitemap = i >= entries.length;
-    const newTotal =
-      (currentJob.total_urls_processed ?? 0) + upserted;
+    const newTotal = (currentJob.total_urls_processed ?? 0) + upserted;
 
     await updateJob({
       sitemap_index: doneWithSitemap
@@ -215,9 +239,9 @@ export async function POST(req: Request) {
       upserted,
       total_urls_processed: newTotal,
       sitemap_index: currentJob.sitemap_index,
-      total_sitemaps: currentJob.total_sitemaps,
+      total_sitemaps: sitemapUrls.length, // report the mode-adjusted count
+      mode,
     });
-
   } catch (e: any) {
     console.error("TICK ROUTE ERROR:", e);
 
@@ -235,6 +259,7 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   } finally {
+    // 🔒 Only release lock if THIS request owns it
     if (lockToken) {
       const job = await getJob();
       if (job?.lock_token === lockToken) {
@@ -264,10 +289,7 @@ async function updateJob(patch: any) {
   const job = await getJob();
   if (!job) return;
 
-  await supabaseAdmin
-    .from("sitemap_sync_jobs")
-    .update(patch)
-    .eq("id", job.id);
+  await supabaseAdmin.from("sitemap_sync_jobs").update(patch).eq("id", job.id);
 }
 
 function extractLocs(xml: string): string[] {
@@ -277,11 +299,8 @@ function extractLocs(xml: string): string[] {
 }
 
 function extractUrlEntries(xml: string): SitemapEntry[] {
-  return [...xml.matchAll(/<url>([\s\S]*?)<\/url>/g)].map(
-    (block) => ({
-      loc: block[1].match(/<loc>(.*?)<\/loc>/)?.[1],
-      lastmod:
-        block[1].match(/<lastmod>(.*?)<\/lastmod>/)?.[1],
-    })
-  );
+  return [...xml.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((block) => ({
+    loc: block[1].match(/<loc>(.*?)<\/loc>/)?.[1],
+    lastmod: block[1].match(/<lastmod>(.*?)<\/lastmod>/)?.[1],
+  }));
 }

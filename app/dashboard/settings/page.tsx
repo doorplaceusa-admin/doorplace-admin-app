@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import SendPasswordReset from "./components/SendPasswordReset";
 import { supabase } from "@/lib/supabaseClient";
 
-
-
 type CleanupResult = {
   pages_scanned: number;
   duplicate_pages_found: number;
@@ -30,6 +28,7 @@ export default function Page() {
   >("idle");
   const [cleanupMessage, setCleanupMessage] = useState<string | null>(null);
   const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(null);
+
   /* ======================================================
      LIVE MAP INTERVAL SETTINGS
   ====================================================== */
@@ -40,6 +39,7 @@ export default function Page() {
   const [intervalLoading, setIntervalLoading] = useState(true);
   const [intervalSaving, setIntervalSaving] = useState(false);
   const [intervalStatus, setIntervalStatus] = useState<string | null>(null);
+
   /* ======================================================
      CRAWLER LOGGING TOGGLE
   ====================================================== */
@@ -47,22 +47,21 @@ export default function Page() {
   const [crawlLoggingEnabled, setCrawlLoggingEnabled] = useState(false);
   const [crawlToggleLoading, setCrawlToggleLoading] = useState(true);
   const [crawlToggleSaving, setCrawlToggleSaving] = useState(false);
-  const [crawlToggleStatus, setCrawlToggleStatus] = useState<string | null>(
-    null
-  );
-
-
-/* ======================================================
-   SITEMAP SYNC JOB STATE
-====================================================== */
-
-const [job, setJob] = useState<any>(null);
-const [jobLoading, setJobLoading] = useState(true);
-const [jobActionLoading, setJobActionLoading] = useState(false);
-
+  const [crawlToggleStatus, setCrawlToggleStatus] = useState<string | null>(null);
 
   /* ======================================================
-     LOAD LIVE MAP INTERVAL SETTINGS (STEP 3)
+     SITEMAP SYNC JOB STATE
+  ====================================================== */
+
+  const [job, setJob] = useState<any>(null);
+  const [jobLoading, setJobLoading] = useState(true);
+  const [jobActionLoading, setJobActionLoading] = useState(false);
+  const [pollingSpeed, setPollingSpeed] = useState<
+  "initializing" | "fast" | "slow"
+>("initializing");
+
+  /* ======================================================
+     LOAD LIVE MAP INTERVAL SETTINGS
   ====================================================== */
 
   useEffect(() => {
@@ -76,19 +75,19 @@ const [jobActionLoading, setJobActionLoading] = useState(false);
         .maybeSingle();
 
       if (error) {
-  console.error(error);
-  setIntervalStatus("❌ Failed to load map interval settings");
-} else if (data) {
-  setHumanMinutes(data.human_window_minutes);
-  setCrawlerSeconds(data.crawler_window_seconds);
-}
-
+        console.error(error);
+        setIntervalStatus("❌ Failed to load map interval settings");
+      } else if (data) {
+        setHumanMinutes(data.human_window_minutes);
+        setCrawlerSeconds(data.crawler_window_seconds);
+      }
 
       setIntervalLoading(false);
     }
 
     loadIntervals();
   }, []);
+
   /* ======================================================
      LOAD CRAWLER LOGGING TOGGLE
   ====================================================== */
@@ -163,12 +162,12 @@ const [jobActionLoading, setJobActionLoading] = useState(false);
     );
   }
 
-/* ======================================================
-   LOAD SITEMAP JOB STATUS
-====================================================== */
+  /* ======================================================
+     LOAD SITEMAP JOB STATUS (UPGRADED: dynamic polling)
+  ====================================================== */
 
-useEffect(() => {
-  let interval: any;
+  useEffect(() => {
+  let interval: any = null;
 
   async function loadJob() {
     try {
@@ -177,6 +176,14 @@ useEffect(() => {
 
       if (data.success) {
         setJob(data.job);
+
+        if (data.job?.status === "running") {
+          setPollingSpeed("fast");
+          restartInterval(2000);
+        } else {
+          setPollingSpeed("slow");
+          restartInterval(10000);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -185,16 +192,33 @@ useEffect(() => {
     }
   }
 
+  function restartInterval(ms: number) {
+    if (interval) clearInterval(interval);
+    interval = setInterval(loadJob, ms);
+  }
+
+  setPollingSpeed("initializing"); // ✅ add this
   loadJob();
+  restartInterval(5000);
 
-  interval = setInterval(loadJob, 2000); // live polling
-
-  return () => clearInterval(interval);
+  return () => {
+    if (interval) clearInterval(interval);
+  };
 }, []);
 
+  // ✅ helper: force refresh immediately after actions
+  async function refreshJob() {
+    try {
+      const res = await fetch("/api/shopify/sync-sitemap/status");
+      const data = await res.json();
+      if (data.success) setJob(data.job);
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   /* ======================================================
-     SAVE LIVE MAP INTERVAL SETTINGS (STEP 4)
+     SAVE LIVE MAP INTERVAL SETTINGS
   ====================================================== */
 
   async function saveIntervals() {
@@ -211,20 +235,20 @@ useEffect(() => {
       .eq("id", 1);
 
     if (error) {
-  console.error(error);
-  setIntervalStatus("❌ Failed to save settings");
-} else {
-  setIntervalStatus("✅ Map intervals updated instantly");
+      console.error(error);
+      setIntervalStatus("❌ Failed to save settings");
+    } else {
+      setIntervalStatus("✅ Map intervals updated instantly");
 
-  // ✅ FIX #5: Auto refresh so map updates immediately
-  setTimeout(() => {
-    window.location.reload();
-  }, 500);
-}
+      // ✅ KEEP RELOAD (per your request)
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    }
 
-setIntervalSaving(false);
-
+    setIntervalSaving(false);
   }
+
   /* ======================================================
      SAVE CRAWLER LOGGING TOGGLE
   ====================================================== */
@@ -235,12 +259,10 @@ setIntervalSaving(false);
 
     setCrawlLoggingEnabled(newValue);
 
-    const { error } = await supabase
-      .from("system_settings")
-      .update({
-        crawl_logging_enabled: newValue,
-        updated_at: new Date().toISOString(),
-      });
+    const { error } = await supabase.from("system_settings").update({
+      crawl_logging_enabled: newValue,
+      updated_at: new Date().toISOString(),
+    });
 
     if (error) {
       console.error(error);
@@ -256,8 +278,6 @@ setIntervalSaving(false);
     setCrawlToggleSaving(false);
   }
 
-  
-
   /* ======================================================
      Shopify Duplicate Cleanup
   ====================================================== */
@@ -269,9 +289,7 @@ setIntervalSaving(false);
     setCleanupPhase("running");
     setCleanupResult(null);
     setCleanupMessage(
-      dryRun
-        ? "🧪 Running duplicate scan (dry run)…"
-        : "🧹 Deleting duplicate Shopify pages…"
+      dryRun ? "🧪 Running duplicate scan (dry run)…" : "🧹 Deleting duplicate Shopify pages…"
     );
 
     try {
@@ -287,9 +305,7 @@ setIntervalSaving(false);
       setCleanupResult(data);
       setCleanupPhase("success");
       setCleanupMessage(
-        dryRun
-          ? "✅ Dry run complete — no pages deleted"
-          : "🎉 Cleanup complete — duplicate pages removed"
+        dryRun ? "✅ Dry run complete — no pages deleted" : "🎉 Cleanup complete — duplicate pages removed"
       );
     } catch (err: any) {
       setCleanupPhase("error");
@@ -299,74 +315,81 @@ setIntervalSaving(false);
     }
   }
 
+  /* ======================================================
+     SITEMAP JOB ACTIONS (UPGRADED: immediate refresh)
+  ====================================================== */
 
   async function startSitemapSync() {
-  if (jobActionLoading) return;
+    if (jobActionLoading) return;
 
-  setJobActionLoading(true);
+    setJobActionLoading(true);
 
-  try {
-    const res = await fetch("/api/shopify/sync-sitemap/start", {
-      method: "POST",
-      headers: {
-        "x-sync-secret":
-          process.env.NEXT_PUBLIC_SITEMAP_SYNC_SECRET || "",
-      },
-    });
+    try {
+      const res = await fetch("/api/shopify/sync-sitemap/start", {
+        method: "POST",
+        headers: {
+          "x-sync-secret": process.env.NEXT_PUBLIC_SITEMAP_SYNC_SECRET || "",
+        },
+      });
 
-    if (!res.ok) throw new Error(await res.text());
-  } catch (err: any) {
-    alert(err.message);
-  } finally {
-    setJobActionLoading(false);
+      if (!res.ok) throw new Error(await res.text());
+
+      // ✅ refresh immediately
+      await refreshJob();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setJobActionLoading(false);
+    }
   }
-}
 
+  async function cancelSitemapSync() {
+    if (jobActionLoading) return;
 
-async function cancelSitemapSync() {
-  if (jobActionLoading) return;
+    setJobActionLoading(true);
 
-  setJobActionLoading(true);
+    try {
+      const res = await fetch("/api/shopify/sync-sitemap/cancel", {
+        method: "POST",
+        headers: {
+          "x-sync-secret": process.env.NEXT_PUBLIC_SITEMAP_SYNC_SECRET || "",
+        },
+      });
 
-  try {
-    const res = await fetch("/api/shopify/sync-sitemap/cancel", {
-      method: "POST",
-      headers: {
-        "x-sync-secret":
-          process.env.NEXT_PUBLIC_SITEMAP_SYNC_SECRET || "",
-      },
-    });
+      if (!res.ok) throw new Error(await res.text());
 
-    if (!res.ok) throw new Error(await res.text());
-  } catch (err: any) {
-    alert(err.message);
-  } finally {
-    setJobActionLoading(false);
+      // ✅ refresh immediately
+      await refreshJob();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setJobActionLoading(false);
+    }
   }
-}
 
+  async function resumeSitemapSync() {
+    if (jobActionLoading) return;
 
-async function resumeSitemapSync() {
-  if (jobActionLoading) return;
+    setJobActionLoading(true);
 
-  setJobActionLoading(true);
+    try {
+      const res = await fetch("/api/shopify/sync-sitemap/resume", {
+        method: "POST",
+        headers: {
+          "x-sync-secret": process.env.NEXT_PUBLIC_SITEMAP_SYNC_SECRET || "",
+        },
+      });
 
-  try {
-    const res = await fetch("/api/shopify/sync-sitemap/resume", {
-      method: "POST",
-      headers: {
-        "x-sync-secret":
-          process.env.NEXT_PUBLIC_SITEMAP_SYNC_SECRET || "",
-      },
-    });
+      if (!res.ok) throw new Error(await res.text());
 
-    if (!res.ok) throw new Error(await res.text());
-  } catch (err: any) {
-    alert(err.message);
-  } finally {
-    setJobActionLoading(false);
+      // ✅ refresh immediately
+      await refreshJob();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setJobActionLoading(false);
+    }
   }
-}
 
   /* ======================================================
      PAGE UI
@@ -390,11 +413,10 @@ async function resumeSitemapSync() {
         </p>
         <SendPasswordReset />
       </div>
+
       {/* Live Map Interval Controls */}
       <div className="border-t pt-6">
-        <h2 className="text-lg font-semibold mb-2">
-          Live Map Traffic Window Controls
-        </h2>
+        <h2 className="text-lg font-semibold mb-2">Live Map Traffic Window Controls</h2>
 
         <p className="text-sm text-gray-600 mb-4">
           Control how far back the Live Map shows human visitors and crawler bot
@@ -402,9 +424,7 @@ async function resumeSitemapSync() {
         </p>
 
         {intervalLoading ? (
-          <p className="text-sm text-gray-500">
-            Loading interval settings…
-          </p>
+          <p className="text-sm text-gray-500">Loading interval settings…</p>
         ) : (
           <div className="space-y-4">
             {/* Human Window */}
@@ -414,15 +434,12 @@ async function resumeSitemapSync() {
               </label>
 
               <input
-              type="number"
-               min={1}
-                  value={humanMinutes}
-                 onChange={(e) =>
-                          setHumanMinutes(Number(e.target.value))
-                      }
-                            className="w-full border rounded px-3 py-2 text-sm"
-                        />
-
+                type="number"
+                min={1}
+                value={humanMinutes}
+                onChange={(e) => setHumanMinutes(Number(e.target.value))}
+                className="w-full border rounded px-3 py-2 text-sm"
+              />
 
               <p className="text-xs text-gray-500 mt-1">
                 Example: 360 = 6 hours, 60 = 1 hour
@@ -436,15 +453,12 @@ async function resumeSitemapSync() {
               </label>
 
               <input
-  type="number"
-  min={5}
-  value={crawlerSeconds}
-  onChange={(e) =>
-    setCrawlerSeconds(Number(e.target.value))
-  }
-  className="w-full border rounded px-3 py-2 text-sm"
-/>
-
+                type="number"
+                min={5}
+                value={crawlerSeconds}
+                onChange={(e) => setCrawlerSeconds(Number(e.target.value))}
+                className="w-full border rounded px-3 py-2 text-sm"
+              />
 
               <p className="text-xs text-gray-500 mt-1">
                 Example: 300 = 5 minutes, 30 = last 30 seconds
@@ -461,25 +475,20 @@ async function resumeSitemapSync() {
                   : "bg-black text-white hover:bg-gray-800"
               }`}
             >
-              {intervalSaving
-                ? "Saving…"
-                : "Save Map Interval Settings"}
+              {intervalSaving ? "Saving…" : "Save Map Interval Settings"}
             </button>
 
             {/* Status */}
             {intervalStatus && (
-              <p className="text-sm mt-2 text-gray-700">
-                {intervalStatus}
-              </p>
+              <p className="text-sm mt-2 text-gray-700">{intervalStatus}</p>
             )}
           </div>
         )}
       </div>
+
       {/* Crawler Logging Toggle */}
       <div className="border-t pt-6">
-        <h2 className="text-lg font-semibold mb-2">
-          Google Crawl Logging Control
-        </h2>
+        <h2 className="text-lg font-semibold mb-2">Google Crawl Logging Control</h2>
 
         <p className="text-sm text-gray-600 mb-4">
           Google will continue crawling your pages normally. This switch only
@@ -523,9 +532,7 @@ async function resumeSitemapSync() {
 
       {/* Shopify Page Finder */}
       <div className="border-t pt-6">
-        <h2 className="text-lg font-semibold mb-2">
-          Shopify Page Finder (TradePilot Search)
-        </h2>
+        <h2 className="text-lg font-semibold mb-2">Shopify Page Finder (TradePilot Search)</h2>
 
         <p className="text-sm text-gray-600 mb-4">
           Search Shopify pages instantly and open the real Shopify editor.
@@ -581,121 +588,120 @@ async function resumeSitemapSync() {
         )}
 
         {searchResults.length === 0 && !searchLoading && searchQuery && (
-          <p className="text-sm text-gray-500">
-            No pages found. Try another keyword.
-          </p>
+          <p className="text-sm text-gray-500">No pages found. Try another keyword.</p>
         )}
       </div>
 
       {/* Shopify Sitemap Sync */}
-<div className="border-t pt-6">
-  <h2 className="text-lg font-semibold mb-2">
-    Shopify Sitemap Sync
-  </h2>
+      <div className="border-t pt-6">
+        <h2 className="text-lg font-semibold mb-2">Shopify Sitemap Sync</h2>
 
-  <p className="text-sm text-gray-600 mb-4">
-    Background job that syncs Shopify sitemap into TradePilot.
-    Progress persists across refresh and devices.
-  </p>
+        <p className="text-sm text-gray-600 mb-4">
+          Background job that syncs Shopify sitemap into TradePilot. Progress
+          persists across refresh and devices.
+        </p>
 
-  {jobLoading ? (
-    <p className="text-sm text-gray-500">Loading job status…</p>
-  ) : (
-    <>
-      {/* Status Panel */}
-      {job && (
-        <div className="border rounded-md p-4 bg-gray-50 space-y-2 mb-4">
+        {jobLoading ? (
+          <p className="text-sm text-gray-500">Loading job status…</p>
+        ) : (
+          <>
+            {/* Status Panel */}
+            {job && (
+              <div className="border rounded-md p-4 bg-gray-50 space-y-2 mb-4">
+                <div
+                  className={`h-2 w-full rounded ${
+                    job.status === "running"
+                      ? "bg-blue-500 animate-pulse"
+                      : job.status === "completed"
+                      ? "bg-green-500"
+                      : job.status === "failed"
+                      ? "bg-red-500"
+                      : job.status === "canceled"
+                      ? "bg-yellow-500"
+                      : "bg-gray-300"
+                  }`}
+                />
 
-          <div
-            className={`h-2 w-full rounded ${
-              job.status === "running"
-                ? "bg-blue-500 animate-pulse"
-                : job.status === "completed"
-                ? "bg-green-500"
-                : job.status === "failed"
-                ? "bg-red-500"
-                : job.status === "canceled"
-                ? "bg-yellow-500"
-                : "bg-gray-300"
-            }`}
-          />
-
-          <p className="text-sm">
-            <strong>Status:</strong> {job.status}
-          </p>
-
-          <p className="text-sm">
-            <strong>Progress:</strong>{" "}
-            {job.total_sitemaps
-              ? `${Math.min(job.sitemap_index, job.total_sitemaps)} / ${job.total_sitemaps} sitemaps`
-              : `${job.sitemap_index}`}
-          </p>
-
-          <p className="text-sm">
-            <strong>URLs Processed:</strong>{" "}
-            {job.total_urls_processed?.toLocaleString()}
-          </p>
-
-          {job.current_sitemap_url && (
-            <p className="text-xs text-gray-600 break-all">
-              <strong>Current:</strong>{" "}
-              {job.current_sitemap_url}
-            </p>
-          )}
-
-          {job.last_error && (
-            <p className="text-sm text-red-600">
-              <strong>Error:</strong> {job.last_error}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Buttons */}
-      <div className="flex gap-3">
-
-        {/* Start */}
-        <button
-          onClick={startSitemapSync}
-          disabled={jobActionLoading || job?.status === "running"}
-          className="px-4 py-2 rounded bg-black text-white text-sm disabled:bg-gray-300"
-        >
-          Start
-        </button>
-
-        {/* Cancel */}
-        <button
-          onClick={cancelSitemapSync}
-          disabled={
-            jobActionLoading || job?.status !== "running"
-          }
-          className="px-4 py-2 rounded bg-yellow-600 text-white text-sm disabled:bg-gray-300"
-        >
-          Cancel
-        </button>
-
-        {/* Resume */}
-        <button
-          onClick={resumeSitemapSync}
-          disabled={
-            jobActionLoading ||
-            !["canceled", "failed"].includes(job?.status)
-          }
-          className="px-4 py-2 rounded bg-blue-600 text-white text-sm disabled:bg-gray-300"
-        >
-          Resume
-        </button>
-
-      </div>
-    </>
+                <p className="text-sm">
+                  <strong>Status:</strong> {job.status}
+                </p>
+<p className="text-xs text-gray-500">
+  <strong>Polling:</strong>{" "}
+  {pollingSpeed === "fast" && (
+    <span className="text-blue-600">Fast (2s)</span>
   )}
-</div>
+  {pollingSpeed === "slow" && (
+    <span className="text-gray-600">Slow (10s)</span>
+  )}
+  {pollingSpeed === "initializing" && (
+    <span className="text-gray-400">Initializing…</span>
+  )}
+</p>
+                <p className="text-sm">
+                  <strong>Progress:</strong>{" "}
+                  {job.total_sitemaps
+                    ? `${Math.min(job.sitemap_index, job.total_sitemaps)} / ${job.total_sitemaps} sitemaps`
+                    : `${job.sitemap_index}`}
+                </p>
+
+                <p className="text-sm">
+                  <strong>URLs Processed:</strong>{" "}
+                  {job.total_urls_processed?.toLocaleString()}
+                </p>
+
+                {job.current_sitemap_url && (
+                  <p className="text-xs text-gray-600 break-all">
+                    <strong>Current:</strong> {job.current_sitemap_url}
+                  </p>
+                )}
+
+                {job.last_error && (
+                  <p className="text-sm text-red-600">
+                    <strong>Error:</strong> {job.last_error}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              {/* Start */}
+              <button
+                onClick={startSitemapSync}
+                disabled={jobActionLoading || job?.status === "running"}
+                className="px-4 py-2 rounded bg-black text-white text-sm disabled:bg-gray-300"
+              >
+                Start
+              </button>
+
+              {/* Cancel */}
+              <button
+                onClick={cancelSitemapSync}
+                disabled={jobActionLoading || job?.status !== "running"}
+                className="px-4 py-2 rounded bg-yellow-600 text-white text-sm disabled:bg-gray-300"
+              >
+                Cancel
+              </button>
+
+              {/* Resume */}
+              <button
+                onClick={resumeSitemapSync}
+                disabled={
+                  jobActionLoading ||
+                  !["canceled", "failed"].includes(job?.status)
+                }
+                className="px-4 py-2 rounded bg-blue-600 text-white text-sm disabled:bg-gray-300"
+              >
+                Resume
+              </button>
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Duplicate Page Cleanup */}
       <div className="border-t pt-6">
-        <h2 className="text-lg font-semibold mb-2">
-          Shopify Duplicate Page Cleanup
-        </h2>
+        <h2 className="text-lg font-semibold mb-2">Shopify Duplicate Page Cleanup</h2>
 
         <p className="text-sm text-gray-600 mb-4">
           Scans all Shopify pages and removes duplicate titles. Always run a dry
@@ -752,9 +758,7 @@ async function resumeSitemapSync() {
                 <p>Pages deleted: {cleanupResult.pages_deleted}</p>
                 <p>
                   Mode:{" "}
-                  {cleanupResult.dry_run
-                    ? "Dry Run (no deletes)"
-                    : "Live Delete"}
+                  {cleanupResult.dry_run ? "Dry Run (no deletes)" : "Live Delete"}
                 </p>
               </div>
             )}

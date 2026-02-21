@@ -5,7 +5,6 @@ const ROOT_SITEMAP = "https://doorplaceusa.com/sitemap.xml";
 const BATCH_SIZE = 150;
 const MAX_BATCHES_PER_TICK = 2;
 const LOCK_SECONDS = 60;
-
 const INCREMENTAL_SITEMAPS_TO_SCAN = 10;
 
 const SYNC_SECRET = process.env.SITEMAP_SYNC_SECRET;
@@ -27,6 +26,25 @@ function dedupeByUrl<T extends { url: string }>(rows: T[]): T[] {
     map.set(r.url, r);
   }
   return Array.from(map.values());
+}
+
+async function fetchWithRetry(url: string, retries = 5) {
+  for (let i = 0; i < retries; i++) {
+    const res = await fetch(url, {
+      cache: "no-store",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+        Accept: "application/xml,text/xml",
+      },
+    });
+
+    if (res.ok) return res;
+
+    await sleep(3000);
+  }
+
+  throw new Error(`Fetch failed after retries: ${url}`);
 }
 
 export async function POST(req: Request) {
@@ -63,10 +81,7 @@ export async function POST(req: Request) {
 
     // LOCK CHECK
     if (job.lock_expires_at && new Date(job.lock_expires_at) > new Date()) {
-      return NextResponse.json({
-        success: true,
-        locked: true,
-      });
+      return NextResponse.json({ success: true, locked: true });
     }
 
     await updateJob({
@@ -85,19 +100,12 @@ export async function POST(req: Request) {
       });
     }
 
-    // FETCH ROOT SITEMAP
-    const indexRes = await fetch(ROOT_SITEMAP, {
-      cache: "no-store",
-      headers: {
-        "User-Agent": "DoorplaceUSA-SitemapSync/1.0",
-      },
-    });
-
-    if (!indexRes.ok) {
-      throw new Error(`Root sitemap fetch failed: ${indexRes.status}`);
-    }
-
+    // =========================
+    // FETCH ROOT SITEMAP (RETRY SAFE)
+    // =========================
+    const indexRes = await fetchWithRetry(ROOT_SITEMAP);
     const indexXml = await indexRes.text();
+
     let sitemapUrls = extractLocs(indexXml);
 
     if (mode === "incremental") {
@@ -110,7 +118,9 @@ export async function POST(req: Request) {
       await updateJob({ total_sitemaps: sitemapUrls.length });
     }
 
+    // =========================
     // COMPLETE
+    // =========================
     if (currentJob.sitemap_index >= sitemapUrls.length) {
       if (mode === "incremental") {
         await updateJob({
@@ -123,7 +133,8 @@ export async function POST(req: Request) {
           success: true,
           done: true,
           incremental: true,
-          total_urls_processed: currentJob.total_urls_processed ?? 0,
+          total_urls_processed:
+            currentJob.total_urls_processed ?? 0,
         });
       }
 
@@ -135,23 +146,16 @@ export async function POST(req: Request) {
       return NextResponse.json({
         success: true,
         done: true,
-        total_urls_processed: currentJob.total_urls_processed ?? 0,
+        total_urls_processed:
+          currentJob.total_urls_processed ?? 0,
       });
     }
 
+    // =========================
     // PROCESS CHILD SITEMAP
+    // =========================
     const sitemapUrl = sitemapUrls[currentJob.sitemap_index];
-
-    const childRes = await fetch(sitemapUrl, {
-      cache: "no-store",
-    });
-
-    if (!childRes.ok) {
-      throw new Error(
-        `Child sitemap fetch failed (${sitemapUrl}): ${childRes.status}`
-      );
-    }
-
+    const childRes = await fetchWithRetry(sitemapUrl);
     const childXml = await childRes.text();
 
     const entries = extractUrlEntries(childXml).filter(
@@ -193,7 +197,6 @@ export async function POST(req: Request) {
     }
 
     const doneWithSitemap = i >= entries.length;
-
     const newTotal =
       (currentJob.total_urls_processed ?? 0) + upserted;
 
@@ -274,8 +277,11 @@ function extractLocs(xml: string): string[] {
 }
 
 function extractUrlEntries(xml: string): SitemapEntry[] {
-  return [...xml.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((block) => ({
-    loc: block[1].match(/<loc>(.*?)<\/loc>/)?.[1],
-    lastmod: block[1].match(/<lastmod>(.*?)<\/lastmod>/)?.[1],
-  }));
+  return [...xml.matchAll(/<url>([\s\S]*?)<\/url>/g)].map(
+    (block) => ({
+      loc: block[1].match(/<loc>(.*?)<\/loc>/)?.[1],
+      lastmod:
+        block[1].match(/<lastmod>(.*?)<\/lastmod>/)?.[1],
+    })
+  );
 }

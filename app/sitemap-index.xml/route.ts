@@ -13,9 +13,9 @@ export async function GET() {
     // ======================================================
     // Count indexable URLs (fast head count)
     // ======================================================
-   const { count, error } = await supabaseAdmin
+  const { count, error } = await supabaseAdmin
   .from("shopify_url_inventory")
-  .select("id", { count: "exact", head: true })
+  .select("*", { count: "estimated", head: true })
   .eq("is_active", true)
   .eq("is_indexable", true);
 

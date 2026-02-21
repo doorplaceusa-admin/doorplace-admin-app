@@ -17,47 +17,93 @@ export async function GET(
     return new NextResponse("Invalid sitemap index", { status: 400 });
   }
 
-  const from = indexNum * CHUNK_SIZE;
-  const to = from + CHUNK_SIZE - 1;
+  try {
+    // ----------------------------------------------------
+    // 1️⃣ Get total row count (estimated = FAST + scalable)
+    // ----------------------------------------------------
+    const { count, error: countError } = await supabaseAdmin
+      .from("shopify_url_inventory")
+      .select("*", { count: "estimated", head: true })
+      .eq("is_active", true)
+      .eq("is_indexable", true);
 
-  const { data, error } = await supabaseAdmin
-  .from("shopify_url_inventory")
-  .select("url,last_modified")
-  .eq("is_active", true)
-  .eq("is_indexable", true)
-  .order("url", { ascending: true })
-  .range(from, to);
+    if (countError) {
+      console.error("Supabase count error:", countError.message);
+      return new NextResponse("Supabase error", { status: 500 });
+    }
 
-  if (error) {
-    console.error("Supabase error:", error.message);
-    return new NextResponse("Supabase error", { status: 500 });
-  }
+    const totalRows = count ?? 0;
 
-  const urls = data ?? [];
+    const from = indexNum * CHUNK_SIZE;
+    let to = from + CHUNK_SIZE - 1;
 
-  const xmlBody = urls
-    .map((row) => {
-      const lastmod = row.last_modified
-        ? new Date(row.last_modified).toISOString().split("T")[0]
-        : null;
+    // ----------------------------------------------------
+    // 2️⃣ Prevent overflow on final chunk
+    // ----------------------------------------------------
+    if (to >= totalRows) {
+      to = totalRows - 1;
+    }
 
-      return `
+    // If index is beyond available rows, return empty sitemap
+    if (from >= totalRows) {
+      const emptyXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`;
+
+      return new NextResponse(emptyXml, {
+        headers: {
+          "Content-Type": "application/xml; charset=utf-8",
+        },
+      });
+    }
+
+    // ----------------------------------------------------
+    // 3️⃣ Fetch actual chunk
+    // ----------------------------------------------------
+    const { data, error } = await supabaseAdmin
+      .from("shopify_url_inventory")
+      .select("url,last_modified")
+      .eq("is_active", true)
+      .eq("is_indexable", true)
+      .order("url", { ascending: true })
+      .range(from, to);
+
+    if (error) {
+      console.error("Supabase range error:", error.message);
+      return new NextResponse("Supabase error", { status: 500 });
+    }
+
+    const urls = data ?? [];
+
+    // ----------------------------------------------------
+    // 4️⃣ Build XML
+    // ----------------------------------------------------
+    const xmlBody = urls
+      .map((row) => {
+        const lastmod = row.last_modified
+          ? new Date(row.last_modified).toISOString().split("T")[0]
+          : null;
+
+        return `
   <url>
     <loc>${row.url}</loc>
     ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}
   </url>`;
-    })
-    .join("");
+      })
+      .join("");
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${xmlBody}
 </urlset>`;
 
-  return new NextResponse(xml, {
-    headers: {
-      "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=600, stale-while-revalidate=60",
-    },
-  });
+    return new NextResponse(xml, {
+      headers: {
+        "Content-Type": "application/xml; charset=utf-8",
+        "Cache-Control": "public, max-age=600, stale-while-revalidate=60",
+      },
+    });
+  } catch (err: any) {
+    console.error("Unexpected sitemap error:", err?.message);
+    return new NextResponse("Internal server error", { status: 500 });
+  }
 }

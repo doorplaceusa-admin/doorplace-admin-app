@@ -6,6 +6,8 @@ const BATCH_SIZE = 150;
 const MAX_BATCHES_PER_TICK = 2;
 const LOCK_SECONDS = 60;
 
+const INCREMENTAL_SITEMAPS_TO_SCAN = 10;
+
 const SYNC_SECRET = process.env.SITEMAP_SYNC_SECRET;
 
 type SitemapEntry = { loc?: string; lastmod?: string };
@@ -18,7 +20,18 @@ function token() {
   return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
+function dedupeByUrl<T extends { url: string }>(rows: T[]): T[] {
+  const map = new Map<string, T>();
+  for (const r of rows) {
+    if (!r?.url) continue;
+    map.set(r.url, r);
+  }
+  return Array.from(map.values());
+}
+
 export async function POST(req: Request) {
+  let lockToken: string | null = null;
+
   try {
     if (!SYNC_SECRET) {
       return NextResponse.json(
@@ -35,7 +48,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const lockToken = token();
+    const url = new URL(req.url);
+    const mode = url.searchParams.get("mode") || "full";
+
+    lockToken = token();
     const job = await getJob();
 
     if (!job) {
@@ -45,7 +61,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 🔒 LOCK CHECK
+    // LOCK CHECK
     if (job.lock_expires_at && new Date(job.lock_expires_at) > new Date()) {
       return NextResponse.json({
         success: true,
@@ -53,7 +69,6 @@ export async function POST(req: Request) {
       });
     }
 
-    // Acquire lock
     await updateJob({
       lock_token: lockToken,
       lock_expires_at: new Date(Date.now() + LOCK_SECONDS * 1000).toISOString(),
@@ -61,7 +76,6 @@ export async function POST(req: Request) {
 
     const currentJob = await getJob();
 
-    // 🚨 If job not running, return status + last_error
     if (currentJob.status !== "running") {
       return NextResponse.json({
         success: true,
@@ -71,9 +85,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // ==========================================
     // FETCH ROOT SITEMAP
-    // ==========================================
     const indexRes = await fetch(ROOT_SITEMAP, {
       cache: "no-store",
       headers: {
@@ -86,16 +98,35 @@ export async function POST(req: Request) {
     }
 
     const indexXml = await indexRes.text();
-    const sitemapUrls = extractLocs(indexXml);
+    let sitemapUrls = extractLocs(indexXml);
+
+    if (mode === "incremental") {
+      sitemapUrls = sitemapUrls.slice(
+        Math.max(0, sitemapUrls.length - INCREMENTAL_SITEMAPS_TO_SCAN)
+      );
+    }
 
     if (!currentJob.total_sitemaps) {
       await updateJob({ total_sitemaps: sitemapUrls.length });
     }
 
-    // ==========================================
-    // COMPLETE?
-    // ==========================================
+    // COMPLETE
     if (currentJob.sitemap_index >= sitemapUrls.length) {
+      if (mode === "incremental") {
+        await updateJob({
+          sitemap_index: 0,
+          url_offset: 0,
+          updated_at: new Date().toISOString(),
+        });
+
+        return NextResponse.json({
+          success: true,
+          done: true,
+          incremental: true,
+          total_urls_processed: currentJob.total_urls_processed ?? 0,
+        });
+      }
+
       await updateJob({
         status: "completed",
         finished_at: new Date().toISOString(),
@@ -108,9 +139,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // ==========================================
     // PROCESS CHILD SITEMAP
-    // ==========================================
     const sitemapUrl = sitemapUrls[currentJob.sitemap_index];
 
     const childRes = await fetch(sitemapUrl, {
@@ -136,7 +165,7 @@ export async function POST(req: Request) {
     while (i < entries.length && batches < MAX_BATCHES_PER_TICK) {
       const slice = entries.slice(i, i + BATCH_SIZE);
 
-      const rows = slice.map((e) => ({
+      let rows = slice.map((e) => ({
         url: e.loc!.replace(/\/$/, "").toLowerCase(),
         page_type: "unknown",
         last_modified: e.lastmod ?? null,
@@ -145,6 +174,8 @@ export async function POST(req: Request) {
         source: "shopify_sitemap",
         updated_at: new Date().toISOString(),
       }));
+
+      rows = dedupeByUrl(rows);
 
       const { error } = await supabaseAdmin
         .from("shopify_url_inventory")
@@ -185,7 +216,7 @@ export async function POST(req: Request) {
     });
 
   } catch (e: any) {
-    console.error("🚨 TICK ROUTE ERROR:", e);
+    console.error("TICK ROUTE ERROR:", e);
 
     await updateJob({
       status: "failed",
@@ -201,10 +232,15 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   } finally {
-    await updateJob({
-      lock_token: null,
-      lock_expires_at: null,
-    });
+    if (lockToken) {
+      const job = await getJob();
+      if (job?.lock_token === lockToken) {
+        await updateJob({
+          lock_token: null,
+          lock_expires_at: null,
+        });
+      }
+    }
   }
 }
 

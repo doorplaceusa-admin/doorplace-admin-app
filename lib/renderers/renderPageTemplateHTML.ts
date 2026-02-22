@@ -43,6 +43,7 @@ import { renderPorchSwingWeightCapacityCityHTML } from "../templates/renderPorch
 
 import { renderBarnDoorStyleCityHTML } from "../templates/renderBarnDoorStyleCityHTML";
 import { renderCustomDoorInstallationCityHTML } from "../templates/renderCustomDoorInstallationCityHTML";
+import { renderInteriorDoorInstallationCityHTML } from "../templates/renderInteriorDoorInstallationCityHTML";
 
 /* =========================================
    Types
@@ -80,6 +81,9 @@ export function renderPageTemplateHTML(
     case "custom_door_installation_city":
       return renderCustomDoorInstallationCityHTML(props);
 
+    case "interior_door_installation_city":
+      return renderInteriorDoorInstallationCityHTML(props);
+
     /* -----------------------------
        CORE
     ------------------------------ */
@@ -95,14 +99,13 @@ export function renderPageTemplateHTML(
     ------------------------------ */
 
     case "porch_swing_installation_city":
-  return renderPorchSwingInstallationCityHTML({
-    ...props,
-    mountType:
-      mountType === "beam" || mountType === "pergola"
-        ? mountType
-        : "ceiling",
-  });
-
+      return renderPorchSwingInstallationCityHTML({
+        ...props,
+        mountType:
+          mountType === "beam" || mountType === "pergola"
+            ? mountType
+            : "ceiling",
+      });
 
     case "porch_swing_installation_process_city":
       return renderPorchSwingInstallationProcessCityHTML(props);
@@ -134,12 +137,11 @@ export function renderPageTemplateHTML(
     ------------------------------ */
 
     case "porch_swing_size_city":
-  if (!variant_key) throw new Error("size required");
-  return renderPorchSwingSizeCityHTML({
-    ...props,
-    size: variant_key,
-  });
-
+      if (!variant_key) throw new Error("size required");
+      return renderPorchSwingSizeCityHTML({
+        ...props,
+        size: variant_key,
+      });
 
     case "porch_swing_size_fit_city":
       return renderPorchSwingSizeFitCityHTML(props);
@@ -168,25 +170,33 @@ export function renderPageTemplateHTML(
 
     case "porch_swing_material_city":
       if (!variant_key) throw new Error("material required");
-      return renderPorchSwingMaterialCityHTML({ ...props, material: variant_key });
+      return renderPorchSwingMaterialCityHTML({
+        ...props,
+        material: variant_key,
+      });
 
     case "porch_swing_style_city":
       if (!variant_key) throw new Error("style required");
-      return renderPorchSwingStyleCityHTML({ ...props, style: variant_key });
+      return renderPorchSwingStyleCityHTML({
+        ...props,
+        style: variant_key,
+      });
 
     case "porch_swing_usecase_city":
       if (!variant_key) throw new Error("usecase required");
-      return renderPorchSwingUsecaseCityHTML({ ...props, usecase: variant_key });
+      return renderPorchSwingUsecaseCityHTML({
+        ...props,
+        usecase: variant_key,
+      });
 
     case "porch_swing_mount_type_city":
-  return renderPorchSwingMountTypeCityHTML({
-    ...props,
-    mountType:
-      props.mountType === "beam" || props.mountType === "pergola"
-        ? props.mountType
-        : "ceiling",
-  });
-
+      return renderPorchSwingMountTypeCityHTML({
+        ...props,
+        mountType:
+          props.mountType === "beam" || props.mountType === "pergola"
+            ? props.mountType
+            : "ceiling",
+      });
 
     case "porch_swing_small_porch_city":
       return renderPorchSwingSmallPorchCityHTML(props);

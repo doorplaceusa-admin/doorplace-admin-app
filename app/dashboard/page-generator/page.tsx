@@ -228,14 +228,14 @@ const TEMPLATE_OPTIONS = [
   { value: "porch_swing_weight_capacity_city", label: "Porch Swing – Weight Capacity (City)" },
 
   /* =========================================
-     DOORS
-  ========================================= */
+   DOORS
+========================================= */
 
-  { value: "door_city", label: "Barn Door Style – City" },
-  { value: "custom_door_installation_city", label: "Custom Door Installation – City" },
-];
+{ value: "door_city", label: "Barn Door Style – City" },
+{ value: "custom_door_installation_city", label: "Custom Door Installation – City" },
+{ value: "interior_door_installation_city", label: "Interior Door Installation – City" },
 
-
+  ];
 
 
 
@@ -341,9 +341,11 @@ const getPageTypeFromTemplate = (template: string) => {
     case "porch_swing_style_city":
       return "style";
     case "door_city":
-      return "door";
-    case "custom_door_installation_city":
-      return "door";
+  return "door";
+case "custom_door_installation_city":
+  return "door";
+case "interior_door_installation_city":
+  return "door";
     case "porch_swing_installation_city":
       return "install";
     default:
@@ -667,7 +669,7 @@ const selectAllCitiesAllStates = async () => {
     Bulk Select States
   </label>
 
-  <div className="max-h-[180px] overflow-y-auto border rounded-lg p-2 space-y-1 bg-gray-50">
+  <div className="max-h-45 overflow-y-auto border rounded-lg p-2 space-y-1 bg-gray-50">
     {states.map((s) => (
       <label
         key={s.id}

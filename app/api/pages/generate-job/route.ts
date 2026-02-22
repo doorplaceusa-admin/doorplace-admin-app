@@ -333,24 +333,29 @@ if (Array.isArray(state_ids) && state_ids.length > 0) {
 
 
   /* -----------------------------
-     DOOR TEMPLATES
-  ------------------------------ */
+   DOOR TEMPLATES
+------------------------------ */
 
-  case "door_city":
-    if (style) {
-      variant_key = slugify(style);
-      title = `${titleCase(style)} in ${c.city_name}, ${stateCodeUpper}`;
-      slug = `${variant_key}-${c.slug}-${stateCodeLower}`;
-    } else {
-      title = `Custom Wood Doors in ${c.city_name}, ${stateCodeUpper}`;
-      slug = `wood-doors-${c.slug}-${stateCodeLower}`;
-    }
-    break;
+case "door_city":
+  if (style) {
+    variant_key = slugify(style);
+    title = `${titleCase(style)} in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `${variant_key}-${c.slug}-${stateCodeLower}`;
+  } else {
+    title = `Custom Wood Doors in ${c.city_name}, ${stateCodeUpper}`;
+    slug = `wood-doors-${c.slug}-${stateCodeLower}`;
+  }
+  break;
 
-  case "custom_door_installation_city":
-    title = `Custom Door Installation in ${c.city_name}, ${stateCodeUpper}`;
-    slug = `custom-door-installation-${c.slug}-${stateCodeLower}`;
-    break;
+case "custom_door_installation_city":
+  title = `Custom Door Installation in ${c.city_name}, ${stateCodeUpper}`;
+  slug = `custom-door-installation-${c.slug}-${stateCodeLower}`;
+  break;
+
+case "interior_door_installation_city":
+  title = `Interior Door Installation in ${c.city_name}, ${stateCodeUpper}`;
+  slug = `interior-door-installation-${c.slug}-${stateCodeLower}`;
+  break;
 
   default:
     throw new Error(`Unsupported template: ${page_template}`);

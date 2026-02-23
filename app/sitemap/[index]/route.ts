@@ -5,6 +5,18 @@ export const dynamic = "force-dynamic";
 
 const CHUNK_SIZE = 50000;
 
+/* -------------------------------------------------------
+   XML Escaper (prevents broken XML)
+------------------------------------------------------- */
+function escapeXml(str: string) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ index: string }> }
@@ -18,53 +30,18 @@ export async function GET(
   }
 
   try {
-    // ----------------------------------------------------
-    // 1️⃣ Fast total count (estimated)
-    // ----------------------------------------------------
-    const { count, error: countError } = await supabaseAdmin
-      .from("shopify_url_inventory")
-      .select("*", { count: "estimated", head: true })
-      .eq("is_active", true)
-      .eq("is_indexable", true);
-
-    if (countError) {
-      console.error("Supabase count error:", countError.message);
-      return new NextResponse("Supabase error", { status: 500 });
-    }
-
-    const totalRows = count ?? 0;
-
     const from = indexNum * CHUNK_SIZE;
-    let to = from + CHUNK_SIZE - 1;
+    const to = from + CHUNK_SIZE - 1;
 
     // ----------------------------------------------------
-    // 2️⃣ Prevent overflow on final chunk
-    // ----------------------------------------------------
-    if (to >= totalRows) {
-      to = totalRows - 1;
-    }
-
-    // If chunk is beyond dataset → return empty sitemap
-    if (from >= totalRows || totalRows === 0) {
-      const emptyXml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`;
-
-      return new NextResponse(emptyXml, {
-        headers: {
-          "Content-Type": "application/xml; charset=utf-8",
-        },
-      });
-    }
-
-    // ----------------------------------------------------
-    // 3️⃣ Fetch chunk (ORDER BY ID = FAST + INDEXED)
+    // Fetch chunk (stable order by id)
     // ----------------------------------------------------
     const { data, error } = await supabaseAdmin
       .from("shopify_url_inventory")
       .select("url,last_modified")
       .eq("is_active", true)
       .eq("is_indexable", true)
-      .order("id", { ascending: true })   // 🔥 critical fix
+      .order("id", { ascending: true })
       .range(from, to);
 
     if (error) {
@@ -74,8 +51,21 @@ export async function GET(
 
     const urls = data ?? [];
 
+    // If no rows returned, return empty sitemap (valid XML)
+    if (urls.length === 0) {
+      const emptyXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`;
+
+      return new NextResponse(emptyXml, {
+        headers: {
+          "Content-Type": "application/xml; charset=utf-8",
+          "Cache-Control": "public, max-age=600, stale-while-revalidate=60",
+        },
+      });
+    }
+
     // ----------------------------------------------------
-    // 4️⃣ Build XML
+    // Build XML
     // ----------------------------------------------------
     const xmlBody = urls
       .map((row) => {
@@ -85,7 +75,7 @@ export async function GET(
 
         return `
   <url>
-    <loc>${row.url}</loc>
+    <loc>${escapeXml(row.url)}</loc>
     ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}
   </url>`;
       })

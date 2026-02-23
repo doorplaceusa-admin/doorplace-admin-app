@@ -90,12 +90,18 @@ function applyPartnerSegment(query: any, segment: SegmentKey) {
 const transporter = nodemailer.createTransport({
   host: requireEnv("SMTP_HOST"),
   port: Number(requireEnv("SMTP_PORT")),
-  secure: false,
+  secure: true,
   auth: {
     user: requireEnv("SMTP_USER"),
     pass: requireEnv("SMTP_PASS"),
   },
 });
+
+console.log("=== SMTP DEBUG ===");
+console.log("SMTP_HOST:", process.env.SMTP_HOST);
+console.log("SMTP_PORT:", process.env.SMTP_PORT);
+console.log("SMTP_USER:", process.env.SMTP_USER);
+console.log("===================");
 
 const FROM_MAP: Record<string, string> = {
   partners: `"Doorplace USA Partners" <partners@doorplaceusa.com>`,
@@ -203,8 +209,11 @@ async function sendCampaign(settings: any) {
         replyTo: "support@doorplaceusa.com",
       });
     } catch (err: any) {
-      console.log("❌ Failed:", email);
-    }
+  console.log("❌ Failed:", email);
+  console.log("Error message:", err?.message);
+  console.log("Error response:", err?.response);
+  console.log("Full error object:", err);
+}
 
     await sleep(SEND_DELAY_MS);
   }

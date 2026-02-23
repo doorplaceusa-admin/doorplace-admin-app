@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 const ROOT_SITEMAP = "https://doorplaceusa.com/sitemap.xml";
 const BATCH_SIZE = 150;
 const MAX_BATCHES_PER_TICK = 2;
-const LOCK_SECONDS = 60;
+const LOCK_SECONDS = 180; // increased to prevent overlapping ticks
 const INCREMENTAL_SITEMAPS_TO_SCAN = 10;
 
 const SYNC_SECRET = process.env.SITEMAP_SYNC_SECRET;
@@ -28,23 +28,45 @@ function dedupeByUrl<T extends { url: string }>(rows: T[]): T[] {
   return Array.from(map.values());
 }
 
-async function fetchWithRetry(url: string, retries = 5) {
-  for (let i = 0; i < retries; i++) {
-    const res = await fetch(url, {
-      cache: "no-store",
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-        Accept: "application/xml,text/xml",
-      },
-    });
+async function fetchWithRetry(
+  url: string,
+  retries = 8,
+  baseDelay = 2000
+) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 45000);
 
-    if (res.ok) return res;
+      const res = await fetch(url, {
+        cache: "no-store",
+        signal: controller.signal,
+        headers: {
+          "User-Agent": "TradePilot-SitemapSync/1.0",
+          Accept: "application/xml,text/xml",
+        },
+      });
 
-    await sleep(3000);
+      clearTimeout(timeout);
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      return res;
+    } catch (err) {
+      console.log(`❌ Fetch attempt ${attempt} failed for ${url}`);
+
+      if (attempt === retries) {
+        throw new Error(`Failed after ${retries} attempts`);
+      }
+
+      // exponential backoff
+      await sleep(baseDelay * attempt);
+    }
   }
 
-  throw new Error(`Fetch failed after retries: ${url}`);
+  throw new Error("Unreachable");
 }
 
 export async function POST(req: Request) {
@@ -162,8 +184,51 @@ export async function POST(req: Request) {
     // PROCESS CHILD SITEMAP
     // =========================
     const sitemapUrl = sitemapUrls[currentJob.sitemap_index];
-    const childRes = await fetchWithRetry(sitemapUrl);
-    const childXml = await childRes.text();
+
+let childXml: string;
+
+try {
+  const childRes = await fetchWithRetry(sitemapUrl);
+  childXml = await childRes.text();
+
+  // ✅ child fetch success → reset retry_count
+  await updateJob({
+    retry_count: 0,
+    last_error: null,
+  });
+
+} catch (childError: any) {
+  console.error("Child sitemap failed:", sitemapUrl);
+
+  const retryCount = (currentJob.retry_count ?? 0) + 1;
+
+  if (retryCount >= 5) {
+    // 🚨 Only now fail job
+    await updateJob({
+      status: "failed",
+      last_error: `Child sitemap failed after 5 attempts: ${sitemapUrl}`,
+      retry_count: retryCount,
+    });
+
+    return NextResponse.json({
+      success: false,
+      status: "failed",
+    });
+  }
+
+  // ✅ Soft retry (do NOT fail job)
+  await updateJob({
+    retry_count: retryCount,
+    last_error: `Temporary child sitemap error (${retryCount}/5)`,
+    updated_at: new Date().toISOString(),
+  });
+
+  return NextResponse.json({
+    success: true,
+    retrying: true,
+    retry_count: retryCount,
+  });
+}
 
     const entries = extractUrlEntries(childXml).filter(
       (e) => !!e.loc
@@ -225,13 +290,14 @@ export async function POST(req: Request) {
     const newTotal = (currentJob.total_urls_processed ?? 0) + upserted;
 
     await updateJob({
-      sitemap_index: doneWithSitemap
-        ? currentJob.sitemap_index + 1
-        : currentJob.sitemap_index,
-      url_offset: doneWithSitemap ? 0 : i,
-      total_urls_processed: newTotal,
-      updated_at: new Date().toISOString(),
-    });
+  sitemap_index: doneWithSitemap
+    ? currentJob.sitemap_index + 1
+    : currentJob.sitemap_index,
+  url_offset: doneWithSitemap ? 0 : i,
+  total_urls_processed: newTotal,
+  retry_count: 0, // ✅ RESET retry counter on success
+  updated_at: new Date().toISOString(),
+});
 
     return NextResponse.json({
       success: true,
@@ -245,10 +311,22 @@ export async function POST(req: Request) {
   } catch (e: any) {
     console.error("TICK ROUTE ERROR:", e);
 
-    await updateJob({
-      status: "failed",
-      last_error: e?.message ?? "Unknown error",
-    });
+    const job = await getJob();
+
+const newRetryCount = (job.retry_count ?? 0) + 1;
+
+if (newRetryCount >= 5) {
+  await updateJob({
+    status: "failed",
+    last_error: e?.message ?? "Unknown error",
+    retry_count: newRetryCount,
+  });
+} else {
+  await updateJob({
+    retry_count: newRetryCount,
+    last_error: e?.message ?? "Temporary error — will retry",
+  });
+}
 
     return NextResponse.json(
       {

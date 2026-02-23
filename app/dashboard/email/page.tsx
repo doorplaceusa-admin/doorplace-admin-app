@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 /* ===============================
-   SEGMENT LOGIC
+   SEGMENTS
 ================================ */
 
 type SegmentKey =
@@ -17,37 +17,6 @@ type SegmentKey =
   | "pending"
   | "active";
 
-function applyPartnerSegment(query: any, segment: SegmentKey) {
-  switch (segment) {
-    case "login_users":
-      return query.not("auth_user_id", "is", null);
-    case "no_login":
-      return query.is("auth_user_id", null);
-    case "email_not_verified":
-      return query.eq("email_verified", false);
-    case "pending":
-      return query.eq("status", "pending");
-    case "active":
-      return query.eq("status", "active");
-    case "ready_for_activation":
-      return query
-        .not("auth_user_id", "is", null)
-        .eq("email_verified", true)
-        .eq("status", "pending");
-    case "welcome_email_not_sent_login":
-      return query
-        .not("auth_user_id", "is", null)
-        .eq("status", "pending")
-        .eq("welcome_email_sent", false);
-    default:
-      return query;
-  }
-}
-
-/* ===============================
-   TEMPLATE TYPE
-================================ */
-
 type EmailTemplate = {
   id: string;
   name: string;
@@ -59,25 +28,13 @@ export default function EmailDashboardPage() {
   const [mode, setMode] = useState<"manual" | "segment">("segment");
   const [segment, setSegment] = useState<SegmentKey>("all");
 
-  const [segmentCounts, setSegmentCounts] = useState<Record<string, number>>(
-    {}
-  );
+  const [segmentCounts, setSegmentCounts] = useState<Record<string, number>>({});
   const [manualEmails, setManualEmails] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
-
   const [delayMs, setDelayMs] = useState(2000);
   const [sending, setSending] = useState(false);
   const [lastResult, setLastResult] = useState<any>(null);
-
-  /* ===============================
-     TEMPLATE STATE
-  ================================ */
-
-  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
-  const [templateName, setTemplateName] = useState("");
-  const [selectedTemplateId, setSelectedTemplateId] =
-    useState<string>("");
 
   /* ===============================
      AUTOMATION STATE
@@ -86,15 +43,29 @@ export default function EmailDashboardPage() {
   const [automationEnabled, setAutomationEnabled] = useState(false);
   const [sendTime, setSendTime] = useState("08:00");
   const [fromKey, setFromKey] = useState("partners");
-  const [currentSequence, setCurrentSequence] =
-    useState<number | null>(null);
-  const [lastSentDate, setLastSentDate] =
-    useState<string | null>(null);
+  const [currentSequence, setCurrentSequence] = useState<number | null>(null);
+  const [lastSentDate, setLastSentDate] = useState<string | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
 
   /* ===============================
-     LOAD COUNTS
+     TEMPLATE STATE
   ================================ */
+
+  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [templateName, setTemplateName] = useState("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+
+  /* ===============================
+     LOAD INITIAL DATA
+  ================================ */
+
+  useEffect(() => {
+    loadCounts();
+    loadAutomationSettings();
+
+    const stored = localStorage.getItem("tp_email_templates");
+    if (stored) setTemplates(JSON.parse(stored));
+  }, []);
 
   async function loadCounts() {
     const segments: SegmentKey[] = [
@@ -111,11 +82,10 @@ export default function EmailDashboardPage() {
     const results: Record<string, number> = {};
 
     for (const s of segments) {
-      let q = supabase
+      const { count } = await supabase
         .from("partners")
         .select("*", { count: "exact", head: true });
-      q = applyPartnerSegment(q, s);
-      const { count } = await q;
+
       results[s] = count || 0;
     }
 
@@ -133,22 +103,14 @@ export default function EmailDashboardPage() {
 
     setAutomationEnabled(data.enabled);
     setSendTime(data.send_time);
-    setSegment(data.segment as SegmentKey);
+    setSegment(data.segment);
     setFromKey(data.from_key);
     setCurrentSequence(data.current_sequence);
     setLastSentDate(data.last_sent_date);
   }
 
-  useEffect(() => {
-    loadCounts();
-    loadAutomationSettings();
-
-    const stored = localStorage.getItem("tp_email_templates");
-    if (stored) setTemplates(JSON.parse(stored));
-  }, []);
-
   /* ===============================
-     TEMPLATE HANDLING
+     TEMPLATE FUNCTIONS
   ================================ */
 
   function persistTemplates(next: EmailTemplate[]) {
@@ -157,10 +119,7 @@ export default function EmailDashboardPage() {
   }
 
   function saveTemplate() {
-    if (!templateName.trim()) {
-      alert("Template name required");
-      return;
-    }
+    if (!templateName.trim()) return alert("Template name required");
 
     const tpl: EmailTemplate = {
       id: Date.now().toString(),
@@ -171,7 +130,6 @@ export default function EmailDashboardPage() {
 
     persistTemplates([tpl, ...templates]);
     setTemplateName("");
-    setSelectedTemplateId(tpl.id);
   }
 
   function loadTemplate(id: string) {
@@ -179,11 +137,10 @@ export default function EmailDashboardPage() {
     if (!tpl) return;
     setSubject(tpl.subject);
     setBody(tpl.body);
-    setSelectedTemplateId(id);
   }
 
   /* ===============================
-     SAVE AUTOMATION
+     AUTOMATION SAVE
   ================================ */
 
   async function saveAutomationSettings() {
@@ -199,13 +156,11 @@ export default function EmailDashboardPage() {
       })
       .eq("id", 1);
 
-    alert("Automation settings saved.");
     setSavingSettings(false);
+    alert("Automation settings saved.");
   }
 
   async function sendTodayNow() {
-    if (!confirm("Send today's automated email now?")) return;
-
     await supabase
       .from("email_automation_settings")
       .update({ last_sent_date: null })
@@ -220,50 +175,25 @@ export default function EmailDashboardPage() {
 
   async function sendEmail() {
     if (!subject.trim() || !body.trim()) {
-      alert("Subject and body are required.");
-      return;
-    }
-
-    if (mode === "manual") {
-      const list = manualEmails
-        .split(/[,;\s]+/g)
-        .map((e) => e.trim())
-        .filter(Boolean);
-      if (!list.length) {
-        alert("Enter at least one email.");
-        return;
-      }
+      return alert("Subject and body required.");
     }
 
     setSending(true);
-    setLastResult(null);
 
-    try {
-      const payload =
-        mode === "manual"
-          ? { mode: "manual", to: manualEmails, subject, html: body, delayMs }
-          : { mode: "segment", segment, subject, html: body, delayMs };
+    const payload =
+      mode === "manual"
+        ? { mode: "manual", to: manualEmails, subject, html: body, delayMs }
+        : { mode: "segment", segment, subject, html: body, delayMs };
 
-      const res = await fetch("/api/email/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    const res = await fetch("/api/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-      const data = await res.json();
-      setLastResult(data);
-
-      if (!res.ok) {
-        alert(data?.error || "Email failed");
-        return;
-      }
-
-      alert(
-        `Done. Sent: ${data.sent} / ${data.count}. Failed: ${data.failed}.`
-      );
-    } finally {
-      setSending(false);
-    }
+    const data = await res.json();
+    setLastResult(data);
+    setSending(false);
   }
 
   /* ===============================
@@ -271,13 +201,11 @@ export default function EmailDashboardPage() {
   ================================ */
 
   return (
-    <div className="h-[calc(100vh-80px)] flex flex-col bg-gray-50 overflow-x-hidden max-w-375 w-full mx-auto p-6 space-y-4">
-      <div className="sticky top-0 bg-white z-30 border-b pb-4">
-        <h1 className="text-3xl font-bold text-red-700">Email</h1>
-        <p className="text-sm text-gray-500">
-          TradePilot — Partner Email System
-        </p>
-      </div>
+    <div className="max-w-5xl mx-auto p-6 space-y-6">
+
+      <h1 className="text-3xl font-bold text-red-700">
+        Email Control Center
+      </h1>
 
       {/* AUTOMATION PANEL */}
       <div className="bg-white border rounded p-4 space-y-4">
@@ -292,43 +220,36 @@ export default function EmailDashboardPage() {
           Enable Daily Automation
         </label>
 
-        <div className="flex gap-4 flex-wrap">
-          <div>
-            <label className="text-xs text-gray-500">Send Time</label>
-            <input
-              type="time"
-              value={sendTime}
-              onChange={(e) => setSendTime(e.target.value)}
-              className="border rounded px-2 py-1 block"
-            />
-          </div>
+        <div className="flex gap-4">
+          <input
+            type="time"
+            value={sendTime}
+            onChange={(e) => setSendTime(e.target.value)}
+            className="border px-2 py-1 rounded"
+          />
 
-          <div>
-            <label className="text-xs text-gray-500">From</label>
-            <select
-              value={fromKey}
-              onChange={(e) => setFromKey(e.target.value)}
-              className="border rounded px-2 py-1 block"
-            >
-              <option value="partners">Partners</option>
-              <option value="support">Support</option>
-              <option value="info">Info</option>
-            </select>
-          </div>
+          <select
+            value={fromKey}
+            onChange={(e) => setFromKey(e.target.value)}
+            className="border px-2 py-1 rounded"
+          >
+            <option value="partners">Partners</option>
+            <option value="support">Support</option>
+            <option value="info">Info</option>
+          </select>
         </div>
 
         <div className="text-sm text-gray-600">
-          <div><b>Current Sequence:</b> {currentSequence ?? "-"}</div>
+          <div><b>Sequence:</b> {currentSequence ?? "-"}</div>
           <div><b>Last Sent:</b> {lastSentDate ?? "Never"}</div>
         </div>
 
         <div className="flex gap-2">
           <button
             onClick={saveAutomationSettings}
-            disabled={savingSettings}
             className="bg-black text-white px-4 py-2 rounded"
           >
-            {savingSettings ? "Saving…" : "Save Settings"}
+            Save Settings
           </button>
 
           <button
@@ -340,33 +261,60 @@ export default function EmailDashboardPage() {
         </div>
       </div>
 
+      {/* MODE + DELAY */}
+      <div className="flex gap-4 items-center">
+        <button onClick={() => setMode("segment")}>Segment</button>
+        <button onClick={() => setMode("manual")}>Manual</button>
+
+        <input
+          type="number"
+          value={delayMs}
+          onChange={(e) => setDelayMs(Number(e.target.value))}
+          className="border px-2 py-1 rounded"
+        />
+      </div>
+
+      {/* TEMPLATE MANAGER */}
+      <div className="bg-white border rounded p-4 space-y-2">
+        <input
+          placeholder="Template name"
+          value={templateName}
+          onChange={(e) => setTemplateName(e.target.value)}
+          className="border px-2 py-1 w-full"
+        />
+        <button onClick={saveTemplate}>Save Template</button>
+
+        <select onChange={(e) => loadTemplate(e.target.value)}>
+          <option>Load template</option>
+          {templates.map((t) => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
+        </select>
+      </div>
+
       {/* SUBJECT */}
       <input
-        className="border rounded px-3 py-2 w-full"
+        className="border px-3 py-2 w-full rounded"
         placeholder="Email subject"
         value={subject}
         onChange={(e) => setSubject(e.target.value)}
       />
 
-      {/* BODY + PREVIEW */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <textarea
-          className="border rounded px-3 py-2 h-60"
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-        />
-        <div className="border rounded bg-white p-4 h-60 overflow-auto">
-          <div dangerouslySetInnerHTML={{ __html: body }} />
-        </div>
-      </div>
+      {/* BODY */}
+      <textarea
+        className="border px-3 py-2 w-full h-60 rounded"
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+      />
 
       <button
-        className="bg-red-700 text-white px-6 py-3 rounded w-full max-w-xs"
-        disabled={sending}
         onClick={sendEmail}
+        disabled={sending}
+        className="bg-red-700 text-white px-6 py-3 rounded"
       >
         {sending ? "Sending…" : "Send Email"}
       </button>
+
     </div>
   );
 }

@@ -90,7 +90,7 @@ function applyPartnerSegment(query: any, segment: SegmentKey) {
 const transporter = nodemailer.createTransport({
   host: requireEnv("SMTP_HOST"),
   port: Number(requireEnv("SMTP_PORT")),
-  secure: true,
+  secure: false,
   auth: {
     user: requireEnv("SMTP_USER"),
     pass: requireEnv("SMTP_PASS"),

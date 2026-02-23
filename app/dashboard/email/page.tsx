@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 /* ===============================
-   SEGMENTS
+   SEGMENT LOGIC
 ================================ */
 
 type SegmentKey =
@@ -17,6 +17,37 @@ type SegmentKey =
   | "pending"
   | "active";
 
+function applyPartnerSegment(query: any, segment: SegmentKey) {
+  switch (segment) {
+    case "login_users":
+      return query.not("auth_user_id", "is", null);
+    case "no_login":
+      return query.is("auth_user_id", null);
+    case "email_not_verified":
+      return query.eq("email_verified", false);
+    case "pending":
+      return query.eq("status", "pending");
+    case "active":
+      return query.eq("status", "active");
+    case "ready_for_activation":
+      return query
+        .not("auth_user_id", "is", null)
+        .eq("email_verified", true)
+        .eq("status", "pending");
+    case "welcome_email_not_sent_login":
+      return query
+        .not("auth_user_id", "is", null)
+        .eq("status", "pending")
+        .eq("welcome_email_sent", false);
+    default:
+      return query;
+  }
+}
+
+/* ===============================
+   TEMPLATE TYPE
+================================ */
+
 type EmailTemplate = {
   id: string;
   name: string;
@@ -25,6 +56,10 @@ type EmailTemplate = {
 };
 
 export default function EmailDashboardPage() {
+  /* ===============================
+     CORE STATE
+  ================================ */
+
   const [mode, setMode] = useState<"manual" | "segment">("segment");
   const [segment, setSegment] = useState<SegmentKey>("all");
 
@@ -32,6 +67,7 @@ export default function EmailDashboardPage() {
   const [manualEmails, setManualEmails] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+
   const [delayMs, setDelayMs] = useState(2000);
   const [sending, setSending] = useState(false);
   const [lastResult, setLastResult] = useState<any>(null);
@@ -56,7 +92,7 @@ export default function EmailDashboardPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
 
   /* ===============================
-     LOAD INITIAL DATA
+     INITIAL LOAD
   ================================ */
 
   useEffect(() => {
@@ -64,8 +100,18 @@ export default function EmailDashboardPage() {
     loadAutomationSettings();
 
     const stored = localStorage.getItem("tp_email_templates");
-    if (stored) setTemplates(JSON.parse(stored));
+    if (stored) {
+      try {
+        setTemplates(JSON.parse(stored));
+      } catch {
+        localStorage.removeItem("tp_email_templates");
+      }
+    }
   }, []);
+
+  /* ===============================
+     LOAD COUNTS
+  ================================ */
 
   async function loadCounts() {
     const segments: SegmentKey[] = [
@@ -82,15 +128,22 @@ export default function EmailDashboardPage() {
     const results: Record<string, number> = {};
 
     for (const s of segments) {
-      const { count } = await supabase
+      let q = supabase
         .from("partners")
         .select("*", { count: "exact", head: true });
 
+      q = applyPartnerSegment(q, s);
+
+      const { count } = await q;
       results[s] = count || 0;
     }
 
     setSegmentCounts(results);
   }
+
+  /* ===============================
+     LOAD AUTOMATION SETTINGS
+  ================================ */
 
   async function loadAutomationSettings() {
     const { data } = await supabase
@@ -103,14 +156,14 @@ export default function EmailDashboardPage() {
 
     setAutomationEnabled(data.enabled);
     setSendTime(data.send_time);
-    setSegment(data.segment);
+    setSegment(data.segment as SegmentKey);
     setFromKey(data.from_key);
     setCurrentSequence(data.current_sequence);
     setLastSentDate(data.last_sent_date);
   }
 
   /* ===============================
-     TEMPLATE FUNCTIONS
+     TEMPLATE HANDLING
   ================================ */
 
   function persistTemplates(next: EmailTemplate[]) {
@@ -119,7 +172,10 @@ export default function EmailDashboardPage() {
   }
 
   function saveTemplate() {
-    if (!templateName.trim()) return alert("Template name required");
+    if (!templateName.trim()) {
+      alert("Template name required");
+      return;
+    }
 
     const tpl: EmailTemplate = {
       id: Date.now().toString(),
@@ -130,6 +186,7 @@ export default function EmailDashboardPage() {
 
     persistTemplates([tpl, ...templates]);
     setTemplateName("");
+    setSelectedTemplateId(tpl.id);
   }
 
   function loadTemplate(id: string) {
@@ -137,10 +194,11 @@ export default function EmailDashboardPage() {
     if (!tpl) return;
     setSubject(tpl.subject);
     setBody(tpl.body);
+    setSelectedTemplateId(id);
   }
 
   /* ===============================
-     AUTOMATION SAVE
+     SAVE AUTOMATION
   ================================ */
 
   async function saveAutomationSettings() {
@@ -161,6 +219,8 @@ export default function EmailDashboardPage() {
   }
 
   async function sendTodayNow() {
+    if (!confirm("Send today's automated email now?")) return;
+
     await supabase
       .from("email_automation_settings")
       .update({ last_sent_date: null })
@@ -175,25 +235,51 @@ export default function EmailDashboardPage() {
 
   async function sendEmail() {
     if (!subject.trim() || !body.trim()) {
-      return alert("Subject and body required.");
+      alert("Subject and body are required.");
+      return;
+    }
+
+    if (mode === "manual") {
+      const list = manualEmails
+        .split(/[,;\s]+/g)
+        .map((e) => e.trim())
+        .filter(Boolean);
+
+      if (!list.length) {
+        alert("Enter at least one email.");
+        return;
+      }
     }
 
     setSending(true);
+    setLastResult(null);
 
-    const payload =
-      mode === "manual"
-        ? { mode: "manual", to: manualEmails, subject, html: body, delayMs }
-        : { mode: "segment", segment, subject, html: body, delayMs };
+    try {
+      const payload =
+        mode === "manual"
+          ? { mode: "manual", to: manualEmails, subject, html: body, delayMs }
+          : { mode: "segment", segment, subject, html: body, delayMs };
 
-    const res = await fetch("/api/email/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+      const res = await fetch("/api/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    const data = await res.json();
-    setLastResult(data);
-    setSending(false);
+      const data = await res.json();
+      setLastResult(data);
+
+      if (!res.ok) {
+        alert(data?.error || "Email failed");
+        return;
+      }
+
+      alert(
+        `Done. Sent: ${data.sent} / ${data.count}. Failed: ${data.failed}.`
+      );
+    } finally {
+      setSending(false);
+    }
   }
 
   /* ===============================
@@ -201,11 +287,16 @@ export default function EmailDashboardPage() {
   ================================ */
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
+    <div className="h-[calc(100vh-80px)] flex flex-col bg-gray-50 overflow-x-hidden max-w-5xl w-full mx-auto p-6 space-y-6">
 
-      <h1 className="text-3xl font-bold text-red-700">
-        Email Control Center
-      </h1>
+      <div className="sticky top-0 bg-white z-30 border-b pb-4">
+        <h1 className="text-3xl font-bold text-red-700">
+          Email Control Center
+        </h1>
+        <p className="text-sm text-gray-500">
+          TradePilot — Partner Email System
+        </p>
+      </div>
 
       {/* AUTOMATION PANEL */}
       <div className="bg-white border rounded p-4 space-y-4">
@@ -220,7 +311,7 @@ export default function EmailDashboardPage() {
           Enable Daily Automation
         </label>
 
-        <div className="flex gap-4">
+        <div className="flex gap-4 flex-wrap">
           <input
             type="time"
             value={sendTime}
@@ -240,16 +331,17 @@ export default function EmailDashboardPage() {
         </div>
 
         <div className="text-sm text-gray-600">
-          <div><b>Sequence:</b> {currentSequence ?? "-"}</div>
+          <div><b>Current Sequence:</b> {currentSequence ?? "-"}</div>
           <div><b>Last Sent:</b> {lastSentDate ?? "Never"}</div>
         </div>
 
         <div className="flex gap-2">
           <button
             onClick={saveAutomationSettings}
+            disabled={savingSettings}
             className="bg-black text-white px-4 py-2 rounded"
           >
-            Save Settings
+            {savingSettings ? "Saving…" : "Save Settings"}
           </button>
 
           <button
@@ -262,59 +354,153 @@ export default function EmailDashboardPage() {
       </div>
 
       {/* MODE + DELAY */}
-      <div className="flex gap-4 items-center">
-        <button onClick={() => setMode("segment")}>Segment</button>
-        <button onClick={() => setMode("manual")}>Manual</button>
+      <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex gap-2">
+          <button
+            className={`px-3 py-1 text-sm rounded border ${
+              mode === "segment" ? "bg-black text-white" : ""
+            }`}
+            onClick={() => setMode("segment")}
+          >
+            Segment
+          </button>
 
-        <input
-          type="number"
-          value={delayMs}
-          onChange={(e) => setDelayMs(Number(e.target.value))}
-          className="border px-2 py-1 rounded"
-        />
+          <button
+            className={`px-3 py-1 text-sm rounded border ${
+              mode === "manual" ? "bg-black text-white" : ""
+            }`}
+            onClick={() => setMode("manual")}
+          >
+            Manual
+          </button>
+        </div>
+
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-xs text-gray-500">Delay</span>
+          <input
+            className="border rounded px-2 py-1 w-24 text-sm"
+            type="number"
+            min={0}
+            step={250}
+            value={delayMs}
+            onChange={(e) => setDelayMs(Number(e.target.value || 0))}
+          />
+          <span className="text-xs text-gray-500">ms</span>
+        </div>
       </div>
 
       {/* TEMPLATE MANAGER */}
       <div className="bg-white border rounded p-4 space-y-2">
-        <input
-          placeholder="Template name"
-          value={templateName}
-          onChange={(e) => setTemplateName(e.target.value)}
-          className="border px-2 py-1 w-full"
-        />
-        <button onClick={saveTemplate}>Save Template</button>
+        <h3 className="font-semibold">Templates</h3>
 
-        <select onChange={(e) => loadTemplate(e.target.value)}>
-          <option>Load template</option>
+        <div className="flex gap-2">
+          <input
+            className="border px-2 py-1 w-full"
+            placeholder="Template name"
+            value={templateName}
+            onChange={(e) => setTemplateName(e.target.value)}
+          />
+          <button
+            className="bg-black text-white px-4 rounded"
+            onClick={saveTemplate}
+          >
+            Save
+          </button>
+        </div>
+
+        <select
+          className="border px-2 py-1 w-full"
+          value={selectedTemplateId}
+          onChange={(e) => loadTemplate(e.target.value)}
+        >
+          <option value="">Load template…</option>
           {templates.map((t) => (
-            <option key={t.id} value={t.id}>{t.name}</option>
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
           ))}
         </select>
       </div>
 
+      {/* RECIPIENTS */}
+      {mode === "segment" ? (
+        <select
+          className="border rounded px-3 py-2 w-full max-w-md"
+          value={segment}
+          onChange={(e) => setSegment(e.target.value as SegmentKey)}
+        >
+          <option value="all">All ({segmentCounts.all || 0})</option>
+          <option value="login_users">
+            Login Users ({segmentCounts.login_users || 0})
+          </option>
+          <option value="no_login">
+            No Login Yet ({segmentCounts.no_login || 0})
+          </option>
+          <option value="email_not_verified">
+            Email Not Verified ({segmentCounts.email_not_verified || 0})
+          </option>
+          <option value="ready_for_activation">
+            Ready for Activation ({segmentCounts.ready_for_activation || 0})
+          </option>
+          <option value="welcome_email_not_sent_login">
+            Welcome Email Not Sent (
+            {segmentCounts.welcome_email_not_sent_login || 0})
+          </option>
+          <option value="pending">
+            Pending ({segmentCounts.pending || 0})
+          </option>
+          <option value="active">
+            Active ({segmentCounts.active || 0})
+          </option>
+        </select>
+      ) : (
+        <input
+          className="border rounded px-3 py-2 w-full"
+          placeholder="Enter emails separated by comma or space"
+          value={manualEmails}
+          onChange={(e) => setManualEmails(e.target.value)}
+        />
+      )}
+
       {/* SUBJECT */}
       <input
-        className="border px-3 py-2 w-full rounded"
+        className="border rounded px-3 py-2 w-full"
         placeholder="Email subject"
         value={subject}
         onChange={(e) => setSubject(e.target.value)}
       />
 
-      {/* BODY */}
-      <textarea
-        className="border px-3 py-2 w-full h-60 rounded"
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-      />
+      {/* BODY + PREVIEW */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <textarea
+          className="border rounded px-3 py-2 h-60"
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+        />
 
+        <div className="border rounded bg-white p-4 h-60 overflow-auto">
+          <div className="text-xs text-gray-400 mb-2">Live Preview</div>
+          <div dangerouslySetInnerHTML={{ __html: body }} />
+        </div>
+      </div>
+
+      {/* SEND */}
       <button
-        onClick={sendEmail}
+        className="bg-red-700 text-white px-6 py-3 rounded w-full max-w-xs"
         disabled={sending}
-        className="bg-red-700 text-white px-6 py-3 rounded"
+        onClick={sendEmail}
       >
         {sending ? "Sending…" : "Send Email"}
       </button>
 
+      {/* RESULTS */}
+      {lastResult && (
+        <div className="border rounded-lg bg-white p-4 text-sm">
+          <div className="font-semibold mb-2">Last Send Result</div>
+          <div><b>Sent:</b> {lastResult.sent}</div>
+          <div><b>Failed:</b> {lastResult.failed}</div>
+        </div>
+      )}
     </div>
   );
 }

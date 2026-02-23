@@ -84,7 +84,8 @@ export default function EmailDashboardPage() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [automationSegment, setAutomationSegment] = useState<SegmentKey>("all");
   const [nextTemplate, setNextTemplate] = useState<any>(null);
-
+const [previewSequence, setPreviewSequence] = useState<number | null>(null);
+const [availableSequences, setAvailableSequences] = useState<number[]>([]);
   /* ===============================
      TEMPLATE STATE
   ================================ */
@@ -100,6 +101,7 @@ export default function EmailDashboardPage() {
   useEffect(() => {
     loadCounts();
     loadAutomationSettings();
+    loadAvailableSequences();
 
     const stored = localStorage.getItem("tp_email_templates");
     if (stored) {
@@ -161,8 +163,15 @@ export default function EmailDashboardPage() {
     setAutomationSegment(data.segment as SegmentKey);
     setFromKey(data.from_key);
     
-    if (data.current_sequence) {
+    setCurrentSequence(data.current_sequence);
+
+if (data.current_sequence) {
+  // Default the preview to the CURRENT automation sequence
+  setPreviewSequence(data.current_sequence);
   loadNextTemplate(data.current_sequence);
+} else {
+  setPreviewSequence(null);
+  setNextTemplate(null);
 }
     setLastSentDate(data.last_sent_date);
   }
@@ -175,8 +184,29 @@ async function loadNextTemplate(sequence: number) {
     .single();
 
   setNextTemplate(data || null);
+  return data || null;
 }
 
+async function loadAvailableSequences() {
+  const { data } = await supabase
+    .from("email_templates")
+    .select("sequence_number")
+    .order("sequence_number", { ascending: true });
+
+  if (!data) return;
+
+  const numbers = data
+  .map((t) => t.sequence_number)
+  .filter((n) => typeof n === "number");
+
+setAvailableSequences(numbers);
+
+// If previewSequence isn't set yet, pick the first template for preview
+setPreviewSequence((prev) => {
+  if (prev != null) return prev;
+  return numbers.length ? numbers[0] : null;
+});
+}
 
   /* ===============================
      TEMPLATE HANDLING
@@ -244,6 +274,60 @@ async function loadNextTemplate(sequence: number) {
 
     alert("Worker will send within 60 seconds.");
   }
+
+async function sendAutomationTest() {
+  if (!previewSequence) {
+  alert("Pick a template in 'Preview Template' first.");
+  return;
+}
+
+await loadNextTemplate(previewSequence);
+
+if (!nextTemplate) {
+  alert("No template found for that preview template.");
+  return;
+}
+
+  const testEmail = "thomas@doorplaceusa.com"; // change if needed
+
+  try {
+    if (!previewSequence) {
+  alert("Select a preview template first.");
+  return;
+}
+
+const tpl = await loadNextTemplate(previewSequence);
+
+if (!tpl) {
+  alert("Template not found.");
+  return;
+}
+
+const res = await fetch("/api/email/send", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    mode: "manual",
+    to: testEmail,
+    subject: tpl.subject,
+    html: tpl.body,
+    delayMs: 0,
+    fromKey,
+  }),
+});
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data?.error || "Test failed");
+      return;
+    }
+
+    alert("Test email sent to you.");
+  } catch (err) {
+    alert("Test failed.");
+  }
+}
 
   /* ===============================
      SEND EMAIL
@@ -364,40 +448,91 @@ async function loadNextTemplate(sequence: number) {
     <div className="flex flex-col">
       <span className="text-xs text-gray-500 mb-1">Send To Segment</span>
       <select
-        value={automationSegment}
-        onChange={(e) =>
-          setAutomationSegment(e.target.value as SegmentKey)
-        }
-        className="border px-2 py-1 rounded"
-      >
-        <option value="all">All Partners</option>
-        <option value="login_users">Login Users</option>
-        <option value="no_login">No Login Yet</option>
-        <option value="email_not_verified">Email Not Verified</option>
-        <option value="ready_for_activation">
-          Ready for Activation
-        </option>
-        <option value="welcome_email_not_sent_login">
-          Welcome Email Not Sent
-        </option>
-        <option value="pending">Pending</option>
-        <option value="active">Active</option>
-      </select>
+  value={automationSegment}
+  onChange={(e) =>
+    setAutomationSegment(e.target.value as SegmentKey)
+  }
+  className="border px-2 py-1 rounded"
+>
+  <option value="all">
+    All Partners ({segmentCounts.all || 0})
+  </option>
+  <option value="login_users">
+    Login Users ({segmentCounts.login_users || 0})
+  </option>
+  <option value="no_login">
+    No Login Yet ({segmentCounts.no_login || 0})
+  </option>
+  <option value="email_not_verified">
+    Email Not Verified ({segmentCounts.email_not_verified || 0})
+  </option>
+  <option value="ready_for_activation">
+    Ready for Activation ({segmentCounts.ready_for_activation || 0})
+  </option>
+  <option value="welcome_email_not_sent_login">
+    Welcome Email Not Sent ({segmentCounts.welcome_email_not_sent_login || 0})
+  </option>
+  <option value="pending">
+    Pending ({segmentCounts.pending || 0})
+  </option>
+  <option value="active">
+    Active ({segmentCounts.active || 0})
+  </option>
+</select>
+
+{/* PREVIEW TEMPLATE */}
+<div className="flex flex-col">
+  <span className="text-xs text-gray-500 mb-1">Preview Template</span>
+
+  <select
+    value={previewSequence ?? ""}
+    onChange={(e) => {
+      const next = e.target.value ? Number(e.target.value) : null;
+      setPreviewSequence(next);
+      if (next != null) loadNextTemplate(next);
+      else setNextTemplate(null);
+    }}
+    className="border px-2 py-1 rounded"
+  >
+    <option value="">Select…</option>
+
+    {availableSequences.map((seq) => (
+      <option key={seq} value={seq}>
+        Template #{seq}
+      </option>
+    ))}
+  </select>
+</div>
     </div>
   </div>
 
   <div className="text-sm text-gray-600">
     
-    {nextTemplate && (
-  <div className="mt-2 p-3 border rounded bg-gray-50 text-sm">
-    <div className="font-semibold mb-1">Next Email Preview</div>
-    <div><b>Template:</b> {nextTemplate.name}</div>
-    <div><b>Subject:</b> {nextTemplate.subject}</div>
-  </div>
-)}
+    <div>
+  <b>Recipient Count:</b>{" "}
+  {segmentCounts[automationSegment] || 0} partners
+</div>
     <div><b>Last Sent:</b> {lastSentDate ?? "Never"}</div>
   </div>
+{nextTemplate && (
+  <div className="mt-3 border rounded bg-gray-50 p-3 text-sm">
+    <div className="font-semibold mb-1">
+      Next Email Preview
+    </div>
 
+    <div><b>Template:</b> {nextTemplate.name}</div>
+    <div><b>Subject:</b> {nextTemplate.subject}</div>
+
+    <div className="mt-3 border rounded bg-white p-3 max-h-60 overflow-auto">
+      <div className="text-xs text-gray-400 mb-2">
+        Full HTML Preview
+      </div>
+      <div
+        dangerouslySetInnerHTML={{ __html: nextTemplate.body }}
+      />
+    </div>
+  </div>
+)}
   <div className="flex gap-2">
     <button
       onClick={saveAutomationSettings}
@@ -413,6 +548,13 @@ async function loadNextTemplate(sequence: number) {
     >
       Send Today Now
     </button>
+
+    <button
+  onClick={sendAutomationTest}
+  className="bg-gray-700 text-white px-4 py-2 rounded"
+>
+  Send Test To Me
+</button>
   </div>
 </div>
 

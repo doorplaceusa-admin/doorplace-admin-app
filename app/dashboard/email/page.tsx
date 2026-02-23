@@ -82,6 +82,8 @@ export default function EmailDashboardPage() {
   const [currentSequence, setCurrentSequence] = useState<number | null>(null);
   const [lastSentDate, setLastSentDate] = useState<string | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [automationSegment, setAutomationSegment] = useState<SegmentKey>("all");
+  const [nextTemplate, setNextTemplate] = useState<any>(null);
 
   /* ===============================
      TEMPLATE STATE
@@ -156,11 +158,25 @@ export default function EmailDashboardPage() {
 
     setAutomationEnabled(data.enabled);
     setSendTime(data.send_time);
-    setSegment(data.segment as SegmentKey);
+    setAutomationSegment(data.segment as SegmentKey);
     setFromKey(data.from_key);
-    setCurrentSequence(data.current_sequence);
+    
+    if (data.current_sequence) {
+  loadNextTemplate(data.current_sequence);
+}
     setLastSentDate(data.last_sent_date);
   }
+
+async function loadNextTemplate(sequence: number) {
+  const { data } = await supabase
+    .from("email_templates")
+    .select("*")
+    .eq("sequence_number", sequence)
+    .single();
+
+  setNextTemplate(data || null);
+}
+
 
   /* ===============================
      TEMPLATE HANDLING
@@ -209,7 +225,7 @@ export default function EmailDashboardPage() {
       .update({
         enabled: automationEnabled,
         send_time: sendTime,
-        segment,
+        segment: automationSegment,
         from_key: fromKey,
       })
       .eq("id", 1);
@@ -299,59 +315,106 @@ export default function EmailDashboardPage() {
       </div>
 
       {/* AUTOMATION PANEL */}
-      <div className="bg-white border rounded p-4 space-y-4">
-        <h3 className="font-semibold text-lg">Daily Automation</h3>
+<div className="bg-white border rounded p-4 space-y-4">
+  <h3 className="font-semibold text-lg">Daily Automation</h3>
 
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={automationEnabled}
-            onChange={(e) => setAutomationEnabled(e.target.checked)}
-          />
-          Enable Daily Automation
-        </label>
+  <label className="flex items-center gap-2">
+    <input
+      type="checkbox"
+      checked={automationEnabled}
+      onChange={(e) => setAutomationEnabled(e.target.checked)}
+    />
+    Enable Daily Automation
+  </label>
 
-        <div className="flex gap-4 flex-wrap">
-          <input
-            type="time"
-            value={sendTime}
-            onChange={(e) => setSendTime(e.target.value)}
-            className="border px-2 py-1 rounded"
-          />
+  <div className="flex gap-4 flex-wrap items-center">
 
-          <select
-            value={fromKey}
-            onChange={(e) => setFromKey(e.target.value)}
-            className="border px-2 py-1 rounded"
-          >
-            <option value="partners">Partners</option>
-            <option value="support">Support</option>
-            <option value="info">Info</option>
-          </select>
-        </div>
+    {/* SEND TIME */}
+    <div className="flex flex-col">
+      <span className="text-xs text-gray-500 mb-1">Send Time</span>
+      <input
+        type="time"
+        value={sendTime}
+        onChange={(e) => setSendTime(e.target.value)}
+        className="border px-2 py-1 rounded"
+      />
+    </div>
 
-        <div className="text-sm text-gray-600">
-          <div><b>Current Sequence:</b> {currentSequence ?? "-"}</div>
-          <div><b>Last Sent:</b> {lastSentDate ?? "Never"}</div>
-        </div>
+    {/* FROM ADDRESS */}
+    <div className="flex flex-col">
+      <span className="text-xs text-gray-500 mb-1">From Address</span>
+      <select
+        value={fromKey}
+        onChange={(e) => setFromKey(e.target.value)}
+        className="border px-2 py-1 rounded"
+      >
+        <option value="partners">
+          partners@doorplaceusa.com
+        </option>
+        <option value="support">
+          support@doorplaceusa.com
+        </option>
+        <option value="info">
+          info@doorplaceusa.com
+        </option>
+      </select>
+    </div>
 
-        <div className="flex gap-2">
-          <button
-            onClick={saveAutomationSettings}
-            disabled={savingSettings}
-            className="bg-black text-white px-4 py-2 rounded"
-          >
-            {savingSettings ? "Saving…" : "Save Settings"}
-          </button>
+    {/* RECIPIENT SEGMENT */}
+    <div className="flex flex-col">
+      <span className="text-xs text-gray-500 mb-1">Send To Segment</span>
+      <select
+        value={automationSegment}
+        onChange={(e) =>
+          setAutomationSegment(e.target.value as SegmentKey)
+        }
+        className="border px-2 py-1 rounded"
+      >
+        <option value="all">All Partners</option>
+        <option value="login_users">Login Users</option>
+        <option value="no_login">No Login Yet</option>
+        <option value="email_not_verified">Email Not Verified</option>
+        <option value="ready_for_activation">
+          Ready for Activation
+        </option>
+        <option value="welcome_email_not_sent_login">
+          Welcome Email Not Sent
+        </option>
+        <option value="pending">Pending</option>
+        <option value="active">Active</option>
+      </select>
+    </div>
+  </div>
 
-          <button
-            onClick={sendTodayNow}
-            className="bg-red-700 text-white px-4 py-2 rounded"
-          >
-            Send Today Now
-          </button>
-        </div>
-      </div>
+  <div className="text-sm text-gray-600">
+    
+    {nextTemplate && (
+  <div className="mt-2 p-3 border rounded bg-gray-50 text-sm">
+    <div className="font-semibold mb-1">Next Email Preview</div>
+    <div><b>Template:</b> {nextTemplate.name}</div>
+    <div><b>Subject:</b> {nextTemplate.subject}</div>
+  </div>
+)}
+    <div><b>Last Sent:</b> {lastSentDate ?? "Never"}</div>
+  </div>
+
+  <div className="flex gap-2">
+    <button
+      onClick={saveAutomationSettings}
+      disabled={savingSettings}
+      className="bg-black text-white px-4 py-2 rounded"
+    >
+      {savingSettings ? "Saving…" : "Save Settings"}
+    </button>
+
+    <button
+      onClick={sendTodayNow}
+      className="bg-red-700 text-white px-4 py-2 rounded"
+    >
+      Send Today Now
+    </button>
+  </div>
+</div>
 
       {/* MODE + DELAY */}
       <div className="flex flex-wrap gap-2 items-center">

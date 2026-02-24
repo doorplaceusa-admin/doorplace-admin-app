@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 
-const CHUNK_SIZE = 50000; // Google maximum per sitemap
+const CHUNK_SIZE = 5000; // Google maximum per sitemap
 const SITEMAP_HOST = "https://tradepilot.doorplaceusa.com";
 
 export async function GET() {

@@ -3,8 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 
-const CHUNK_SIZE = 50000; // Google max URLs per sitemap
-const INTERNAL_BATCH = 1000; // Safe Supabase batch size (prevents range failures)
+const CHUNK_SIZE = 50000;
 
 /* -------------------------------------------------------
    XML Escaper (prevents broken XML)
@@ -31,44 +30,33 @@ export async function GET(
   }
 
   try {
-    const from = indexNum * CHUNK_SIZE;
-    const to = from + CHUNK_SIZE - 1;
+    // ----------------------------------------------------
+    // Calculate row window (NOT offset)
+    // ----------------------------------------------------
+    const startRow = indexNum * CHUNK_SIZE + 1;
+    const endRow = startRow + CHUNK_SIZE - 1;
 
     // ----------------------------------------------------
-    // Fetch the chunk in safe INTERNAL batches
+    // Call Supabase RPC (windowed query)
     // ----------------------------------------------------
-    let allRows: { url: string; last_modified: string | null }[] = [];
-    let currentFrom = from;
-
-    while (currentFrom <= to) {
-      const currentTo = Math.min(currentFrom + INTERNAL_BATCH - 1, to);
-
-      const { data, error } = await supabaseAdmin
-        .from("shopify_url_inventory")
-        .select("url,last_modified")
-        .eq("is_active", true)
-        .eq("is_indexable", true)
-        .order("id", { ascending: true }) // stable ordering
-        .range(currentFrom, currentTo);
-
-      if (error) {
-        console.error("Supabase range error:", error.message);
-        return new NextResponse("Supabase error", { status: 500 });
+    const { data, error } = await supabaseAdmin.rpc(
+      "get_sitemap_chunk",
+      {
+        chunk_start: startRow,
+        chunk_end: endRow,
       }
+    );
 
-      if (!data || data.length === 0) break;
-
-      allRows = allRows.concat(data as any);
-
-      // If Supabase returns fewer than requested, we’re at the end
-      if (data.length < INTERNAL_BATCH) break;
-
-      currentFrom += INTERNAL_BATCH;
+    if (error) {
+      console.error("Supabase RPC error:", error.message);
+      return new NextResponse("Supabase error", { status: 500 });
     }
 
-    const urls = allRows;
+    const urls = data ?? [];
 
-    // If chunk has no rows, return a valid empty sitemap
+    // ----------------------------------------------------
+    // If empty → return valid empty sitemap
+    // ----------------------------------------------------
     if (urls.length === 0) {
       const emptyXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`;
@@ -85,7 +73,7 @@ export async function GET(
     // Build XML
     // ----------------------------------------------------
     const xmlBody = urls
-      .map((row) => {
+      .map((row: any) => {
         const lastmod = row.last_modified
           ? new Date(row.last_modified).toISOString().split("T")[0]
           : null;

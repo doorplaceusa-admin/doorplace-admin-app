@@ -11,8 +11,21 @@ export async function GET() {
   try {
     console.log("Starting sitemap rebuild...");
 
+    // 🔵 Mark job as running
+    await supabaseAdmin
+      .from("sitemap_rebuild_status")
+      .upsert({
+        id: 1,
+        status: "running",
+        rows_processed: 0,
+        updated_at: new Date().toISOString(),
+      });
+
     // Clear table
-    await supabaseAdmin.from("sitemap_chunks").delete().neq("chunk_number", -1);
+    await supabaseAdmin
+      .from("sitemap_chunks")
+      .delete()
+      .neq("chunk_number", -1);
 
     let globalIndex = 0;
     let lastUrl: string | null = null;
@@ -34,6 +47,15 @@ export async function GET() {
 
       if (error) {
         console.error(error);
+
+        await supabaseAdmin
+          .from("sitemap_rebuild_status")
+          .update({
+            status: "failed",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", 1);
+
         return new NextResponse("Fetch error", { status: 500 });
       }
 
@@ -55,6 +77,15 @@ export async function GET() {
 
       if (insertError) {
         console.error(insertError);
+
+        await supabaseAdmin
+          .from("sitemap_rebuild_status")
+          .update({
+            status: "failed",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", 1);
+
         return new NextResponse("Insert error", { status: 500 });
       }
 
@@ -62,13 +93,40 @@ export async function GET() {
       lastUrl = data[data.length - 1].url;
 
       console.log(`Processed ${globalIndex} rows...`);
+
+      // 🔵 Update live progress
+      await supabaseAdmin
+        .from("sitemap_rebuild_status")
+        .update({
+          rows_processed: globalIndex,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", 1);
     }
 
     console.log("Sitemap rebuild complete.");
 
+    // 🔵 Mark complete
+    await supabaseAdmin
+      .from("sitemap_rebuild_status")
+      .update({
+        status: "completed",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", 1);
+
     return new NextResponse("Rebuild complete");
   } catch (err: any) {
     console.error(err);
+
+    await supabaseAdmin
+      .from("sitemap_rebuild_status")
+      .update({
+        status: "failed",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", 1);
+
     return new NextResponse("Server error", { status: 500 });
   }
 }

@@ -17,18 +17,16 @@ export async function GET(
       return new NextResponse("Invalid sitemap index", { status: 400 });
     }
 
-    // Instead of OFFSET, calculate ID boundaries
-    const minId = indexNum * CHUNK_SIZE + 1;
-    const maxId = minId + CHUNK_SIZE - 1;
-
     const { data, error } = await supabaseAdmin
       .from("shopify_url_inventory")
       .select("url,last_modified")
       .eq("is_active", true)
       .eq("is_indexable", true)
-      .gte("id", minId)
-      .lte("id", maxId)
-      .order("id", { ascending: true });
+      .order("id", { ascending: true })
+      .range(
+        indexNum * CHUNK_SIZE,
+        (indexNum + 1) * CHUNK_SIZE - 1
+      );
 
     if (error) {
       console.error("Supabase error:", error.message);

@@ -65,7 +65,7 @@ export default function Page() {
 ====================================================== */
 
 const [rebuildJob, setRebuildJob] = useState<any>(null);
-const [rebuildLoading, setRebuildLoading] = useState(true);
+const [rebuildLoading, setRebuildLoading] = useState(false);
 const [rebuildActionLoading, setRebuildActionLoading] = useState(false);
 
   /* ======================================================
@@ -794,14 +794,20 @@ async function startRebuild() {
       )}
 
       <button
-        onClick={startRebuild}
-        disabled={
-          rebuildActionLoading || rebuildJob?.status === "running"
-        }
-        className="px-4 py-2 rounded bg-black text-white text-sm disabled:bg-gray-300"
-      >
-        {rebuildActionLoading ? "Starting…" : "Rebuild Sitemap"}
-      </button>
+  onClick={startRebuild}
+  disabled={
+    rebuildActionLoading ||
+    rebuildLoading ||
+    rebuildJob?.status === "running"
+  }
+  className="px-4 py-2 rounded bg-black text-white text-sm disabled:bg-gray-300"
+>
+  {rebuildActionLoading
+    ? "Starting…"
+    : rebuildJob?.status === "running"
+    ? "Rebuilding…"
+    : "Rebuild Sitemap"}
+</button>
     </>
   )}
 </div>

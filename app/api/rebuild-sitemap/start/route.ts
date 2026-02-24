@@ -3,11 +3,10 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export async function POST() {
   try {
-    // Check if already running
     const { data: existing } = await supabaseAdmin
       .from("sitemap_rebuild_status")
       .select("*")
-      .limit(1)
+      .eq("id", 1)
       .maybeSingle();
 
     if (existing?.status === "running") {
@@ -17,7 +16,6 @@ export async function POST() {
       );
     }
 
-    // Set status to running
     await supabaseAdmin
       .from("sitemap_rebuild_status")
       .upsert({
@@ -27,9 +25,14 @@ export async function POST() {
         updated_at: new Date().toISOString(),
       });
 
-    // Fire worker (non-blocking)
-    fetch("https://tradepilot.doorplaceusa.com/api/rebuild-sitemap", {
+    const origin =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      "https://tradepilot.doorplaceusa.com";
+
+    fetch(`${origin}/api/rebuild-sitemap`, {
       method: "GET",
+    }).catch((err) => {
+      console.error("Failed to trigger rebuild worker:", err);
     });
 
     return NextResponse.json({ success: true });

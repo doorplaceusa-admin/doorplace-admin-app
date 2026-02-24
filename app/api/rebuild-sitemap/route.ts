@@ -5,21 +5,12 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const CHUNK_SIZE = 5000;
-const BATCH_SIZE = 10000;
+const BATCH_SIZE = 3000;
 
 export async function GET() {
   try {
     console.log("Starting sitemap rebuild...");
 
-    // 🔵 Mark job as running
-    await supabaseAdmin
-      .from("sitemap_rebuild_status")
-      .upsert({
-        id: 1,
-        status: "running",
-        rows_processed: 0,
-        updated_at: new Date().toISOString(),
-      });
 
     // Clear table
     await supabaseAdmin
@@ -89,7 +80,9 @@ export async function GET() {
         return new NextResponse("Insert error", { status: 500 });
       }
 
-      globalIndex += data.length;
+      
+      // small pause to avoid DB saturation
+await new Promise((resolve) => setTimeout(resolve, 50));
       lastUrl = data[data.length - 1].url;
 
       console.log(`Processed ${globalIndex} rows...`);

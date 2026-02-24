@@ -4,10 +4,10 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 export async function GET() {
   try {
     const { data, error } = await supabaseAdmin
-      .from("sitemap_rebuild_status")
-      .select("*")
-      .limit(1)
-      .maybeSingle();
+  .from("sitemap_rebuild_status")
+  .select("*")
+  .eq("id", 1)
+  .maybeSingle();
 
     if (error) throw error;
 

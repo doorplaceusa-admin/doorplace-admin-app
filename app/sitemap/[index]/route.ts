@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
@@ -6,45 +6,33 @@ export const dynamic = "force-dynamic";
 const CHUNK_SIZE = 5000;
 
 export async function GET(
-  req: Request,
-  { params }: { params: { index: string } }
+  req: NextRequest,
+  context: { params: { index: string } }
 ) {
   try {
-    const indexNum = parseInt(params.index, 10);
+    const indexNum = parseInt(context.params.index, 10);
+
     if (isNaN(indexNum) || indexNum < 0) {
       return new NextResponse("Invalid sitemap index", { status: 400 });
     }
 
-    // Step 1: Find the starting ID for this chunk
-    const startOffset = indexNum * CHUNK_SIZE;
+    const offset = indexNum * CHUNK_SIZE;
 
-    const { data: startRow, error: startError } = await supabaseAdmin
-      .from("shopify_url_inventory")
-      .select("id")
-      .eq("is_active", true)
-      .eq("is_indexable", true)
-      .order("id", { ascending: true })
-      .range(startOffset, startOffset);
-
-    if (startError || !startRow || startRow.length === 0) {
-      return new NextResponse("No data", { status: 404 });
-    }
-
-    const startId = startRow[0].id;
-
-    // Step 2: Fetch next CHUNK_SIZE rows using cursor
     const { data, error } = await supabaseAdmin
       .from("shopify_url_inventory")
       .select("url,last_modified")
       .eq("is_active", true)
       .eq("is_indexable", true)
-      .gt("id", startId - 1)
       .order("id", { ascending: true })
-      .limit(CHUNK_SIZE);
+      .range(offset, offset + CHUNK_SIZE - 1);
 
     if (error) {
       console.error("Supabase error:", error.message);
       return new NextResponse("Supabase error", { status: 500 });
+    }
+
+    if (!data || data.length === 0) {
+      return new NextResponse("No URLs found", { status: 404 });
     }
 
     const urls = data

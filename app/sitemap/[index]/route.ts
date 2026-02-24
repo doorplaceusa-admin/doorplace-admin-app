@@ -3,7 +3,8 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 
-const CHUNK_SIZE = 50000;
+const CHUNK_SIZE = 50000; // Google max URLs per sitemap
+const INTERNAL_BATCH = 1000; // Safe Supabase batch size (prevents range failures)
 
 /* -------------------------------------------------------
    XML Escaper (prevents broken XML)
@@ -34,24 +35,40 @@ export async function GET(
     const to = from + CHUNK_SIZE - 1;
 
     // ----------------------------------------------------
-    // Fetch chunk (stable order by id)
+    // Fetch the chunk in safe INTERNAL batches
     // ----------------------------------------------------
-    const { data, error } = await supabaseAdmin
-      .from("shopify_url_inventory")
-      .select("url,last_modified")
-      .eq("is_active", true)
-      .eq("is_indexable", true)
-      .order("id", { ascending: true })
-      .range(from, to);
+    let allRows: { url: string; last_modified: string | null }[] = [];
+    let currentFrom = from;
 
-    if (error) {
-      console.error("Supabase range error:", error.message);
-      return new NextResponse("Supabase error", { status: 500 });
+    while (currentFrom <= to) {
+      const currentTo = Math.min(currentFrom + INTERNAL_BATCH - 1, to);
+
+      const { data, error } = await supabaseAdmin
+        .from("shopify_url_inventory")
+        .select("url,last_modified")
+        .eq("is_active", true)
+        .eq("is_indexable", true)
+        .order("id", { ascending: true }) // stable ordering
+        .range(currentFrom, currentTo);
+
+      if (error) {
+        console.error("Supabase range error:", error.message);
+        return new NextResponse("Supabase error", { status: 500 });
+      }
+
+      if (!data || data.length === 0) break;
+
+      allRows = allRows.concat(data as any);
+
+      // If Supabase returns fewer than requested, we’re at the end
+      if (data.length < INTERNAL_BATCH) break;
+
+      currentFrom += INTERNAL_BATCH;
     }
 
-    const urls = data ?? [];
+    const urls = allRows;
 
-    // If no rows returned, return empty sitemap (valid XML)
+    // If chunk has no rows, return a valid empty sitemap
     if (urls.length === 0) {
       const emptyXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>`;

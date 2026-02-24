@@ -109,10 +109,10 @@ export default function CommissionCalculator() {
           <ResultCard title="Sale Price (Before Freight)" value={`$${salePrice.toFixed(2)}`} />
           <ResultCard title="Freight" value={`$${freightTotal.toFixed(2)}`} />
           <ResultCard
-            title="Final Customer Price"
-            value={`$${finalCustomerPrice.toFixed(2)}`}
-            dark
-          />
+  title="Projected Sale Price (Pre-Tax)"
+  value={`$${finalCustomerPrice.toFixed(2)}`}
+  dark
+/>
           <ResultCard
             title="Your Commission"
             value={`$${commission.toFixed(2)}`}
@@ -121,9 +121,10 @@ export default function CommissionCalculator() {
           />
 
           <div style={noteStyle}>
-            Commission is 12% or $100 minimum (whichever is greater).
-            Freight is excluded from commission.
-          </div>
+  Internal tool for commission planning only.
+  Commission is 12% or $100 minimum (whichever is greater).
+  Freight is excluded from commission.
+</div>
         </div>
 
       </div>

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import type { CSSProperties } from "react";
 
 export default function CommissionCalculator() {
-  const [size, setSize] = useState("crib");
+  const [size, setSize] = useState("twin");
   const [markupPercent, setMarkupPercent] = useState(60);
   const [blackCupHolder, setBlackCupHolder] = useState(false);
   const [rope, setRope] = useState(false);
@@ -21,27 +22,15 @@ export default function CommissionCalculator() {
     full: 900,
   };
 
-  const accessories = {
-    blackCupHolder: 15,
-    rope: 85,
-  };
-
-  const upgrades = {
-    paint: 225,
-    cedarUpgrade: 500,
-  };
-
-  const freightCost = 200;
-
   const basePrice = basePrices[size];
 
   const accessoryTotal =
-    (blackCupHolder ? accessories.blackCupHolder : 0) +
-    (rope ? accessories.rope : 0);
+    (blackCupHolder ? 15 : 0) +
+    (rope ? 85 : 0);
 
   const upgradeTotal =
-    (paint ? upgrades.paint : 0) +
-    (cedarUpgrade ? upgrades.cedarUpgrade : 0);
+    (paint ? 225 : 0) +
+    (cedarUpgrade ? 500 : 0);
 
   const commissionableTotal = basePrice + accessoryTotal + upgradeTotal;
 
@@ -49,7 +38,7 @@ export default function CommissionCalculator() {
 
   const salePrice = commissionableTotal * (1 + cappedMarkup / 100);
 
-  const freightTotal = freight ? freightCost : 0;
+  const freightTotal = freight ? 200 : 0;
 
   const finalCustomerPrice = salePrice + freightTotal;
 
@@ -57,18 +46,16 @@ export default function CommissionCalculator() {
   const commission = Math.max(rawCommission, MIN_COMMISSION);
 
   return (
-    <div style={{ maxWidth: 1000, margin: "40px auto", padding: 20 }}>
-      <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 30 }}>
-        Commission Calculator
-      </h1>
+    <div style={containerStyle}>
+      <h1 style={titleStyle}>Commission Calculator</h1>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 30 }}>
+      <div style={gridStyle}>
 
-        {/* LEFT SIDE */}
+        {/* LEFT PANEL */}
         <div style={cardStyle}>
-          <h3>Product Selection</h3>
+          <SectionTitle text="Product Selection" />
 
-          <label>Swing Size</label>
+          <label style={labelStyle}>Swing Size</label>
           <select
             value={size}
             onChange={(e) => setSize(e.target.value)}
@@ -79,66 +66,62 @@ export default function CommissionCalculator() {
             <option value="full">Full – $900</option>
           </select>
 
-          <div style={{ marginTop: 25 }}>
-            <label>Markup Percentage (Max 60%)</label>
+          <div style={{ marginTop: 30 }}>
+            <SectionTitle text="Markup Percentage" />
+            <div style={badgeStyle}>MAX 60%</div>
+
             <input
               type="range"
               min="0"
               max="60"
               value={cappedMarkup}
               onChange={(e) => setMarkupPercent(Number(e.target.value))}
-              style={{ width: "100%" }}
+              style={{ width: "100%", marginTop: 10 }}
             />
-            <div style={{ fontWeight: 700, marginTop: 5 }}>
+
+            <div style={markupDisplayStyle}>
               {cappedMarkup}% Markup
             </div>
           </div>
 
-          <div style={{ marginTop: 25 }}>
-            <h4>Accessories</h4>
-            <Checkbox label="Black Cup Holder – $15" value={blackCupHolder} setValue={setBlackCupHolder} />
-            <Checkbox label={`Rope ¾" x 50' – $85`} value={rope} setValue={setRope} />
+          <div style={{ marginTop: 30 }}>
+            <SectionTitle text="Accessories" />
+            <Check label="Black Cup Holder – $15" value={blackCupHolder} setValue={setBlackCupHolder} />
+            <Check label={'Rope ¾" x 50\' – $85'} value={rope} setValue={setRope} />
           </div>
 
-          <div style={{ marginTop: 20 }}>
-            <h4>Upgrades</h4>
-            <Checkbox label="Paint – $225" value={paint} setValue={setPaint} />
-            <Checkbox label="Cedar Upgrade – $500" value={cedarUpgrade} setValue={setCedarUpgrade} />
+          <div style={{ marginTop: 30 }}>
+            <SectionTitle text="Upgrades" />
+            <Check label="Paint – $225" value={paint} setValue={setPaint} />
+            <Check label="Cedar Upgrade – $500" value={cedarUpgrade} setValue={setCedarUpgrade} />
           </div>
 
-          <div style={{ marginTop: 20 }}>
-            <h4>Freight</h4>
-            <Checkbox
-              label="Freight Shipping – $200 (No Commission)"
-              value={freight}
-              setValue={setFreight}
-            />
+          <div style={{ marginTop: 30 }}>
+            <SectionTitle text="Freight" />
+            <Check label="Freight Shipping – $200 (No Commission)" value={freight} setValue={setFreight} />
           </div>
         </div>
 
-        {/* RIGHT SIDE RESULTS */}
+        {/* RIGHT PANEL */}
         <div style={cardStyle}>
-          <h3>Financial Breakdown</h3>
+          <SectionTitle text="Financial Breakdown" />
 
-          <ResultBox title="Sale Price (Before Freight)" value={`$${salePrice.toFixed(2)}`} />
-
-          <ResultBox title="Freight" value={`$${freightTotal.toFixed(2)}`} />
-
-          <ResultBox
+          <ResultCard title="Sale Price (Before Freight)" value={`$${salePrice.toFixed(2)}`} />
+          <ResultCard title="Freight" value={`$${freightTotal.toFixed(2)}`} />
+          <ResultCard
             title="Final Customer Price"
             value={`$${finalCustomerPrice.toFixed(2)}`}
-            highlight
+            dark
           />
-
-          <ResultBox
+          <ResultCard
             title="Your Commission"
             value={`$${commission.toFixed(2)}`}
+            highlight
             big
-            green
           />
 
-          <div style={{ fontSize: 13, marginTop: 20, color: "#555" }}>
-            Commission is 12% or $100 minimum, whichever is greater.
+          <div style={noteStyle}>
+            Commission is 12% or $100 minimum (whichever is greater).
             Freight is excluded from commission.
           </div>
         </div>
@@ -150,62 +133,125 @@ export default function CommissionCalculator() {
 
 /* ---------- COMPONENTS ---------- */
 
-function Checkbox({ label, value, setValue }: any) {
+function SectionTitle({ text }: { text: string }) {
   return (
-    <label style={{ display: "block", marginBottom: 8 }}>
-      <input
-        type="checkbox"
-        checked={value}
-        onChange={() => setValue(!value)}
-        style={{ marginRight: 8 }}
-      />
+    <div style={{ fontWeight: 700, marginBottom: 8, fontSize: 16 }}>
+      {text}
+    </div>
+  );
+}
+
+function Check({
+  label,
+  value,
+  setValue,
+}: {
+  label: string;
+  value: boolean;
+  setValue: (v: boolean) => void;
+}) {
+  return (
+    <label style={{ display: "flex", gap: 10, marginBottom: 10, cursor: "pointer" }}>
+      <input type="checkbox" checked={value} onChange={() => setValue(!value)} />
       {label}
     </label>
   );
 }
 
-function ResultBox({ title, value, highlight, big, green }: any) {
+function ResultCard({
+  title,
+  value,
+  dark,
+  highlight,
+  big,
+}: {
+  title: string;
+  value: string;
+  dark?: boolean;
+  highlight?: boolean;
+  big?: boolean;
+}) {
   return (
     <div
       style={{
         padding: 20,
-        borderRadius: 12,
+        borderRadius: 16,
+        marginBottom: 20,
         background: highlight
+          ? "#e6f6ec"
+          : dark
           ? "#111"
-          : green
-          ? "#e7f9ee"
-          : "#f4f4f4",
-        marginBottom: 15,
-        boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+          : "#f5f5f5",
+        color: dark ? "#fff" : highlight ? "#15803d" : "#111",
+        boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
       }}
     >
-      <div style={{ fontSize: 14, color: highlight ? "#aaa" : "#555" }}>
-        {title}
-      </div>
-      <div
-        style={{
-          fontSize: big ? 32 : 22,
-          fontWeight: 800,
-          color: highlight ? "#fff" : green ? "#15803d" : "#111",
-        }}
-      >
+      <div style={{ fontSize: 14, opacity: 0.7 }}>{title}</div>
+      <div style={{ fontSize: big ? 36 : 24, fontWeight: 800 }}>
         {value}
       </div>
     </div>
   );
 }
 
-const cardStyle = {
-  background: "#fff",
-  padding: 25,
-  borderRadius: 16,
-  boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
+/* ---------- STYLES ---------- */
+
+const containerStyle: CSSProperties = {
+  maxWidth: 1200,
+  margin: "40px auto",
+  padding: 20,
 };
 
-const inputStyle = {
+const titleStyle: CSSProperties = {
+  fontSize: 36,
+  fontWeight: 800,
+  marginBottom: 30,
+};
+
+const gridStyle: CSSProperties = {
+  display: "grid",
+  gap: 30,
+  gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))",
+};
+
+const cardStyle: CSSProperties = {
+  background: "#fff",
+  padding: 30,
+  borderRadius: 20,
+  boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+};
+
+const inputStyle: CSSProperties = {
   width: "100%",
-  padding: 10,
-  marginTop: 6,
-  borderRadius: 8,
+  padding: 12,
+  borderRadius: 10,
   border: "1px solid #ddd",
+  marginTop: 6,
+};
+
+const labelStyle: CSSProperties = {
+  fontWeight: 600,
+  marginBottom: 6,
+};
+
+const badgeStyle: CSSProperties = {
+  fontSize: 12,
+  fontWeight: 700,
+  background: "#111",
+  color: "#fff",
+  padding: "4px 10px",
+  borderRadius: 999,
+  display: "inline-block",
+};
+
+const markupDisplayStyle: CSSProperties = {
+  marginTop: 10,
+  fontWeight: 800,
+  fontSize: 18,
+};
+
+const noteStyle: CSSProperties = {
+  fontSize: 13,
+  color: "#555",
+  marginTop: 20,
 };

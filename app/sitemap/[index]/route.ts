@@ -11,22 +11,24 @@ export async function GET(
 ) {
   try {
     const { index } = await context.params;
-
     const indexNum = parseInt(index, 10);
 
     if (isNaN(indexNum) || indexNum < 0) {
       return new NextResponse("Invalid sitemap index", { status: 400 });
     }
 
-    const offset = indexNum * CHUNK_SIZE;
+    // Instead of OFFSET, calculate ID boundaries
+    const minId = indexNum * CHUNK_SIZE + 1;
+    const maxId = minId + CHUNK_SIZE - 1;
 
     const { data, error } = await supabaseAdmin
       .from("shopify_url_inventory")
       .select("url,last_modified")
       .eq("is_active", true)
       .eq("is_indexable", true)
-      .order("id", { ascending: true })
-      .range(offset, offset + CHUNK_SIZE - 1);
+      .gte("id", minId)
+      .lte("id", maxId)
+      .order("id", { ascending: true });
 
     if (error) {
       console.error("Supabase error:", error.message);

@@ -3,38 +3,29 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 
-const CHUNK_SIZE = 5000; // Google maximum per sitemap
 const SITEMAP_HOST = "https://tradepilot.doorplaceusa.com";
 
 export async function GET() {
   try {
     console.log("🧭 Generating TradePilot Sitemap Index...");
 
-    // ======================================================
-    // Count indexable URLs (fast head count)
-    // ======================================================
-  const { count, error } = await supabaseAdmin
-  .from("shopify_url_inventory")
-  .select("*", { count: "estimated", head: true })
-  .eq("is_active", true)
-  .eq("is_indexable", true);
+    // Get highest chunk_number from sitemap_chunks
+    const { data, error } = await supabaseAdmin
+      .from("sitemap_chunks")
+      .select("chunk_number")
+      .order("chunk_number", { ascending: false })
+      .limit(1);
 
     if (error) {
-      console.error("❌ Supabase count error:", error.message);
-      return new NextResponse("Supabase count failed", { status: 500 });
+      console.error("❌ Supabase error:", error.message);
+      return new NextResponse("Supabase query failed", { status: 500 });
     }
 
-    const totalUrls = count ?? 0;
-
     const totalChunks =
-      totalUrls === 0 ? 1 : Math.ceil(totalUrls / CHUNK_SIZE);
+      data && data.length > 0 ? data[0].chunk_number + 1 : 0;
 
-    console.log(`✅ Total URLs: ${totalUrls}`);
     console.log(`✅ Total Chunks: ${totalChunks}`);
 
-    // ======================================================
-    // Build Sitemap Index
-    // ======================================================
     const sitemapLinks = Array.from({ length: totalChunks })
       .map(
         (_, i) => `

@@ -3,8 +3,6 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 
-const CHUNK_SIZE = 5000;
-
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ index: string }> }
@@ -18,15 +16,10 @@ export async function GET(
     }
 
     const { data, error } = await supabaseAdmin
-      .from("shopify_url_inventory")
+      .from("sitemap_chunks")
       .select("url,last_modified")
-      .eq("is_active", true)
-      .eq("is_indexable", true)
-      .order("url", { ascending: true }) // ← key change
-      .range(
-        indexNum * CHUNK_SIZE,
-        (indexNum + 1) * CHUNK_SIZE - 1
-      );
+      .eq("chunk_number", indexNum)
+      .order("position", { ascending: true });
 
     if (error) {
       console.error("Supabase error:", error.message);

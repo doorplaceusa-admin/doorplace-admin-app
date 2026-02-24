@@ -48,12 +48,22 @@ function asTime(s?: string) {
 }
 
 /* -----------------------------------------
+   Log sanitizer: hide Shopify page_info cursor
+------------------------------------------ */
+function sanitizeShopifyPathForLogs(path: string) {
+  // Replace the massive cursor with a placeholder
+  return path.replace(/([?&]page_info=)[^&]+/i, "$1<cursor>");
+}
+
+/* -----------------------------------------
    Shopify Fetch Helper (clean logs)
 ------------------------------------------ */
 async function shopifyFetch(path: string, options: RequestInit = {}) {
   const method = (options.method || "GET").toUpperCase();
-  // ✅ keep it short: do NOT print full URL
-  console.log(`🌐 Shopify ${method} ${path}`);
+
+  // ✅ Log a sanitized version only
+  const logPath = sanitizeShopifyPathForLogs(path);
+  console.log(`🌐 Shopify ${method} ${logPath}`);
 
   const res = await fetch(`https://${SHOP}/admin/api/${API_VERSION}${path}`, {
     ...options,
@@ -66,7 +76,7 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
 
   if (!res.ok) {
     const text = await res.text();
-    console.error(`❌ Shopify ${res.status} ${path}`);
+    console.error(`❌ Shopify ${res.status} ${logPath}`);
     throw new Error(`Shopify ${res.status}: ${text}`);
   }
 
@@ -82,7 +92,7 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
 /* -----------------------------------------
    POST — Duplicate Title Cleanup (CLEAN LOGS)
    - Default: clean summary logs
-   - Add ?verbose=1 to print each duplicate group items
+   - Add ?verbose=1 to print duplicate groups details
 ------------------------------------------ */
 export async function POST(req: Request) {
   const url = new URL(req.url);
@@ -90,7 +100,9 @@ export async function POST(req: Request) {
   const verbose = url.searchParams.get("verbose") === "1";
 
   console.log("==================================================");
-  console.log(`🧹 Duplicate Title Cleanup START | dryRun=${dryRun} | verbose=${verbose}`);
+  console.log(
+    `🧹 Duplicate Title Cleanup START | dryRun=${dryRun} | verbose=${verbose}`
+  );
   console.log(`⏱️ ${new Date().toISOString()}`);
   console.log("==================================================");
 
@@ -118,7 +130,6 @@ export async function POST(req: Request) {
       const data = await res.json();
       const pages: ShopifyPage[] = data.pages || [];
 
-      // Group
       for (const p of pages) {
         scanned++;
         if (!p?.title) continue;
@@ -134,7 +145,7 @@ export async function POST(req: Request) {
       const match = link?.match(/page_info=([^&>]+)>; rel="next"/);
       nextPageInfo = match ? match[1] : null;
 
-      // ✅ Batch summary (readable)
+      // ✅ Batch summary only (readable)
       console.log(
         `📦 Batch #${pageBatch} | +${pages.length} pages | total_scanned=${scanned.toLocaleString()} | unique_titles=${byTitle.size.toLocaleString()}`
       );
@@ -146,7 +157,7 @@ export async function POST(req: Request) {
     );
 
     /* ---------------------------
-       2) FIND DUP GROUPS (clean)
+       2) FIND DUP GROUPS + DELETE
     ---------------------------- */
     let groupCount = 0;
 
@@ -162,20 +173,18 @@ export async function POST(req: Request) {
         const tb = asTime(b.updated_at) || asTime(b.created_at);
         if (tb !== ta) return tb - ta;
 
-        const ida = typeof a.id === "string" ? parseInt(a.id, 10) : Number(a.id);
-        const idb = typeof b.id === "string" ? parseInt(b.id, 10) : Number(b.id);
+        const ida = typeof a.id === "string" ? parseInt(a.id as string, 10) : Number(a.id);
+        const idb = typeof b.id === "string" ? parseInt(b.id as string, 10) : Number(b.id);
         return (idb || 0) - (ida || 0);
       });
 
       const keep = sorted[0];
       const remove = sorted.slice(1);
 
-      // ✅ One-line group summary (easy to scan)
       console.log(
         `⚠️ DUP GROUP #${groupCount} | size=${group.length} | keep_id=${keep.id} | title="${keep.title}"`
       );
 
-      // Optional: show details only when verbose=1
       if (verbose) {
         console.log(`   key="${key}"`);
         console.log(`   KEEP  id=${keep.id} handle=${keep.handle} updated=${keep.updated_at || ""}`);
@@ -188,8 +197,9 @@ export async function POST(req: Request) {
         for (const p of remove) {
           await shopifyFetch(`/pages/${p.id}.json`, { method: "DELETE" });
           deleted++;
-          // ✅ short delete confirmation
-          console.log(`🗑️ Deleted id=${p.id} | deleted_total=${deleted.toLocaleString()}`);
+          console.log(
+            `🗑️ Deleted id=${p.id} | deleted_total=${deleted.toLocaleString()}`
+          );
           await sleep(350);
         }
       }

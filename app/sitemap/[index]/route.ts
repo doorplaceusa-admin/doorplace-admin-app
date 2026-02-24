@@ -22,7 +22,7 @@ export async function GET(
       .select("url,last_modified")
       .eq("is_active", true)
       .eq("is_indexable", true)
-      .order("id", { ascending: true })
+      .order("url", { ascending: true }) // ← key change
       .range(
         indexNum * CHUNK_SIZE,
         (indexNum + 1) * CHUNK_SIZE - 1

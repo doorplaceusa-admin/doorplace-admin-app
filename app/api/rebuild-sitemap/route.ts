@@ -11,20 +11,26 @@ export async function GET() {
   try {
     console.log("Starting sitemap rebuild...");
 
-    // 1️⃣ Clear table
+    // Clear table
     await supabaseAdmin.from("sitemap_chunks").delete().neq("chunk_number", -1);
 
-    let offset = 0;
     let globalIndex = 0;
+    let lastUrl: string | null = null;
 
     while (true) {
-      const { data, error } = await supabaseAdmin
+      let query = supabaseAdmin
         .from("shopify_url_inventory")
         .select("url,last_modified")
         .eq("is_active", true)
         .eq("is_indexable", true)
         .order("url", { ascending: true })
-        .range(offset, offset + BATCH_SIZE - 1);
+        .limit(BATCH_SIZE);
+
+      if (lastUrl) {
+        query = query.gt("url", lastUrl);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error(error);
@@ -53,7 +59,7 @@ export async function GET() {
       }
 
       globalIndex += data.length;
-      offset += BATCH_SIZE;
+      lastUrl = data[data.length - 1].url;
 
       console.log(`Processed ${globalIndex} rows...`);
     }

@@ -12,44 +12,8 @@ const API_VERSION = "2024-01";
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,
-    headers: {
-      Allow: "POST, OPTIONS",
-    },
+    headers: { Allow: "POST, OPTIONS" },
   });
-}
-
-/* -----------------------------------------
-   Shopify Fetch Helper
------------------------------------------- */
-async function shopifyFetch(path: string, options: RequestInit = {}) {
-  const url = `https://${SHOP}/admin/api/${API_VERSION}${path}`;
-
-  console.log(`🌐 Shopify Fetch → ${options.method || "GET"} ${url}`);
-
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      "X-Shopify-Access-Token": TOKEN,
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    console.error("❌ Shopify API Error:", res.status, text);
-    throw new Error(`Shopify ${res.status}: ${text}`);
-  }
-
-  // Log rate-limit headers if present
-  const callLimit =
-    res.headers.get("x-shopify-shop-api-call-limit") ||
-    res.headers.get("X-Shopify-Shop-Api-Call-Limit");
-  if (callLimit) {
-    console.log(`📉 Rate Limit Header: ${callLimit}`);
-  }
-
-  return res;
 }
 
 /* -----------------------------------------
@@ -60,12 +24,12 @@ function sleep(ms: number) {
 }
 
 /* -----------------------------------------
-   Title Normalizer (max safety)
+   Title Normalizer (safe)
 ------------------------------------------ */
 function normalizeTitle(raw: string) {
   return raw
-    .replace(/\u00A0/g, " ") // nbsp -> space
-    .replace(/\s+/g, " ") // collapse internal whitespace
+    .replace(/\u00A0/g, " ")
+    .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
 }
@@ -84,17 +48,50 @@ function asTime(s?: string) {
 }
 
 /* -----------------------------------------
-   POST — Duplicate Title Cleanup (MAX LOGS)
+   Shopify Fetch Helper (clean logs)
+------------------------------------------ */
+async function shopifyFetch(path: string, options: RequestInit = {}) {
+  const method = (options.method || "GET").toUpperCase();
+  // ✅ keep it short: do NOT print full URL
+  console.log(`🌐 Shopify ${method} ${path}`);
+
+  const res = await fetch(`https://${SHOP}/admin/api/${API_VERSION}${path}`, {
+    ...options,
+    headers: {
+      "X-Shopify-Access-Token": TOKEN,
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error(`❌ Shopify ${res.status} ${path}`);
+    throw new Error(`Shopify ${res.status}: ${text}`);
+  }
+
+  // Optional: short rate limit snapshot
+  const callLimit =
+    res.headers.get("x-shopify-shop-api-call-limit") ||
+    res.headers.get("X-Shopify-Shop-Api-Call-Limit");
+  if (callLimit) console.log(`📉 API calls: ${callLimit}`);
+
+  return res;
+}
+
+/* -----------------------------------------
+   POST — Duplicate Title Cleanup (CLEAN LOGS)
+   - Default: clean summary logs
+   - Add ?verbose=1 to print each duplicate group items
 ------------------------------------------ */
 export async function POST(req: Request) {
-  const dryRun = new URL(req.url).searchParams.get("dry_run") === "1";
+  const url = new URL(req.url);
+  const dryRun = url.searchParams.get("dry_run") === "1";
+  const verbose = url.searchParams.get("verbose") === "1";
 
   console.log("==================================================");
-  console.log("🧹 DUPLICATE TITLE CLEANUP STARTED");
-  console.log("🧪 Dry run:", dryRun);
-  console.log("🏪 SHOP:", SHOP);
-  console.log("📦 API_VERSION:", API_VERSION);
-  console.log("⏱️ Started at:", new Date().toISOString());
+  console.log(`🧹 Duplicate Title Cleanup START | dryRun=${dryRun} | verbose=${verbose}`);
+  console.log(`⏱️ ${new Date().toISOString()}`);
   console.log("==================================================");
 
   let scanned = 0;
@@ -104,21 +101,15 @@ export async function POST(req: Request) {
   let pageBatch = 0;
   let nextPageInfo: string | null = null;
 
-  // Group pages by normalized title (for accurate duplicate detection)
+  // Group pages by normalized title
   const byTitle = new Map<string, ShopifyPage[]>();
 
   try {
-    /* -----------------------------------------
-       1) Fetch all pages (paginated)
-    ------------------------------------------ */
+    /* ---------------------------
+       1) FETCH + GROUP (clean)
+    ---------------------------- */
     do {
       pageBatch++;
-
-      console.log("--------------------------------------------------");
-      console.log(`📦 Fetching page batch #${pageBatch}`);
-      console.log(
-        `➡️ page_info: ${nextPageInfo ? nextPageInfo : "(none / first page)"}`
-      );
 
       const res = await shopifyFetch(
         `/pages.json?limit=250${nextPageInfo ? `&page_info=${nextPageInfo}` : ""}`
@@ -127,85 +118,45 @@ export async function POST(req: Request) {
       const data = await res.json();
       const pages: ShopifyPage[] = data.pages || [];
 
-      console.log(`✅ Batch #${pageBatch} loaded — ${pages.length} pages`);
-
-      // Dump first few items for sanity
-      if (pages.length > 0) {
-        console.log("🔍 Sample pages (first 5):");
-        pages.slice(0, 5).forEach((p, i) => {
-          console.log(
-            `   [${i + 1}] id=${p.id} | title="${p.title}" | handle="${p.handle}" | updated_at=${p.updated_at}`
-          );
-        });
-      }
-
-      console.log("🧾 Processing pages in this batch...");
-
-      for (const page of pages) {
+      // Group
+      for (const p of pages) {
         scanned++;
+        if (!p?.title) continue;
 
-        if (!page?.title) {
-          console.log(`⚠️ Skipping page with missing title (id=${page?.id})`);
-          continue;
-        }
-
-        const key = normalizeTitle(page.title);
-
-        // MAX LOGS: show every page processed
-        console.log(
-          `➡️ [SCAN #${scanned}] id=${page.id} | title="${page.title}" | key="${key}" | handle="${page.handle}" | updated_at=${page.updated_at}`
-        );
-
+        const key = normalizeTitle(p.title);
         const arr = byTitle.get(key) || [];
-        arr.push(page);
+        arr.push(p);
         byTitle.set(key, arr);
-
-        // Running totals every 100 scans (plus you see every scan anyway)
-        if (scanned % 100 === 0) {
-          console.log(
-            `📈 RUNNING TOTALS — Scanned: ${scanned}, DuplicateGroupsSoFar: ${Array.from(byTitle.values()).filter(g => g.length > 1).length}, Deleted: ${deleted}, DryRun: ${dryRun}`
-          );
-        }
       }
 
-      // Pagination header parse
+      // Pagination
       const link = res.headers.get("link");
-      console.log(`🔗 Link header: ${link || "(none)"}`);
-
       const match = link?.match(/page_info=([^&>]+)>; rel="next"/);
       nextPageInfo = match ? match[1] : null;
 
+      // ✅ Batch summary (readable)
       console.log(
-        `📊 Batch #${pageBatch} DONE — Total scanned so far: ${scanned}`
+        `📦 Batch #${pageBatch} | +${pages.length} pages | total_scanned=${scanned.toLocaleString()} | unique_titles=${byTitle.size.toLocaleString()}`
       );
-
-      if (nextPageInfo) {
-        console.log(`➡️ Next page_info found, continuing... (${nextPageInfo})`);
-      } else {
-        console.log("✅ No next page_info — finished fetching all pages.");
-      }
     } while (nextPageInfo);
 
-    console.log("==================================================");
-    console.log("✅ FETCH PHASE COMPLETE");
-    console.log(`📌 Total pages scanned: ${scanned}`);
-    console.log(`📌 Unique normalized titles: ${byTitle.size}`);
-    console.log("==================================================");
+    console.log("--------------------------------------------------");
+    console.log(
+      `✅ Fetch complete | total_scanned=${scanned.toLocaleString()} | unique_titles=${byTitle.size.toLocaleString()}`
+    );
 
-    /* -----------------------------------------
-       2) Find duplicate title groups + delete extras
-    ------------------------------------------ */
-    let groupIndex = 0;
+    /* ---------------------------
+       2) FIND DUP GROUPS (clean)
+    ---------------------------- */
+    let groupCount = 0;
 
     for (const [key, group] of byTitle.entries()) {
       if (group.length <= 1) continue;
 
-      groupIndex++;
-
-      // Count duplicates as extras beyond the first kept page
+      groupCount++;
       duplicates += group.length - 1;
 
-      // Sort by: newest updated_at, fallback created_at, fallback highest id
+      // Sort: newest updated, fallback created, fallback highest id
       const sorted = [...group].sort((a, b) => {
         const ta = asTime(a.updated_at) || asTime(a.created_at);
         const tb = asTime(b.updated_at) || asTime(b.created_at);
@@ -219,56 +170,35 @@ export async function POST(req: Request) {
       const keep = sorted[0];
       const remove = sorted.slice(1);
 
-      console.log("--------------------------------------------------");
-      console.log(`⚠️ DUPLICATE GROUP #${groupIndex}`);
-      console.log(`🔑 normalized_title_key: "${key}"`);
-      console.log(`🧮 group_size: ${group.length}`);
+      // ✅ One-line group summary (easy to scan)
       console.log(
-        `✅ KEEPING → id=${keep.id} | title="${keep.title}" | handle="${keep.handle}" | updated_at=${keep.updated_at} | created_at=${keep.created_at}`
+        `⚠️ DUP GROUP #${groupCount} | size=${group.length} | keep_id=${keep.id} | title="${keep.title}"`
       );
 
-      console.log("🗑️ CANDIDATES TO REMOVE:");
-      remove.forEach((p, idx) => {
-        console.log(
-          `   (${idx + 1}) id=${p.id} | title="${p.title}" | handle="${p.handle}" | updated_at=${p.updated_at} | created_at=${p.created_at}`
-        );
-      });
+      // Optional: show details only when verbose=1
+      if (verbose) {
+        console.log(`   key="${key}"`);
+        console.log(`   KEEP  id=${keep.id} handle=${keep.handle} updated=${keep.updated_at || ""}`);
+        for (const p of remove) {
+          console.log(`   DEL?  id=${p.id} handle=${p.handle} updated=${p.updated_at || ""}`);
+        }
+      }
 
       if (!dryRun) {
         for (const p of remove) {
-          console.log(
-            `🗑️ DELETING → id=${p.id} | title="${p.title}" | handle="${p.handle}"`
-          );
-
-          await shopifyFetch(`/pages/${p.id}.json`, {
-            method: "DELETE",
-          });
-
+          await shopifyFetch(`/pages/${p.id}.json`, { method: "DELETE" });
           deleted++;
-
-          console.log(
-            `✅ DELETE OK → id=${p.id} | Deleted so far: ${deleted}`
-          );
-
-          // Sleep between deletes for rate limit safety
+          // ✅ short delete confirmation
+          console.log(`🗑️ Deleted id=${p.id} | deleted_total=${deleted.toLocaleString()}`);
           await sleep(350);
         }
-      } else {
-        console.log("🧪 DRY RUN: No deletes executed for this group.");
       }
-
-      console.log(
-        `📊 TOTALS AFTER GROUP #${groupIndex} — Scanned: ${scanned}, DuplicatesFound: ${duplicates}, Deleted: ${deleted}`
-      );
     }
 
     console.log("==================================================");
-    console.log("🎉 DUPLICATE TITLE CLEANUP FINISHED");
-    console.log(`✅ FINAL TOTALS — Scanned: ${scanned}`);
-    console.log(`✅ FINAL TOTALS — Duplicate pages found: ${duplicates}`);
-    console.log(`✅ FINAL TOTALS — Pages deleted: ${deleted}`);
-    console.log(`🧪 Dry run: ${dryRun}`);
-    console.log("⏱️ Finished at:", new Date().toISOString());
+    console.log(
+      `🎉 DONE | scanned=${scanned.toLocaleString()} | dup_pages=${duplicates.toLocaleString()} | deleted=${deleted.toLocaleString()} | dryRun=${dryRun}`
+    );
     console.log("==================================================");
 
     return NextResponse.json({
@@ -280,12 +210,10 @@ export async function POST(req: Request) {
     });
   } catch (err: any) {
     console.error("==================================================");
-    console.error("❌ CLEANUP FAILED:", err);
-    console.error("📌 Totals at failure:");
-    console.error(`   Scanned: ${scanned}`);
-    console.error(`   Duplicate pages found (so far): ${duplicates}`);
-    console.error(`   Pages deleted (so far): ${deleted}`);
-    console.error("⏱️ Failed at:", new Date().toISOString());
+    console.error("❌ CLEANUP FAILED:", err?.message || err);
+    console.error(
+      `📌 Totals so far | scanned=${scanned.toLocaleString()} | dup_pages=${duplicates.toLocaleString()} | deleted=${deleted.toLocaleString()}`
+    );
     console.error("==================================================");
 
     return NextResponse.json(

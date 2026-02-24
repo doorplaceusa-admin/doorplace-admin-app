@@ -13,10 +13,7 @@ export async function GET() {
 
 
     // Clear table
-    await supabaseAdmin
-      .from("sitemap_chunks")
-      .delete()
-      .neq("chunk_number", -1);
+   await supabaseAdmin.rpc("truncate_sitemap_chunks");
 
     let globalIndex = 0;
     let lastUrl: string | null = null;

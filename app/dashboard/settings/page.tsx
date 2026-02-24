@@ -60,6 +60,14 @@ export default function Page() {
   "initializing" | "fast" | "slow"
 >("initializing");
 
+/* ======================================================
+   SITEMAP REBUILD STATE
+====================================================== */
+
+const [rebuildJob, setRebuildJob] = useState<any>(null);
+const [rebuildLoading, setRebuildLoading] = useState(true);
+const [rebuildActionLoading, setRebuildActionLoading] = useState(false);
+
   /* ======================================================
      LOAD LIVE MAP INTERVAL SETTINGS
   ====================================================== */
@@ -192,6 +200,9 @@ export default function Page() {
     }
   }
 
+
+
+
   function restartInterval(ms: number) {
     if (interval) clearInterval(interval);
     interval = setInterval(loadJob, ms);
@@ -205,7 +216,34 @@ export default function Page() {
     if (interval) clearInterval(interval);
   };
 }, []);
+/* ======================================================
+   LOAD SITEMAP REBUILD STATUS
+====================================================== */
 
+useEffect(() => {
+  let interval: any = null;
+
+  async function loadRebuildStatus() {
+    try {
+      const res = await fetch("/api/rebuild-sitemap/status");
+      const data = await res.json();
+      if (data.success) {
+        setRebuildJob(data.job);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setRebuildLoading(false);
+    }
+  }
+
+  loadRebuildStatus();
+  interval = setInterval(loadRebuildStatus, 3000);
+
+  return () => {
+    if (interval) clearInterval(interval);
+  };
+}, []);
   // ✅ helper: force refresh immediately after actions
   async function refreshJob() {
     try {
@@ -390,7 +428,26 @@ export default function Page() {
       setJobActionLoading(false);
     }
   }
+async function startRebuild() {
+  if (rebuildActionLoading) return;
 
+  setRebuildActionLoading(true);
+
+  try {
+    const res = await fetch("/api/rebuild-sitemap/start", {
+      method: "POST",
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      alert(text);
+    }
+  } catch (err: any) {
+    alert(err.message);
+  } finally {
+    setRebuildActionLoading(false);
+  }
+}
   /* ======================================================
      PAGE UI
   ====================================================== */
@@ -698,7 +755,56 @@ export default function Page() {
           </>
         )}
       </div>
+{/* Sitemap Rebuild */}
+<div className="border-t pt-6">
+  <h2 className="text-lg font-semibold mb-2">Sitemap Rebuild</h2>
 
+  <p className="text-sm text-gray-600 mb-4">
+    Rebuilds the sitemap_chunks table from shopify_url_inventory.
+  </p>
+
+  {rebuildLoading ? (
+    <p className="text-sm text-gray-500">Loading rebuild status…</p>
+  ) : (
+    <>
+      {rebuildJob && (
+        <div className="border rounded-md p-4 bg-gray-50 space-y-2 mb-4">
+          <div
+            className={`h-2 w-full rounded ${
+              rebuildJob.status === "running"
+                ? "bg-blue-500 animate-pulse"
+                : rebuildJob.status === "completed"
+                ? "bg-green-500"
+                : rebuildJob.status === "failed"
+                ? "bg-red-500"
+                : "bg-gray-300"
+            }`}
+          />
+
+          <p className="text-sm">
+            <strong>Status:</strong>{" "}
+            {rebuildJob.status || "idle"}
+          </p>
+
+          <p className="text-sm">
+            <strong>Rows Processed:</strong>{" "}
+            {rebuildJob.rows_processed?.toLocaleString() || 0}
+          </p>
+        </div>
+      )}
+
+      <button
+        onClick={startRebuild}
+        disabled={
+          rebuildActionLoading || rebuildJob?.status === "running"
+        }
+        className="px-4 py-2 rounded bg-black text-white text-sm disabled:bg-gray-300"
+      >
+        {rebuildActionLoading ? "Starting…" : "Rebuild Sitemap"}
+      </button>
+    </>
+  )}
+</div>
       {/* Duplicate Page Cleanup */}
       <div className="border-t pt-6">
         <h2 className="text-lg font-semibold mb-2">Shopify Duplicate Page Cleanup</h2>

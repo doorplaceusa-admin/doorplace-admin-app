@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
 
-const CHUNK_SIZE = 50000;
+const CHUNK_SIZE = 5000;
 
 /* -------------------------------------------------------
    XML Escaper (prevents broken XML)

@@ -67,24 +67,6 @@ export default function CommissionCalculator() {
           </select>
 
           <div style={{ marginTop: 30 }}>
-            <SectionTitle text="Markup Percentage" />
-            <div style={badgeStyle}>MAX 60%</div>
-
-            <input
-              type="range"
-              min="0"
-              max="60"
-              value={cappedMarkup}
-              onChange={(e) => setMarkupPercent(Number(e.target.value))}
-              style={{ width: "100%", marginTop: 10 }}
-            />
-
-            <div style={markupDisplayStyle}>
-              {cappedMarkup}% Markup
-            </div>
-          </div>
-
-          <div style={{ marginTop: 30 }}>
             <SectionTitle text="Accessories" />
             <Check label="Black Cup Holder – $15" value={blackCupHolder} setValue={setBlackCupHolder} />
             <Check label={'Rope ¾" x 50\' – $85'} value={rope} setValue={setRope} />
@@ -106,13 +88,32 @@ export default function CommissionCalculator() {
         <div style={cardStyle}>
           <SectionTitle text="Financial Breakdown" />
 
+          {/* MARKUP MOVED HERE */}
+          <div style={{ marginBottom: 25 }}>
+            <SectionTitle text="Markup Percentage" />
+            <div style={badgeStyle}>MAX 60%</div>
+
+            <input
+              type="range"
+              min="0"
+              max="60"
+              value={cappedMarkup}
+              onChange={(e) => setMarkupPercent(Number(e.target.value))}
+              style={{ width: "100%", marginTop: 10 }}
+            />
+
+            <div style={markupDisplayStyle}>
+              {cappedMarkup}% Markup
+            </div>
+          </div>
+
           <ResultCard title="Sale Price (Before Freight)" value={`$${salePrice.toFixed(2)}`} />
           <ResultCard title="Freight" value={`$${freightTotal.toFixed(2)}`} />
           <ResultCard
-  title="Projected Sale Price (Pre-Tax)"
-  value={`$${finalCustomerPrice.toFixed(2)}`}
-  dark
-/>
+            title="Projected Sale Price (Pre-Tax)"
+            value={`$${finalCustomerPrice.toFixed(2)}`}
+            dark
+          />
           <ResultCard
             title="Your Commission"
             value={`$${commission.toFixed(2)}`}
@@ -121,10 +122,10 @@ export default function CommissionCalculator() {
           />
 
           <div style={noteStyle}>
-  Internal tool for commission planning only.
-  Commission is 12% or $100 minimum (whichever is greater).
-  Freight is excluded from commission.
-</div>
+            Internal tool for commission planning only.
+            Commission is 12% or $100 minimum (whichever is greater).
+            Freight is excluded from commission.
+          </div>
         </div>
 
       </div>

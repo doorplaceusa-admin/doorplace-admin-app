@@ -4,125 +4,208 @@ import { useState } from "react";
 
 export default function CommissionCalculator() {
   const [size, setSize] = useState("crib");
-  const [material, setMaterial] = useState("pine");
-  const [cupHolders, setCupHolders] = useState(false);
-  const [ropeKit, setRopeKit] = useState(false);
-  const [stainUpgrade, setStainUpgrade] = useState(false);
+  const [markupPercent, setMarkupPercent] = useState(60);
+  const [blackCupHolder, setBlackCupHolder] = useState(false);
+  const [rope, setRope] = useState(false);
+  const [paint, setPaint] = useState(false);
+  const [cedarUpgrade, setCedarUpgrade] = useState(false);
+  const [freight, setFreight] = useState(false);
 
   const COMMISSION_RATE = 0.12;
-  const DEPOSIT_RATE = 0.30; // assuming 30% deposit
+  const MIN_COMMISSION = 100;
+  const MAX_MARKUP = 60;
 
   const basePrices: Record<string, number> = {
-    crib: 600,
-    twin: 900,
-    full: 1100,
-    queen: 1400,
+    crib: 700,
+    twin: 800,
+    full: 900,
   };
 
-  const materialUpcharge: Record<string, number> = {
-    pine: 0,
-    cedar: 200,
-    red_oak: 350,
-    white_oak: 450,
+  const accessories = {
+    blackCupHolder: 15,
+    rope: 85,
   };
 
-  const addOns = {
-    cupHolders: 15,
-    ropeKit: 85,
-    stainUpgrade: 150,
+  const upgrades = {
+    paint: 225,
+    cedarUpgrade: 500,
   };
 
-  const calculateTotal = () => {
-    let total = basePrices[size] + materialUpcharge[material];
+  const freightCost = 200;
 
-    if (cupHolders) total += addOns.cupHolders;
-    if (ropeKit) total += addOns.ropeKit;
-    if (stainUpgrade) total += addOns.stainUpgrade;
+  const basePrice = basePrices[size];
 
-    return total;
-  };
+  const accessoryTotal =
+    (blackCupHolder ? accessories.blackCupHolder : 0) +
+    (rope ? accessories.rope : 0);
 
-  const totalPrice = calculateTotal();
-  const commission = totalPrice * COMMISSION_RATE;
-  const depositCommission = totalPrice * DEPOSIT_RATE * COMMISSION_RATE;
+  const upgradeTotal =
+    (paint ? upgrades.paint : 0) +
+    (cedarUpgrade ? upgrades.cedarUpgrade : 0);
+
+  const commissionableTotal = basePrice + accessoryTotal + upgradeTotal;
+
+  const cappedMarkup = Math.min(markupPercent, MAX_MARKUP);
+
+  const salePrice = commissionableTotal * (1 + cappedMarkup / 100);
+
+  const freightTotal = freight ? freightCost : 0;
+
+  const finalCustomerPrice = salePrice + freightTotal;
+
+  const rawCommission = salePrice * COMMISSION_RATE;
+  const commission = Math.max(rawCommission, MIN_COMMISSION);
 
   return (
-    <div style={{ maxWidth: 700, margin: "0 auto", padding: 20 }}>
-      <h1 style={{ fontSize: 28, marginBottom: 20 }}>
-        TradePilot Commission Calculator
+    <div style={{ maxWidth: 1000, margin: "40px auto", padding: 20 }}>
+      <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 30 }}>
+        Commission Calculator
       </h1>
 
-      <div style={{ marginBottom: 15 }}>
-        <label>Swing Size:</label>
-        <select
-          value={size}
-          onChange={(e) => setSize(e.target.value)}
-          style={{ width: "100%", padding: 8, marginTop: 5 }}
-        >
-          <option value="crib">Crib</option>
-          <option value="twin">Twin</option>
-          <option value="full">Full</option>
-          <option value="queen">Queen</option>
-        </select>
-      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 30 }}>
 
-      <div style={{ marginBottom: 15 }}>
-        <label>Material:</label>
-        <select
-          value={material}
-          onChange={(e) => setMaterial(e.target.value)}
-          style={{ width: "100%", padding: 8, marginTop: 5 }}
-        >
-          <option value="pine">Pine</option>
-          <option value="cedar">Cedar (+$200)</option>
-          <option value="red_oak">Red Oak (+$350)</option>
-          <option value="white_oak">White Oak (+$450)</option>
-        </select>
-      </div>
+        {/* LEFT SIDE */}
+        <div style={cardStyle}>
+          <h3>Product Selection</h3>
 
-      <div style={{ marginBottom: 10 }}>
-        <label>
-          <input
-            type="checkbox"
-            checked={cupHolders}
-            onChange={() => setCupHolders(!cupHolders)}
+          <label>Swing Size</label>
+          <select
+            value={size}
+            onChange={(e) => setSize(e.target.value)}
+            style={inputStyle}
+          >
+            <option value="crib">Crib – $700</option>
+            <option value="twin">Twin – $800</option>
+            <option value="full">Full – $900</option>
+          </select>
+
+          <div style={{ marginTop: 25 }}>
+            <label>Markup Percentage (Max 60%)</label>
+            <input
+              type="range"
+              min="0"
+              max="60"
+              value={cappedMarkup}
+              onChange={(e) => setMarkupPercent(Number(e.target.value))}
+              style={{ width: "100%" }}
+            />
+            <div style={{ fontWeight: 700, marginTop: 5 }}>
+              {cappedMarkup}% Markup
+            </div>
+          </div>
+
+          <div style={{ marginTop: 25 }}>
+            <h4>Accessories</h4>
+            <Checkbox label="Black Cup Holder – $15" value={blackCupHolder} setValue={setBlackCupHolder} />
+            <Checkbox label={`Rope ¾" x 50' – $85`} value={rope} setValue={setRope} />
+          </div>
+
+          <div style={{ marginTop: 20 }}>
+            <h4>Upgrades</h4>
+            <Checkbox label="Paint – $225" value={paint} setValue={setPaint} />
+            <Checkbox label="Cedar Upgrade – $500" value={cedarUpgrade} setValue={setCedarUpgrade} />
+          </div>
+
+          <div style={{ marginTop: 20 }}>
+            <h4>Freight</h4>
+            <Checkbox
+              label="Freight Shipping – $200 (No Commission)"
+              value={freight}
+              setValue={setFreight}
+            />
+          </div>
+        </div>
+
+        {/* RIGHT SIDE RESULTS */}
+        <div style={cardStyle}>
+          <h3>Financial Breakdown</h3>
+
+          <ResultBox title="Sale Price (Before Freight)" value={`$${salePrice.toFixed(2)}`} />
+
+          <ResultBox title="Freight" value={`$${freightTotal.toFixed(2)}`} />
+
+          <ResultBox
+            title="Final Customer Price"
+            value={`$${finalCustomerPrice.toFixed(2)}`}
+            highlight
           />
-          Add Cup Holders (+$15)
-        </label>
-      </div>
 
-      <div style={{ marginBottom: 10 }}>
-        <label>
-          <input
-            type="checkbox"
-            checked={ropeKit}
-            onChange={() => setRopeKit(!ropeKit)}
+          <ResultBox
+            title="Your Commission"
+            value={`$${commission.toFixed(2)}`}
+            big
+            green
           />
-          Add Rope Kit (+$85)
-        </label>
-      </div>
 
-      <div style={{ marginBottom: 20 }}>
-        <label>
-          <input
-            type="checkbox"
-            checked={stainUpgrade}
-            onChange={() => setStainUpgrade(!stainUpgrade)}
-          />
-          Stain Upgrade (+$150)
-        </label>
-      </div>
+          <div style={{ fontSize: 13, marginTop: 20, color: "#555" }}>
+            Commission is 12% or $100 minimum, whichever is greater.
+            Freight is excluded from commission.
+          </div>
+        </div>
 
-      <hr />
-
-      <div style={{ marginTop: 20 }}>
-        <h2>Total Retail Price: ${totalPrice.toFixed(2)}</h2>
-        <h2>Your 12% Commission: ${commission.toFixed(2)}</h2>
-        <h3>
-          Commission Paid After Deposit (30%): $
-          {depositCommission.toFixed(2)}
-        </h3>
       </div>
     </div>
   );
 }
+
+/* ---------- COMPONENTS ---------- */
+
+function Checkbox({ label, value, setValue }: any) {
+  return (
+    <label style={{ display: "block", marginBottom: 8 }}>
+      <input
+        type="checkbox"
+        checked={value}
+        onChange={() => setValue(!value)}
+        style={{ marginRight: 8 }}
+      />
+      {label}
+    </label>
+  );
+}
+
+function ResultBox({ title, value, highlight, big, green }: any) {
+  return (
+    <div
+      style={{
+        padding: 20,
+        borderRadius: 12,
+        background: highlight
+          ? "#111"
+          : green
+          ? "#e7f9ee"
+          : "#f4f4f4",
+        marginBottom: 15,
+        boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+      }}
+    >
+      <div style={{ fontSize: 14, color: highlight ? "#aaa" : "#555" }}>
+        {title}
+      </div>
+      <div
+        style={{
+          fontSize: big ? 32 : 22,
+          fontWeight: 800,
+          color: highlight ? "#fff" : green ? "#15803d" : "#111",
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+const cardStyle = {
+  background: "#fff",
+  padding: 25,
+  borderRadius: 16,
+  boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
+};
+
+const inputStyle = {
+  width: "100%",
+  padding: 10,
+  marginTop: 6,
+  borderRadius: 8,
+  border: "1px solid #ddd",
+};

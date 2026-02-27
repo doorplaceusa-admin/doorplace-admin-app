@@ -33,12 +33,31 @@ function dedupeByUrl<T extends { url: string }>(rows: T[]): T[] {
 
 function withCacheBust(url: string) {
   const u = new URL(url);
-  // “refresh the page” effect against flaky edge caches
   u.searchParams.set("_tp", `${Date.now()}_${Math.random().toString(16).slice(2)}`);
   return u.toString();
 }
 
-async function fetchWithRetry(url: string, retries = 20) {
+// ✅ Decode XML entities (this is the core fix)
+function decodeXmlEntities(str: string) {
+  return str
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
+function isRetryableStatus(status: number) {
+  // Retry on transient failures; do NOT retry 400 (usually bad URL)
+  if (status === 400) return false;
+  if (status === 404) return false;
+  if (status === 429) return true;
+  return status >= 500 && status <= 599;
+}
+
+// ✅ IMPORTANT: keep retries low per request to avoid nginx 504.
+// Let the worker tick again rather than one request retrying forever.
+async function fetchWithRetry(url: string, retries = 3) {
   let lastErr: any = null;
 
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -46,14 +65,13 @@ async function fetchWithRetry(url: string, retries = 20) {
 
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 45000);
+      const timeout = setTimeout(() => controller.abort(), 25000);
 
       const res = await fetch(tryUrl, {
         cache: "no-store",
         redirect: "follow",
         signal: controller.signal,
         headers: {
-          // Browser-ish headers (reduces random CDN weirdness)
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
           Accept: "application/xml,text/xml,*/*;q=0.8",
@@ -65,40 +83,35 @@ async function fetchWithRetry(url: string, retries = 20) {
       clearTimeout(timeout);
 
       if (!res.ok) {
-        // If it’s truly missing, don’t burn retries forever
-        if (res.status === 404) {
-          throw new Error(`HTTP 404 for ${url}`);
-        }
-
-        // Read a small snippet for debugging (Shopify sometimes returns HTML error pages)
         let snippet = "";
         try {
           const txt = await res.text();
-          snippet = txt.slice(0, 220).replace(/\s+/g, " ").trim();
+          snippet = txt.slice(0, 180).replace(/\s+/g, " ").trim();
         } catch {}
 
-        throw new Error(
-          `HTTP ${res.status} for ${url}${snippet ? ` | ${snippet}` : ""}`
-        );
+        const msg = `HTTP ${res.status} for ${url}${snippet ? ` | ${snippet}` : ""}`;
+
+        // Retry only if it’s actually retryable
+        if (isRetryableStatus(res.status) && attempt < retries) {
+          console.log(`❌ Fetch attempt ${attempt}/${retries} retryable: ${msg}`);
+          await sleep(800 * attempt + Math.floor(Math.random() * 400));
+          continue;
+        }
+
+        throw new Error(msg);
       }
 
       return res;
     } catch (err: any) {
       lastErr = err;
-
       const reason =
-        err?.name === "AbortError"
-          ? "TIMEOUT"
-          : err?.message || String(err);
+        err?.name === "AbortError" ? "TIMEOUT" : err?.message || String(err);
 
       console.log(`❌ Fetch attempt ${attempt}/${retries} failed for ${url}: ${reason}`);
 
       if (attempt === retries) break;
 
-      // Backoff + jitter (keeps you from hammering the same flaky edge)
-      const base = Math.min(15000, 1200 * attempt); // grows, caps at 15s
-      const jitter = Math.floor(Math.random() * 700);
-      await sleep(base + jitter);
+      await sleep(800 * attempt + Math.floor(Math.random() * 400));
     }
   }
 
@@ -118,10 +131,7 @@ export async function POST(req: Request) {
 
     const headerSecret = req.headers.get("x-sync-secret");
     if (headerSecret !== SYNC_SECRET) {
-      return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const requestUrl = new URL(req.url);
@@ -146,7 +156,6 @@ export async function POST(req: Request) {
 
     const currentJob = await getJob();
 
-    // If job not running, return status
     if (currentJob.status !== "running") {
       return NextResponse.json({
         success: true,
@@ -157,19 +166,16 @@ export async function POST(req: Request) {
     }
 
     // =========================
-    // FETCH ROOT SITEMAP (NEVER FAIL JOB HERE)
+    // FETCH ROOT SITEMAP (soft retry)
     // =========================
     let indexXml: string;
     try {
-      const indexRes = await fetchWithRetry(ROOT_SITEMAP, 20);
+      const indexRes = await fetchWithRetry(ROOT_SITEMAP, 3);
       indexXml = await indexRes.text();
-
-      // root fetch success -> reset retry_count
       await updateJob({ retry_count: 0, last_error: null });
     } catch (e: any) {
       const retryCount = (currentJob.retry_count ?? 0) + 1;
 
-      // ✅ DO NOT FAIL JOB. Shopify is flaky. Just report + retry next tick.
       await updateJob({
         retry_count: retryCount,
         last_error: `Root sitemap fetch failed (will retry): ${e?.message ?? "Unknown error"}`,
@@ -187,11 +193,8 @@ export async function POST(req: Request) {
 
     let sitemapUrls = extractLocs(indexXml);
 
-    // incremental scans only last N sitemap files
     if (mode === "incremental") {
-      sitemapUrls = sitemapUrls.slice(
-        Math.max(0, sitemapUrls.length - INCREMENTAL_SITEMAPS_TO_SCAN)
-      );
+      sitemapUrls = sitemapUrls.slice(Math.max(0, sitemapUrls.length - INCREMENTAL_SITEMAPS_TO_SCAN));
     }
 
     await updateJob({ total_sitemaps: sitemapUrls.length });
@@ -239,14 +242,12 @@ export async function POST(req: Request) {
     let childXml: string;
 
     try {
-      const childRes = await fetchWithRetry(sitemapUrl, 10);
+      const childRes = await fetchWithRetry(sitemapUrl, 3);
       childXml = await childRes.text();
-
       await updateJob({ retry_count: 0, last_error: null });
     } catch (childError: any) {
       const retryCount = (currentJob.retry_count ?? 0) + 1;
 
-      // ✅ Soft retry child failures too (don’t fail immediately)
       await updateJob({
         retry_count: retryCount,
         last_error: `Child sitemap fetch failed (will retry): ${sitemapUrl} | ${childError?.message ?? "Unknown error"}`,
@@ -287,7 +288,7 @@ export async function POST(req: Request) {
           return new Date(e.lastmod) > lastSync;
         })
         .map((e) => ({
-          url: e.loc!.replace(/\/$/, "").toLowerCase(),
+          url: decodeXmlEntities(e.loc!).replace(/\/$/, "").toLowerCase(), // ✅ decode here too
           page_type: "unknown",
           last_modified: e.lastmod ?? null,
           last_seen: new Date().toISOString(),
@@ -310,7 +311,7 @@ export async function POST(req: Request) {
       i += BATCH_SIZE;
       batches++;
 
-      await sleep(500);
+      await sleep(300);
     }
 
     const doneWithSitemap = i >= entries.length;
@@ -336,16 +337,12 @@ export async function POST(req: Request) {
   } catch (e: any) {
     console.error("TICK ROUTE ERROR:", e);
 
-    // If something else explodes, still don’t hard-fail unless you want it to
     await updateJob({
       last_error: e?.message ?? "Unknown error",
       updated_at: new Date().toISOString(),
     });
 
-    return NextResponse.json(
-      { success: false, error: e?.message ?? "Unknown error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: e?.message ?? "Unknown error" }, { status: 500 });
   } finally {
     if (lockToken) {
       const job = await getJob();
@@ -377,13 +374,13 @@ async function updateJob(patch: any) {
 
 function extractLocs(xml: string): string[] {
   return [...xml.matchAll(/<loc>(.*?)<\/loc>/g)]
-    .map((m) => m[1])
+    .map((m) => decodeXmlEntities(m[1].trim())) // ✅ THIS fixes &amp;
     .filter((u) => u.startsWith("http"));
 }
 
 function extractUrlEntries(xml: string): SitemapEntry[] {
   return [...xml.matchAll(/<url>([\s\S]*?)<\/url>/g)].map((block) => ({
-    loc: block[1].match(/<loc>(.*?)<\/loc>/)?.[1],
+    loc: decodeXmlEntities(block[1].match(/<loc>(.*?)<\/loc>/)?.[1] ?? ""), // ✅ decode
     lastmod: block[1].match(/<lastmod>(.*?)<\/lastmod>/)?.[1],
   }));
 }

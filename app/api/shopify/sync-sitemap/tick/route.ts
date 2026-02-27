@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 const ROOT_SITEMAP = "https://doorplaceusa.com/sitemap.xml";
 const BATCH_SIZE = 150;
 const MAX_BATCHES_PER_TICK = 2;
-const LOCK_SECONDS = 180; // increased to prevent overlapping ticks
+const LOCK_SECONDS = 180;
 const INCREMENTAL_SITEMAPS_TO_SCAN = 10;
 
 const SYNC_SECRET = process.env.SITEMAP_SYNC_SECRET;
@@ -28,45 +31,78 @@ function dedupeByUrl<T extends { url: string }>(rows: T[]): T[] {
   return Array.from(map.values());
 }
 
-async function fetchWithRetry(
-  url: string,
-  retries = 8,
-  baseDelay = 2000
-) {
+function withCacheBust(url: string) {
+  const u = new URL(url);
+  // “refresh the page” effect against flaky edge caches
+  u.searchParams.set("_tp", `${Date.now()}_${Math.random().toString(16).slice(2)}`);
+  return u.toString();
+}
+
+async function fetchWithRetry(url: string, retries = 20) {
+  let lastErr: any = null;
+
   for (let attempt = 1; attempt <= retries; attempt++) {
+    const tryUrl = withCacheBust(url);
+
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 45000);
 
-      const res = await fetch(url, {
+      const res = await fetch(tryUrl, {
         cache: "no-store",
+        redirect: "follow",
         signal: controller.signal,
         headers: {
-          "User-Agent": "TradePilot-SitemapSync/1.0",
-          Accept: "application/xml,text/xml",
+          // Browser-ish headers (reduces random CDN weirdness)
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          Accept: "application/xml,text/xml,*/*;q=0.8",
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
         },
       });
 
       clearTimeout(timeout);
 
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
+        // If it’s truly missing, don’t burn retries forever
+        if (res.status === 404) {
+          throw new Error(`HTTP 404 for ${url}`);
+        }
+
+        // Read a small snippet for debugging (Shopify sometimes returns HTML error pages)
+        let snippet = "";
+        try {
+          const txt = await res.text();
+          snippet = txt.slice(0, 220).replace(/\s+/g, " ").trim();
+        } catch {}
+
+        throw new Error(
+          `HTTP ${res.status} for ${url}${snippet ? ` | ${snippet}` : ""}`
+        );
       }
 
       return res;
-    } catch (err) {
-      console.log(`❌ Fetch attempt ${attempt} failed for ${url}`);
+    } catch (err: any) {
+      lastErr = err;
 
-      if (attempt === retries) {
-        throw new Error(`Failed after ${retries} attempts`);
-      }
+      const reason =
+        err?.name === "AbortError"
+          ? "TIMEOUT"
+          : err?.message || String(err);
 
-      // exponential backoff
-      await sleep(baseDelay * attempt);
+      console.log(`❌ Fetch attempt ${attempt}/${retries} failed for ${url}: ${reason}`);
+
+      if (attempt === retries) break;
+
+      // Backoff + jitter (keeps you from hammering the same flaky edge)
+      const base = Math.min(15000, 1200 * attempt); // grows, caps at 15s
+      const jitter = Math.floor(Math.random() * 700);
+      await sleep(base + jitter);
     }
   }
 
-  throw new Error("Unreachable");
+  throw new Error(`Failed after ${retries} attempts: ${lastErr?.message ?? "Unknown error"}`);
 }
 
 export async function POST(req: Request) {
@@ -89,19 +125,15 @@ export async function POST(req: Request) {
     }
 
     const requestUrl = new URL(req.url);
-    const mode = requestUrl.searchParams.get("mode") || "full"; // "full" | "incremental"
+    const mode = (requestUrl.searchParams.get("mode") || "full") as "full" | "incremental";
 
     lockToken = token();
     const job = await getJob();
-
     if (!job) {
-      return NextResponse.json(
-        { success: false, error: "No job row found" },
-        { status: 500 }
-      );
+      return NextResponse.json({ success: false, error: "No job row found" }, { status: 500 });
     }
 
-    // 🔒 LOCK CHECK
+    // LOCK CHECK
     if (job.lock_expires_at && new Date(job.lock_expires_at) > new Date()) {
       return NextResponse.json({ success: true, locked: true });
     }
@@ -114,7 +146,7 @@ export async function POST(req: Request) {
 
     const currentJob = await getJob();
 
-    // 🛑 If job not running, return status
+    // If job not running, return status
     if (currentJob.status !== "running") {
       return NextResponse.json({
         success: true,
@@ -125,21 +157,43 @@ export async function POST(req: Request) {
     }
 
     // =========================
-    // FETCH ROOT SITEMAP (RETRY SAFE)
+    // FETCH ROOT SITEMAP (NEVER FAIL JOB HERE)
     // =========================
-    const indexRes = await fetchWithRetry(ROOT_SITEMAP);
-    const indexXml = await indexRes.text();
+    let indexXml: string;
+    try {
+      const indexRes = await fetchWithRetry(ROOT_SITEMAP, 20);
+      indexXml = await indexRes.text();
+
+      // root fetch success -> reset retry_count
+      await updateJob({ retry_count: 0, last_error: null });
+    } catch (e: any) {
+      const retryCount = (currentJob.retry_count ?? 0) + 1;
+
+      // ✅ DO NOT FAIL JOB. Shopify is flaky. Just report + retry next tick.
+      await updateJob({
+        retry_count: retryCount,
+        last_error: `Root sitemap fetch failed (will retry): ${e?.message ?? "Unknown error"}`,
+        updated_at: new Date().toISOString(),
+      });
+
+      return NextResponse.json({
+        success: true,
+        retrying: true,
+        where: "root_sitemap",
+        retry_count: retryCount,
+        error: e?.message ?? "Unknown error",
+      });
+    }
 
     let sitemapUrls = extractLocs(indexXml);
 
-    // ✅ incremental scans only last N sitemap files
+    // incremental scans only last N sitemap files
     if (mode === "incremental") {
       sitemapUrls = sitemapUrls.slice(
         Math.max(0, sitemapUrls.length - INCREMENTAL_SITEMAPS_TO_SCAN)
       );
     }
 
-    // keep total_sitemaps updated per mode run
     await updateJob({ total_sitemaps: sitemapUrls.length });
 
     // =========================
@@ -149,12 +203,10 @@ export async function POST(req: Request) {
       const nowIso = new Date().toISOString();
 
       if (mode === "incremental") {
-        // ✅ For incremental: reset cursor, keep status running (or you can set completed if you want)
         await updateJob({
           sitemap_index: 0,
           url_offset: 0,
           updated_at: nowIso,
-          // ✅ Elite mode: advance watermark after successful incremental run
           last_successful_sync_at: nowIso,
         });
 
@@ -166,7 +218,6 @@ export async function POST(req: Request) {
         });
       }
 
-      // ✅ For full: mark completed + advance watermark
       await updateJob({
         status: "completed",
         finished_at: nowIso,
@@ -185,60 +236,41 @@ export async function POST(req: Request) {
     // =========================
     const sitemapUrl = sitemapUrls[currentJob.sitemap_index];
 
-let childXml: string;
+    let childXml: string;
 
-try {
-  const childRes = await fetchWithRetry(sitemapUrl);
-  childXml = await childRes.text();
+    try {
+      const childRes = await fetchWithRetry(sitemapUrl, 10);
+      childXml = await childRes.text();
 
-  // ✅ child fetch success → reset retry_count
-  await updateJob({
-    retry_count: 0,
-    last_error: null,
-  });
+      await updateJob({ retry_count: 0, last_error: null });
+    } catch (childError: any) {
+      const retryCount = (currentJob.retry_count ?? 0) + 1;
 
-} catch (childError: any) {
-  console.error("Child sitemap failed:", sitemapUrl);
+      // ✅ Soft retry child failures too (don’t fail immediately)
+      await updateJob({
+        retry_count: retryCount,
+        last_error: `Child sitemap fetch failed (will retry): ${sitemapUrl} | ${childError?.message ?? "Unknown error"}`,
+        updated_at: new Date().toISOString(),
+      });
 
-  const retryCount = (currentJob.retry_count ?? 0) + 1;
+      return NextResponse.json({
+        success: true,
+        retrying: true,
+        where: "child_sitemap",
+        sitemap_url: sitemapUrl,
+        retry_count: retryCount,
+      });
+    }
 
-  if (retryCount >= 5) {
-    // 🚨 Only now fail job
-    await updateJob({
-      status: "failed",
-      last_error: `Child sitemap failed after 5 attempts: ${sitemapUrl}`,
-      retry_count: retryCount,
-    });
-
-    return NextResponse.json({
-      success: false,
-      status: "failed",
-    });
-  }
-
-  // ✅ Soft retry (do NOT fail job)
-  await updateJob({
-    retry_count: retryCount,
-    last_error: `Temporary child sitemap error (${retryCount}/5)`,
-    updated_at: new Date().toISOString(),
-  });
-
-  return NextResponse.json({
-    success: true,
-    retrying: true,
-    retry_count: retryCount,
-  });
-}
-
-    const entries = extractUrlEntries(childXml).filter(
-      (e) => !!e.loc
-    ) as { loc: string; lastmod?: string }[];
+    const entries = extractUrlEntries(childXml).filter((e) => !!e.loc) as {
+      loc: string;
+      lastmod?: string;
+    }[];
 
     let i = currentJob.url_offset;
     let upserted = 0;
     let batches = 0;
 
-    // ✅ Elite watermark: only used in incremental mode
     const lastSync =
       mode === "incremental" && currentJob.last_successful_sync_at
         ? new Date(currentJob.last_successful_sync_at)
@@ -247,12 +279,11 @@ try {
     while (i < entries.length && batches < MAX_BATCHES_PER_TICK) {
       const slice = entries.slice(i, i + BATCH_SIZE);
 
-      // ✅ Only filter by lastmod in incremental mode
       let rows = slice
         .filter((e) => {
-          if (mode !== "incremental") return true; // full mode: take all
-          if (!e.lastmod) return true; // safety: include if missing
-          if (!lastSync) return true; // safety: include if no watermark
+          if (mode !== "incremental") return true;
+          if (!e.lastmod) return true;
+          if (!lastSync) return true;
           return new Date(e.lastmod) > lastSync;
         })
         .map((e) => ({
@@ -267,16 +298,12 @@ try {
 
       rows = dedupeByUrl(rows);
 
-      // ✅ If nothing new in this slice (common in incremental), skip DB call
       if (rows.length > 0) {
         const { error } = await supabaseAdmin
           .from("shopify_url_inventory")
           .upsert(rows, { onConflict: "url" });
 
-        if (error) {
-          throw new Error(`Supabase upsert failed: ${error.message}`);
-        }
-
+        if (error) throw new Error(`Supabase upsert failed: ${error.message}`);
         upserted += rows.length;
       }
 
@@ -290,14 +317,12 @@ try {
     const newTotal = (currentJob.total_urls_processed ?? 0) + upserted;
 
     await updateJob({
-  sitemap_index: doneWithSitemap
-    ? currentJob.sitemap_index + 1
-    : currentJob.sitemap_index,
-  url_offset: doneWithSitemap ? 0 : i,
-  total_urls_processed: newTotal,
-  retry_count: 0, // ✅ RESET retry counter on success
-  updated_at: new Date().toISOString(),
-});
+      sitemap_index: doneWithSitemap ? currentJob.sitemap_index + 1 : currentJob.sitemap_index,
+      url_offset: doneWithSitemap ? 0 : i,
+      total_urls_processed: newTotal,
+      retry_count: 0,
+      updated_at: new Date().toISOString(),
+    });
 
     return NextResponse.json({
       success: true,
@@ -305,46 +330,27 @@ try {
       upserted,
       total_urls_processed: newTotal,
       sitemap_index: currentJob.sitemap_index,
-      total_sitemaps: sitemapUrls.length, // report the mode-adjusted count
+      total_sitemaps: sitemapUrls.length,
       mode,
     });
   } catch (e: any) {
     console.error("TICK ROUTE ERROR:", e);
 
-    const job = await getJob();
-
-const newRetryCount = (job.retry_count ?? 0) + 1;
-
-if (newRetryCount >= 5) {
-  await updateJob({
-    status: "failed",
-    last_error: e?.message ?? "Unknown error",
-    retry_count: newRetryCount,
-  });
-} else {
-  await updateJob({
-    retry_count: newRetryCount,
-    last_error: e?.message ?? "Temporary error — will retry",
-  });
-}
+    // If something else explodes, still don’t hard-fail unless you want it to
+    await updateJob({
+      last_error: e?.message ?? "Unknown error",
+      updated_at: new Date().toISOString(),
+    });
 
     return NextResponse.json(
-      {
-        success: false,
-        status: "failed",
-        error: e?.message ?? "Unknown error",
-      },
+      { success: false, error: e?.message ?? "Unknown error" },
       { status: 500 }
     );
   } finally {
-    // 🔒 Only release lock if THIS request owns it
     if (lockToken) {
       const job = await getJob();
       if (job?.lock_token === lockToken) {
-        await updateJob({
-          lock_token: null,
-          lock_expires_at: null,
-        });
+        await updateJob({ lock_token: null, lock_expires_at: null });
       }
     }
   }
@@ -366,7 +372,6 @@ async function getJob() {
 async function updateJob(patch: any) {
   const job = await getJob();
   if (!job) return;
-
   await supabaseAdmin.from("sitemap_sync_jobs").update(patch).eq("id", job.id);
 }
 

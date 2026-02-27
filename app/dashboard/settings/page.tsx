@@ -574,12 +574,7 @@ try {
     </>
   }
 >
-        <h2 className="text-lg font-semibold mb-2">Live Map Traffic Window Controls</h2>
-
-        <p className="text-sm text-gray-600 mb-4">
-          Control how far back the Live Map shows human visitors and crawler bot
-          activity. These settings update instantly without editing SQL.
-        </p>
+        
 
         {intervalLoading ? (
           <p className="text-sm text-gray-500">Loading interval settings…</p>
@@ -655,12 +650,7 @@ try {
     </>
   }
 >
-        <h2 className="text-lg font-semibold mb-2">Google Crawl Logging Control</h2>
-
-        <p className="text-sm text-gray-600 mb-4">
-          Google will continue crawling your pages normally. This switch only
-          controls whether TradePilot logs crawler activity into Supabase.
-        </p>
+       
 
         {crawlToggleLoading ? (
           <p className="text-sm text-gray-500">Loading crawler setting…</p>
@@ -709,12 +699,7 @@ try {
     </>
   }
 >
-        <h2 className="text-lg font-semibold mb-2">Shopify Page Finder (TradePilot Search)</h2>
-
-        <p className="text-sm text-gray-600 mb-4">
-          Search Shopify pages instantly and open the real Shopify editor.
-          Perfect for stores with thousands of pages.
-        </p>
+       
 
         <div className="flex gap-2 mb-4">
           <input
@@ -780,12 +765,7 @@ try {
     </>
   }
 >
-        <h2 className="text-lg font-semibold mb-2">Shopify Sitemap Sync</h2>
-
-        <p className="text-sm text-gray-600 mb-4">
-          Background job that syncs Shopify sitemap into TradePilot. Progress
-          persists across refresh and devices.
-        </p>
+        
 
         {jobLoading ? (
           <p className="text-sm text-gray-500">Loading job status…</p>
@@ -891,11 +871,7 @@ try {
   title="Sitemap Rebuild"
   description="Rebuilds the sitemap_chunks table from shopify_url_inventory."
 >
-  <h2 className="text-lg font-semibold mb-2">Sitemap Rebuild</h2>
-
-  <p className="text-sm text-gray-600 mb-4">
-    Rebuilds the sitemap_chunks table from shopify_url_inventory.
-  </p>
+  
 
   {rebuildLoading ? (
     <p className="text-sm text-gray-500">Loading rebuild status…</p>
@@ -960,12 +936,7 @@ try {
     </>
   }
 >
-  <h2 className="text-lg font-semibold mb-2">Incremental Sitemap Update (SAFE)</h2>
-
-  <p className="text-sm text-gray-600 mb-4">
-    Appends only NEW URLs into sitemap_chunks without reshuffling existing chunks.
-    Use this after syncing new Shopify pages into <code>shopify_url_inventory</code>.
-  </p>
+ 
 
   <div className="flex flex-wrap gap-3 mb-4">
     <button
@@ -1055,12 +1026,7 @@ try {
     </>
   }
 >
-        <h2 className="text-lg font-semibold mb-2">Shopify Duplicate Page Cleanup</h2>
-
-        <p className="text-sm text-gray-600 mb-4">
-          Scans all Shopify pages and removes duplicate titles. Always run a dry
-          test first.
-        </p>
+       
 
         <div className="flex gap-3 mb-4">
           <button

@@ -154,7 +154,9 @@ export async function GET() {
           };
         });
 
-        const { error: insertError } = await supabaseAdmin.from("sitemap_chunks").insert(rowsToInsert);
+        const { error: insertError } = await supabaseAdmin
+  .from("sitemap_chunks")
+  .upsert(rowsToInsert, { onConflict: "url", ignoreDuplicates: true });
 
         if (insertError) {
           console.error(`❌ Insert error (batch ${batchNumber}):`, insertError);

@@ -5,9 +5,55 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const CHUNK_SIZE = 5000;
-const BATCH_SIZE = 5000;
-// PostgREST has practical limits; 1000 keeps .in() safe
-const EXISTS_CHECK_BATCH = 1000;
+const BATCH_SIZE = 2000; // keep inventory batch reasonable
+const EXISTS_CHECK_BATCH_START = 300; // will auto-shrink on "exists-check error"
+
+function sleep(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+/**
+ * Supabase/PostgREST `.in()` is sent as a query string and can blow up (URI too long)
+ * when URLs are long and the batch is big.
+ * This helper auto-retries with smaller batch sizes until it works.
+ */
+async function fetchExistingUrlsAutoBatch(urls: string[], batchSizeStart: number) {
+  const existing = new Set<string>();
+  let batchSize = Math.max(10, batchSizeStart);
+
+  for (let i = 0; i < urls.length; ) {
+    const slice = urls.slice(i, i + batchSize);
+
+    const { data, error } = await supabaseAdmin
+      .from("sitemap_chunks")
+      .select("url")
+      .in("url", slice);
+
+    if (error) {
+      // Most common: request URL too large / 414 / query string too long
+      // Auto-shrink and retry the SAME slice.
+      if (batchSize > 25) {
+        batchSize = Math.max(25, Math.floor(batchSize / 2));
+        console.warn(
+          `⚠️ Exists-check batch too large. Shrinking to ${batchSize} and retrying...`,
+          { attempted: slice.length }
+        );
+        continue;
+      }
+
+      // If we’re already small, bubble it up
+      throw error;
+    }
+
+    for (const row of data ?? []) {
+      if (row?.url) existing.add(row.url);
+    }
+
+    i += slice.length;
+  }
+
+  return existing;
+}
 
 export async function GET() {
   const startTime = Date.now();
@@ -78,31 +124,18 @@ export async function GET() {
 
       totalInventoryScanned += invBatch.length;
 
-      // 3) Build url list for existence check
-      const urls = invBatch.map((r) => r.url).filter(Boolean);
+      const urls = invBatch.map((r) => r.url).filter(Boolean) as string[];
 
-      // 4) Check which of these urls already exist in sitemap_chunks, in chunks of 1000
-      const existing = new Set<string>();
-
-      for (let i = 0; i < urls.length; i += EXISTS_CHECK_BATCH) {
-        const slice = urls.slice(i, i + EXISTS_CHECK_BATCH);
-
-        const { data: existsRows, error: existsError } = await supabaseAdmin
-          .from("sitemap_chunks")
-          .select("url")
-          .in("url", slice);
-
-        if (existsError) {
-          console.error(`❌ Exists-check error (batch ${batchNumber}):`, existsError);
-          return new NextResponse("Exists-check error", { status: 500 });
-        }
-
-        for (const row of existsRows ?? []) {
-          if (row?.url) existing.add(row.url);
-        }
+      // 3) Exists-check (auto-shrinks to avoid URI-too-long)
+      let existing: Set<string>;
+      try {
+        existing = await fetchExistingUrlsAutoBatch(urls, EXISTS_CHECK_BATCH_START);
+      } catch (existsErr: any) {
+        console.error(`❌ Exists-check error (batch ${batchNumber}):`, existsErr);
+        return new NextResponse("Exists-check error", { status: 500 });
       }
 
-      // 5) Filter new urls (true incremental)
+      // 4) Filter new urls (true incremental)
       const newRows = invBatch.filter((r) => r.url && !existing.has(r.url));
       totalNewDetected += newRows.length;
 
@@ -121,9 +154,7 @@ export async function GET() {
           };
         });
 
-        const { error: insertError } = await supabaseAdmin
-          .from("sitemap_chunks")
-          .insert(rowsToInsert);
+        const { error: insertError } = await supabaseAdmin.from("sitemap_chunks").insert(rowsToInsert);
 
         if (insertError) {
           console.error(`❌ Insert error (batch ${batchNumber}):`, insertError);
@@ -138,11 +169,10 @@ export async function GET() {
 
       lastUrl = invBatch[invBatch.length - 1].url;
 
-      // tiny pause for DB safety
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await sleep(50);
     }
 
-    // 6) Final chunk metrics
+    // 5) Final chunk metrics
     const { data: finalRows, error: finalError } = await supabaseAdmin
       .from("sitemap_chunks")
       .select("chunk_number, position")
@@ -156,7 +186,6 @@ export async function GET() {
 
     const finalChunkNumber = finalRows?.[0]?.chunk_number ?? startingChunkNumber;
     const chunksCreated = Math.max(0, finalChunkNumber - startingChunkNumber);
-
     const durationSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
 
     console.log("====================================================");

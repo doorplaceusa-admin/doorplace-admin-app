@@ -68,6 +68,17 @@ const [rebuildJob, setRebuildJob] = useState<any>(null);
 const [rebuildLoading, setRebuildLoading] = useState(false);
 const [rebuildActionLoading, setRebuildActionLoading] = useState(false);
 
+
+/* ======================================================
+   INCREMENTAL SITEMAP STATE
+====================================================== */
+
+const [incrementalRunning, setIncrementalRunning] = useState(false);
+const [incrementalStatus, setIncrementalStatus] = useState<string | null>(null);
+const [incrementalResult, setIncrementalResult] = useState<string | null>(null);
+const [incrementalStartedAt, setIncrementalStartedAt] = useState<string | null>(null);
+const [incrementalFinishedAt, setIncrementalFinishedAt] = useState<string | null>(null);
+const [latestChunkNumber, setLatestChunkNumber] = useState<number | null>(null);
   /* ======================================================
      LOAD LIVE MAP INTERVAL SETTINGS
   ====================================================== */
@@ -227,8 +238,14 @@ useEffect(() => {
     try {
       const res = await fetch("/api/rebuild-sitemap/status");
       const data = await res.json();
+
       if (data.success) {
         setRebuildJob(data.job);
+
+        // ✅ NEW: auto-detect latest chunk number
+        if (typeof data.job?.final_chunk_number === "number") {
+          setLatestChunkNumber(data.job.final_chunk_number);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -244,6 +261,8 @@ useEffect(() => {
     if (interval) clearInterval(interval);
   };
 }, []);
+
+
   // ✅ helper: force refresh immediately after actions
   async function refreshJob() {
     try {
@@ -448,7 +467,63 @@ async function startRebuild() {
     setRebuildActionLoading(false);
   }
 }
-  /* ======================================================
+ 
+function openSitemapIndex() {
+  window.open("https://tradepilot.doorplaceusa.com/sitemap.xml", "_blank");
+}
+
+function openSitemapChunk(n: number) {
+  window.open(`https://tradepilot.doorplaceusa.com/sitemap${n}.xml`, "_blank");
+}
+
+async function runIncrementalSitemap() {
+  if (incrementalRunning) return;
+
+  setIncrementalRunning(true);
+  setIncrementalStatus("running");
+  setIncrementalResult(null);
+
+  const started = new Date().toISOString();
+  setIncrementalStartedAt(started);
+  setIncrementalFinishedAt(null);
+
+  try {
+    const res = await fetch("/api/rebuild-sitemap/incremental", {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    const text = await res.text();
+
+    if (!res.ok) {
+      setIncrementalStatus("error");
+      setIncrementalResult(text || "Incremental run failed.");
+      return;
+    }
+
+    setIncrementalStatus("completed");
+    setIncrementalResult(text || "Incremental run complete.");
+    // ✅ Force refresh rebuild status so latest chunk updates immediately
+try {
+  const statusRes = await fetch("/api/rebuild-sitemap/status", { cache: "no-store" });
+  const statusData = await statusRes.json();
+  if (statusData.success && typeof statusData.job?.final_chunk_number === "number") {
+    setLatestChunkNumber(statusData.job.final_chunk_number);
+    setRebuildJob(statusData.job);
+  }
+} catch (e) {
+  // ignore refresh errors
+}
+  } catch (err: any) {
+    setIncrementalStatus("error");
+    setIncrementalResult(err?.message || "Incremental run failed.");
+  } finally {
+    setIncrementalRunning(false);
+    setIncrementalFinishedAt(new Date().toISOString());
+  }
+}
+
+/* ======================================================
      PAGE UI
   ====================================================== */
 
@@ -811,6 +886,91 @@ async function startRebuild() {
     </>
   )}
 </div>
+
+{/* Incremental Sitemap Update (SAFE) */}
+<div className="border-t pt-6">
+  <h2 className="text-lg font-semibold mb-2">Incremental Sitemap Update (SAFE)</h2>
+
+  <p className="text-sm text-gray-600 mb-4">
+    Appends only NEW URLs into sitemap_chunks without reshuffling existing chunks.
+    Use this after syncing new Shopify pages into <code>shopify_url_inventory</code>.
+  </p>
+
+  <div className="flex flex-wrap gap-3 mb-4">
+    <button
+      onClick={runIncrementalSitemap}
+      disabled={incrementalRunning}
+      className="px-4 py-2 rounded bg-black text-white text-sm disabled:bg-gray-300"
+    >
+      {incrementalRunning ? "Running Incremental…" : "Run Incremental Update"}
+    </button>
+
+    <button
+      onClick={openSitemapIndex}
+      className="px-4 py-2 rounded bg-gray-900 text-white text-sm hover:bg-gray-800"
+    >
+      Open sitemap.xml
+    </button>
+
+   
+   <button
+  onClick={() => {
+    if (latestChunkNumber !== null) openSitemapChunk(latestChunkNumber);
+  }}
+  disabled={latestChunkNumber === null}
+  className={`px-4 py-2 rounded text-sm ${
+    latestChunkNumber === null
+      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+      : "bg-gray-200 text-gray-900 hover:bg-gray-300"
+  }`}
+>
+  {latestChunkNumber === null
+    ? "Loading latest chunk…"
+    : `Open latest chunk (${latestChunkNumber})`}
+</button>
+  </div>
+
+  <div className="border rounded-md p-4 bg-gray-50 space-y-2">
+    <div
+      className={`h-2 w-full rounded ${
+        incrementalStatus === "running"
+          ? "bg-blue-500 animate-pulse"
+          : incrementalStatus === "completed"
+          ? "bg-green-500"
+          : incrementalStatus === "error"
+          ? "bg-red-500"
+          : "bg-gray-300"
+      }`}
+    />
+
+    <p className="text-sm">
+      <strong>Status:</strong> {incrementalStatus || "idle"}
+    </p>
+
+    {incrementalStartedAt && (
+      <p className="text-xs text-gray-600">
+        <strong>Started:</strong> {incrementalStartedAt}
+      </p>
+    )}
+
+    {incrementalFinishedAt && (
+      <p className="text-xs text-gray-600">
+        <strong>Finished:</strong> {incrementalFinishedAt}
+      </p>
+    )}
+
+    {incrementalResult && (
+      <pre className="text-xs bg-white border rounded p-3 overflow-x-auto whitespace-pre-wrap">
+        {incrementalResult}
+      </pre>
+    )}
+  </div>
+
+  <p className="text-xs text-gray-500 mt-3">
+    Note: This runs in the foreground. Leave this page open until it finishes.
+  </p>
+</div>
+
       {/* Duplicate Page Cleanup */}
       <div className="border-t pt-6">
         <h2 className="text-lg font-semibold mb-2">Shopify Duplicate Page Cleanup</h2>

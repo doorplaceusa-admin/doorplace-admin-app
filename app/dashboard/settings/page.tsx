@@ -18,6 +18,26 @@ type ShopifyPageResult = {
   updatedAt?: string;
 };
 
+function SectionCard({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border bg-white p-5 shadow-sm space-y-4">
+      <div className="space-y-1">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        {description && <div className="text-sm text-gray-600">{description}</div>}
+      </div>
+      <div>{children}</div>
+    </div>
+  );
+}
+
 export default function Page() {
   const [syncing, setSyncing] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -528,7 +548,7 @@ try {
   ====================================================== */
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-6 max-w-375 w-full mx-auto">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-10 space-y-6 max-w-375 w-full mx-auto bg-gray-50 px-4">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
@@ -537,17 +557,23 @@ try {
         </p>
       </div>
 
-      {/* Password Reset */}
-      <div>
-        <h2 className="text-lg font-semibold mb-2">Partner Password Tools</h2>
-        <p className="text-sm text-gray-600 mb-4">
-          Send a secure password reset link to a partner.
-        </p>
-        <SendPasswordReset />
-      </div>
+      <SectionCard
+  title="Partner Password Tools"
+  description="Send a secure password reset link to a partner."
+>
+  <SendPasswordReset />
+</SectionCard>
 
       {/* Live Map Interval Controls */}
-      <div className="border-t pt-6">
+<SectionCard
+  title="Live Map Traffic Window Controls"
+  description={
+    <>
+      Control how far back the Live Map shows human visitors and crawler bot
+      activity. These settings update instantly without editing SQL.
+    </>
+  }
+>
         <h2 className="text-lg font-semibold mb-2">Live Map Traffic Window Controls</h2>
 
         <p className="text-sm text-gray-600 mb-4">
@@ -616,10 +642,19 @@ try {
             )}
           </div>
         )}
-      </div>
+</SectionCard>
+
 
       {/* Crawler Logging Toggle */}
-      <div className="border-t pt-6">
+<SectionCard
+  title="Google Crawl Logging Control"
+  description={
+    <>
+      Google will continue crawling your pages normally. This switch only controls
+      whether TradePilot logs crawler activity into Supabase.
+    </>
+  }
+>
         <h2 className="text-lg font-semibold mb-2">Google Crawl Logging Control</h2>
 
         <p className="text-sm text-gray-600 mb-4">
@@ -660,10 +695,20 @@ try {
         {crawlToggleStatus && (
           <p className="text-sm mt-3 text-gray-700">{crawlToggleStatus}</p>
         )}
-      </div>
+      </SectionCard>
+
+
 
       {/* Shopify Page Finder */}
-      <div className="border-t pt-6">
+<SectionCard
+  title="Shopify Page Finder (TradePilot Search)"
+  description={
+    <>
+      Search Shopify pages instantly and open the real Shopify editor. Perfect
+      for stores with thousands of pages.
+    </>
+  }
+>
         <h2 className="text-lg font-semibold mb-2">Shopify Page Finder (TradePilot Search)</h2>
 
         <p className="text-sm text-gray-600 mb-4">
@@ -722,10 +767,19 @@ try {
         {searchResults.length === 0 && !searchLoading && searchQuery && (
           <p className="text-sm text-gray-500">No pages found. Try another keyword.</p>
         )}
-      </div>
+</SectionCard>
+
 
       {/* Shopify Sitemap Sync */}
-      <div className="border-t pt-6">
+<SectionCard
+  title="Shopify Sitemap Sync"
+  description={
+    <>
+      Background job that syncs Shopify sitemap into TradePilot. Progress
+      persists across refresh and devices.
+    </>
+  }
+>
         <h2 className="text-lg font-semibold mb-2">Shopify Sitemap Sync</h2>
 
         <p className="text-sm text-gray-600 mb-4">
@@ -829,9 +883,14 @@ try {
             </div>
           </>
         )}
-      </div>
+</SectionCard>
+
+
 {/* Sitemap Rebuild */}
-<div className="border-t pt-6">
+<SectionCard
+  title="Sitemap Rebuild"
+  description="Rebuilds the sitemap_chunks table from shopify_url_inventory."
+>
   <h2 className="text-lg font-semibold mb-2">Sitemap Rebuild</h2>
 
   <p className="text-sm text-gray-600 mb-4">
@@ -885,10 +944,22 @@ try {
 </button>
     </>
   )}
-</div>
+</SectionCard>
+
+
+
 
 {/* Incremental Sitemap Update (SAFE) */}
-<div className="border-t pt-6">
+<SectionCard
+  title="Incremental Sitemap Update (SAFE)"
+  description={
+    <>
+      Appends only NEW URLs into sitemap_chunks without reshuffling existing
+      chunks. Use this after syncing new Shopify pages into{" "}
+      <code>shopify_url_inventory</code>.
+    </>
+  }
+>
   <h2 className="text-lg font-semibold mb-2">Incremental Sitemap Update (SAFE)</h2>
 
   <p className="text-sm text-gray-600 mb-4">
@@ -969,10 +1040,21 @@ try {
   <p className="text-xs text-gray-500 mt-3">
     Note: This runs in the foreground. Leave this page open until it finishes.
   </p>
-</div>
+</SectionCard>
+
+
+
 
       {/* Duplicate Page Cleanup */}
-      <div className="border-t pt-6">
+<SectionCard
+  title="Shopify Duplicate Page Cleanup"
+  description={
+    <>
+      Scans all Shopify pages and removes duplicate titles. Always run a dry
+      test first.
+    </>
+  }
+>
         <h2 className="text-lg font-semibold mb-2">Shopify Duplicate Page Cleanup</h2>
 
         <p className="text-sm text-gray-600 mb-4">
@@ -1036,12 +1118,13 @@ try {
             )}
           </div>
         )}
-      </div>
+</SectionCard>
+
 
       {/* Footer */}
-      <div className="border-t pt-6 text-sm text-gray-500">
-        More features coming soon.
-      </div>
+      <div className="text-xs text-gray-500 text-center py-2">
+  More features coming soon.
+</div>
     </div>
   );
 }

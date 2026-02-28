@@ -29,7 +29,7 @@ async function fetchHtml(url: string) {
    Count internal vs external links (FIXED TYPES)
 ===================================================== */
 function countInternalExternalLinks(
-  $: cheerio.Root,
+  $: cheerio.CheerioAPI,
   baseHost: string
 ) {
   let internal = 0;

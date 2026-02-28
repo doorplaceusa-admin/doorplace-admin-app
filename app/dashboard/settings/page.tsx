@@ -493,7 +493,10 @@ function openSitemapIndex() {
 }
 
 function openSitemapChunk(n: number) {
-  window.open(`https://tradepilot.doorplaceusa.com/sitemap${n}.xml`, "_blank");
+  window.open(
+    `https://tradepilot.doorplaceusa.com/sitemap/${n}.xml`,
+    "_blank"
+  );
 }
 
 async function runIncrementalSitemap() {

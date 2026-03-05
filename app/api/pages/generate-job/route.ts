@@ -330,7 +330,34 @@ if (Array.isArray(state_ids) && state_ids.length > 0) {
     title = `Porch Swing Style Fit Guide in ${c.city_name}, ${stateCodeUpper}`;
     slug = `porch-swing-style-fit-${c.slug}-${stateCodeLower}`;
     break;
+/* -----------------------------
+   NEW GUIDE / IDEA PAGES
+------------------------------ */
 
+case "porch_swing_best_city":
+  title = `Best Porch Swings in ${c.city_name}, ${stateCodeUpper}`;
+  slug = `best-porch-swings-${c.slug}-${stateCodeLower}`;
+  break;
+
+case "porch_swing_ideas_city":
+  title = `Porch Swing Ideas in ${c.city_name}, ${stateCodeUpper}`;
+  slug = `porch-swing-ideas-${c.slug}-${stateCodeLower}`;
+  break;
+
+case "porch_swing_buying_guide_city":
+  title = `Porch Swing Buying Guide in ${c.city_name}, ${stateCodeUpper}`;
+  slug = `porch-swing-buying-guide-${c.slug}-${stateCodeLower}`;
+  break;
+
+case "porch_swing_maintenance_city":
+  title = `Porch Swing Maintenance Guide in ${c.city_name}, ${stateCodeUpper}`;
+  slug = `porch-swing-maintenance-${c.slug}-${stateCodeLower}`;
+  break;
+
+case "porch_swing_safety_city":
+  title = `Porch Swing Safety Guide in ${c.city_name}, ${stateCodeUpper}`;
+  slug = `porch-swing-safety-${c.slug}-${stateCodeLower}`;
+  break;
 
   /* -----------------------------
    DOOR TEMPLATES

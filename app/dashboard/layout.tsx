@@ -390,11 +390,6 @@ async function askAdminAI() {
     label="Sitemap"
   />
   <NavLink
-    href="/dashboard/page-scanner"
-    icon={<ScanLineIcon size={18} />}
-    label="Page Scanner"
-  />
-  <NavLink
     href="/dashboard/google-search-console"
     icon={<DatabaseIcon size={18} />}
     label="Google Analytics"
@@ -405,8 +400,6 @@ async function askAdminAI() {
     label="Page Requests leads"
   />
   
-
-
 
   {/* SYSTEM */}
   <NavLink href="/dashboard/settings" icon={<Settings size={18} />} label="Settings" />
@@ -742,12 +735,6 @@ function MobileBottomNav() {
                 href="/dashboard/sitemap"
                 icon={<MapIcon size={20} />}
                 label="Sitemap"
-                onClick={() => setShowMore(false)}
-              />
-              <MoreTile
-                href="/dashboard/page-scanner"
-                icon={<ScanLine size={20} />}
-                label="Page Scanner"
                 onClick={() => setShowMore(false)}
               />
               <MoreTile

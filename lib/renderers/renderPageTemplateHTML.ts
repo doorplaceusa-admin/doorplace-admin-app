@@ -38,6 +38,16 @@ import { renderPorchSwingHireProCityHTML } from "../templates/renderPorchSwingHi
 import { renderPorchSwingWeightCapacityCityHTML } from "../templates/renderPorchSwingWeightCapacityCityHTML";
 
 /* =========================================
+   NEW GUIDE IMPORTS
+========================================= */
+
+import { renderPorchSwingBestCityHTML } from "../templates/renderPorchSwingBestCityHTML";
+import { renderPorchSwingIdeasCityHTML } from "../templates/renderPorchSwingIdeasCityHTML";
+import { renderPorchSwingBuyingGuideCityHTML } from "../templates/renderPorchSwingBuyingGuideCityHTML";
+import { renderPorchSwingMaintenanceCityHTML } from "../templates/renderPorchSwingMaintenanceCityHTML";
+import { renderPorchSwingSafetyCityHTML } from "../templates/renderPorchSwingSafetyCityHTML";
+
+/* =========================================
    DOOR IMPORTS
 ========================================= */
 
@@ -70,6 +80,7 @@ export function renderPageTemplateHTML(
   const { page_template, variant_key, mountType } = props;
 
   switch (page_template) {
+
     /* -----------------------------
        DOORS
     ------------------------------ */
@@ -216,6 +227,25 @@ export function renderPageTemplateHTML(
 
     case "porch_swing_weight_capacity_city":
       return renderPorchSwingWeightCapacityCityHTML(props);
+
+    /* -----------------------------
+       GUIDES / IDEAS
+    ------------------------------ */
+
+    case "porch_swing_best_city":
+      return renderPorchSwingBestCityHTML(props);
+
+    case "porch_swing_ideas_city":
+      return renderPorchSwingIdeasCityHTML(props);
+
+    case "porch_swing_buying_guide_city":
+      return renderPorchSwingBuyingGuideCityHTML(props);
+
+    case "porch_swing_maintenance_city":
+      return renderPorchSwingMaintenanceCityHTML(props);
+
+    case "porch_swing_safety_city":
+      return renderPorchSwingSafetyCityHTML(props);
 
     default:
       throw new Error(`Unsupported page_template: ${page_template}`);

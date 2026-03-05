@@ -228,6 +228,15 @@ const TEMPLATE_OPTIONS = [
   { value: "porch_swing_weight_capacity_city", label: "Porch Swing – Weight Capacity (City)" },
 
   /* =========================================
+   GUIDES / IDEAS
+========================================= */
+
+{ value: "porch_swing_best_city", label: "Best Porch Swings (City)" },
+{ value: "porch_swing_ideas_city", label: "Porch Swing Ideas (City)" },
+{ value: "porch_swing_buying_guide_city", label: "Porch Swing Buying Guide (City)" },
+{ value: "porch_swing_maintenance_city", label: "Porch Swing Maintenance (City)" },
+{ value: "porch_swing_safety_city", label: "Porch Swing Safety (City)" },
+  /* =========================================
    DOORS
 ========================================= */
 

@@ -1,102 +1,96 @@
-export const dynamic = "force-dynamic";
-
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
-const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN!;
-const API_VERSION = "2024-01";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-function sleep(ms:number){
-  return new Promise(r=>setTimeout(r,ms))
-}
+const SHOPIFY_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN!;
+const SHOPIFY_TOKEN = process.env.SHOPIFY_ADMIN_API_TOKEN!;
 
-async function shopifyFetch(path:string, options:RequestInit = {}){
-
-  const res = await fetch(`https://${SHOP}/admin/api/${API_VERSION}${path}`,{
-    ...options,
-    headers:{
-      "X-Shopify-Access-Token":TOKEN,
-      "Content-Type":"application/json"
+async function getPage(id: string) {
+  const res = await fetch(
+    `https://${SHOPIFY_DOMAIN}/admin/api/2024-01/pages/${id}.json`,
+    {
+      headers: {
+        "X-Shopify-Access-Token": SHOPIFY_TOKEN,
+        "Content-Type": "application/json",
+      },
     }
-  })
+  );
 
-  if(!res.ok){
-    const text = await res.text()
-    throw new Error(text)
+  const json = await res.json();
+  return json.page;
+}
+
+async function updatePage(id: string, body_html: string) {
+  await fetch(
+    `https://${SHOPIFY_DOMAIN}/admin/api/2024-01/pages/${id}.json`,
+    {
+      method: "PUT",
+      headers: {
+        "X-Shopify-Access-Token": SHOPIFY_TOKEN,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        page: {
+          id,
+          body_html,
+        },
+      }),
+    }
+  );
+}
+
+export async function POST() {
+  try {
+
+    console.log("🧹 RESET SWING PAGES STARTED");
+
+    const { data } = await supabaseAdmin
+      .from("shopify_url_inventory")
+      .select("shopify_page_id, handle")
+      .limit(400);
+
+    let cleaned = 0;
+
+    for (const row of data || []) {
+
+      const page = await getPage(row.shopify_page_id);
+      if (!page?.body_html) continue;
+
+      let html = page.body_html;
+
+      if (!html.includes("Porch Swing Guides")) continue;
+
+      const start = html.indexOf("Porch Swing Guides");
+      const end = html.indexOf("Get a Fast Quote");
+
+      if (start === -1 || end === -1) continue;
+
+      const before = html.substring(0, start);
+      const after = html.substring(end);
+
+      const cleanedHTML = before + after;
+
+      await updatePage(row.shopify_page_id, cleanedHTML);
+
+      cleaned++;
+
+      console.log("🧹 Cleaned:", row.handle);
+    }
+
+    return NextResponse.json({
+      success: true,
+      cleaned,
+    });
+
+  } catch (err: any) {
+
+    console.error("❌ ERROR:", err.message);
+
+    return NextResponse.json(
+      { success: false, error: err.message },
+      { status: 500 }
+    );
   }
-
-  return res
-}
-
-function extractHandle(url:string){
-  return url.replace("https://doorplaceusa.com/pages/","")
-}
-
-function removeInsertedSections(html:string){
-
-  html = html.replace(
-    /<h2[^>]*>\s*Porch Swing Guides\s*<\/h2>[\s\S]*?<\/ul>/gi,
-    ""
-  )
-
-  html = html.replace(
-    /<h2[^>]*>\s*Explore More Porch Swings\s*<\/h2>[\s\S]*?<\/ul>/gi,
-    ""
-  )
-
-  return html
-}
-
-export async function POST(){
-
-  console.log("RESET STARTED")
-
-  let fixed = 0
-
-  const {data:pages} = await supabaseAdmin
-    .from("shopify_url_inventory")
-    .select("url")
-    .ilike("url","%porch-swing%")
-    .limit(250)
-
-  for(const p of pages || []){
-
-    const handle = extractHandle(p.url)
-
-    const res = await shopifyFetch(`/pages.json?handle=${handle}`)
-    const data = await res.json()
-
-    const page = data.pages?.[0]
-
-    if(!page) continue
-
-    const html = page.body_html
-
-    const cleaned = removeInsertedSections(html)
-
-    if(cleaned === html) continue
-
-    await shopifyFetch(`/pages/${page.id}.json`,{
-      method:"PUT",
-      body:JSON.stringify({
-        page:{
-          id:page.id,
-          body_html:cleaned
-        }
-      })
-    })
-
-    fixed++
-
-    console.log(`Reset ${handle}`)
-
-    await sleep(300)
-  }
-
-  console.log(`DONE reset ${fixed}`)
-
-  return NextResponse.json({
-    reset:fixed
-  })
 }

@@ -1,13 +1,23 @@
-import { MetadataRoute } from 'next'
+import { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
-        userAgent: '*',
-        allow: '/',
+        userAgent: "*",
+        allow: "/",
+      },
+      {
+        userAgent: "Googlebot",
+        allow: "/",
+      },
+      {
+        userAgent: "Bingbot",
+        allow: "/",
       },
     ],
-    sitemap: 'https://tradepilot.doorplaceusa.com/sitemap.xml',
-  }
+    sitemap: [
+      "https://tradepilot.doorplaceusa.com/sitemap.xml",
+    ],
+  };
 }

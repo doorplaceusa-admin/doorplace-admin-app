@@ -17,6 +17,7 @@ function sleep(ms: number) {
 
 async function shopifyFetch(path: string, options: RequestInit = {}) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+
     const res = await fetch(
       `https://${SHOP}/admin/api/${API_VERSION}${path}`,
       {
@@ -29,7 +30,9 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
     );
 
     if (res.status === 429) {
+
       console.log(`⏳ Shopify throttled… retrying (${attempt}/${MAX_RETRIES})`);
+
       await sleep(2000 * attempt);
 
       if (attempt >= 6) {
@@ -59,12 +62,20 @@ function extractHandle(url: string) {
 }
 
 function formatTitle(slug: string) {
-  return slug.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  return slug
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
+/* ----------------------------------------------------- */
+/* PORCH SWING GUIDES BLOCK */
+/* ----------------------------------------------------- */
+
 const GUIDE_BLOCK = `
-<div style="margin-top:40px">
-<h2>Porch Swing Guides</h2>
+<div style="margin-top:60px;border-top:1px solid #ddd;padding-top:30px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
+
+<h2 style="text-align:center">Porch Swing Guides</h2>
+
 <ul>
 <li><a href="/pages/best-porch-swings">Best Porch Swings</a></li>
 <li><a href="/pages/porch-swing-ideas">Porch Swing Ideas</a></li>
@@ -72,6 +83,7 @@ const GUIDE_BLOCK = `
 <li><a href="/pages/porch-swing-maintenance">Porch Swing Maintenance</a></li>
 <li><a href="/pages/porch-swing-safety-guide">Porch Swing Safety Guide</a></li>
 </ul>
+
 </div>
 `;
 
@@ -119,34 +131,47 @@ export async function POST() {
 
     const html = (page.body_html || "").toLowerCase();
 
-    if (html.includes("porch swing guides")) continue;
+    if (html.includes("porch swing guides")) {
+      continue;
+    }
 
-    const { data: pointer2 } = await supabaseAdmin
-      .from("internal_link_pointer")
-      .select("*")
-      .eq("id", 1)
-      .single();
+    /* ------------------------------------------- */
+    /* DYNAMIC LINK GENERATION */
+    /* ------------------------------------------- */
 
-    const linkOffset = pointer2?.link_pointer || 0;
+    const dynamicStart = pageOffset + processed * 6;
 
     const { data: urls } = await supabaseAdmin
       .from("shopify_url_inventory")
       .select("url")
-      .range(linkOffset, linkOffset + 5);
+      .ilike("url", "%porch-swing%")
+      .range(dynamicStart, dynamicStart + 5);
 
     if (!urls) continue;
 
     const dynamicLinks = `
-<h2>Explore More Porch Swings</h2>
+<div style="margin-top:40px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
+
+<h2 style="text-align:center">Explore More Porch Swings</h2>
+
 <ul>
 ${urls.map((u: any) => {
+
   const slug = extractHandle(u.url);
+
   return `<li><a href="/pages/${slug}">${formatTitle(slug)}</a></li>`;
+
 }).join("")}
+
 </ul>
+
+</div>
 `;
 
-    const updatedHTML = (page.body_html || "") + GUIDE_BLOCK + dynamicLinks;
+    const updatedHTML =
+      (page.body_html || "") +
+      GUIDE_BLOCK +
+      dynamicLinks;
 
     await shopifyFetch(`/pages/${page.id}.json`, {
       method: "PUT",
@@ -159,13 +184,6 @@ ${urls.map((u: any) => {
     });
 
     updated++;
-
-    await supabaseAdmin
-      .from("internal_link_pointer")
-      .update({
-        link_pointer: linkOffset + 6,
-      })
-      .eq("id", 1);
 
     await sleep(SHOPIFY_DELAY_MS);
   }

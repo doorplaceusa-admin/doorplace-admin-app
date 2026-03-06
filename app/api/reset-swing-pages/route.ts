@@ -1,96 +1,102 @@
-import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
-
-export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const SHOPIFY_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN!;
-const SHOPIFY_TOKEN = process.env.SHOPIFY_ADMIN_API_TOKEN!;
+import { NextResponse } from "next/server";
 
-async function getPage(id: string) {
-  const res = await fetch(
-    `https://${SHOPIFY_DOMAIN}/admin/api/2024-01/pages/${id}.json`,
-    {
-      headers: {
-        "X-Shopify-Access-Token": SHOPIFY_TOKEN,
-        "Content-Type": "application/json",
-      },
-    }
-  );
+const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
+const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN!;
+const API_VERSION = "2024-01";
 
-  const json = await res.json();
-  return json.page;
+function sleep(ms:number){
+  return new Promise(r => setTimeout(r, ms));
 }
 
-async function updatePage(id: string, body_html: string) {
-  await fetch(
-    `https://${SHOPIFY_DOMAIN}/admin/api/2024-01/pages/${id}.json`,
-    {
-      method: "PUT",
-      headers: {
-        "X-Shopify-Access-Token": SHOPIFY_TOKEN,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        page: {
-          id,
-          body_html,
-        },
-      }),
+async function shopifyFetch(path:string, options:RequestInit = {}){
+
+  const res = await fetch(`https://${SHOP}/admin/api/${API_VERSION}${path}`,{
+    ...options,
+    headers:{
+      "X-Shopify-Access-Token":TOKEN,
+      "Content-Type":"application/json"
     }
-  );
+  });
+
+  if(!res.ok){
+    const text = await res.text();
+    console.error("Shopify error:", text);
+    throw new Error(text);
+  }
+
+  return res;
 }
 
-export async function POST() {
-  try {
+export async function POST(){
 
-    console.log("🧹 RESET SWING PAGES STARTED");
+  console.log("RESET SWING PAGES STARTED");
 
-    const { data } = await supabaseAdmin
-      .from("shopify_url_inventory")
-      .select("shopify_page_id, handle")
-      .limit(400);
+  let scanned = 0;
+  let fixed = 0;
 
-    let cleaned = 0;
+  let nextPageInfo:string|null = null;
 
-    for (const row of data || []) {
+  do {
 
-      const page = await getPage(row.shopify_page_id);
-      if (!page?.body_html) continue;
+    const res = await shopifyFetch(
+      `/pages.json?limit=250${nextPageInfo ? `&page_info=${nextPageInfo}` : ""}`
+    );
 
-      let html = page.body_html;
+    const data = await res.json();
+    const pages = data.pages || [];
 
-      if (!html.includes("Porch Swing Guides")) continue;
+    console.log(`Batch pages: ${pages.length}`);
+
+    for(const page of pages){
+
+      scanned++;
+
+      let html = page.body_html || "";
+
+      if(!html.includes("Porch Swing Guides")) continue;
 
       const start = html.indexOf("Porch Swing Guides");
       const end = html.indexOf("Get a Fast Quote");
 
-      if (start === -1 || end === -1) continue;
+      if(start === -1 || end === -1) continue;
 
-      const before = html.substring(0, start);
+      const before = html.substring(0,start);
       const after = html.substring(end);
 
       const cleanedHTML = before + after;
 
-      await updatePage(row.shopify_page_id, cleanedHTML);
+      await shopifyFetch(`/pages/${page.id}.json`,{
+        method:"PUT",
+        body:JSON.stringify({
+          page:{
+            id:page.id,
+            body_html:cleanedHTML
+          }
+        })
+      });
 
-      cleaned++;
+      fixed++;
 
-      console.log("🧹 Cleaned:", row.handle);
+      console.log(`Cleaned page ${page.handle}`);
+
+      await sleep(300);
     }
 
-    return NextResponse.json({
-      success: true,
-      cleaned,
-    });
+    const link = res.headers.get("link");
+    const match = link?.match(/page_info=([^&>]+)>; rel="next"/);
+    nextPageInfo = match ? match[1] : null;
 
-  } catch (err: any) {
+    console.log(`Progress scanned=${scanned} fixed=${fixed}`);
 
-    console.error("❌ ERROR:", err.message);
+  } while(nextPageInfo);
 
-    return NextResponse.json(
-      { success: false, error: err.message },
-      { status: 500 }
-    );
-  }
+  console.log("RESET COMPLETE");
+
+  return NextResponse.json({
+    success:true,
+    scanned,
+    fixed
+  });
 }

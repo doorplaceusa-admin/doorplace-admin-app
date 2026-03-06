@@ -33,20 +33,39 @@ function extractHandle(url:string){
   return url.replace("https://doorplaceusa.com/pages/","")
 }
 
-/* clean out broken blocks */
+function cleanBrokenBlocks(html:string){
 
-function removeBrokenBlocks(html:string){
+  html = html.replace(/<h2[^>]*>Porch Swing Guides[\s\S]*?<\/div>/gi,"")
+  html = html.replace(/<h2[^>]*>Explore More Porch Swings[\s\S]*?<\/div>/gi,"")
 
   return html
-    .replace(/<h2[^>]*>Porch Swing Guides[\s\S]*?<\/div>/gi,"")
-    .replace(/<h2[^>]*>Explore More Porch Swings[\s\S]*?<\/div>/gi,"")
 }
+
+const GUIDE_BLOCK = `
+<div style="margin-top:45px">
+
+<h2 style="color:#b80d0d">
+Porch Swing Guides
+</h2>
+
+<ul style="line-height:1.9">
+
+<li><a href="/pages/best-porch-swings">Best Porch Swings</a></li>
+<li><a href="/pages/porch-swing-ideas">Porch Swing Ideas</a></li>
+<li><a href="/pages/porch-swing-buying-guide">Porch Swing Buying Guide</a></li>
+<li><a href="/pages/porch-swing-maintenance">Porch Swing Maintenance</a></li>
+<li><a href="/pages/porch-swing-safety-guide">Porch Swing Safety Guide</a></li>
+
+</ul>
+
+</div>
+`
 
 export async function POST(){
 
-  console.log("FIX SWING LAYOUT STARTED")
+  console.log("REPAIR STARTED")
 
-  let updated = 0
+  let repaired = 0
 
   const {data:pages} = await supabaseAdmin
     .from("shopify_url_inventory")
@@ -67,23 +86,11 @@ export async function POST(){
 
     let html = page.body_html
 
-    html = removeBrokenBlocks(html)
-
-    /* insert after resources section */
+    html = cleanBrokenBlocks(html)
 
     html = html.replace(
-      /(Helpful Style & Design Resources[\s\S]*?<\/ul>)/i,
-      `$1
-<div style="margin-top:40px">
-<h2>Porch Swing Guides</h2>
-<ul>
-<li><a href="/pages/best-porch-swings">Best Porch Swings</a></li>
-<li><a href="/pages/porch-swing-ideas">Porch Swing Ideas</a></li>
-<li><a href="/pages/porch-swing-buying-guide">Porch Swing Buying Guide</a></li>
-<li><a href="/pages/porch-swing-maintenance">Porch Swing Maintenance</a></li>
-<li><a href="/pages/porch-swing-safety-guide">Porch Swing Safety Guide</a></li>
-</ul>
-</div>`
+      /Get a Fast Quote/i,
+      `${GUIDE_BLOCK}Get a Fast Quote`
     )
 
     await shopifyFetch(`/pages/${page.id}.json`,{
@@ -96,16 +103,16 @@ export async function POST(){
       })
     })
 
-    updated++
+    repaired++
 
     console.log(`Repaired ${handle}`)
 
-    await sleep(500)
+    await sleep(400)
   }
 
-  console.log(`DONE repaired ${updated}`)
+  console.log(`DONE repaired ${repaired}`)
 
   return NextResponse.json({
-    repaired:updated
+    repaired
   })
 }

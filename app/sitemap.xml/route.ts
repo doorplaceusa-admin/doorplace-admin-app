@@ -9,7 +9,7 @@ export async function GET() {
   try {
     console.log("🧭 Generating TradePilot Sitemap Index...");
 
-    // Fetch ALL chunk numbers safely
+    // Get ALL chunk numbers from the database
     const { data, error } = await supabaseAdmin
       .from("sitemap_chunks")
       .select("chunk_number")
@@ -22,11 +22,12 @@ export async function GET() {
 
     if (!data || data.length === 0) {
       console.log("⚠️ No sitemap chunks found.");
-      return new NextResponse("No sitemap chunks", { status: 200 });
+      return new NextResponse("No sitemap chunks available", { status: 200 });
     }
 
     console.log(`✅ Total Chunks Found: ${data.length}`);
 
+    // Generate sitemap index entries
     const sitemapLinks = data
       .map(
         (row) => `

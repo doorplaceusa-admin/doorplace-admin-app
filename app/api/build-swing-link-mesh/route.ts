@@ -20,21 +20,42 @@ function sleep(ms: number) {
 /* -------------------------------------------------- */
 
 async function shopifyFetch(path: string, options: RequestInit = {}) {
-  const res = await fetch(`https://${SHOP}/admin/api/${API_VERSION}${path}`, {
-    ...options,
-    headers: {
-      "X-Shopify-Access-Token": TOKEN,
-      "Content-Type": "application/json",
-    },
-  });
 
-  if (!res.ok) {
-    const text = await res.text();
-    console.error(`❌ Shopify error ${res.status}`, text);
-    throw new Error(text);
+  while (true) {
+
+    const res = await fetch(`https://${SHOP}/admin/api/${API_VERSION}${path}`, {
+      ...options,
+      headers: {
+        "X-Shopify-Access-Token": TOKEN,
+        "Content-Type": "application/json",
+      },
+    });
+
+    /* -------------------------------- */
+    /* Shopify Rate Limit Protection    */
+    /* -------------------------------- */
+
+    if (res.status === 429) {
+
+      console.log("⚠️ Shopify rate limit hit. Waiting 3 seconds...");
+
+      await sleep(3000);
+
+      continue;
+    }
+
+    if (!res.ok) {
+
+      const text = await res.text();
+
+      console.error(`❌ Shopify error ${res.status}`, text);
+
+      throw new Error(text);
+    }
+
+    return res;
+
   }
-
-  return res;
 }
 
 /* -------------------------------------------------- */

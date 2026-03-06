@@ -33,17 +33,24 @@ function extractHandle(url:string){
   return url.replace("https://doorplaceusa.com/pages/","")
 }
 
-function cleanInsertedBlocks(html:string){
+function removeInsertedSections(html:string){
 
-  html = html.replace(/<div[^>]*>\s*<h2[^>]*>Porch Swing Guides[\s\S]*?<\/div>/gi,"")
-  html = html.replace(/<div[^>]*>\s*<h2[^>]*>Explore More Porch Swings[\s\S]*?<\/div>/gi,"")
+  html = html.replace(
+    /<h2[^>]*>\s*Porch Swing Guides\s*<\/h2>[\s\S]*?<\/ul>/gi,
+    ""
+  )
+
+  html = html.replace(
+    /<h2[^>]*>\s*Explore More Porch Swings\s*<\/h2>[\s\S]*?<\/ul>/gi,
+    ""
+  )
 
   return html
 }
 
 export async function POST(){
 
-  console.log("RESET SWING PAGES STARTED")
+  console.log("RESET STARTED")
 
   let fixed = 0
 
@@ -64,9 +71,9 @@ export async function POST(){
 
     if(!page) continue
 
-    let html = page.body_html
+    const html = page.body_html
 
-    const cleaned = cleanInsertedBlocks(html)
+    const cleaned = removeInsertedSections(html)
 
     if(cleaned === html) continue
 
@@ -84,10 +91,10 @@ export async function POST(){
 
     console.log(`Reset ${handle}`)
 
-    await sleep(350)
+    await sleep(300)
   }
 
-  console.log(`DONE reset ${fixed} pages`)
+  console.log(`DONE reset ${fixed}`)
 
   return NextResponse.json({
     reset:fixed

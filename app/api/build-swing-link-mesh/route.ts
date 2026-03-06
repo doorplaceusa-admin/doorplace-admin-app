@@ -7,9 +7,17 @@ const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
 const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN!;
 const API_VERSION = "2024-01";
 
+/* -------------------------------------------------- */
+/* SLEEP (Shopify rate control)                        */
+/* -------------------------------------------------- */
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+/* -------------------------------------------------- */
+/* SHOPIFY FETCH                                       */
+/* -------------------------------------------------- */
 
 async function shopifyFetch(path: string, options: RequestInit = {}) {
 
@@ -30,15 +38,31 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
   return res;
 }
 
+/* -------------------------------------------------- */
+/* FORMAT TITLE                                        */
+/* -------------------------------------------------- */
+
 function formatTitle(slug: string) {
   return slug
     .replace(/-/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
-/* ---------------------------------- */
-/* GUIDE BLOCK                         */
-/* ---------------------------------- */
+/* -------------------------------------------------- */
+/* EXTRACT HANDLE FROM URL                             */
+/* -------------------------------------------------- */
+
+function extractHandle(url: string) {
+
+  return url
+    .replace("https://doorplaceusa.com/pages/", "")
+    .replace("/pages/", "")
+    .trim();
+}
+
+/* -------------------------------------------------- */
+/* GUIDE BLOCK                                         */
+/* -------------------------------------------------- */
 
 const GUIDE_BLOCK = `
 <div style="margin-top:45px;">
@@ -49,35 +73,59 @@ Porch Swing Guides
 
 <ul style="line-height:1.9;font-size:16px;">
 
-<li><a href="https://doorplaceusa.com/pages/best-porch-swings" style="color:#b80d0d;">Best Porch Swings</a></li>
-<li><a href="https://doorplaceusa.com/pages/porch-swing-ideas" style="color:#b80d0d;">Porch Swing Ideas</a></li>
-<li><a href="https://doorplaceusa.com/pages/porch-swing-buying-guide" style="color:#b80d0d;">Porch Swing Buying Guide</a></li>
-<li><a href="https://doorplaceusa.com/pages/porch-swing-maintenance" style="color:#b80d0d;">Porch Swing Maintenance</a></li>
-<li><a href="https://doorplaceusa.com/pages/porch-swing-safety-guide" style="color:#b80d0d;">Porch Swing Safety Guide</a></li>
+<li>
+<a href="https://doorplaceusa.com/pages/best-porch-swings" style="color:#b80d0d;">
+Best Porch Swings
+</a>
+</li>
+
+<li>
+<a href="https://doorplaceusa.com/pages/porch-swing-ideas" style="color:#b80d0d;">
+Porch Swing Ideas
+</a>
+</li>
+
+<li>
+<a href="https://doorplaceusa.com/pages/porch-swing-buying-guide" style="color:#b80d0d;">
+Porch Swing Buying Guide
+</a>
+</li>
+
+<li>
+<a href="https://doorplaceusa.com/pages/porch-swing-maintenance" style="color:#b80d0d;">
+Porch Swing Maintenance
+</a>
+</li>
+
+<li>
+<a href="https://doorplaceusa.com/pages/porch-swing-safety-guide" style="color:#b80d0d;">
+Porch Swing Safety Guide
+</a>
+</li>
 
 </ul>
 
 </div>
 `;
 
-/* ---------------------------------- */
-/* MAIN ROUTE                          */
-/* ---------------------------------- */
+/* -------------------------------------------------- */
+/* MAIN ROUTE                                          */
+/* -------------------------------------------------- */
 
 export async function POST() {
 
-  console.log("==================================");
+  console.log("=======================================");
   console.log("🚀 SUPABASE LINK MESH STARTED");
-  console.log("==================================");
+  console.log("=======================================");
 
   let processed = 0;
   let updated = 0;
 
   try {
 
-    /* ---------------------------------- */
-    /* Get pointer                        */
-    /* ---------------------------------- */
+    /* -------------------------------------------------- */
+    /* GET POINTER                                        */
+    /* -------------------------------------------------- */
 
     const { data: pointer } = await supabaseAdmin
       .from("internal_link_pointer")
@@ -87,19 +135,19 @@ export async function POST() {
 
     const offset = pointer?.current_offset || 0;
 
-    /* ---------------------------------- */
-    /* Get swing pages from inventory     */
-    /* ---------------------------------- */
+    /* -------------------------------------------------- */
+    /* GET SWING PAGES FROM INVENTORY                     */
+    /* -------------------------------------------------- */
 
     const { data: pages } = await supabaseAdmin
       .from("shopify_url_inventory")
-      .select("slug")
-      .ilike("slug", "%porch-swing%")
+      .select("url")
+      .ilike("url", "%porch-swing%")
       .range(offset, offset + 249);
 
     if (!pages || pages.length === 0) {
 
-      console.log("No pages found");
+      console.log("❌ No pages found");
 
       return NextResponse.json({
         success: true,
@@ -109,22 +157,29 @@ export async function POST() {
 
     console.log(`Loaded ${pages.length} pages from inventory`);
 
+    /* -------------------------------------------------- */
+    /* PROCESS PAGES                                      */
+    /* -------------------------------------------------- */
+
     for (const p of pages) {
+
+      const handle = extractHandle(p.url);
 
       processed++;
 
-      const slug = p.slug;
+      /* -------------------------------------------------- */
+      /* GET SHOPIFY PAGE                                   */
+      /* -------------------------------------------------- */
 
-      /* ---------------------------------- */
-      /* Get Shopify page                   */
-      /* ---------------------------------- */
-
-      const res = await shopifyFetch(`/pages.json?handle=${slug}`);
+      const res = await shopifyFetch(`/pages.json?handle=${handle}`);
       const data = await res.json();
 
       const page = data.pages?.[0];
 
-      if (!page) continue;
+      if (!page) {
+        console.log(`⚠️ Page not found: ${handle}`);
+        continue;
+      }
 
       const html = (page.body_html || "").toLowerCase();
 
@@ -132,17 +187,28 @@ export async function POST() {
         continue;
       }
 
-      /* ---------------------------------- */
-      /* Get dynamic URLs                   */
-      /* ---------------------------------- */
+      /* -------------------------------------------------- */
+      /* GET POINTER AGAIN                                  */
+      /* -------------------------------------------------- */
+
+      const { data: pointer2 } = await supabaseAdmin
+        .from("internal_link_pointer")
+        .select("*")
+        .eq("id", 1)
+        .single();
+
+      const linkOffset = pointer2?.current_offset || 0;
+
+      /* -------------------------------------------------- */
+      /* GET DYNAMIC LINKS                                  */
+      /* -------------------------------------------------- */
 
       const { data: urls } = await supabaseAdmin
         .from("shopify_url_inventory")
-        .select("slug")
-        .order("slug")
-        .range(offset, offset + 5);
+        .select("url")
+        .range(linkOffset, linkOffset + 5);
 
-      if (!urls) continue;
+      if (!urls || urls.length === 0) continue;
 
       const dynamicLinks = `
 <div style="margin-top:45px;">
@@ -153,13 +219,19 @@ Explore More Porch Swings
 
 <ul style="line-height:1.9;font-size:16px;">
 
-${urls.map((u:any)=>`
+${urls.map((u:any)=>{
+
+const slug = extractHandle(u.url)
+
+return `
 <li>
-<a href="https://doorplaceusa.com/pages/${u.slug}" style="color:#b80d0d;">
-${formatTitle(u.slug)}
+<a href="https://doorplaceusa.com/pages/${slug}" style="color:#b80d0d;">
+${formatTitle(slug)}
 </a>
 </li>
-`).join("")}
+`
+
+}).join("")}
 
 </ul>
 
@@ -168,9 +240,9 @@ ${formatTitle(u.slug)}
 
       const updatedHTML = page.body_html + GUIDE_BLOCK + dynamicLinks;
 
-      /* ---------------------------------- */
-      /* Update page                        */
-      /* ---------------------------------- */
+      /* -------------------------------------------------- */
+      /* UPDATE SHOPIFY PAGE                                */
+      /* -------------------------------------------------- */
 
       await shopifyFetch(`/pages/${page.id}.json`, {
         method: "PUT",
@@ -184,14 +256,25 @@ ${formatTitle(u.slug)}
 
       updated++;
 
-      console.log(`✅ Updated ${slug}`);
+      console.log(`✅ Updated ${handle}`);
+
+      /* -------------------------------------------------- */
+      /* MOVE POINTER                                       */
+      /* -------------------------------------------------- */
+
+      await supabaseAdmin
+        .from("internal_link_pointer")
+        .update({
+          current_offset: linkOffset + 6,
+        })
+        .eq("id", 1);
 
       await sleep(600);
     }
 
-    /* ---------------------------------- */
-    /* Move pointer                       */
-    /* ---------------------------------- */
+    /* -------------------------------------------------- */
+    /* MOVE MAIN POINTER                                  */
+    /* -------------------------------------------------- */
 
     await supabaseAdmin
       .from("internal_link_pointer")
@@ -200,10 +283,10 @@ ${formatTitle(u.slug)}
       })
       .eq("id", 1);
 
-    console.log("==================================");
+    console.log("=======================================");
     console.log(`Processed: ${processed}`);
     console.log(`Updated: ${updated}`);
-    console.log("==================================");
+    console.log("=======================================");
 
     return NextResponse.json({
       success: true,
@@ -213,7 +296,7 @@ ${formatTitle(u.slug)}
 
   } catch (err:any) {
 
-    console.error(err);
+    console.error("❌ ERROR:", err.message);
 
     return NextResponse.json(
       {

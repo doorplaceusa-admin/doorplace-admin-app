@@ -22,8 +22,27 @@ export async function OPTIONS() {
 /* ======================================================
    BOT / CRAWLER DETECTOR (FINAL + HARDENED)
 ====================================================== */
-function detectCrawler(userAgent: string) {
+function detectCrawler(userAgent: string, ip: string | null) {
   const ua = (userAgent || "").toLowerCase();
+
+  /* -------------------------------
+     IP Range Detection (HIGH CONFIDENCE)
+  -------------------------------- */
+  if (ip) {
+    if (ip.startsWith("66.249.")) return "googlebot";
+
+    if (ip.startsWith("157.55.") || ip.startsWith("40.77.")) return "bingbot";
+
+    if (ip.startsWith("57.141.")) return "facebook";
+
+    if (ip.startsWith("17.")) return "applebot";
+
+    if (ip.startsWith("34.") || ip.startsWith("35.")) return "google-cloud";
+
+    if (ip.startsWith("52.") || ip.startsWith("54.")) return "amazon";
+
+    if (ip.startsWith("20.15.")) return "openai";
+  }
 
   /* -------------------------------
      Major Search Engine Crawlers
@@ -108,7 +127,7 @@ export async function POST(req: Request) {
       req.headers.get("x-forwarded-for") ||
       null;
 
-    const crawler = detectCrawler(ua);
+    const crawler = detectCrawler(ua, ip);
 
     console.log("🔎 VIEW CHECK:", {
       crawler: crawler || "human",
@@ -117,12 +136,12 @@ export async function POST(req: Request) {
     });
 
     /* ============================================
-       3) BOT → SEO CRAWL EVENT ONLY (NEVER HUMAN)
+       3) BOT → SEO CRAWL EVENT ONLY
     ============================================ */
     if (crawler) {
       console.log("🔵 SEO BOT HIT:", crawler, page_url);
 
-      /* ✅ MASTER SAFE MODE */
+      /* MASTER SAFE MODE */
       if (process.env.CRAWLER_LOG_ONLY === "true") {
         return new Response("Crawler detected (log only)", {
           status: 200,
@@ -130,7 +149,7 @@ export async function POST(req: Request) {
         });
       }
 
-      /* ✅ Dashboard Toggle */
+      /* Dashboard Toggle */
       const { data: settings } = await supabase
         .from("system_settings")
         .select("crawl_logging_enabled")
@@ -146,7 +165,7 @@ export async function POST(req: Request) {
         });
       }
 
-      /* ✅ Insert Crawl Event */
+      /* Insert Crawl Event */
       const { error } = await supabase.from("seo_crawl_events").insert({
         page_url,
         page_key,
@@ -189,7 +208,7 @@ export async function POST(req: Request) {
         : null;
     }
 
-    console.log("🔥🔥🔥🔥 HUMAN VIEW🔥🔥🔥🔥:", page_url, city, state);
+    console.log("🔥🔥🔥🔥 HUMAN VIEW 🔥🔥🔥🔥:", page_url, city, state);
 
     /* ============================================
        5) HUMAN → INSERT REAL PAGE VIEW

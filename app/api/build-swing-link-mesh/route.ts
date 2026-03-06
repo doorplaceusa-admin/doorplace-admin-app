@@ -36,6 +36,10 @@ function formatTitle(slug: string) {
     .replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
+/* -------------------------------------------------- */
+/* HUB GUIDE BLOCK                                    */
+/* -------------------------------------------------- */
+
 const GUIDE_BLOCK = `
 <div style="margin-top:45px;">
 
@@ -45,20 +49,44 @@ Porch Swing Guides
 
 <ul style="line-height:1.9;font-size:16px;">
 
-<li><a href="https://doorplaceusa.com/pages/best-porch-swings" style="color:#b80d0d;">Best Porch Swings</a></li>
+<li>
+<a href="https://doorplaceusa.com/pages/best-porch-swings" style="color:#b80d0d;">
+Best Porch Swings
+</a>
+</li>
 
-<li><a href="https://doorplaceusa.com/pages/porch-swing-ideas" style="color:#b80d0d;">Porch Swing Ideas</a></li>
+<li>
+<a href="https://doorplaceusa.com/pages/porch-swing-ideas" style="color:#b80d0d;">
+Porch Swing Ideas
+</a>
+</li>
 
-<li><a href="https://doorplaceusa.com/pages/porch-swing-buying-guide" style="color:#b80d0d;">Porch Swing Buying Guide</a></li>
+<li>
+<a href="https://doorplaceusa.com/pages/porch-swing-buying-guide" style="color:#b80d0d;">
+Porch Swing Buying Guide
+</a>
+</li>
 
-<li><a href="https://doorplaceusa.com/pages/porch-swing-maintenance" style="color:#b80d0d;">Porch Swing Maintenance</a></li>
+<li>
+<a href="https://doorplaceusa.com/pages/porch-swing-maintenance" style="color:#b80d0d;">
+Porch Swing Maintenance
+</a>
+</li>
 
-<li><a href="https://doorplaceusa.com/pages/porch-swing-safety-guide" style="color:#b80d0d;">Porch Swing Safety Guide</a></li>
+<li>
+<a href="https://doorplaceusa.com/pages/porch-swing-safety-guide" style="color:#b80d0d;">
+Porch Swing Safety Guide
+</a>
+</li>
 
 </ul>
 
 </div>
 `;
+
+/* -------------------------------------------------- */
+/* MAIN ROUTE                                         */
+/* -------------------------------------------------- */
 
 export async function POST() {
 
@@ -95,18 +123,33 @@ export async function POST() {
         const html = (page.body_html || "").toLowerCase();
         const handle = (page.handle || "").toLowerCase();
 
-        const hasResources = html.includes("helpful resources");
-        const isSwingPage = handle.includes("swing");
+        /* -------------------------------------------------- */
+        /* BETTER DETECTION                                   */
+        /* -------------------------------------------------- */
 
-        if (!hasResources || !isSwingPage) continue;
+        const isSwingPage =
+          handle.includes("swing") ||
+          html.includes("porch swing");
+
+        const hasResources =
+          html.includes("helpful") &&
+          html.includes("resource");
+
+        if (!hasResources || !isSwingPage) {
+          continue;
+        }
+
+        console.log(`🎯 Swing page detected: ${handle}`);
 
         swingPages++;
 
-        if (html.includes("explore more porch swings")) continue;
+        if (html.includes("explore more porch swings")) {
+          continue;
+        }
 
-        /* ---------------------------------- */
-        /* Get pointer                        */
-        /* ---------------------------------- */
+        /* -------------------------------------------------- */
+        /* GET POINTER                                        */
+        /* -------------------------------------------------- */
 
         const { data: pointer } = await supabaseAdmin
           .from("internal_link_pointer")
@@ -116,9 +159,9 @@ export async function POST() {
 
         const offset = pointer?.current_offset || 0;
 
-        /* ---------------------------------- */
-        /* Pull 6 URLs                        */
-        /* ---------------------------------- */
+        /* -------------------------------------------------- */
+        /* GET 6 URLS FROM INVENTORY                          */
+        /* -------------------------------------------------- */
 
         const { data: urls } = await supabaseAdmin
           .from("shopify_url_inventory")
@@ -128,6 +171,10 @@ export async function POST() {
 
         if (!urls || urls.length === 0) continue;
 
+        /* -------------------------------------------------- */
+        /* BUILD DYNAMIC LINK BLOCK                           */
+        /* -------------------------------------------------- */
+
         const dynamicLinks = `
 <div style="margin-top:45px;">
 
@@ -136,6 +183,7 @@ Explore More Porch Swings
 </h2>
 
 <ul style="line-height:1.9;font-size:16px;">
+
 ${urls
   .map(
     (u: any) => `
@@ -143,9 +191,11 @@ ${urls
 <a href="https://doorplaceusa.com/pages/${u.slug}" style="color:#b80d0d;">
 ${formatTitle(u.slug)}
 </a>
-</li>`
+</li>
+`
   )
   .join("")}
+
 </ul>
 
 </div>
@@ -155,6 +205,10 @@ ${formatTitle(u.slug)}
           page.body_html +
           GUIDE_BLOCK +
           dynamicLinks;
+
+        /* -------------------------------------------------- */
+        /* UPDATE SHOPIFY PAGE                                */
+        /* -------------------------------------------------- */
 
         await shopifyFetch(`/pages/${page.id}.json`, {
           method: "PUT",
@@ -168,6 +222,10 @@ ${formatTitle(u.slug)}
 
         updated++;
 
+        /* -------------------------------------------------- */
+        /* MOVE POINTER                                       */
+        /* -------------------------------------------------- */
+
         await supabaseAdmin
           .from("internal_link_pointer")
           .update({
@@ -177,7 +235,7 @@ ${formatTitle(u.slug)}
 
         console.log(`✅ Updated page ${page.id}`);
 
-        await sleep(350);
+        await sleep(600);
       }
 
       const link = res.headers.get("link");

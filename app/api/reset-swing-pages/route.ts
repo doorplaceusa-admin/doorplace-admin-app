@@ -33,45 +33,25 @@ function extractHandle(url:string){
   return url.replace("https://doorplaceusa.com/pages/","")
 }
 
-function cleanBrokenBlocks(html:string){
+function cleanInsertedBlocks(html:string){
 
-  html = html.replace(/<h2[^>]*>Porch Swing Guides[\s\S]*?<\/div>/gi,"")
-  html = html.replace(/<h2[^>]*>Explore More Porch Swings[\s\S]*?<\/div>/gi,"")
+  html = html.replace(/<div[^>]*>\s*<h2[^>]*>Porch Swing Guides[\s\S]*?<\/div>/gi,"")
+  html = html.replace(/<div[^>]*>\s*<h2[^>]*>Explore More Porch Swings[\s\S]*?<\/div>/gi,"")
 
   return html
 }
 
-const GUIDE_BLOCK = `
-<div style="margin-top:45px">
-
-<h2 style="color:#b80d0d">
-Porch Swing Guides
-</h2>
-
-<ul style="line-height:1.9">
-
-<li><a href="/pages/best-porch-swings">Best Porch Swings</a></li>
-<li><a href="/pages/porch-swing-ideas">Porch Swing Ideas</a></li>
-<li><a href="/pages/porch-swing-buying-guide">Porch Swing Buying Guide</a></li>
-<li><a href="/pages/porch-swing-maintenance">Porch Swing Maintenance</a></li>
-<li><a href="/pages/porch-swing-safety-guide">Porch Swing Safety Guide</a></li>
-
-</ul>
-
-</div>
-`
-
 export async function POST(){
 
-  console.log("REPAIR STARTED")
+  console.log("RESET SWING PAGES STARTED")
 
-  let repaired = 0
+  let fixed = 0
 
   const {data:pages} = await supabaseAdmin
     .from("shopify_url_inventory")
     .select("url")
     .ilike("url","%porch-swing%")
-    .limit(200)
+    .limit(250)
 
   for(const p of pages || []){
 
@@ -86,33 +66,30 @@ export async function POST(){
 
     let html = page.body_html
 
-    html = cleanBrokenBlocks(html)
+    const cleaned = cleanInsertedBlocks(html)
 
-    html = html.replace(
-      /Get a Fast Quote/i,
-      `${GUIDE_BLOCK}Get a Fast Quote`
-    )
+    if(cleaned === html) continue
 
     await shopifyFetch(`/pages/${page.id}.json`,{
       method:"PUT",
       body:JSON.stringify({
         page:{
           id:page.id,
-          body_html:html
+          body_html:cleaned
         }
       })
     })
 
-    repaired++
+    fixed++
 
-    console.log(`Repaired ${handle}`)
+    console.log(`Reset ${handle}`)
 
-    await sleep(400)
+    await sleep(350)
   }
 
-  console.log(`DONE repaired ${repaired}`)
+  console.log(`DONE reset ${fixed} pages`)
 
   return NextResponse.json({
-    repaired
+    reset:fixed
   })
 }

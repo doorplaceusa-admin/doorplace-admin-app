@@ -7,10 +7,6 @@ const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
 const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN!;
 const API_VERSION = "2024-01";
 
-/* ======================================================
-   RATE CONTROL
-====================================================== */
-
 const SHOPIFY_DELAY_MS = 650;
 const COOLDOWN_MS = 60000;
 const MAX_RETRIES = 10;
@@ -18,10 +14,6 @@ const MAX_RETRIES = 10;
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-
-/* ======================================================
-   SAFE SHOPIFY FETCH
-====================================================== */
 
 async function shopifyFetch(path: string, options: RequestInit = {}) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
@@ -50,24 +42,13 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
 
     if (!res.ok) {
       const text = await res.text();
-      console.error(`❌ Shopify error ${res.status}`, text);
       throw new Error(text);
     }
 
     return res;
   }
 
-  throw new Error("Shopify request failed after retries");
-}
-
-/* ======================================================
-   HELPERS
-====================================================== */
-
-function formatTitle(slug: string) {
-  return slug
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (l) => l.toUpperCase());
+  throw new Error("Shopify request failed");
 }
 
 function extractHandle(url: string) {
@@ -77,9 +58,9 @@ function extractHandle(url: string) {
     .trim();
 }
 
-/* ======================================================
-   GUIDE BLOCK
-====================================================== */
+function formatTitle(slug: string) {
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+}
 
 const GUIDE_BLOCK = `
 <div style="margin-top:40px">
@@ -94,10 +75,6 @@ const GUIDE_BLOCK = `
 </div>
 `;
 
-/* ======================================================
-   MAIN ROUTE
-====================================================== */
-
 export async function POST() {
 
   console.log("🚀 BUILD SWING LINK MESH STARTED");
@@ -105,130 +82,107 @@ export async function POST() {
   let processed = 0;
   let updated = 0;
 
-  try {
+  const { data: pointer } = await supabaseAdmin
+    .from("internal_link_pointer")
+    .select("*")
+    .eq("id", 1)
+    .single();
 
-    const { data: pointer } = await supabaseAdmin
-      .from("internal_link_pointer")
-      .select("*")
-      .eq("id",1)
-      .single();
+  const pageOffset = pointer?.page_pointer || 0;
 
-    const pageOffset = pointer?.page_pointer || 0;
+  const { data: pages } = await supabaseAdmin
+    .from("shopify_url_inventory")
+    .select("url")
+    .ilike("url", "%porch-swing%")
+    .range(pageOffset, pageOffset + 249);
 
-    const { data: pages } = await supabaseAdmin
-      .from("shopify_url_inventory")
-      .select("url")
-      .ilike("url","%porch-swing%")
-      .range(pageOffset,pageOffset+249);
+  if (!pages || pages.length === 0) {
+    return NextResponse.json({ success: true });
+  }
 
-    if (!pages || pages.length === 0) {
+  for (const p of pages) {
 
-      console.log("No pages found");
+    const url = p.url as string;
+    const handle = extractHandle(url);
 
-      return NextResponse.json({
-        success:true
-      });
+    processed++;
+
+    const res = await shopifyFetch(`/pages.json?handle=${handle}`);
+    const data = await res.json();
+
+    const page = data.pages?.[0];
+
+    if (!page) {
+      console.log(`Page not found: ${handle}`);
+      continue;
     }
 
-    for (const p of pages) {
+    const html = (page.body_html || "").toLowerCase();
 
-      const currentUrl = p.url as string;
+    if (html.includes("porch swing guides")) continue;
 
-      const handle = extractHandle(currentUrl);
+    const { data: pointer2 } = await supabaseAdmin
+      .from("internal_link_pointer")
+      .select("*")
+      .eq("id", 1)
+      .single();
 
-      processed++;
+    const linkOffset = pointer2?.link_pointer || 0;
 
-      const res = await shopifyFetch(`/pages.json?handle=${handle}`);
-      const data = await res.json();
+    const { data: urls } = await supabaseAdmin
+      .from("shopify_url_inventory")
+      .select("url")
+      .range(linkOffset, linkOffset + 5);
 
-      const page = data.pages?.[0];
+    if (!urls) continue;
 
-      if (!page) {
-        console.log(`Page not found: ${handle}`);
-        continue;
-      }
-
-      const html = (page.body_html || "").toLowerCase();
-
-      if (
-        html.includes("porch swing guides") ||
-        html.includes("explore more porch swings")
-      ) {
-        continue;
-      }
-
-      const { data:pointer2 } = await supabaseAdmin
-        .from("internal_link_pointer")
-        .select("*")
-        .eq("id",1)
-        .single();
-
-      const linkOffset = pointer2?.link_pointer || 0;
-
-      const { data: urls } = await supabaseAdmin
-        .from("shopify_url_inventory")
-        .select("url")
-        .range(linkOffset, linkOffset + 5);
-
-      if (!urls || urls.length === 0) continue;
-
-      const dynamicLinks = `
+    const dynamicLinks = `
 <h2>Explore More Porch Swings</h2>
 <ul>
-${urls.map((u:any)=>{
-const slug = extractHandle(u.url)
-return `<li><a href="/pages/${slug}">${formatTitle(slug)}</a></li>`
+${urls.map((u: any) => {
+  const slug = extractHandle(u.url);
+  return `<li><a href="/pages/${slug}">${formatTitle(slug)}</a></li>`;
 }).join("")}
 </ul>
 `;
 
-      const updatedHTML = (page.body_html || "") + GUIDE_BLOCK + dynamicLinks;
+    const updatedHTML = (page.body_html || "") + GUIDE_BLOCK + dynamicLinks;
 
-      await shopifyFetch(`/pages/${page.id}.json`,{
-        method:"PUT",
-        body:JSON.stringify({
-          page:{
-            id:page.id,
-            body_html:updatedHTML
-          }
-        })
-      });
+    await shopifyFetch(`/pages/${page.id}.json`, {
+      method: "PUT",
+      body: JSON.stringify({
+        page: {
+          id: page.id,
+          body_html: updatedHTML,
+        },
+      }),
+    });
 
-      updated++;
-
-      await supabaseAdmin
-        .from("internal_link_pointer")
-        .update({
-          link_pointer: linkOffset + 6
-        })
-        .eq("id",1);
-
-      await sleep(SHOPIFY_DELAY_MS);
-    }
+    updated++;
 
     await supabaseAdmin
       .from("internal_link_pointer")
       .update({
-        page_pointer: pageOffset + pages.length
+        link_pointer: linkOffset + 6,
       })
-      .eq("id",1);
+      .eq("id", 1);
 
-    console.log(`Processed: ${processed}`);
-    console.log(`Updated: ${updated}`);
-
-    return NextResponse.json({
-      success:true,
-      processed,
-      updated
-    });
-
-  } catch(err:any) {
-
-    console.error("ERROR:",err.message);
-
-    return NextResponse.json({
-      success:false,
-      error:err.message
-    },{status:500});
+    await sleep(SHOPIFY_DELAY_MS);
   }
+
+  await supabaseAdmin
+    .from("internal_link_pointer")
+    .update({
+      page_pointer: pageOffset + pages.length,
+    })
+    .eq("id", 1);
+
+  console.log(`Processed: ${processed}`);
+  console.log(`Updated: ${updated}`);
+
+  return NextResponse.json({
+    success: true,
+    processed,
+    updated,
+  });
 }

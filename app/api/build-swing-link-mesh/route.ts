@@ -61,11 +61,32 @@ function extractHandle(url: string) {
 }
 
 /* -------------------------------------------------- */
+/* DETECT TOPIC                                        */
+/* -------------------------------------------------- */
+
+function detectTopic(slug: string) {
+
+  slug = slug.toLowerCase()
+
+  if (slug.includes("cedar")) return "cedar"
+  if (slug.includes("pine")) return "pine"
+  if (slug.includes("oak")) return "oak"
+  if (slug.includes("daybed")) return "daybed"
+  if (slug.includes("farmhouse")) return "farmhouse"
+  if (slug.includes("patio")) return "patio"
+  if (slug.includes("garden")) return "garden"
+  if (slug.includes("backyard")) return "backyard"
+  if (slug.includes("front")) return "front"
+
+  return "porch-swing"
+}
+
+/* -------------------------------------------------- */
 /* GUIDE BLOCK                                         */
 /* -------------------------------------------------- */
 
 const GUIDE_BLOCK = `
-<div style="margin-top:45px;">
+<div class="tp-link-mesh" style="margin-top:45px; max-width:900px; margin-left:auto; margin-right:auto;">
 
 <h2 style="color:#b80d0d;">
 Porch Swing Guides
@@ -164,6 +185,7 @@ export async function POST() {
     for (const p of pages) {
 
       const handle = extractHandle(p.url);
+      const topic = detectTopic(handle);
 
       processed++;
 
@@ -183,7 +205,10 @@ export async function POST() {
 
       const html = (page.body_html || "").toLowerCase();
 
-      if (html.includes("explore more porch swings")) {
+      if (
+        html.includes("porch swing guides") ||
+        html.includes("explore more porch swings")
+      ) {
         continue;
       }
 
@@ -206,9 +231,12 @@ export async function POST() {
       const { data: urls } = await supabaseAdmin
         .from("shopify_url_inventory")
         .select("url")
+        .ilike("url", `%${topic}%`)
         .range(linkOffset, linkOffset + 5);
 
-      if (!urls || urls.length === 0) continue;
+      const urlsArr = urls ?? [];
+
+      if (urlsArr.length === 0) continue;
 
       const dynamicLinks = `
 <div style="margin-top:45px;">
@@ -219,7 +247,7 @@ Explore More Porch Swings
 
 <ul style="line-height:1.9;font-size:16px;">
 
-${urls.map((u:any)=>{
+${urlsArr.map((u:any)=>{
 
 const slug = extractHandle(u.url)
 
@@ -238,7 +266,23 @@ ${formatTitle(slug)}
 </div>
 `;
 
-      const updatedHTML = page.body_html + GUIDE_BLOCK + dynamicLinks;
+      /* -------------------------------------------------- */
+      /* INSERT BEFORE FOOTER                               */
+      /* -------------------------------------------------- */
+
+      let updatedHTML = page.body_html || "";
+
+      const footerIndex = updatedHTML.toLowerCase().indexOf("</footer>");
+
+      if (footerIndex !== -1) {
+        updatedHTML =
+          updatedHTML.slice(0, footerIndex) +
+          GUIDE_BLOCK +
+          dynamicLinks +
+          updatedHTML.slice(footerIndex);
+      } else {
+        updatedHTML = updatedHTML + GUIDE_BLOCK + dynamicLinks;
+      }
 
       /* -------------------------------------------------- */
       /* UPDATE SHOPIFY PAGE                                */
@@ -269,7 +313,7 @@ ${formatTitle(slug)}
         })
         .eq("id", 1);
 
-      await sleep(600);
+      await sleep(350);
     }
 
     /* -------------------------------------------------- */

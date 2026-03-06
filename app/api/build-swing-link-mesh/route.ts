@@ -254,7 +254,7 @@ async function getRelatedUrlsForSlug(currentUrl: string, limit = 6) {
       .eq("id", 1)
       .single();
 
-    const linkOffset = pointer?.current_offset || 0;
+    const linkOffset = pointer?.link_pointer || 0;
 
     const { data } = await supabaseAdmin
       .from("shopify_url_inventory")
@@ -291,13 +291,14 @@ export async function POST() {
       .eq("id", 1)
       .single();
 
-    const offset = pointer?.current_offset || 0;
+    const pageOffset = pointer?.page_pointer || 0;
+const linkOffset = pointer?.link_pointer || 0;
 
     const { data: pages } = await supabaseAdmin
       .from("shopify_url_inventory")
       .select("url")
       .ilike("url", "%porch-swing%")
-      .range(offset, offset + 249);
+      .range(pageOffset, pageOffset + 249);
 
     if (!pages || pages.length === 0) {
       console.log("❌ No pages found");
@@ -403,22 +404,21 @@ export async function POST() {
         .eq("id", 1)
         .single();
 
-      const linkOffset = pointer2?.current_offset || 0;
+      const nextLinkOffset = pointer2?.link_pointer || 0;
 
-      await supabaseAdmin
-        .from("internal_link_pointer")
-        .update({
-          current_offset: linkOffset + 6,
-        })
-        .eq("id", 1);
+     await supabaseAdmin
+  .from("internal_link_pointer")
+  .update({
+    link_pointer: nextLinkOffset + 6,
+  })
+  .eq("id", 1);
 
-      await sleep(350);
-    }
+await sleep(550);    }
 
     await supabaseAdmin
       .from("internal_link_pointer")
       .update({
-        current_offset: offset + pages.length,
+        page_pointer: pageOffset + pages.length,
       })
       .eq("id", 1);
 

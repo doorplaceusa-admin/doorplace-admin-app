@@ -6,97 +6,66 @@ const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
 const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN!;
 const API_VERSION = "2024-01";
 
-function sleep(ms:number){
-  return new Promise(r => setTimeout(r, ms));
-}
-
-async function shopifyFetch(path:string, options:RequestInit = {}){
-
-  const res = await fetch(`https://${SHOP}/admin/api/${API_VERSION}${path}`,{
+async function shopifyFetch(path: string, options: RequestInit = {}) {
+  const res = await fetch(`https://${SHOP}/admin/api/${API_VERSION}${path}`, {
     ...options,
-    headers:{
-      "X-Shopify-Access-Token":TOKEN,
-      "Content-Type":"application/json"
+    headers: {
+      "X-Shopify-Access-Token": TOKEN,
+      "Content-Type": "application/json"
     }
   });
 
-  if(!res.ok){
+  if (!res.ok) {
     const text = await res.text();
-    console.error("Shopify error:", text);
     throw new Error(text);
   }
 
   return res;
 }
 
-export async function POST(){
+export async function POST() {
 
   console.log("RESET SWING PAGES STARTED");
 
-  let scanned = 0;
+  const res = await shopifyFetch(`/pages.json?limit=200&order=updated_at desc`);
+  const data = await res.json();
+  const pages = data.pages || [];
+
   let fixed = 0;
 
-  let nextPageInfo:string|null = null;
+  for (const page of pages) {
 
-  do {
+    let html = page.body_html || "";
 
-    const res = await shopifyFetch(
-      `/pages.json?limit=250${nextPageInfo ? `&page_info=${nextPageInfo}` : ""}`
-    );
+    if (!html.includes("Porch Swing Guides")) continue;
 
-    const data = await res.json();
-    const pages = data.pages || [];
+    const start = html.indexOf("Porch Swing Guides");
+    const footer = html.indexOf("footer");
 
-    console.log(`Batch pages: ${pages.length}`);
+    if (start === -1) continue;
 
-    for(const page of pages){
+    const cleaned =
+      html.substring(0, start);
 
-      scanned++;
+    await shopifyFetch(`/pages/${page.id}.json`, {
+      method: "PUT",
+      body: JSON.stringify({
+        page: {
+          id: page.id,
+          body_html: cleaned
+        }
+      })
+    });
 
-      let html = page.body_html || "";
+    fixed++;
 
-      if(!html.includes("Porch Swing Guides")) continue;
+    console.log("Removed block:", page.handle);
+  }
 
-      const start = html.indexOf("Porch Swing Guides");
-      const end = html.indexOf("Get a Fast Quote");
-
-      if(start === -1 || end === -1) continue;
-
-      const before = html.substring(0,start);
-      const after = html.substring(end);
-
-      const cleanedHTML = before + after;
-
-      await shopifyFetch(`/pages/${page.id}.json`,{
-        method:"PUT",
-        body:JSON.stringify({
-          page:{
-            id:page.id,
-            body_html:cleanedHTML
-          }
-        })
-      });
-
-      fixed++;
-
-      console.log(`Cleaned page ${page.handle}`);
-
-      await sleep(300);
-    }
-
-    const link = res.headers.get("link");
-    const match = link?.match(/page_info=([^&>]+)>; rel="next"/);
-    nextPageInfo = match ? match[1] : null;
-
-    console.log(`Progress scanned=${scanned} fixed=${fixed}`);
-
-  } while(nextPageInfo);
-
-  console.log("RESET COMPLETE");
+  console.log("DONE");
 
   return NextResponse.json({
-    success:true,
-    scanned,
+    success: true,
     fixed
   });
 }

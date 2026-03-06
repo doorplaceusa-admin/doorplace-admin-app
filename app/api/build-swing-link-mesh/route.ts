@@ -20,53 +20,44 @@ function sleep(ms: number) {
 }
 
 /* ======================================================
-   SAFE SHOPIFY FETCH (ENTERPRISE)
+   SAFE SHOPIFY FETCH
 ====================================================== */
 
 async function shopifyFetch(path: string, options: RequestInit = {}) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    try {
+    const res = await fetch(
+      `https://${SHOP}/admin/api/${API_VERSION}${path}`,
+      {
+        ...options,
+        headers: {
+          "X-Shopify-Access-Token": TOKEN,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-      const res = await fetch(
-        `https://${SHOP}/admin/api/${API_VERSION}${path}`,
-        {
-          ...options,
-          headers: {
-            "X-Shopify-Access-Token": TOKEN,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+    if (res.status === 429) {
+      console.log(`⏳ Shopify throttled… retrying (${attempt}/${MAX_RETRIES})`);
+      await sleep(2000 * attempt);
 
-      if (res.status === 429) {
-        console.log(`⏳ Shopify throttled… retrying (${attempt}/${MAX_RETRIES})`);
-        await sleep(2000 * attempt);
-
-        if (attempt >= 6) {
-          console.log("🛑 Cooldown wall triggered… sleeping 60s");
-          await sleep(COOLDOWN_MS);
-        }
-
-        continue;
+      if (attempt >= 6) {
+        console.log("🛑 Cooldown wall triggered… sleeping 60s");
+        await sleep(COOLDOWN_MS);
       }
 
-      if (!res.ok) {
-        const text = await res.text();
-        console.error(`❌ Shopify error ${res.status}`, text);
-        throw new Error(text);
-      }
-
-      return res;
-
-    } catch (err) {
-
-      if (attempt === MAX_RETRIES) {
-        throw err;
-      }
-
-      await sleep(2000);
+      continue;
     }
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error(`❌ Shopify error ${res.status}`, text);
+      throw new Error(text);
+    }
+
+    return res;
   }
+
+  throw new Error("Shopify request failed after retries");
 }
 
 /* ======================================================
@@ -86,165 +77,22 @@ function extractHandle(url: string) {
     .trim();
 }
 
-function parseLocationParts(slug: string) {
-  const parts = slug.toLowerCase().split("-");
-
-  const stateCode = parts[parts.length - 1];
-  const cityPart = parts.slice(0, parts.length - 1).join("-");
-
-  return { cityPart, stateCode };
-}
-
-function detectTopic(slug: string) {
-
-  const s = slug.toLowerCase();
-
-  if (s.includes("white-oak")) return "white-oak";
-  if (s.includes("red-oak")) return "red-oak";
-  if (s.includes("oak")) return "oak";
-  if (s.includes("cedar")) return "cedar";
-  if (s.includes("pine")) return "pine";
-
-  if (s.includes("daybed")) return "daybed";
-  if (s.includes("farmhouse")) return "farmhouse";
-  if (s.includes("patio")) return "patio";
-  if (s.includes("garden")) return "garden";
-  if (s.includes("backyard")) return "backyard";
-
-  return "porch-swing";
-}
-
-function buildTopicPool(topic: string) {
-
-  const map: Record<string, string[]> = {
-
-    cedar: ["cedar","outdoor","custom","porch-swing"],
-    pine: ["pine","custom","porch-swing"],
-    oak: ["oak","red-oak","white-oak","solid-wood","custom","porch-swing"],
-
-    daybed: ["daybed","bed-swing","porch-bed","custom","porch-swing"],
-
-    patio: ["patio","outdoor","garden","backyard","porch-swing"],
-    garden: ["garden","patio","backyard","outdoor","porch-swing"],
-    backyard: ["backyard","garden","patio","outdoor","porch-swing"],
-
-    "porch-swing": ["porch-swing","custom","outdoor"],
-  };
-
-  return map[topic] || ["porch-swing","custom","outdoor"];
-}
-
-function dedupeUrls(urls: string[]) {
-  return [...new Set(urls)];
-}
-
 /* ======================================================
    GUIDE BLOCK
 ====================================================== */
 
 const GUIDE_BLOCK = `
 <div style="margin-top:40px">
-
 <h2>Porch Swing Guides</h2>
-
 <ul>
-
 <li><a href="/pages/best-porch-swings">Best Porch Swings</a></li>
 <li><a href="/pages/porch-swing-ideas">Porch Swing Ideas</a></li>
 <li><a href="/pages/porch-swing-buying-guide">Porch Swing Buying Guide</a></li>
 <li><a href="/pages/porch-swing-maintenance">Porch Swing Maintenance</a></li>
 <li><a href="/pages/porch-swing-safety-guide">Porch Swing Safety Guide</a></li>
-
 </ul>
-
 </div>
 `;
-
-/* ======================================================
-   RELATED URL ENGINE
-====================================================== */
-
-async function getRelatedUrlsForSlug(currentUrl: string, limit = 6) {
-
-  const handle = extractHandle(currentUrl);
-
-  const topic = detectTopic(handle);
-
-  const topicPool = buildTopicPool(topic);
-
-  const { cityPart, stateCode } = parseLocationParts(handle);
-
-  const collected: string[] = [];
-
-  for (const topicTerm of topicPool) {
-
-    if (collected.length >= limit) break;
-
-    const { data } = await supabaseAdmin
-      .from("shopify_url_inventory")
-      .select("url")
-      .ilike("url", `%${topicTerm}%`)
-      .ilike("url", `%${stateCode}`)
-      .neq("url", currentUrl)
-      .limit(12);
-
-    for (const row of data || []) {
-
-      const url = row.url as string;
-
-      if (!collected.includes(url)) collected.push(url);
-
-      if (collected.length >= limit) break;
-    }
-  }
-
-  if (collected.length < limit && cityPart) {
-
-    const { data } = await supabaseAdmin
-      .from("shopify_url_inventory")
-      .select("url")
-      .ilike("url", `%${cityPart}%`)
-      .neq("url", currentUrl)
-      .limit(20);
-
-    for (const row of data || []) {
-
-      const url = row.url as string;
-
-      if (!collected.includes(url)) collected.push(url);
-
-      if (collected.length >= limit) break;
-    }
-  }
-
-  if (collected.length < limit) {
-
-    const { data: pointer } = await supabaseAdmin
-      .from("internal_link_pointer")
-      .select("*")
-      .eq("id",1)
-      .single();
-
-    const linkOffset = pointer?.link_pointer || 0;
-
-    const { data } = await supabaseAdmin
-      .from("shopify_url_inventory")
-      .select("url")
-      .neq("url", currentUrl)
-      .range(linkOffset, linkOffset + 24);
-
-    for (const row of data || []) {
-
-      const url = row.url as string;
-
-      if (!collected.includes(url)) collected.push(url);
-
-      if (collected.length >= limit) break;
-    }
-  }
-
-  return dedupeUrls(collected).slice(0,limit);
-}
 
 /* ======================================================
    MAIN ROUTE
@@ -290,8 +138,7 @@ export async function POST() {
 
       processed++;
 
-      const res = (await shopifyFetch(`/pages.json?handle=${handle}`))!;
-
+      const res = await shopifyFetch(`/pages.json?handle=${handle}`);
       const data = await res.json();
 
       const page = data.pages?.[0];
@@ -310,19 +157,27 @@ export async function POST() {
         continue;
       }
 
-      const relatedUrls = await getRelatedUrlsForSlug(currentUrl,6);
+      const { data:pointer2 } = await supabaseAdmin
+        .from("internal_link_pointer")
+        .select("*")
+        .eq("id",1)
+        .single();
 
-      if (!relatedUrls.length) continue;
+      const linkOffset = pointer2?.link_pointer || 0;
+
+      const { data: urls } = await supabaseAdmin
+        .from("shopify_url_inventory")
+        .select("url")
+        .range(linkOffset, linkOffset + 5);
+
+      if (!urls || urls.length === 0) continue;
 
       const dynamicLinks = `
 <h2>Explore More Porch Swings</h2>
 <ul>
-${relatedUrls.map(url => {
-
-const slug = extractHandle(url);
-
-return `<li><a href="/pages/${slug}">${formatTitle(slug)}</a></li>`;
-
+${urls.map((u:any)=>{
+const slug = extractHandle(u.url)
+return `<li><a href="/pages/${slug}">${formatTitle(slug)}</a></li>`
 }).join("")}
 </ul>
 `;
@@ -341,18 +196,10 @@ return `<li><a href="/pages/${slug}">${formatTitle(slug)}</a></li>`;
 
       updated++;
 
-      const { data:pointer2 } = await supabaseAdmin
-        .from("internal_link_pointer")
-        .select("*")
-        .eq("id",1)
-        .single();
-
-      const nextLinkOffset = pointer2?.link_pointer || 0;
-
       await supabaseAdmin
         .from("internal_link_pointer")
         .update({
-          link_pointer: nextLinkOffset + 6
+          link_pointer: linkOffset + 6
         })
         .eq("id",1);
 

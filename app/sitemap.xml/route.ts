@@ -9,28 +9,28 @@ export async function GET() {
   try {
     console.log("🧭 Generating TradePilot Sitemap Index...");
 
+    // Get highest chunk_number from sitemap_chunks
     const { data, error } = await supabaseAdmin
       .from("sitemap_chunks")
       .select("chunk_number")
-      .order("chunk_number", { ascending: true });
+      .order("chunk_number", { ascending: false })
+      .limit(1);
 
     if (error) {
       console.error("❌ Supabase error:", error.message);
       return new NextResponse("Supabase query failed", { status: 500 });
     }
 
-    if (!data || data.length === 0) {
-      return new NextResponse("No sitemap chunks found", { status: 200 });
-    }
+    const totalChunks =
+      data && data.length > 0 ? data[0].chunk_number + 1 : 0;
 
-    console.log(`✅ Total Chunks Found: ${data.length}`);
+    console.log(`✅ Total Chunks: ${totalChunks}`);
 
-    const sitemapLinks = data
+    const sitemapLinks = Array.from({ length: totalChunks })
       .map(
-        (row) => `
+        (_, i) => `
   <sitemap>
-    <loc>${SITEMAP_HOST}/sitemap/${row.chunk_number}.xml</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
+    <loc>${SITEMAP_HOST}/sitemap/${i}.xml</loc>
   </sitemap>`
       )
       .join("");

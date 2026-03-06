@@ -36,9 +36,9 @@ function formatTitle(slug: string) {
     .replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
-/* -------------------------------------------------- */
-/* HUB GUIDE BLOCK                                    */
-/* -------------------------------------------------- */
+/* ---------------------------------- */
+/* GUIDE BLOCK                         */
+/* ---------------------------------- */
 
 const GUIDE_BLOCK = `
 <div style="margin-top:45px;">
@@ -49,133 +49,102 @@ Porch Swing Guides
 
 <ul style="line-height:1.9;font-size:16px;">
 
-<li>
-<a href="https://doorplaceusa.com/pages/best-porch-swings" style="color:#b80d0d;">
-Best Porch Swings
-</a>
-</li>
-
-<li>
-<a href="https://doorplaceusa.com/pages/porch-swing-ideas" style="color:#b80d0d;">
-Porch Swing Ideas
-</a>
-</li>
-
-<li>
-<a href="https://doorplaceusa.com/pages/porch-swing-buying-guide" style="color:#b80d0d;">
-Porch Swing Buying Guide
-</a>
-</li>
-
-<li>
-<a href="https://doorplaceusa.com/pages/porch-swing-maintenance" style="color:#b80d0d;">
-Porch Swing Maintenance
-</a>
-</li>
-
-<li>
-<a href="https://doorplaceusa.com/pages/porch-swing-safety-guide" style="color:#b80d0d;">
-Porch Swing Safety Guide
-</a>
-</li>
+<li><a href="https://doorplaceusa.com/pages/best-porch-swings" style="color:#b80d0d;">Best Porch Swings</a></li>
+<li><a href="https://doorplaceusa.com/pages/porch-swing-ideas" style="color:#b80d0d;">Porch Swing Ideas</a></li>
+<li><a href="https://doorplaceusa.com/pages/porch-swing-buying-guide" style="color:#b80d0d;">Porch Swing Buying Guide</a></li>
+<li><a href="https://doorplaceusa.com/pages/porch-swing-maintenance" style="color:#b80d0d;">Porch Swing Maintenance</a></li>
+<li><a href="https://doorplaceusa.com/pages/porch-swing-safety-guide" style="color:#b80d0d;">Porch Swing Safety Guide</a></li>
 
 </ul>
 
 </div>
 `;
 
-/* -------------------------------------------------- */
-/* MAIN ROUTE                                         */
-/* -------------------------------------------------- */
+/* ---------------------------------- */
+/* MAIN ROUTE                          */
+/* ---------------------------------- */
 
 export async function POST() {
 
-  console.log("=======================================");
-  console.log("🚀 SWING LINK MESH BUILDER STARTED");
-  console.log("=======================================");
+  console.log("==================================");
+  console.log("🚀 SUPABASE LINK MESH STARTED");
+  console.log("==================================");
 
-  let scanned = 0;
-  let swingPages = 0;
+  let processed = 0;
   let updated = 0;
-
-  let batch = 0;
-  let nextPageInfo: string | null = null;
 
   try {
 
-    do {
+    /* ---------------------------------- */
+    /* Get pointer                        */
+    /* ---------------------------------- */
 
-      batch++;
+    const { data: pointer } = await supabaseAdmin
+      .from("internal_link_pointer")
+      .select("*")
+      .eq("id", 1)
+      .single();
 
-      const res = await shopifyFetch(
-        `/pages.json?limit=20${nextPageInfo ? `&page_info=${nextPageInfo}` : ""}`
-      );
+    const offset = pointer?.current_offset || 0;
 
+    /* ---------------------------------- */
+    /* Get swing pages from inventory     */
+    /* ---------------------------------- */
+
+    const { data: pages } = await supabaseAdmin
+      .from("shopify_url_inventory")
+      .select("slug")
+      .ilike("slug", "%porch-swing%")
+      .range(offset, offset + 249);
+
+    if (!pages || pages.length === 0) {
+
+      console.log("No pages found");
+
+      return NextResponse.json({
+        success: true,
+        message: "No pages returned",
+      });
+    }
+
+    console.log(`Loaded ${pages.length} pages from inventory`);
+
+    for (const p of pages) {
+
+      processed++;
+
+      const slug = p.slug;
+
+      /* ---------------------------------- */
+      /* Get Shopify page                   */
+      /* ---------------------------------- */
+
+      const res = await shopifyFetch(`/pages.json?handle=${slug}`);
       const data = await res.json();
-      const pages = data.pages || [];
 
-      console.log(`📦 Batch #${batch} | pages=${pages.length}`);
+      const page = data.pages?.[0];
 
-      for (const page of pages) {
+      if (!page) continue;
 
-        scanned++;
+      const html = (page.body_html || "").toLowerCase();
 
-        const html = (page.body_html || "").toLowerCase();
-        const handle = (page.handle || "").toLowerCase();
+      if (html.includes("explore more porch swings")) {
+        continue;
+      }
 
-        /* -------------------------------------------------- */
-        /* BETTER DETECTION                                   */
-        /* -------------------------------------------------- */
+      /* ---------------------------------- */
+      /* Get dynamic URLs                   */
+      /* ---------------------------------- */
 
-        const isSwingPage =
-          handle.includes("swing") ||
-          html.includes("porch swing");
+      const { data: urls } = await supabaseAdmin
+        .from("shopify_url_inventory")
+        .select("slug")
+        .order("slug")
+        .range(offset, offset + 5);
 
-        const hasResources =
-          html.includes("helpful") &&
-          html.includes("resource");
+      if (!urls) continue;
 
-        if (!hasResources || !isSwingPage) {
-          continue;
-        }
-
-        console.log(`🎯 Swing page detected: ${handle}`);
-
-        swingPages++;
-
-        if (html.includes("explore more porch swings")) {
-          continue;
-        }
-
-        /* -------------------------------------------------- */
-        /* GET POINTER                                        */
-        /* -------------------------------------------------- */
-
-        const { data: pointer } = await supabaseAdmin
-          .from("internal_link_pointer")
-          .select("*")
-          .eq("id", 1)
-          .single();
-
-        const offset = pointer?.current_offset || 0;
-
-        /* -------------------------------------------------- */
-        /* GET 6 URLS FROM INVENTORY                          */
-        /* -------------------------------------------------- */
-
-        const { data: urls } = await supabaseAdmin
-          .from("shopify_url_inventory")
-          .select("slug")
-          .order("slug")
-          .range(offset, offset + 5);
-
-        if (!urls || urls.length === 0) continue;
-
-        /* -------------------------------------------------- */
-        /* BUILD DYNAMIC LINK BLOCK                           */
-        /* -------------------------------------------------- */
-
-        const dynamicLinks = `
+      const dynamicLinks = `
 <div style="margin-top:45px;">
 
 <h2 style="color:#b80d0d;">
@@ -184,99 +153,74 @@ Explore More Porch Swings
 
 <ul style="line-height:1.9;font-size:16px;">
 
-${urls
-  .map(
-    (u: any) => `
+${urls.map((u:any)=>`
 <li>
 <a href="https://doorplaceusa.com/pages/${u.slug}" style="color:#b80d0d;">
 ${formatTitle(u.slug)}
 </a>
 </li>
-`
-  )
-  .join("")}
+`).join("")}
 
 </ul>
 
 </div>
 `;
 
-        const updatedHTML =
-          page.body_html +
-          GUIDE_BLOCK +
-          dynamicLinks;
+      const updatedHTML = page.body_html + GUIDE_BLOCK + dynamicLinks;
 
-        /* -------------------------------------------------- */
-        /* UPDATE SHOPIFY PAGE                                */
-        /* -------------------------------------------------- */
+      /* ---------------------------------- */
+      /* Update page                        */
+      /* ---------------------------------- */
 
-        await shopifyFetch(`/pages/${page.id}.json`, {
-          method: "PUT",
-          body: JSON.stringify({
-            page: {
-              id: page.id,
-              body_html: updatedHTML,
-            },
-          }),
-        });
+      await shopifyFetch(`/pages/${page.id}.json`, {
+        method: "PUT",
+        body: JSON.stringify({
+          page: {
+            id: page.id,
+            body_html: updatedHTML,
+          },
+        }),
+      });
 
-        updated++;
+      updated++;
 
-        /* -------------------------------------------------- */
-        /* MOVE POINTER                                       */
-        /* -------------------------------------------------- */
+      console.log(`✅ Updated ${slug}`);
 
-        await supabaseAdmin
-          .from("internal_link_pointer")
-          .update({
-            current_offset: offset + 6,
-          })
-          .eq("id", 1);
+      await sleep(600);
+    }
 
-        console.log(`✅ Updated page ${page.id}`);
+    /* ---------------------------------- */
+    /* Move pointer                       */
+    /* ---------------------------------- */
 
-        await sleep(600);
-      }
+    await supabaseAdmin
+      .from("internal_link_pointer")
+      .update({
+        current_offset: offset + pages.length,
+      })
+      .eq("id", 1);
 
-      const link = res.headers.get("link");
-      const match = link?.match(/page_info=([^&>]+)>; rel="next"/);
-      nextPageInfo = match ? match[1] : null;
-
-      console.log(
-        `📊 Progress | scanned=${scanned} swing_pages=${swingPages} updated=${updated}`
-      );
-
-    } while (nextPageInfo);
-
-    console.log("=======================================");
-    console.log("🎉 LINK MESH COMPLETE");
-    console.log(`Pages scanned: ${scanned}`);
-    console.log(`Swing pages found: ${swingPages}`);
-    console.log(`Pages updated: ${updated}`);
-    console.log("=======================================");
+    console.log("==================================");
+    console.log(`Processed: ${processed}`);
+    console.log(`Updated: ${updated}`);
+    console.log("==================================");
 
     return NextResponse.json({
       success: true,
-      scanned,
-      swing_pages_found: swingPages,
-      pages_updated: updated,
+      processed,
+      updated,
     });
 
-  } catch (err: any) {
+  } catch (err:any) {
 
-    console.error("=======================================");
-    console.error("❌ ERROR", err.message);
-    console.error("=======================================");
+    console.error(err);
 
     return NextResponse.json(
       {
-        success: false,
-        scanned,
-        swing_pages_found: swingPages,
-        pages_updated: updated,
-        error: err.message,
+        success:false,
+        error:err.message
       },
-      { status: 500 }
+      { status:500 }
     );
   }
 }

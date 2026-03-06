@@ -27,45 +27,64 @@ export async function POST() {
 
   console.log("RESET SWING PAGES STARTED");
 
-  const res = await shopifyFetch(`/pages.json?limit=200&order=updated_at desc`);
-  const data = await res.json();
-  const pages = data.pages || [];
-
+  let pageInfo: string | null = null;
   let fixed = 0;
+  let scanned = 0;
 
-  for (const page of pages) {
+  while (fixed < 200) {
 
-    let html = page.body_html || "";
+    const res = await shopifyFetch(
+      `/pages.json?limit=250${pageInfo ? `&page_info=${pageInfo}` : ""}`
+    );
 
-    if (!html.includes("Porch Swing Guides")) continue;
+    const data = await res.json();
+    const pages = data.pages || [];
 
-    const start = html.indexOf("Porch Swing Guides");
-    const footer = html.indexOf("footer");
+    for (const page of pages) {
 
-    if (start === -1) continue;
+      scanned++;
 
-    const cleaned =
-      html.substring(0, start);
+      let html = page.body_html || "";
 
-    await shopifyFetch(`/pages/${page.id}.json`, {
-      method: "PUT",
-      body: JSON.stringify({
-        page: {
-          id: page.id,
-          body_html: cleaned
-        }
-      })
-    });
+      if (!html.includes("Porch Swing Guides")) continue;
 
-    fixed++;
+      const start = html.indexOf("Porch Swing Guides");
 
-    console.log("Removed block:", page.handle);
+      if (start === -1) continue;
+
+      const cleaned = html.substring(0, start);
+
+      await shopifyFetch(`/pages/${page.id}.json`, {
+        method: "PUT",
+        body: JSON.stringify({
+          page: {
+            id: page.id,
+            body_html: cleaned
+          }
+        })
+      });
+
+      fixed++;
+
+      console.log("Removed block:", page.handle);
+
+      if (fixed >= 200) break;
+    }
+
+    const link = res.headers.get("link");
+    const match = link?.match(/page_info=([^&>]+)>; rel="next"/);
+    pageInfo = match ? match[1] : null;
+
+    if (!pageInfo) break;
+
+    console.log(`Progress scanned=${scanned} fixed=${fixed}`);
   }
 
   console.log("DONE");
 
   return NextResponse.json({
     success: true,
+    scanned,
     fixed
   });
 }

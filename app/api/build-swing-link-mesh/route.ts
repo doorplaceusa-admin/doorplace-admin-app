@@ -164,11 +164,12 @@ const styleBuckets:any={}
 
 for(const row of inventory){
 
-const slug=extractHandle(row.url)
-const parts=slug.split("-")
-const state=parts[parts.length-1]
+const slug = extractHandle(row.url)
 
-if(!stateBuckets[state]) stateBuckets[state]=[]
+const match = slug.match(/-([a-z]{2})$/)
+const state = match ? match[1] : ""
+
+if(!stateBuckets[state]) stateBuckets[state] = []
 stateBuckets[state].push(slug)
 
 for(const style of STYLES){
@@ -193,7 +194,7 @@ console.log("Batch",batchCount)
 
 const {data:pages}=await supabaseAdmin
 .from("shopify_url_inventory")
-.select("url, shopify_page_id")
+.select("url")
 .ilike("url","%porch-swing%")
 .range(offset,offset+BATCH_SIZE-1)
 
@@ -211,9 +212,8 @@ console.log("Processing",handle)
 
 let relatedLinks:string[]=[]
 
-const parts=handle.split("-")
-const state=parts[parts.length-1]
-
+const match = handle.match(/-([a-z]{2})$/)
+const state = match ? match[1] : ""
 /* RANDOMIZED STATE LINKS */
 
 const stateList=stateBuckets[state]||[]
@@ -222,7 +222,7 @@ if(stateList.length){
 
 let startIndex=Math.floor(Math.random()*stateList.length)
 
-for(let x=0;x<stateList.length&&relatedLinks.length<10;x++){
+for(let x=0;x<stateList.length&&relatedLinks.length<15;x++){
 
 let idx=(startIndex+x)%stateList.length
 let candidate=stateList[idx]

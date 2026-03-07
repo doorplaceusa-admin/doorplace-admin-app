@@ -67,9 +67,9 @@ function formatTitle(slug: string) {
     .replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
-/* ----------------------------------------------------- */
-/* PORCH SWING GUIDES BLOCK */
-/* ----------------------------------------------------- */
+/* ------------------------------------- */
+/* GUIDE BLOCK */
+/* ------------------------------------- */
 
 const GUIDE_BLOCK = `
 <div style="margin-top:60px;border-top:1px solid #ddd;padding-top:30px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
@@ -91,7 +91,6 @@ export async function POST() {
 
   console.log("🚀 BUILD SWING LINK MESH STARTED");
 
-  let processed = 0;
   let updated = 0;
 
   const { data: pointer } = await supabaseAdmin
@@ -112,42 +111,35 @@ export async function POST() {
     return NextResponse.json({ success: true });
   }
 
-  for (const p of pages) {
+  for (let i = 0; i < pages.length; i++) {
 
-    const url = p.url as string;
+    const url = pages[i].url as string;
     const handle = extractHandle(url);
-
-    processed++;
 
     const res = await shopifyFetch(`/pages.json?handle=${handle}`);
     const data = await res.json();
 
     const page = data.pages?.[0];
 
-    if (!page) {
-      console.log(`Page not found: ${handle}`);
-      continue;
-    }
+    if (!page) continue;
 
     const html = (page.body_html || "").toLowerCase();
 
-    if (html.includes("porch swing guides")) {
-      continue;
-    }
+    if (html.includes("porch swing guides")) continue;
 
-    /* ------------------------------------------- */
-    /* DYNAMIC LINK GENERATION */
-    /* ------------------------------------------- */
+    /* ---------------------------------- */
+    /* DYNAMIC LINKS (FIXED) */
+    /* ---------------------------------- */
 
-    const dynamicStart = pageOffset + processed * 6;
+    const start = (pageOffset + i) * 5;
 
     const { data: urls } = await supabaseAdmin
       .from("shopify_url_inventory")
       .select("url")
       .ilike("url", "%porch-swing%")
-      .range(dynamicStart, dynamicStart + 5);
+      .range(start, start + 4);
 
-    if (!urls) continue;
+    if (!urls || urls.length === 0) continue;
 
     const dynamicLinks = `
 <div style="margin-top:40px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
@@ -195,12 +187,10 @@ ${urls.map((u: any) => {
     })
     .eq("id", 1);
 
-  console.log(`Processed: ${processed}`);
   console.log(`Updated: ${updated}`);
 
   return NextResponse.json({
     success: true,
-    processed,
-    updated,
+    updated
   });
 }

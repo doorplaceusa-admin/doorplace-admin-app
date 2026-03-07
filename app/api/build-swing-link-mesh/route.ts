@@ -244,9 +244,24 @@ console.log("Processing",handle)
 
 let relatedLinks:string[]=[]
 
-/* FORCE VARIETY */
+/* DETECT CURRENT TYPE */
+
+let currentType="general"
+
+if(handle.includes("daybed")) currentType="daybed"
+else if(handle.includes("twin")) currentType="twin"
+else if(handle.includes("crib")) currentType="crib"
+else if(handle.includes("farmhouse")) currentType="farmhouse"
+else if(handle.includes("patio")) currentType="patio"
+else if(handle.includes("garden")) currentType="garden"
+else if(handle.includes("backyard")) currentType="backyard"
+else if(handle.includes("pool")) currentType="pool"
+
+/* FORCE VARIETY BUT SKIP CURRENT TYPE */
 
 for(const type of Object.keys(typeBuckets)){
+
+if(type === currentType) continue
 
 const bucket=typeBuckets[type]
 

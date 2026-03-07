@@ -174,6 +174,16 @@ return NextResponse.json({success:false})
 
 const allSlugs=inventory.map(row=>extractHandle(row.url))
 
+/* ROTATION CURSOR */
+
+const {data:rotation}=await supabaseAdmin
+.from("mesh_rotation_state")
+.select("cursor_position")
+.eq("id",1)
+.single()
+
+let cursor = rotation?.cursor_position || 0
+
 const stateBuckets:any={}
 const styleBuckets:any={}
 const typeBuckets:any={}
@@ -286,12 +296,16 @@ relatedLinks.push(candidate)
 
 }
 
+/* ROTATION BASED LINKS */
+
 while(relatedLinks.length<12){
 
-const randomSlug=allSlugs[Math.floor(Math.random()*allSlugs.length)]
+const rotationSlug = allSlugs[cursor % allSlugs.length]
 
-if(randomSlug!==handle && !relatedLinks.includes(randomSlug)){
-relatedLinks.push(randomSlug)
+cursor++
+
+if(rotationSlug!==handle && !relatedLinks.includes(rotationSlug)){
+relatedLinks.push(rotationSlug)
 }
 
 }
@@ -357,6 +371,14 @@ await supabaseAdmin
 .from("system_jobs")
 .update({last_offset:offset})
 .eq("job_name","swing_link_mesh")
+
+await supabaseAdmin
+.from("mesh_rotation_state")
+.update({
+cursor_position: cursor,
+updated_at: new Date()
+})
+.eq("id",1)
 
 console.log("Saved offset:",offset)
 

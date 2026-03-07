@@ -7,7 +7,7 @@ const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
 const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN!;
 const API_VERSION = "2024-01";
 
-const SHOPIFY_DELAY_MS = 400;
+const SHOPIFY_DELAY_MS = 600;
 const MAX_RETRIES = 10;
 const BATCH_SIZE = 200;
 const MAX_BATCHES = 10000;

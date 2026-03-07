@@ -69,8 +69,16 @@ function formatTitle(slug: string) {
 }
 
 /* ------------------------------------- */
-/* GUIDE BLOCK */
+/* GUIDE LINKS */
 /* ------------------------------------- */
+
+const GUIDE_PAGES = [
+  "/pages/best-porch-swings",
+  "/pages/porch-swing-ideas",
+  "/pages/porch-swing-buying-guide",
+  "/pages/porch-swing-maintenance",
+  "/pages/porch-swing-safety-guide"
+];
 
 const GUIDE_BLOCK = `
 <div style="margin-top:60px;border-top:1px solid #ddd;padding-top:30px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
@@ -130,19 +138,19 @@ export async function POST() {
     const page = data.pages?.[0];
 
     if (!page) {
-      console.log("⚠️ Page not found in Shopify:", handle);
+      console.log("⚠️ Page not found:", handle);
       continue;
     }
 
     const html = (page.body_html || "").toLowerCase();
 
     if (html.includes("porch swing guides")) {
-      console.log("⏭ Skipping (already updated):", handle);
+      console.log("⏭ Skipping (already updated)");
       continue;
     }
 
     /* ---------------------------------- */
-    /* RELATED LINKS BY STATE */
+    /* DETECT STATE */
     /* ---------------------------------- */
 
     const parts = handle.split("-");
@@ -150,17 +158,51 @@ export async function POST() {
 
     console.log("📍 Detected State:", state);
 
-    const { data: urls } = await supabaseAdmin
+    /* ---------------------------------- */
+    /* LAYER 1: SAME STATE LINKS */
+    /* ---------------------------------- */
+
+    const { data: stateLinks } = await supabaseAdmin
       .from("shopify_url_inventory")
       .select("url")
-      .ilike("url", "%porch-swing%")
       .ilike("url", `%-${state}`)
-      .limit(5);
+      .ilike("url", "%porch-swing%")
+      .limit(10);
 
-    if (!urls || urls.length === 0) {
-      console.log("⚠️ No related pages found for state:", state);
-      continue;
+    let relatedLinks = [];
+
+    if (stateLinks) {
+      for (const u of stateLinks) {
+        const slug = extractHandle(u.url);
+        if (slug !== handle) relatedLinks.push(slug);
+        if (relatedLinks.length === 3) break;
+      }
     }
+
+    /* ---------------------------------- */
+    /* LAYER 2: STYLE VARIATION */
+    /* ---------------------------------- */
+
+    const { data: styleLinks } = await supabaseAdmin
+      .from("shopify_url_inventory")
+      .select("url")
+      .ilike("url", "%daybed%")
+      .limit(1);
+
+    if (styleLinks?.length) {
+      relatedLinks.push(extractHandle(styleLinks[0].url));
+    }
+
+    /* ---------------------------------- */
+    /* LAYER 3: GUIDE PAGE */
+    /* ---------------------------------- */
+
+    const guide = GUIDE_PAGES[Math.floor(Math.random() * GUIDE_PAGES.length)];
+    relatedLinks.push(guide.replace("/pages/", ""));
+
+    /* ---------------------------------- */
+    /* BUILD LINK HTML */
+    /* ---------------------------------- */
 
     const dynamicLinks = `
 <div style="margin-top:40px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
@@ -168,11 +210,7 @@ export async function POST() {
 <h2 style="text-align:center">Explore More Porch Swings</h2>
 
 <ul>
-${urls.map((u: any) => {
-
-  const slug = extractHandle(u.url);
-
-  if (slug === handle) return "";
+${relatedLinks.map(slug => {
 
   return `<li><a href="/pages/${slug}">${formatTitle(slug)}</a></li>`;
 
@@ -193,9 +231,9 @@ ${urls.map((u: any) => {
       body: JSON.stringify({
         page: {
           id: page.id,
-          body_html: updatedHTML,
-        },
-      }),
+          body_html: updatedHTML
+        }
+      })
     });
 
     console.log("✅ Updated:", handle);
@@ -210,7 +248,7 @@ ${urls.map((u: any) => {
   await supabaseAdmin
     .from("internal_link_pointer")
     .update({
-      current_offset: newOffset,
+      current_offset: newOffset
     })
     .eq("id", 1);
 

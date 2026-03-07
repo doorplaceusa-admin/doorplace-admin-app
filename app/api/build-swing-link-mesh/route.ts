@@ -146,8 +146,21 @@ export async function POST(){
 console.log("🚀 LINK MESH START")
 
 let totalUpdated=0
-let offset=0
 let batchCount=0
+
+/* READ OFFSET */
+
+const {data:job}=await supabaseAdmin
+.from("system_jobs")
+.select("*")
+.eq("job_name","swing_link_mesh")
+.single()
+
+let offset=job?.last_offset || 0
+
+console.log("Resuming from offset:",offset)
+
+/* LOAD INVENTORY */
 
 const {data:inventory}=await supabaseAdmin
 .from("shopify_url_inventory")
@@ -170,12 +183,12 @@ const styleBuckets:any={}
 
 for(const row of inventory){
 
-const slug=extractHandle(row.url)
+const slug = extractHandle(row.url)
 
-const match=slug.match(/-([a-z]{2})$/)
-const state=match?match[1]:""
+const match = slug.match(/-([a-z]{2})$/)
+const state = match ? match[1] : ""
 
-if(!stateBuckets[state]) stateBuckets[state]=[]
+if(!stateBuckets[state]) stateBuckets[state] = []
 stateBuckets[state].push(slug)
 
 for(const style of STYLES){
@@ -188,6 +201,8 @@ styleBuckets[style].push(slug)
 }
 
 }
+
+/* PROCESS */
 
 while(true){
 
@@ -218,10 +233,10 @@ console.log("Processing",handle)
 
 let relatedLinks:string[]=[]
 
-const match=handle.match(/-([a-z]{2})$/)
-const state=match?match[1]:""
+const match = handle.match(/-([a-z]{2})$/)
+const state = match ? match[1] : ""
 
-/* SAME STATE LINKS */
+/* STATE LINKS */
 
 const stateList=stateBuckets[state]||[]
 
@@ -258,7 +273,7 @@ relatedLinks.push(neighborList[Math.floor(Math.random()*neighborList.length)])
 
 }
 
-/* STYLE LINKS */
+/* STYLE LINK */
 
 const style=STYLES[(offset+i)%STYLES.length]
 
@@ -268,11 +283,7 @@ if(styleList.length){
 relatedLinks.push(styleList[(offset+i)%styleList.length])
 }
 
-/* FALLBACK RANDOM LINKS */
-
-if(relatedLinks.length<5){
-
-console.log("Fallback random links",handle)
+/* FALLBACK LINKS */
 
 while(relatedLinks.length<10){
 
@@ -280,8 +291,6 @@ const randomSlug=allSlugs[Math.floor(Math.random()*allSlugs.length)]
 
 if(randomSlug!==handle && !relatedLinks.includes(randomSlug)){
 relatedLinks.push(randomSlug)
-}
-
 }
 
 }
@@ -328,6 +337,8 @@ existingBody=existingBody.replace(
 ""
 )
 
+/* UPDATE PAGE */
+
 await shopifyFetch(`/pages/${pageId}.json`,{
 method:"PUT",
 body:JSON.stringify({
@@ -347,13 +358,23 @@ await sleep(SHOPIFY_DELAY_MS)
 offset+=pages.length
 batchCount++
 
+/* SAVE OFFSET */
+
+await supabaseAdmin
+.from("system_jobs")
+.update({last_offset:offset})
+.eq("job_name","swing_link_mesh")
+
+console.log("Saved offset:",offset)
+
 }
 
 console.log("Updated",totalUpdated)
 
 return NextResponse.json({
 success:true,
-updated:totalUpdated
+updated:totalUpdated,
+finalOffset:offset
 })
 
 }

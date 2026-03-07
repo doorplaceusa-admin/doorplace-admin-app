@@ -18,6 +18,9 @@ function sleep(ms: number) {
 
 async function shopifyFetch(path: string, options: RequestInit = {}) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+
+    console.log(`📡 Shopify Request → ${path} (Attempt ${attempt})`);
+
     const res = await fetch(
       `https://${SHOP}/admin/api/${API_VERSION}${path}`,
       {
@@ -40,6 +43,8 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
       console.log("❌ Shopify API Error:", text);
       throw new Error(text);
     }
+
+    console.log(`✅ Shopify request successful`);
 
     return res;
   }
@@ -145,7 +150,9 @@ let totalUpdated = 0;
 let offset = 0;
 let batchCount = 0;
 
-/* LOAD INVENTORY ONCE */
+/* LOAD INVENTORY */
+
+console.log("📊 Loading inventory for link buckets...");
 
 const { data: inventory } = await supabaseAdmin
 .from("shopify_url_inventory")
@@ -154,11 +161,15 @@ const { data: inventory } = await supabaseAdmin
 .limit(10000);
 
 if(!inventory){
-console.log("No inventory found");
+console.log("❌ No inventory found");
 return NextResponse.json({success:false});
 }
 
+console.log(`📦 Inventory loaded: ${inventory.length} records`);
+
 /* BUILD BUCKETS */
+
+console.log("🧠 Building state and style buckets...");
 
 const stateBuckets:any = {};
 const styleBuckets:any = {};
@@ -181,16 +192,18 @@ styleBuckets[style].push(slug);
 
 }
 
+console.log("✅ Buckets built");
+
 /* LOOP */
 
 while(true){
 
 if(batchCount > MAX_BATCHES){
-console.log("Safety stop triggered");
+console.log("🛑 Safety stop triggered");
 break;
 }
 
-console.log("📦 Batch:",batchCount,"Offset:",offset);
+console.log(`📦 Starting Batch ${batchCount} | Offset ${offset}`);
 
 const { data: pages } = await supabaseAdmin
 .from("shopify_url_inventory")
@@ -199,9 +212,11 @@ const { data: pages } = await supabaseAdmin
 .range(offset,offset+BATCH_SIZE-1);
 
 if(!pages || pages.length === 0){
-console.log("✅ All pages processed");
+console.log("✅ All pages processed. Ending loop.");
 break;
 }
+
+console.log(`📄 Pages returned in batch: ${pages.length}`);
 
 for(let i=0;i<pages.length;i++){
 
@@ -209,7 +224,7 @@ const url = pages[i].url;
 const pageId = pages[i].id;
 const handle = extractHandle(url);
 
-console.log("Processing:",handle);
+console.log(`🔧 Processing page ${i+1}/${pages.length} → ${handle}`);
 
 let relatedLinks:string[] = [];
 
@@ -221,11 +236,9 @@ const state = parts[parts.length-1];
 const stateList = stateBuckets[state] || [];
 
 for(let x=0;x<stateList.length && relatedLinks.length<3;x++){
-
 if(stateList[x] !== handle){
 relatedLinks.push(stateList[x]);
 }
-
 }
 
 /* NEIGHBOR */
@@ -233,26 +246,26 @@ relatedLinks.push(stateList[x]);
 const neighbors = STATE_NEIGHBORS[state];
 
 if(neighbors?.length){
-
 const neighbor = neighbors[Math.floor(Math.random()*neighbors.length)];
-
 const neighborList = stateBuckets[neighbor] || [];
 
 if(neighborList.length){
 relatedLinks.push(neighborList[Math.floor(Math.random()*neighborList.length)]);
 }
-
 }
 
 /* STYLE */
 
 const style = STYLES[(offset+i)%STYLES.length];
-
 const styleList = styleBuckets[style] || [];
 
 if(styleList.length){
 relatedLinks.push(styleList[(offset+i)%styleList.length]);
 }
+
+console.log("🔗 Related links selected:", relatedLinks);
+
+/* BUILD HTML */
 
 const dynamicLinks = `
 <div style="margin-top:40px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
@@ -276,6 +289,8 @@ body_html: GUIDE_BLOCK + dynamicLinks
 })
 });
 
+console.log(`✅ Updated page ${handle}`);
+
 totalUpdated++;
 
 await sleep(SHOPIFY_DELAY_MS);
@@ -285,9 +300,11 @@ await sleep(SHOPIFY_DELAY_MS);
 offset += pages.length;
 batchCount++;
 
+console.log(`➡ Moving to next batch | New Offset: ${offset}`);
+
 }
 
-console.log("🎉 Finished. Total Updated:",totalUpdated);
+console.log(`🎉 PROCESS COMPLETE | Total Updated: ${totalUpdated}`);
 
 return NextResponse.json({
 success:true,

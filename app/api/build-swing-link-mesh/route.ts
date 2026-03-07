@@ -55,36 +55,15 @@ return url
 
 }
 
-function capitalize(text:string){
-return text
-.split(" ")
-.map(w => w.charAt(0).toUpperCase() + w.slice(1))
-.join(" ")
-}
-
 function formatTitle(slug:string){
 
 let cleaned = slug
 
 cleaned = cleaned.replace(/-\d{4,}/g,"")
 
-cleaned = cleaned
-.replace("porch-swing-","")
-.replace("porch-swings-","")
-
-const parts = cleaned.split("-")
-
-const state = parts.pop()?.toUpperCase() || ""
-
-const cityParts = []
-while(parts.length && parts[parts.length-1].length > 2){
-cityParts.unshift(parts.pop())
-}
-
-const city = cityParts.join(" ")
-const type = parts.join(" ")
-
-return `${capitalize(type)} – ${capitalize(city)}, ${state}`
+return cleaned
+.replace(/-/g," ")
+.replace(/\b\w/g,l=>l.toUpperCase())
 
 }
 
@@ -218,6 +197,8 @@ styleBuckets[style].push(slug)
 
 }
 
+/* TYPE BUCKETS */
+
 let type="general"
 
 if(slug.includes("daybed")) type="daybed"
@@ -263,6 +244,8 @@ console.log("Processing",handle)
 
 let relatedLinks:string[]=[]
 
+/* DETECT CURRENT TYPE */
+
 let currentType="general"
 
 if(handle.includes("daybed")) currentType="daybed"
@@ -273,6 +256,8 @@ else if(handle.includes("patio")) currentType="patio"
 else if(handle.includes("garden")) currentType="garden"
 else if(handle.includes("backyard")) currentType="backyard"
 else if(handle.includes("pool")) currentType="pool"
+
+/* FORCE VARIETY BUT SKIP CURRENT TYPE */
 
 for(const type of Object.keys(typeBuckets)){
 
@@ -292,6 +277,8 @@ relatedLinks.push(candidate)
 
 }
 
+/* STATE LINK */
+
 const match = handle.match(/-([a-z]{2})$/)
 const state = match ? match[1] : ""
 
@@ -306,6 +293,8 @@ relatedLinks.push(candidate)
 }
 
 }
+
+/* RANDOM FILL */
 
 while(relatedLinks.length<12){
 

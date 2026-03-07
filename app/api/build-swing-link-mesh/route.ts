@@ -154,7 +154,6 @@ const {data:inventory}=await supabaseAdmin
 .select("url")
 .ilike("url","%porch-swing%")
 
-
 if(!inventory){
 console.log("No inventory")
 return NextResponse.json({success:false})
@@ -215,15 +214,28 @@ let relatedLinks:string[]=[]
 const parts=handle.split("-")
 const state=parts[parts.length-1]
 
+/* RANDOMIZED STATE LINKS */
+
 const stateList=stateBuckets[state]||[]
+
+if(stateList.length){
+
+let startIndex=Math.floor(Math.random()*stateList.length)
 
 for(let x=0;x<stateList.length&&relatedLinks.length<3;x++){
 
-if(stateList[x]!==handle){
-relatedLinks.push(stateList[x])
+let idx=(startIndex+x)%stateList.length
+let candidate=stateList[idx]
+
+if(candidate!==handle){
+relatedLinks.push(candidate)
 }
 
 }
+
+}
+
+/* NEIGHBOR STATE */
 
 const neighbors=STATE_NEIGHBORS[state]
 
@@ -238,6 +250,8 @@ relatedLinks.push(neighborList[Math.floor(Math.random()*neighborList.length)])
 }
 
 }
+
+/* STYLE LINK */
 
 const style=STYLES[(offset+i)%STYLES.length]
 

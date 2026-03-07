@@ -45,6 +45,7 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
 
     if (!res.ok) {
       const text = await res.text();
+      console.log("❌ Shopify API Error:", text);
       throw new Error(text);
     }
 
@@ -99,7 +100,9 @@ export async function POST() {
     .eq("id", 1)
     .single();
 
-  const pageOffset = pointer?.page_pointer || 0;
+  const pageOffset = pointer?.current_offset || 0;
+
+  console.log("📍 Current Offset:", pageOffset);
 
   const { data: pages } = await supabaseAdmin
     .from("shopify_url_inventory")
@@ -107,7 +110,10 @@ export async function POST() {
     .ilike("url", "%porch-swing%")
     .range(pageOffset, pageOffset + 249);
 
+  console.log("📄 Pages Returned:", pages?.length);
+
   if (!pages || pages.length === 0) {
+    console.log("⚠️ No pages returned — exiting route");
     return NextResponse.json({ success: true });
   }
 
@@ -116,22 +122,32 @@ export async function POST() {
     const url = pages[i].url as string;
     const handle = extractHandle(url);
 
+    console.log(`🔧 Processing Page ${i + 1}:`, handle);
+
     const res = await shopifyFetch(`/pages.json?handle=${handle}`);
     const data = await res.json();
 
     const page = data.pages?.[0];
 
-    if (!page) continue;
+    if (!page) {
+      console.log("⚠️ Page not found in Shopify:", handle);
+      continue;
+    }
 
     const html = (page.body_html || "").toLowerCase();
 
-    if (html.includes("porch swing guides")) continue;
+    if (html.includes("porch swing guides")) {
+      console.log("⏭ Skipping (already updated):", handle);
+      continue;
+    }
 
     /* ---------------------------------- */
-    /* DYNAMIC LINKS (FIXED) */
+    /* DYNAMIC LINKS */
     /* ---------------------------------- */
 
     const start = (pageOffset + i) * 5;
+
+    console.log("🔗 Dynamic Link Range:", start, "-", start + 4);
 
     const { data: urls } = await supabaseAdmin
       .from("shopify_url_inventory")
@@ -139,7 +155,10 @@ export async function POST() {
       .ilike("url", "%porch-swing%")
       .range(start, start + 4);
 
-    if (!urls || urls.length === 0) continue;
+    if (!urls || urls.length === 0) {
+      console.log("⚠️ No dynamic links found for:", handle);
+      continue;
+    }
 
     const dynamicLinks = `
 <div style="margin-top:40px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
@@ -175,19 +194,24 @@ ${urls.map((u: any) => {
       }),
     });
 
+    console.log("✅ Updated:", handle);
+
     updated++;
 
     await sleep(SHOPIFY_DELAY_MS);
   }
 
+  const newOffset = pageOffset + pages.length;
+
   await supabaseAdmin
     .from("internal_link_pointer")
     .update({
-      page_pointer: pageOffset + pages.length,
+      current_offset: newOffset,
     })
     .eq("id", 1);
 
-  console.log(`Updated: ${updated}`);
+  console.log("📍 Pointer Updated To:", newOffset);
+  console.log("🎉 Total Pages Updated:", updated);
 
   return NextResponse.json({
     success: true,

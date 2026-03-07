@@ -165,7 +165,7 @@ console.log("Resuming from offset:",offset)
 const {data:inventory}=await supabaseAdmin
 .from("shopify_url_inventory")
 .select("url")
-.or("url.ilike.%swing%,url.ilike.%swings%,url.ilike.%porch%,url.ilike.%porches%")
+.or("url.ilike.%swing%,url.ilike.%swings%")
 
 if(!inventory){
 console.log("No inventory")
@@ -197,8 +197,6 @@ styleBuckets[style].push(slug)
 
 }
 
-/* TYPE BUCKETS */
-
 let type="general"
 
 if(slug.includes("daybed")) type="daybed"
@@ -227,7 +225,7 @@ console.log("Batch",batchCount)
 const {data:pages}=await supabaseAdmin
 .from("shopify_url_inventory")
 .select("url")
-.or("url.ilike.%swing%,url.ilike.%swings%,url.ilike.%porch%,url.ilike.%porches%")
+.or("url.ilike.%swing%,url.ilike.%swings%")
 .range(offset,offset+BATCH_SIZE-1)
 
 if(!pages||pages.length===0){
@@ -244,8 +242,6 @@ console.log("Processing",handle)
 
 let relatedLinks:string[]=[]
 
-/* DETECT CURRENT TYPE */
-
 let currentType="general"
 
 if(handle.includes("daybed")) currentType="daybed"
@@ -256,8 +252,6 @@ else if(handle.includes("patio")) currentType="patio"
 else if(handle.includes("garden")) currentType="garden"
 else if(handle.includes("backyard")) currentType="backyard"
 else if(handle.includes("pool")) currentType="pool"
-
-/* FORCE VARIETY BUT SKIP CURRENT TYPE */
 
 for(const type of Object.keys(typeBuckets)){
 
@@ -277,8 +271,6 @@ relatedLinks.push(candidate)
 
 }
 
-/* STATE LINK */
-
 const match = handle.match(/-([a-z]{2})$/)
 const state = match ? match[1] : ""
 
@@ -293,8 +285,6 @@ relatedLinks.push(candidate)
 }
 
 }
-
-/* RANDOM FILL */
 
 while(relatedLinks.length<12){
 

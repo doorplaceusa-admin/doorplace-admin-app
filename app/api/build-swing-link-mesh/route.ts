@@ -57,7 +57,11 @@ return url
 
 function formatTitle(slug:string){
 
-return slug
+let cleaned = slug
+
+cleaned = cleaned.replace(/-\d{4,}/g,"")
+
+return cleaned
 .replace(/-/g," ")
 .replace(/\b\w/g,l=>l.toUpperCase())
 
@@ -148,8 +152,6 @@ console.log("🚀 LINK MESH START")
 let totalUpdated=0
 let batchCount=0
 
-/* READ OFFSET */
-
 const {data:job}=await supabaseAdmin
 .from("system_jobs")
 .select("*")
@@ -160,26 +162,20 @@ let offset=job?.last_offset || 0
 
 console.log("Resuming from offset:",offset)
 
-/* LOAD INVENTORY */
-
 const {data:inventory}=await supabaseAdmin
 .from("shopify_url_inventory")
 .select("url")
-.ilike("url","%porch-swing%")
+.or("url.ilike.%swing%,url.ilike.%swings%,url.ilike.%porch%,url.ilike.%porches%")
 
 if(!inventory){
 console.log("No inventory")
 return NextResponse.json({success:false})
 }
 
-/* GLOBAL SLUG POOL */
-
 const allSlugs=inventory.map(row=>extractHandle(row.url))
 
 const stateBuckets:any={}
 const styleBuckets:any={}
-
-/* BUILD BUCKETS */
 
 for(const row of inventory){
 
@@ -202,8 +198,6 @@ styleBuckets[style].push(slug)
 
 }
 
-/* PROCESS */
-
 while(true){
 
 if(batchCount>MAX_BATCHES){
@@ -216,7 +210,7 @@ console.log("Batch",batchCount)
 const {data:pages}=await supabaseAdmin
 .from("shopify_url_inventory")
 .select("url")
-.ilike("url","%porch-swing%")
+.or("url.ilike.%swing%,url.ilike.%swings%,url.ilike.%porch%,url.ilike.%porches%")
 .range(offset,offset+BATCH_SIZE-1)
 
 if(!pages||pages.length===0){
@@ -235,8 +229,6 @@ let relatedLinks:string[]=[]
 
 const match = handle.match(/-([a-z]{2})$/)
 const state = match ? match[1] : ""
-
-/* STATE LINKS */
 
 const stateList=stateBuckets[state]||[]
 
@@ -257,8 +249,6 @@ relatedLinks.push(candidate)
 
 }
 
-/* NEIGHBOR STATE */
-
 const neighbors=STATE_NEIGHBORS[state]
 
 if(neighbors?.length){
@@ -273,8 +263,6 @@ relatedLinks.push(neighborList[Math.floor(Math.random()*neighborList.length)])
 
 }
 
-/* STYLE LINK */
-
 const style=STYLES[(offset+i)%STYLES.length]
 
 const styleList=styleBuckets[style]||[]
@@ -282,8 +270,6 @@ const styleList=styleBuckets[style]||[]
 if(styleList.length){
 relatedLinks.push(styleList[(offset+i)%styleList.length])
 }
-
-/* FALLBACK LINKS */
 
 while(relatedLinks.length<10){
 
@@ -294,8 +280,6 @@ relatedLinks.push(randomSlug)
 }
 
 }
-
-/* BUILD HTML */
 
 const dynamicLinks=`
 
@@ -330,14 +314,10 @@ continue
 const pageId=findJson.pages[0].id
 let existingBody=findJson.pages[0].body_html||""
 
-/* REMOVE OLD MESH */
-
 existingBody=existingBody.replace(
 /<!-- TP_LINK_MESH_START -->[\s\S]*?<!-- TP_LINK_MESH_END -->/g,
 ""
 )
-
-/* UPDATE PAGE */
 
 await shopifyFetch(`/pages/${pageId}.json`,{
 method:"PUT",
@@ -357,8 +337,6 @@ await sleep(SHOPIFY_DELAY_MS)
 
 offset+=pages.length
 batchCount++
-
-/* SAVE OFFSET */
 
 await supabaseAdmin
 .from("system_jobs")

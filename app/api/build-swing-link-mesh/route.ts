@@ -18,19 +18,16 @@ function sleep(ms: number) {
 
 async function shopifyFetch(path: string, options: RequestInit = {}) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    console.log(`🌐 Shopify Request → ${path} (attempt ${attempt}/${MAX_RETRIES})`);
 
-    console.log(`📡 Shopify Request → ${path} (Attempt ${attempt})`);
-
-    const res = await fetch(
-      `https://${SHOP}/admin/api/${API_VERSION}${path}`,
-      {
-        ...options,
-        headers: {
-          "X-Shopify-Access-Token": TOKEN,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const res = await fetch(`https://${SHOP}/admin/api/${API_VERSION}${path}`, {
+      ...options,
+      headers: {
+        "X-Shopify-Access-Token": TOKEN,
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      },
+    });
 
     if (res.status === 429) {
       console.log(`⏳ Shopify throttled (${attempt}/${MAX_RETRIES})`);
@@ -44,18 +41,16 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
       throw new Error(text);
     }
 
-    console.log(`✅ Shopify request successful`);
-
     return res;
   }
 
-  throw new Error("Shopify request failed");
+  throw new Error(`Shopify request failed after ${MAX_RETRIES} retries`);
 }
 
 function extractHandle(url: string) {
   return url
-    .replace("https://doorplaceusa.com/pages/", "")
-    .replace("/pages/", "")
+    .replace(/^https?:\/\/[^/]+\/pages\//i, "")
+    .replace(/^\/pages\//i, "")
     .trim();
 }
 
@@ -65,250 +60,321 @@ function formatTitle(slug: string) {
     .replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
+function uniquePush(arr: string[], value?: string) {
+  if (!value) return;
+  if (!arr.includes(value)) arr.push(value);
+}
+
+function pickDeterministic(arr: string[], seed: number) {
+  if (!arr || arr.length === 0) return null;
+  return arr[seed % arr.length];
+}
+
 const STATE_NEIGHBORS: Record<string, string[]> = {
-al:["fl","ga","ms","tn"],
-ak:[],
-az:["ca","nv","ut","nm"],
-ar:["tx","ok","mo","tn","ms","la"],
-ca:["or","nv","az"],
-co:["wy","ne","ks","ok","nm","az","ut"],
-ct:["ny","ma","ri"],
-de:["md","pa","nj"],
-fl:["ga","al"],
-ga:["fl","al","tn","nc","sc"],
-hi:[],
-id:["wa","or","nv","ut","wy","mt"],
-il:["wi","ia","mo","ky","in"],
-in:["mi","oh","ky","il"],
-ia:["mn","sd","ne","mo","il","wi"],
-ks:["ne","mo","ok","co"],
-ky:["il","in","oh","wv","va","tn","mo"],
-la:["tx","ar","ms"],
-me:["nh"],
-md:["va","wv","pa","de"],
-ma:["ny","vt","nh","ct","ri"],
-mi:["wi","in","oh"],
-mn:["nd","sd","ia","wi"],
-ms:["la","ar","tn","al"],
-mo:["ia","il","ky","tn","ar","ok","ks","ne"],
-mt:["id","wy","sd","nd"],
-ne:["sd","ia","mo","ks","co","wy"],
-nv:["ca","or","id","ut","az"],
-nh:["me","ma","vt"],
-nj:["ny","pa","de"],
-nm:["az","ut","co","ok","tx"],
-ny:["pa","nj","ct","ma","vt"],
-nc:["va","tn","ga","sc"],
-nd:["mt","sd","mn"],
-oh:["pa","wv","ky","in","mi"],
-ok:["tx","nm","co","ks","mo","ar"],
-or:["wa","id","nv","ca"],
-pa:["ny","nj","de","md","wv","oh"],
-ri:["ct","ma"],
-sc:["ga","nc"],
-sd:["nd","mn","ia","ne","wy","mt"],
-tn:["ky","va","nc","ga","al","ms","ar","mo"],
-tx:["nm","ok","ar","la"],
-ut:["id","wy","co","nm","az","nv"],
-vt:["ny","nh","ma"],
-va:["nc","tn","ky","wv","md"],
-wa:["id","or"],
-wv:["oh","pa","md","va","ky"],
-wi:["mi","mn","ia","il"],
-wy:["mt","sd","ne","co","ut","id"]
+  al: ["fl", "ga", "ms", "tn"],
+  ak: [],
+  az: ["ca", "nv", "ut", "nm"],
+  ar: ["tx", "ok", "mo", "tn", "ms", "la"],
+  ca: ["or", "nv", "az"],
+  co: ["wy", "ne", "ks", "ok", "nm", "az", "ut"],
+  ct: ["ny", "ma", "ri"],
+  de: ["md", "pa", "nj"],
+  fl: ["ga", "al"],
+  ga: ["fl", "al", "tn", "nc", "sc"],
+  hi: [],
+  id: ["wa", "or", "nv", "ut", "wy", "mt"],
+  il: ["wi", "ia", "mo", "ky", "in"],
+  in: ["mi", "oh", "ky", "il"],
+  ia: ["mn", "sd", "ne", "mo", "il", "wi"],
+  ks: ["ne", "mo", "ok", "co"],
+  ky: ["il", "in", "oh", "wv", "va", "tn", "mo"],
+  la: ["tx", "ar", "ms"],
+  me: ["nh"],
+  md: ["va", "wv", "pa", "de"],
+  ma: ["ny", "vt", "nh", "ct", "ri"],
+  mi: ["wi", "in", "oh"],
+  mn: ["nd", "sd", "ia", "wi"],
+  ms: ["la", "ar", "tn", "al"],
+  mo: ["ia", "il", "ky", "tn", "ar", "ok", "ks", "ne"],
+  mt: ["id", "wy", "sd", "nd"],
+  ne: ["sd", "ia", "mo", "ks", "co", "wy"],
+  nv: ["ca", "or", "id", "ut", "az"],
+  nh: ["me", "ma", "vt"],
+  nj: ["ny", "pa", "de"],
+  nm: ["az", "ut", "co", "ok", "tx"],
+  ny: ["pa", "nj", "ct", "ma", "vt"],
+  nc: ["va", "tn", "ga", "sc"],
+  nd: ["mt", "sd", "mn"],
+  oh: ["pa", "wv", "ky", "in", "mi"],
+  ok: ["tx", "nm", "co", "ks", "mo", "ar"],
+  or: ["wa", "id", "nv", "ca"],
+  pa: ["ny", "nj", "de", "md", "wv", "oh"],
+  ri: ["ct", "ma"],
+  sc: ["ga", "nc"],
+  sd: ["nd", "mn", "ia", "ne", "wy", "mt"],
+  tn: ["ky", "va", "nc", "ga", "al", "ms", "ar", "mo"],
+  tx: ["nm", "ok", "ar", "la"],
+  ut: ["id", "wy", "co", "nm", "az", "nv"],
+  vt: ["ny", "nh", "ma"],
+  va: ["nc", "tn", "ky", "wv", "md"],
+  wa: ["id", "or"],
+  wv: ["oh", "pa", "md", "va", "ky"],
+  wi: ["mi", "mn", "ia", "il"],
+  wy: ["mt", "sd", "ne", "co", "ut", "id"],
 };
 
-const STYLES = [
-"daybed",
-"farmhouse",
-"patio",
-"garden",
-"backyard"
-];
+const STYLES = ["daybed", "farmhouse", "patio", "garden", "backyard"];
 
 const GUIDE_BLOCK = `
 <div style="margin-top:60px;border-top:1px solid #ddd;padding-top:30px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
-
-<h2 style="text-align:center">Porch Swing Guides</h2>
-
-<ul>
-<li><a href="/pages/best-porch-swings">Best Porch Swings</a></li>
-<li><a href="/pages/porch-swing-ideas">Porch Swing Ideas</a></li>
-<li><a href="/pages/porch-swing-buying-guide">Porch Swing Buying Guide</a></li>
-<li><a href="/pages/porch-swing-maintenance">Porch Swing Maintenance</a></li>
-<li><a href="/pages/porch-swing-safety-guide">Porch Swing Safety Guide</a></li>
-</ul>
-
+  <h2 style="text-align:center">Porch Swing Guides</h2>
+  <ul>
+    <li><a href="/pages/best-porch-swings">Best Porch Swings</a></li>
+    <li><a href="/pages/porch-swing-ideas">Porch Swing Ideas</a></li>
+    <li><a href="/pages/porch-swing-buying-guide">Porch Swing Buying Guide</a></li>
+    <li><a href="/pages/porch-swing-maintenance">Porch Swing Maintenance</a></li>
+    <li><a href="/pages/porch-swing-safety-guide">Porch Swing Safety Guide</a></li>
+  </ul>
 </div>
 `;
+
+const LINK_MESH_START = "<!-- TP_LINK_MESH_START -->";
+const LINK_MESH_END = "<!-- TP_LINK_MESH_END -->";
+
+function buildMeshHtml(relatedLinks: string[]) {
+  return `
+${LINK_MESH_START}
+${GUIDE_BLOCK}
+<div style="margin-top:40px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
+  <h2 style="text-align:center">Explore More Porch Swings</h2>
+  <ul>
+    ${relatedLinks
+      .map(
+        (slug) =>
+          `<li><a href="/pages/${slug}">${formatTitle(slug)}</a></li>`
+      )
+      .join("")}
+  </ul>
+</div>
+${LINK_MESH_END}
+`;
+}
+
+function mergeMeshIntoBody(existingBody: string, meshHtml: string) {
+  const current = existingBody || "";
+
+  if (current.includes(LINK_MESH_START) && current.includes(LINK_MESH_END)) {
+    const regex = new RegExp(
+      `${LINK_MESH_START}[\\s\\S]*?${LINK_MESH_END}`,
+      "g"
+    );
+    return current.replace(regex, meshHtml);
+  }
+
+  return `${current}\n\n${meshHtml}`;
+}
 
 export async function POST() {
+  console.log("🚀 FULL LINK MESH RUN STARTED");
 
-console.log("🚀 FULL LINK MESH RUN STARTED");
+  let totalUpdated = 0;
+  let totalSkipped = 0;
+  let totalErrors = 0;
+  let offset = 0;
+  let batchCount = 0;
 
-let totalUpdated = 0;
-let offset = 0;
-let batchCount = 0;
+  console.log("📦 Loading inventory");
 
-/* LOAD INVENTORY */
+  const { data: inventory, error: invError } = await supabaseAdmin
+    .from("shopify_url_inventory")
+    .select("url, shopify_page_id")
+    .ilike("url", "%porch-swing%")
+    .order("shopify_page_id", { ascending: true })
+    .limit(10000);
 
-console.log("📊 Loading inventory for link buckets...");
+  if (invError) {
+    console.log("❌ Inventory error:", invError.message);
+    return NextResponse.json(
+      { success: false, error: invError.message },
+      { status: 500 }
+    );
+  }
 
-const { data: inventory } = await supabaseAdmin
-.from("shopify_url_inventory")
-.select("url,id")
-.ilike("url","%porch-swing%")
-.limit(10000);
+  if (!inventory || inventory.length === 0) {
+    console.log("⚠️ No inventory found");
+    return NextResponse.json({ success: false, error: "No inventory found" }, { status: 404 });
+  }
 
-if(!inventory){
-console.log("❌ No inventory found");
-return NextResponse.json({success:false});
-}
+  console.log("✅ Inventory loaded:", inventory.length);
 
-console.log(`📦 Inventory loaded: ${inventory.length} records`);
+  const stateBuckets: Record<string, string[]> = {};
+  const styleBuckets: Record<string, string[]> = {};
+  const allSlugs: string[] = [];
 
-/* BUILD BUCKETS */
+  for (const row of inventory) {
+    const slug = extractHandle(row.url);
+    if (!slug) continue;
 
-console.log("🧠 Building state and style buckets...");
+    allSlugs.push(slug);
 
-const stateBuckets:any = {};
-const styleBuckets:any = {};
+    const parts = slug.split("-");
+    const state = parts[parts.length - 1]?.toLowerCase();
 
-for(const row of inventory){
+    if (state) {
+      if (!stateBuckets[state]) stateBuckets[state] = [];
+      stateBuckets[state].push(slug);
+    }
 
-const slug = extractHandle(row.url);
-const parts = slug.split("-");
-const state = parts[parts.length-1];
+    for (const style of STYLES) {
+      if (slug.includes(style)) {
+        if (!styleBuckets[style]) styleBuckets[style] = [];
+        styleBuckets[style].push(slug);
+      }
+    }
+  }
 
-if(!stateBuckets[state]) stateBuckets[state] = [];
-stateBuckets[state].push(slug);
+  console.log("🧠 Buckets built");
+  console.log("🗺️ States bucketed:", Object.keys(stateBuckets).length);
+  console.log(
+    "🎨 Styles bucketed:",
+    Object.keys(styleBuckets)
+      .map((k) => `${k}:${styleBuckets[k].length}`)
+      .join(" | ")
+  );
 
-for(const style of STYLES){
-if(slug.includes(style)){
-if(!styleBuckets[style]) styleBuckets[style] = [];
-styleBuckets[style].push(slug);
-}
-}
+  while (true) {
+    if (batchCount >= MAX_BATCHES) {
+      console.log("🛑 Safety stop triggered");
+      break;
+    }
 
-}
+    console.log("📦 Batch:", batchCount, "Offset:", offset);
 
-console.log("✅ Buckets built");
+    const { data: pages, error: pageError } = await supabaseAdmin
+      .from("shopify_url_inventory")
+      .select("url, shopify_page_id")
+      .ilike("url", "%porch-swing%")
+      .order("shopify_page_id", { ascending: true })
+      .range(offset, offset + BATCH_SIZE - 1);
 
-/* LOOP */
+    if (pageError) {
+      console.log("❌ Batch query error:", pageError.message);
+      return NextResponse.json(
+        {
+          success: false,
+          error: pageError.message,
+          updated: totalUpdated,
+          skipped: totalSkipped,
+          errors: totalErrors,
+        },
+        { status: 500 }
+      );
+    }
 
-while(true){
+    if (!pages || pages.length === 0) {
+      console.log("✅ All pages processed");
+      break;
+    }
 
-if(batchCount > MAX_BATCHES){
-console.log("🛑 Safety stop triggered");
-break;
-}
+    for (let i = 0; i < pages.length; i++) {
+      const url = pages[i].url;
+      const shopifyId = pages[i].shopify_page_id;
 
-console.log(`📦 Starting Batch ${batchCount} | Offset ${offset}`);
+      if (!shopifyId) {
+        console.log("⚠️ Missing shopify_page_id:", url);
+        totalSkipped++;
+        continue;
+      }
 
-const { data: pages } = await supabaseAdmin
-.from("shopify_url_inventory")
-.select("url,id")
-.ilike("url","%porch-swing%")
-.range(offset,offset+BATCH_SIZE-1);
+      const handle = extractHandle(url);
+      const parts = handle.split("-");
+      const state = parts[parts.length - 1]?.toLowerCase();
 
-if(!pages || pages.length === 0){
-console.log("✅ All pages processed. Ending loop.");
-break;
-}
+      console.log("🔧 Processing:", handle, "| Shopify ID:", shopifyId, "| State:", state);
 
-console.log(`📄 Pages returned in batch: ${pages.length}`);
+      try {
+        const relatedLinks: string[] = [];
 
-for(let i=0;i<pages.length;i++){
+        const stateList = stateBuckets[state] || [];
 
-const url = pages[i].url;
-const pageId = pages[i].id;
-const handle = extractHandle(url);
+        for (let x = 0; x < stateList.length && relatedLinks.length < 3; x++) {
+          if (stateList[x] !== handle) {
+            uniquePush(relatedLinks, stateList[x]);
+          }
+        }
 
-console.log(`🔧 Processing page ${i+1}/${pages.length} → ${handle}`);
+        const neighbors = STATE_NEIGHBORS[state] || [];
+        if (neighbors.length) {
+          const neighborState = neighbors[(offset + i) % neighbors.length];
+          const neighborList = stateBuckets[neighborState] || [];
+          const neighborSlug = pickDeterministic(neighborList, offset + i);
+          if (neighborSlug && neighborSlug !== handle) {
+            uniquePush(relatedLinks, neighborSlug);
+          }
+        }
 
-let relatedLinks:string[] = [];
+        const detectedStyle =
+          STYLES.find((style) => handle.includes(style)) ||
+          STYLES[(offset + i) % STYLES.length];
 
-const parts = handle.split("-");
-const state = parts[parts.length-1];
+        const styleList = styleBuckets[detectedStyle] || [];
+        const styleSlug = pickDeterministic(styleList, offset + i);
+        if (styleSlug && styleSlug !== handle) {
+          uniquePush(relatedLinks, styleSlug);
+        }
 
-/* SAME STATE */
+        const randomNationalSlug = pickDeterministic(allSlugs, offset + i + 17);
+        if (randomNationalSlug && randomNationalSlug !== handle) {
+          uniquePush(relatedLinks, randomNationalSlug);
+        }
 
-const stateList = stateBuckets[state] || [];
+        const finalLinks = relatedLinks.filter((slug) => slug && slug !== handle).slice(0, 6);
 
-for(let x=0;x<stateList.length && relatedLinks.length<3;x++){
-if(stateList[x] !== handle){
-relatedLinks.push(stateList[x]);
-}
-}
+        console.log("🔗 Related Links:", finalLinks);
 
-/* NEIGHBOR */
+        const getRes = await shopifyFetch(`/pages/${shopifyId}.json`, {
+          method: "GET",
+        });
+        const getJson = await getRes.json();
+        const existingBody = getJson?.page?.body_html || "";
 
-const neighbors = STATE_NEIGHBORS[state];
+        const meshHtml = buildMeshHtml(finalLinks);
+        const mergedBody = mergeMeshIntoBody(existingBody, meshHtml);
 
-if(neighbors?.length){
-const neighbor = neighbors[Math.floor(Math.random()*neighbors.length)];
-const neighborList = stateBuckets[neighbor] || [];
+        await shopifyFetch(`/pages/${shopifyId}.json`, {
+          method: "PUT",
+          body: JSON.stringify({
+            page: {
+              id: shopifyId,
+              body_html: mergedBody,
+            },
+          }),
+        });
 
-if(neighborList.length){
-relatedLinks.push(neighborList[Math.floor(Math.random()*neighborList.length)]);
-}
-}
+        totalUpdated++;
+        console.log("✅ Updated:", handle);
 
-/* STYLE */
+        await sleep(SHOPIFY_DELAY_MS);
+      } catch (err: any) {
+        totalErrors++;
+        console.log("❌ Failed:", handle, "| Error:", err?.message || err);
+      }
+    }
 
-const style = STYLES[(offset+i)%STYLES.length];
-const styleList = styleBuckets[style] || [];
+    offset += pages.length;
+    batchCount++;
+  }
 
-if(styleList.length){
-relatedLinks.push(styleList[(offset+i)%styleList.length]);
-}
+  console.log("🎉 Finished");
+  console.log("✅ Total Updated:", totalUpdated);
+  console.log("⚠️ Total Skipped:", totalSkipped);
+  console.log("❌ Total Errors:", totalErrors);
 
-console.log("🔗 Related links selected:", relatedLinks);
-
-/* BUILD HTML */
-
-const dynamicLinks = `
-<div style="margin-top:40px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
-
-<h2 style="text-align:center">Explore More Porch Swings</h2>
-
-<ul>
-${relatedLinks.map(slug=>`<li><a href="/pages/${slug}">${formatTitle(slug)}</a></li>`).join("")}
-</ul>
-
-</div>
-`;
-
-await shopifyFetch(`/pages/${pageId}.json`,{
-method:"PUT",
-body:JSON.stringify({
-page:{
-id:pageId,
-body_html: GUIDE_BLOCK + dynamicLinks
-}
-})
-});
-
-console.log(`✅ Updated page ${handle}`);
-
-totalUpdated++;
-
-await sleep(SHOPIFY_DELAY_MS);
-
-}
-
-offset += pages.length;
-batchCount++;
-
-console.log(`➡ Moving to next batch | New Offset: ${offset}`);
-
-}
-
-console.log(`🎉 PROCESS COMPLETE | Total Updated: ${totalUpdated}`);
-
-return NextResponse.json({
-success:true,
-updated:totalUpdated
-});
-
+  return NextResponse.json({
+    success: true,
+    updated: totalUpdated,
+    skipped: totalSkipped,
+    errors: totalErrors,
+    batches: batchCount,
+  });
 }

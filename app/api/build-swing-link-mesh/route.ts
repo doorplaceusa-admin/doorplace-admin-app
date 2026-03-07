@@ -193,7 +193,7 @@ console.log("Batch",batchCount)
 
 const {data:pages}=await supabaseAdmin
 .from("shopify_url_inventory")
-.select("url")
+.select("url, shopify_page_id")
 .ilike("url","%porch-swing%")
 .range(offset,offset+BATCH_SIZE-1)
 

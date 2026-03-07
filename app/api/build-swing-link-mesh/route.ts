@@ -153,7 +153,7 @@ const {data:inventory}=await supabaseAdmin
 .from("shopify_url_inventory")
 .select("url")
 .ilike("url","%porch-swing%")
-.limit(10000)
+
 
 if(!inventory){
 console.log("No inventory")

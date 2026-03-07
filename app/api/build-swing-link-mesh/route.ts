@@ -159,17 +159,23 @@ console.log("No inventory")
 return NextResponse.json({success:false})
 }
 
+/* GLOBAL SLUG POOL */
+
+const allSlugs=inventory.map(row=>extractHandle(row.url))
+
 const stateBuckets:any={}
 const styleBuckets:any={}
 
+/* BUILD BUCKETS */
+
 for(const row of inventory){
 
-const slug = extractHandle(row.url)
+const slug=extractHandle(row.url)
 
-const match = slug.match(/-([a-z]{2})$/)
-const state = match ? match[1] : ""
+const match=slug.match(/-([a-z]{2})$/)
+const state=match?match[1]:""
 
-if(!stateBuckets[state]) stateBuckets[state] = []
+if(!stateBuckets[state]) stateBuckets[state]=[]
 stateBuckets[state].push(slug)
 
 for(const style of STYLES){
@@ -212,9 +218,10 @@ console.log("Processing",handle)
 
 let relatedLinks:string[]=[]
 
-const match = handle.match(/-([a-z]{2})$/)
-const state = match ? match[1] : ""
-/* RANDOMIZED STATE LINKS */
+const match=handle.match(/-([a-z]{2})$/)
+const state=match?match[1]:""
+
+/* SAME STATE LINKS */
 
 const stateList=stateBuckets[state]||[]
 
@@ -222,7 +229,7 @@ if(stateList.length){
 
 let startIndex=Math.floor(Math.random()*stateList.length)
 
-for(let x=0;x<stateList.length&&relatedLinks.length<15;x++){
+for(let x=0;x<stateList.length && relatedLinks.length<15;x++){
 
 let idx=(startIndex+x)%stateList.length
 let candidate=stateList[idx]
@@ -251,7 +258,7 @@ relatedLinks.push(neighborList[Math.floor(Math.random()*neighborList.length)])
 
 }
 
-/* STYLE LINK */
+/* STYLE LINKS */
 
 const style=STYLES[(offset+i)%STYLES.length]
 
@@ -260,6 +267,26 @@ const styleList=styleBuckets[style]||[]
 if(styleList.length){
 relatedLinks.push(styleList[(offset+i)%styleList.length])
 }
+
+/* FALLBACK RANDOM LINKS */
+
+if(relatedLinks.length<5){
+
+console.log("Fallback random links",handle)
+
+while(relatedLinks.length<10){
+
+const randomSlug=allSlugs[Math.floor(Math.random()*allSlugs.length)]
+
+if(randomSlug!==handle && !relatedLinks.includes(randomSlug)){
+relatedLinks.push(randomSlug)
+}
+
+}
+
+}
+
+/* BUILD HTML */
 
 const dynamicLinks=`
 
@@ -294,7 +321,7 @@ continue
 const pageId=findJson.pages[0].id
 let existingBody=findJson.pages[0].body_html||""
 
-/* DUPLICATE PREVENTION */
+/* REMOVE OLD MESH */
 
 existingBody=existingBody.replace(
 /<!-- TP_LINK_MESH_START -->[\s\S]*?<!-- TP_LINK_MESH_END -->/g,

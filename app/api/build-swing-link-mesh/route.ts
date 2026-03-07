@@ -176,6 +176,7 @@ const allSlugs=inventory.map(row=>extractHandle(row.url))
 
 const stateBuckets:any={}
 const styleBuckets:any={}
+const typeBuckets:any={}
 
 for(const row of inventory){
 
@@ -195,6 +196,22 @@ styleBuckets[style].push(slug)
 }
 
 }
+
+/* TYPE BUCKETS */
+
+let type="general"
+
+if(slug.includes("daybed")) type="daybed"
+else if(slug.includes("twin")) type="twin"
+else if(slug.includes("crib")) type="crib"
+else if(slug.includes("farmhouse")) type="farmhouse"
+else if(slug.includes("patio")) type="patio"
+else if(slug.includes("garden")) type="garden"
+else if(slug.includes("backyard")) type="backyard"
+else if(slug.includes("pool")) type="pool"
+
+if(!typeBuckets[type]) typeBuckets[type]=[]
+typeBuckets[type].push(slug)
 
 }
 
@@ -227,21 +244,17 @@ console.log("Processing",handle)
 
 let relatedLinks:string[]=[]
 
-const match = handle.match(/-([a-z]{2})$/)
-const state = match ? match[1] : ""
+/* FORCE VARIETY */
 
-const stateList=stateBuckets[state]||[]
+for(const type of Object.keys(typeBuckets)){
 
-if(stateList.length){
+const bucket=typeBuckets[type]
 
-let startIndex=Math.floor(Math.random()*stateList.length)
+if(bucket && bucket.length){
 
-for(let x=0;x<stateList.length && relatedLinks.length<15;x++){
+const candidate=bucket[Math.floor(Math.random()*bucket.length)]
 
-let idx=(startIndex+x)%stateList.length
-let candidate=stateList[idx]
-
-if(candidate!==handle){
+if(candidate!==handle && !relatedLinks.includes(candidate)){
 relatedLinks.push(candidate)
 }
 
@@ -249,29 +262,26 @@ relatedLinks.push(candidate)
 
 }
 
-const neighbors=STATE_NEIGHBORS[state]
+/* STATE LINK */
 
-if(neighbors?.length){
+const match = handle.match(/-([a-z]{2})$/)
+const state = match ? match[1] : ""
 
-const neighbor=neighbors[Math.floor(Math.random()*neighbors.length)]
+const stateList=stateBuckets[state]||[]
 
-const neighborList=stateBuckets[neighbor]||[]
+if(stateList.length){
 
-if(neighborList.length){
-relatedLinks.push(neighborList[Math.floor(Math.random()*neighborList.length)])
+const candidate=stateList[Math.floor(Math.random()*stateList.length)]
+
+if(candidate!==handle && !relatedLinks.includes(candidate)){
+relatedLinks.push(candidate)
 }
 
 }
 
-const style=STYLES[(offset+i)%STYLES.length]
+/* RANDOM FILL */
 
-const styleList=styleBuckets[style]||[]
-
-if(styleList.length){
-relatedLinks.push(styleList[(offset+i)%styleList.length])
-}
-
-while(relatedLinks.length<10){
+while(relatedLinks.length<12){
 
 const randomSlug=allSlugs[Math.floor(Math.random()*allSlugs.length)]
 

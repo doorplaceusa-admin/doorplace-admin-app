@@ -16,6 +16,7 @@ function sleep(ms: number) {
 }
 
 async function shopifyFetch(path: string, options: RequestInit = {}) {
+
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
 
     const res = await fetch(
@@ -44,8 +45,10 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
     }
 
     if (!res.ok) {
+
       const text = await res.text();
       console.log("❌ Shopify API Error:", text);
+
       throw new Error(text);
     }
 
@@ -56,6 +59,7 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
 }
 
 function extractHandle(url: string) {
+
   return url
     .replace("https://doorplaceusa.com/pages/", "")
     .replace("/pages/", "")
@@ -63,22 +67,74 @@ function extractHandle(url: string) {
 }
 
 function formatTitle(slug: string) {
+
   return slug
     .replace(/-/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
-/* ------------------------------------- */
-/* GUIDE LINKS */
-/* ------------------------------------- */
+/* ---------------------------------- */
+/* STATE NEIGHBORS */
+/* ---------------------------------- */
 
-const GUIDE_PAGES = [
-  "/pages/best-porch-swings",
-  "/pages/porch-swing-ideas",
-  "/pages/porch-swing-buying-guide",
-  "/pages/porch-swing-maintenance",
-  "/pages/porch-swing-safety-guide"
-];
+const STATE_NEIGHBORS: Record<string,string[]> = {
+
+al:["fl","ga","ms","tn"],
+ak:[],
+az:["ca","nv","ut","nm"],
+ar:["tx","ok","mo","tn","ms","la"],
+ca:["or","nv","az"],
+co:["wy","ne","ks","ok","nm","az","ut"],
+ct:["ny","ma","ri"],
+de:["md","pa","nj"],
+fl:["ga","al"],
+ga:["fl","al","tn","nc","sc"],
+hi:[],
+id:["wa","or","nv","ut","wy","mt"],
+il:["wi","ia","mo","ky","in"],
+in:["mi","oh","ky","il"],
+ia:["mn","sd","ne","mo","il","wi"],
+ks:["ne","mo","ok","co"],
+ky:["il","in","oh","wv","va","tn","mo"],
+la:["tx","ar","ms"],
+me:["nh"],
+md:["va","wv","pa","de"],
+ma:["ny","vt","nh","ct","ri"],
+mi:["wi","in","oh"],
+mn:["nd","sd","ia","wi"],
+ms:["la","ar","tn","al"],
+mo:["ia","il","ky","tn","ar","ok","ks","ne"],
+mt:["id","wy","sd","nd"],
+ne:["sd","ia","mo","ks","co","wy"],
+nv:["ca","or","id","ut","az"],
+nh:["me","ma","vt"],
+nj:["ny","pa","de"],
+nm:["az","ut","co","ok","tx"],
+ny:["pa","nj","ct","ma","vt"],
+nc:["va","tn","ga","sc"],
+nd:["mt","sd","mn"],
+oh:["pa","wv","ky","in","mi"],
+ok:["tx","nm","co","ks","mo","ar"],
+or:["wa","id","nv","ca"],
+pa:["ny","nj","de","md","wv","oh"],
+ri:["ct","ma"],
+sc:["ga","nc"],
+sd:["nd","mn","ia","ne","wy","mt"],
+tn:["ky","va","nc","ga","al","ms","ar","mo"],
+tx:["nm","ok","ar","la"],
+ut:["id","wy","co","nm","az","nv"],
+vt:["ny","nh","ma"],
+va:["nc","tn","ky","wv","md"],
+wa:["id","or"],
+wv:["oh","pa","md","va","ky"],
+wi:["mi","mn","ia","il"],
+wy:["mt","sd","ne","co","ut","id"]
+
+};
+
+/* ---------------------------------- */
+/* GUIDE BLOCK */
+/* ---------------------------------- */
 
 const GUIDE_BLOCK = `
 <div style="margin-top:60px;border-top:1px solid #ddd;padding-top:30px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
@@ -98,165 +154,199 @@ const GUIDE_BLOCK = `
 
 export async function POST() {
 
-  console.log("🚀 BUILD SWING LINK MESH STARTED");
+console.log("🚀 BUILD SWING LINK MESH STARTED");
 
-  let updated = 0;
+let updated = 0;
 
-  const { data: pointer } = await supabaseAdmin
-    .from("internal_link_pointer")
-    .select("*")
-    .eq("id", 1)
-    .single();
+const { data: pointer } = await supabaseAdmin
+.from("internal_link_pointer")
+.select("*")
+.eq("id",1)
+.single();
 
-  const pageOffset = pointer?.current_offset || 0;
+const pageOffset = pointer?.current_offset || 0;
 
-  console.log("📍 Current Offset:", pageOffset);
+console.log("📍 Current Offset:",pageOffset);
 
-  const { data: pages } = await supabaseAdmin
-    .from("shopify_url_inventory")
-    .select("url")
-    .ilike("url", "%porch-swing%")
-    .range(pageOffset, pageOffset + 249);
+const { data: pages } = await supabaseAdmin
+.from("shopify_url_inventory")
+.select("url")
+.ilike("url","%porch-swing%")
+.range(pageOffset,pageOffset+249);
 
-  console.log("📄 Pages Returned:", pages?.length);
+console.log("📄 Pages Returned:",pages?.length);
 
-  if (!pages || pages.length === 0) {
-    console.log("⚠️ No pages returned — exiting route");
-    return NextResponse.json({ success: true });
-  }
+if(!pages || pages.length===0){
 
-  for (let i = 0; i < pages.length; i++) {
+console.log("⚠️ No pages returned");
+return NextResponse.json({success:true});
 
-    const url = pages[i].url as string;
-    const handle = extractHandle(url);
+}
 
-    console.log(`🔧 Processing Page ${i + 1}:`, handle);
+for(let i=0;i<pages.length;i++){
 
-    const res = await shopifyFetch(`/pages.json?handle=${handle}`);
-    const data = await res.json();
+const url = pages[i].url;
+const handle = extractHandle(url);
 
-    const page = data.pages?.[0];
+console.log("🔧 Processing:",handle);
 
-    if (!page) {
-      console.log("⚠️ Page not found:", handle);
-      continue;
-    }
+const res = await shopifyFetch(`/pages.json?handle=${handle}`);
+const data = await res.json();
 
-    const html = (page.body_html || "").toLowerCase();
+const page = data.pages?.[0];
 
-    if (html.includes("porch swing guides")) {
-      console.log("⏭ Skipping (already updated)");
-      continue;
-    }
+if(!page){
+console.log("⚠️ Page not found");
+continue;
+}
 
-    /* ---------------------------------- */
-    /* DETECT STATE */
-    /* ---------------------------------- */
+const html = (page.body_html || "").toLowerCase();
 
-    const parts = handle.split("-");
-    const state = parts[parts.length - 1];
+if(html.includes("porch swing guides")){
+console.log("⏭ Already updated");
+continue;
+}
 
-    console.log("📍 Detected State:", state);
+/* ---------------------------------- */
+/* DETECT STATE */
+/* ---------------------------------- */
 
-    /* ---------------------------------- */
-    /* LAYER 1: SAME STATE LINKS */
-    /* ---------------------------------- */
+const parts = handle.split("-");
+const state = parts[parts.length-1];
 
-    const { data: stateLinks } = await supabaseAdmin
-      .from("shopify_url_inventory")
-      .select("url")
-      .ilike("url", `%-${state}`)
-      .ilike("url", "%porch-swing%")
-      .limit(10);
+console.log("📍 State:",state);
 
-    let relatedLinks = [];
+let relatedLinks:string[] = [];
 
-    if (stateLinks) {
-      for (const u of stateLinks) {
-        const slug = extractHandle(u.url);
-        if (slug !== handle) relatedLinks.push(slug);
-        if (relatedLinks.length === 3) break;
-      }
-    }
+/* ---------------------------------- */
+/* 3 SAME STATE */
+/* ---------------------------------- */
 
-    /* ---------------------------------- */
-    /* LAYER 2: STYLE VARIATION */
-    /* ---------------------------------- */
+const { data: sameState } = await supabaseAdmin
+.from("shopify_url_inventory")
+.select("url")
+.ilike("url","%porch-swing%")
+.ilike("url",`%-${state}`)
+.limit(20);
 
-    const { data: styleLinks } = await supabaseAdmin
-      .from("shopify_url_inventory")
-      .select("url")
-      .ilike("url", "%daybed%")
-      .limit(1);
+if(sameState){
 
-    if (styleLinks?.length) {
-      relatedLinks.push(extractHandle(styleLinks[0].url));
-    }
+for(const row of sameState){
 
-    /* ---------------------------------- */
-    /* LAYER 3: GUIDE PAGE */
-    /* ---------------------------------- */
+const slug = extractHandle(row.url);
 
-    const guide = GUIDE_PAGES[Math.floor(Math.random() * GUIDE_PAGES.length)];
-    relatedLinks.push(guide.replace("/pages/", ""));
+if(slug!==handle && !relatedLinks.includes(slug)){
+relatedLinks.push(slug);
+}
 
-    /* ---------------------------------- */
-    /* BUILD LINK HTML */
-    /* ---------------------------------- */
+if(relatedLinks.length===3) break;
 
-    const dynamicLinks = `
+}
+
+}
+
+/* ---------------------------------- */
+/* NEIGHBOR STATE */
+/* ---------------------------------- */
+
+const neighbors = STATE_NEIGHBORS[state];
+
+if(neighbors?.length){
+
+const randomNeighbor =
+neighbors[Math.floor(Math.random()*neighbors.length)];
+
+const { data: neighborPages } = await supabaseAdmin
+.from("shopify_url_inventory")
+.select("url")
+.ilike("url","%porch-swing%")
+.ilike("url",`%-${randomNeighbor}`)
+.limit(1);
+
+if(neighborPages?.length){
+
+relatedLinks.push(extractHandle(neighborPages[0].url));
+
+}
+
+}
+
+/* ---------------------------------- */
+/* STYLE VARIATION */
+/* ---------------------------------- */
+
+const styles = ["daybed","farmhouse","patio","garden","backyard"];
+
+const style = styles[Math.floor(Math.random()*styles.length)];
+
+const { data: stylePages } = await supabaseAdmin
+.from("shopify_url_inventory")
+.select("url")
+.ilike("url",`%${style}%`)
+.limit(1);
+
+if(stylePages?.length){
+
+relatedLinks.push(extractHandle(stylePages[0].url));
+
+}
+
+console.log("🔗 Related Links:",relatedLinks);
+
+/* ---------------------------------- */
+/* HTML */
+/* ---------------------------------- */
+
+const dynamicLinks = `
 <div style="margin-top:40px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
 
 <h2 style="text-align:center">Explore More Porch Swings</h2>
 
 <ul>
-${relatedLinks.map(slug => {
-
-  return `<li><a href="/pages/${slug}">${formatTitle(slug)}</a></li>`;
-
+${relatedLinks.map(slug=>{
+return `<li><a href="/pages/${slug}">${formatTitle(slug)}</a></li>`;
 }).join("")}
-
 </ul>
 
 </div>
 `;
 
-    const updatedHTML =
-      (page.body_html || "") +
-      GUIDE_BLOCK +
-      dynamicLinks;
+const updatedHTML =
+(page.body_html || "") +
+GUIDE_BLOCK +
+dynamicLinks;
 
-    await shopifyFetch(`/pages/${page.id}.json`, {
-      method: "PUT",
-      body: JSON.stringify({
-        page: {
-          id: page.id,
-          body_html: updatedHTML
-        }
-      })
-    });
+await shopifyFetch(`/pages/${page.id}.json`,{
+method:"PUT",
+body:JSON.stringify({
+page:{
+id:page.id,
+body_html:updatedHTML
+}
+})
+});
 
-    console.log("✅ Updated:", handle);
+console.log("✅ Updated:",handle);
 
-    updated++;
+updated++;
 
-    await sleep(SHOPIFY_DELAY_MS);
-  }
+await sleep(SHOPIFY_DELAY_MS);
 
-  const newOffset = pageOffset + pages.length;
+}
 
-  await supabaseAdmin
-    .from("internal_link_pointer")
-    .update({
-      current_offset: newOffset
-    })
-    .eq("id", 1);
+const newOffset = pageOffset + pages.length;
 
-  console.log("📍 Pointer Updated To:", newOffset);
-  console.log("🎉 Total Pages Updated:", updated);
+await supabaseAdmin
+.from("internal_link_pointer")
+.update({current_offset:newOffset})
+.eq("id",1);
 
-  return NextResponse.json({
-    success: true,
-    updated
-  });
+console.log("📍 Pointer Updated:",newOffset);
+console.log("🎉 Total Updated:",updated);
+
+return NextResponse.json({
+success:true,
+updated
+});
+
 }

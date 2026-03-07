@@ -249,6 +249,8 @@ relatedLinks.push(styleList[(offset+i)%styleList.length])
 
 const dynamicLinks=`
 
+<!-- TP_LINK_MESH_START -->
+
 <div style="margin-top:40px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
 
 <h2 style="text-align:center">Explore More Porch Swings</h2>
@@ -261,9 +263,11 @@ ${relatedLinks.map(slug=>`<li><a href="/pages/${slug}">${formatTitle(slug)}</a><
 
 </div>
 
-`
+${GUIDE_BLOCK}
 
-/* FIND PAGE ID */
+<!-- TP_LINK_MESH_END -->
+
+`
 
 const findRes=await shopifyFetch(`/pages.json?handle=${handle}`)
 const findJson=await findRes.json()
@@ -274,16 +278,21 @@ continue
 }
 
 const pageId=findJson.pages[0].id
-const existingBody=findJson.pages[0].body_html||""
+let existingBody=findJson.pages[0].body_html||""
 
-/* UPDATE PAGE */
+/* DUPLICATE PREVENTION */
+
+existingBody=existingBody.replace(
+/<!-- TP_LINK_MESH_START -->[\s\S]*?<!-- TP_LINK_MESH_END -->/g,
+""
+)
 
 await shopifyFetch(`/pages/${pageId}.json`,{
 method:"PUT",
 body:JSON.stringify({
 page:{
 id:pageId,
-body_html:existingBody+GUIDE_BLOCK+dynamicLinks
+body_html:existingBody+dynamicLinks
 }
 })
 })

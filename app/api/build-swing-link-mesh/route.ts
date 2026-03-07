@@ -142,21 +142,23 @@ export async function POST() {
     }
 
     /* ---------------------------------- */
-    /* DYNAMIC LINKS */
+    /* RELATED LINKS BY STATE */
     /* ---------------------------------- */
 
-    const start = (pageOffset + i) * 5;
+    const parts = handle.split("-");
+    const state = parts[parts.length - 1];
 
-    console.log("🔗 Dynamic Link Range:", start, "-", start + 4);
+    console.log("📍 Detected State:", state);
 
     const { data: urls } = await supabaseAdmin
       .from("shopify_url_inventory")
       .select("url")
       .ilike("url", "%porch-swing%")
-      .range(start, start + 4);
+      .ilike("url", `%-${state}`)
+      .limit(5);
 
     if (!urls || urls.length === 0) {
-      console.log("⚠️ No dynamic links found for:", handle);
+      console.log("⚠️ No related pages found for state:", state);
       continue;
     }
 
@@ -169,6 +171,8 @@ export async function POST() {
 ${urls.map((u: any) => {
 
   const slug = extractHandle(u.url);
+
+  if (slug === handle) return "";
 
   return `<li><a href="/pages/${slug}">${formatTitle(slug)}</a></li>`;
 

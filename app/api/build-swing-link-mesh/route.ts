@@ -222,7 +222,7 @@ if(stateList.length){
 
 let startIndex=Math.floor(Math.random()*stateList.length)
 
-for(let x=0;x<stateList.length&&relatedLinks.length<3;x++){
+for(let x=0;x<stateList.length&&relatedLinks.length<10;x++){
 
 let idx=(startIndex+x)%stateList.length
 let candidate=stateList[idx]

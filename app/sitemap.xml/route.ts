@@ -14,6 +14,7 @@ export async function GET() {
       `${HOST}/sitemap-index-3`,
       `${HOST}/sitemap-index-4`,
       `${HOST}/sitemap-index-5`,
+      `${HOST}/sitemap-index-6`,
     ];
 
     const sitemapLinks = sitemapIndexes

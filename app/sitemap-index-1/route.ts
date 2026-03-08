@@ -11,12 +11,12 @@ Each chunk sitemap contains 5,000 URLs.
 60 × 5000 = 300,000 URLs per sitemap index
 */
 
-const START = 0;
+const START = 1;
 const TOTAL_CHUNKS = 60;
 
 export async function GET() {
   try {
-    console.log("Generating sitemap-index-1");
+    console.log("Generating sitemap.xml");
 
     const sitemapLinks = Array.from({ length: TOTAL_CHUNKS })
       .map((_, index) => {
@@ -24,7 +24,7 @@ export async function GET() {
 
         return `
 <sitemap>
-<loc>${SITEMAP_HOST}/sitemap/${chunk}.xml</loc>
+<loc>${SITEMAP_HOST}/sitemap_pages_${chunk}.xml</loc>
 </sitemap>`;
       })
       .join("");
@@ -42,7 +42,7 @@ ${sitemapLinks}
     });
 
   } catch (err: any) {
-    console.error("❌ sitemap-index-1 error:", err?.message);
+    console.error("❌ sitemap.xml error:", err?.message);
     return new NextResponse("Internal server error", { status: 500 });
   }
 }

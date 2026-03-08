@@ -93,7 +93,7 @@ console.log("Resuming from offset:",offset)
 
 const {data:inventory}=await supabaseAdmin
 .from("shopify_url_inventory")
-.select("url,title")
+.select("url")
 .or("url.ilike.%swing%,url.ilike.%swings%")
 
 if(!inventory){
@@ -104,7 +104,7 @@ return NextResponse.json({success:false})
 const allPages = inventory.map(row=>{
 return{
 slug: extractHandle(row.url),
-title: row.title || extractHandle(row.url)
+title: extractHandle(row.url)
 }
 })
 

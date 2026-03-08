@@ -47,18 +47,15 @@ throw new Error("Shopify failed")
 }
 
 function extractHandle(url:string){
-
 return url
 .replace("https://doorplaceusa.com/pages/","")
 .replace("/pages/","")
 .trim()
-
 }
 
 function formatTitle(slug:string){
 
 let cleaned = slug
-
 cleaned = cleaned.replace(/-\d{4,}/g,"")
 
 return cleaned
@@ -67,66 +64,9 @@ return cleaned
 
 }
 
-const STATE_NEIGHBORS:Record<string,string[]>={
-al:["fl","ga","ms","tn"],
-ak:[],
-az:["ca","nv","ut","nm"],
-ar:["tx","ok","mo","tn","ms","la"],
-ca:["or","nv","az"],
-co:["wy","ne","ks","ok","nm","az","ut"],
-ct:["ny","ma","ri"],
-de:["md","pa","nj"],
-fl:["ga","al"],
-ga:["fl","al","tn","nc","sc"],
-hi:[],
-id:["wa","or","nv","ut","wy","mt"],
-il:["wi","ia","mo","ky","in"],
-in:["mi","oh","ky","il"],
-ia:["mn","sd","ne","mo","il","wi"],
-ks:["ne","mo","ok","co"],
-ky:["il","in","oh","wv","va","tn","mo"],
-la:["tx","ar","ms"],
-me:["nh"],
-md:["va","wv","pa","de"],
-ma:["ny","vt","nh","ct","ri"],
-mi:["wi","in","oh"],
-mn:["nd","sd","ia","wi"],
-ms:["la","ar","tn","al"],
-mo:["ia","il","ky","tn","ar","ok","ks","ne"],
-mt:["id","wy","sd","nd"],
-ne:["sd","ia","mo","ks","co","wy"],
-nv:["ca","or","id","ut","az"],
-nh:["me","ma","vt"],
-nj:["ny","pa","de"],
-nm:["az","ut","co","ok","tx"],
-ny:["pa","nj","ct","ma","vt"],
-nc:["va","tn","ga","sc"],
-nd:["mt","sd","mn"],
-oh:["pa","wv","ky","in","mi"],
-ok:["tx","nm","co","ks","mo","ar"],
-or:["wa","id","nv","ca"],
-pa:["ny","nj","de","md","wv","oh"],
-ri:["ct","ma"],
-sc:["ga","nc"],
-sd:["nd","mn","ia","ne","wy","mt"],
-tn:["ky","va","nc","ga","al","ms","ar","mo"],
-tx:["nm","ok","ar","la"],
-ut:["id","wy","co","nm","az","nv"],
-vt:["ny","nh","ma"],
-va:["nc","tn","ky","wv","md"],
-wa:["id","or"],
-wv:["oh","pa","md","va","ky"],
-wi:["mi","mn","ia","il"],
-wy:["mt","sd","ne","co","ut","id"]
+function randomLinkCount(){
+return Math.floor(Math.random() * 11) + 10
 }
-
-const STYLES=[
-"daybed",
-"farmhouse",
-"patio",
-"garden",
-"backyard"
-]
 
 const GUIDE_BLOCK=`
 
@@ -174,8 +114,6 @@ return NextResponse.json({success:false})
 
 const allSlugs=inventory.map(row=>extractHandle(row.url))
 
-/* ROTATION CURSOR */
-
 const {data:rotation}=await supabaseAdmin
 .from("mesh_rotation_state")
 .select("cursor_position")
@@ -183,45 +121,6 @@ const {data:rotation}=await supabaseAdmin
 .single()
 
 let cursor = rotation?.cursor_position || 0
-
-const stateBuckets:any={}
-const styleBuckets:any={}
-const typeBuckets:any={}
-
-for(const row of inventory){
-
-const slug = extractHandle(row.url)
-
-const match = slug.match(/-([a-z]{2})$/)
-const state = match ? match[1] : ""
-
-if(!stateBuckets[state]) stateBuckets[state] = []
-stateBuckets[state].push(slug)
-
-for(const style of STYLES){
-
-if(slug.includes(style)){
-if(!styleBuckets[style]) styleBuckets[style]=[]
-styleBuckets[style].push(slug)
-}
-
-}
-
-let type="general"
-
-if(slug.includes("daybed")) type="daybed"
-else if(slug.includes("twin")) type="twin"
-else if(slug.includes("crib")) type="crib"
-else if(slug.includes("farmhouse")) type="farmhouse"
-else if(slug.includes("patio")) type="patio"
-else if(slug.includes("garden")) type="garden"
-else if(slug.includes("backyard")) type="backyard"
-else if(slug.includes("pool")) type="pool"
-
-if(!typeBuckets[type]) typeBuckets[type]=[]
-typeBuckets[type].push(slug)
-
-}
 
 while(true){
 
@@ -252,59 +151,15 @@ console.log("Processing",handle)
 
 let relatedLinks:string[]=[]
 
-let currentType="general"
+const targetCount = randomLinkCount()
 
-if(handle.includes("daybed")) currentType="daybed"
-else if(handle.includes("twin")) currentType="twin"
-else if(handle.includes("crib")) currentType="crib"
-else if(handle.includes("farmhouse")) currentType="farmhouse"
-else if(handle.includes("patio")) currentType="patio"
-else if(handle.includes("garden")) currentType="garden"
-else if(handle.includes("backyard")) currentType="backyard"
-else if(handle.includes("pool")) currentType="pool"
-
-for(const type of Object.keys(typeBuckets)){
-
-if(type === currentType) continue
-
-const bucket=typeBuckets[type]
-
-if(bucket && bucket.length){
-
-const candidate=bucket[Math.floor(Math.random()*bucket.length)]
-
-if(candidate!==handle && !relatedLinks.includes(candidate)){
-relatedLinks.push(candidate)
-}
-
-}
-
-}
-
-const match = handle.match(/-([a-z]{2})$/)
-const state = match ? match[1] : ""
-
-const stateList=stateBuckets[state]||[]
-
-if(stateList.length){
-
-const candidate=stateList[Math.floor(Math.random()*stateList.length)]
-
-if(candidate!==handle && !relatedLinks.includes(candidate)){
-relatedLinks.push(candidate)
-}
-
-}
-
-/* ROTATION BASED LINKS */
-
-while(relatedLinks.length<12){
+while(relatedLinks.length < targetCount){
 
 const rotationSlug = allSlugs[cursor % allSlugs.length]
 
 cursor++
 
-if(rotationSlug!==handle && !relatedLinks.includes(rotationSlug)){
+if(rotationSlug !== handle && !relatedLinks.includes(rotationSlug)){
 relatedLinks.push(rotationSlug)
 }
 

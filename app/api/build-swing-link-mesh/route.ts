@@ -53,17 +53,6 @@ return url
 .trim()
 }
 
-function formatTitle(slug:string){
-
-let cleaned = slug
-cleaned = cleaned.replace(/-\d{4,}/g,"")
-
-return cleaned
-.replace(/-/g," ")
-.replace(/\b\w/g,l=>l.toUpperCase())
-
-}
-
 function randomLinkCount(){
 return Math.floor(Math.random() * 11) + 10
 }
@@ -104,7 +93,7 @@ console.log("Resuming from offset:",offset)
 
 const {data:inventory}=await supabaseAdmin
 .from("shopify_url_inventory")
-.select("url")
+.select("url,title")
 .or("url.ilike.%swing%,url.ilike.%swings%")
 
 if(!inventory){
@@ -112,7 +101,14 @@ console.log("No inventory")
 return NextResponse.json({success:false})
 }
 
-const allSlugs=inventory.map(row=>extractHandle(row.url))
+const allPages = inventory.map(row=>{
+return{
+slug: extractHandle(row.url),
+title: row.title || extractHandle(row.url)
+}
+})
+
+const totalPages = allPages.length
 
 const {data:rotation}=await supabaseAdmin
 .from("mesh_rotation_state")
@@ -149,18 +145,19 @@ const handle=extractHandle(url)
 
 console.log("Processing",handle)
 
-let relatedLinks:string[]=[]
+let relatedLinks:{slug:string,title:string}[]=[]
 
 const targetCount = randomLinkCount()
 
 while(relatedLinks.length < targetCount){
 
-const rotationSlug = allSlugs[cursor % allSlugs.length]
+const index = cursor % totalPages
+const candidate = allPages[index]
 
 cursor++
 
-if(rotationSlug !== handle && !relatedLinks.includes(rotationSlug)){
-relatedLinks.push(rotationSlug)
+if(candidate.slug !== handle && !relatedLinks.find(l=>l.slug===candidate.slug)){
+relatedLinks.push(candidate)
 }
 
 }
@@ -175,7 +172,7 @@ const dynamicLinks=`
 
 <ul>
 
-${relatedLinks.map(slug=>`<li><a href="/pages/${slug}">${formatTitle(slug)}</a></li>`).join("")}
+${relatedLinks.map(link=>`<li><a href="/pages/${link.slug}">${link.title}</a></li>`).join("")}
 
 </ul>
 

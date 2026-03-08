@@ -17,11 +17,12 @@ export default function robots(): MetadataRoute.Robots {
       },
     ],
     sitemap: [
-      "https://tradepilot.doorplaceusa.com/sitemap-index-1",
-      "https://tradepilot.doorplaceusa.com/sitemap-index-2",
-      "https://tradepilot.doorplaceusa.com/sitemap-index-3",
-      "https://tradepilot.doorplaceusa.com/sitemap-index-4",
-      "https://tradepilot.doorplaceusa.com/sitemap-index-5",
+      "https://tradepilot.doorplaceusa.com/sitemap-index-1.xml",
+      "https://tradepilot.doorplaceusa.com/sitemap-index-2.xml",
+      "https://tradepilot.doorplaceusa.com/sitemap-index-3.xml",
+      "https://tradepilot.doorplaceusa.com/sitemap-index-4.xml",
+      "https://tradepilot.doorplaceusa.com/sitemap-index-5.xml",
+      "https://tradepilot.doorplaceusa.com/sitemap-index-6.xml",
     ],
   };
 }

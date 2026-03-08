@@ -37,6 +37,12 @@ continue
 if(!res.ok){
 const txt=await res.text()
 console.log("❌ Shopify error",txt)
+
+if(txt.includes("has already been taken")){
+console.log("⚠️ Duplicate handle detected — skipping")
+return { duplicate:true }
+}
+
 throw new Error(txt)
 }
 
@@ -184,7 +190,12 @@ ${GUIDE_BLOCK}
 
 `
 
-const findRes=await shopifyFetch(`/pages.json?handle=${handle}`)
+const findRes:any = await shopifyFetch(`/pages.json?handle=${handle}`)
+
+if(findRes?.duplicate){
+continue
+}
+
 const findJson=await findRes.json()
 
 if(!findJson.pages||findJson.pages.length===0){
@@ -200,7 +211,7 @@ existingBody=existingBody.replace(
 ""
 )
 
-await shopifyFetch(`/pages/${pageId}.json`,{
+const updateRes:any = await shopifyFetch(`/pages/${pageId}.json`,{
 method:"PUT",
 body:JSON.stringify({
 page:{
@@ -209,6 +220,10 @@ body_html:existingBody+dynamicLinks
 }
 })
 })
+
+if(updateRes?.duplicate){
+continue
+}
 
 totalUpdated++
 

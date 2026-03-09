@@ -7,72 +7,42 @@ function extractHandle(url: string) {
     .trim();
 }
 
+function randomLinkCount() {
+  return Math.floor(Math.random() * 11) + 10;
+}
+
 export async function getMeshLinks(currentSlug: string): Promise<string[]> {
 
-  const LINK_COUNT = Math.floor(Math.random() * 11) + 10;
-
-  /* -----------------------------------------
-     LOAD CURRENT CURSOR POSITION
-  ----------------------------------------- */
-
-  const { data: rotation } = await supabaseAdmin
-    .from("mesh_rotation_state")
-    .select("cursor_position")
-    .eq("id", 1)
-    .single();
-
-  let cursor = rotation?.cursor_position || 0;
-
-  /* -----------------------------------------
-     LOAD SMALL WINDOW OF URLS
-  ----------------------------------------- */
+  const targetCount = randomLinkCount();
 
   const { data: inventory } = await supabaseAdmin
     .from("shopify_url_inventory")
     .select("url")
-    .order("url", { ascending: true })
-    .range(cursor, cursor + 50);
+    .or("url.ilike.%swing%,url.ilike.%swings%")
+    .limit(500);
 
   if (!inventory || inventory.length === 0) {
     return [];
   }
 
-  const pages = inventory.map((r: any) => ({
-    slug: extractHandle(r.url),
-  }));
-
-  const totalPages = pages.length;
+  const pages = inventory.map((row) => extractHandle(row.url));
 
   const links: string[] = [];
 
-  /* -----------------------------------------
-     BUILD LINK LIST
-  ----------------------------------------- */
+  let cursor = Math.floor(Math.random() * pages.length);
 
-  while (links.length < LINK_COUNT) {
+  while (links.length < targetCount) {
 
-    const index = cursor % totalPages;
+    const index = cursor % pages.length;
     const candidate = pages[index];
 
     cursor++;
 
-    if (candidate.slug !== currentSlug) {
-      links.push(candidate.slug);
+    if (candidate !== currentSlug && !links.includes(candidate)) {
+      links.push(candidate);
     }
 
   }
-
-  /* -----------------------------------------
-     SAVE UPDATED CURSOR
-  ----------------------------------------- */
-
-  await supabaseAdmin
-    .from("mesh_rotation_state")
-    .update({
-      cursor_position: cursor,
-      updated_at: new Date(),
-    })
-    .eq("id", 1);
 
   return links;
 }

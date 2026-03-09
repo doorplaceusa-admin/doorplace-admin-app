@@ -17,6 +17,7 @@ import { createShopifyPage } from "@/lib/shopify/createShopifyPage";
 import { renderPageTemplateHTML } from "@/lib/renderers/renderPageTemplateHTML";
 import { buildMetaDescription } from "@/lib/seo/build_meta/description";
 import { shopifyLimiter } from "@/lib/shopify/shopifyLimiter"
+import { getMeshLinks } from "@/lib/seo/getMeshLinks";
 
 /* ======================================================
    ENTERPRISE SETTINGS
@@ -25,7 +26,7 @@ import { shopifyLimiter } from "@/lib/shopify/shopifyLimiter"
 const BATCH_SIZE = 60;
 const INTERVAL_MS = 60_000;
 
-const SHOPIFY_DELAY_MS = 0;
+const SHOPIFY_DELAY_MS = 1500;
 const COOLDOWN_MS = 60_000;
 const MAX_RETRIES = 10;
 
@@ -201,6 +202,44 @@ async function publishOne(page: any) {
     heroImageUrl: page.hero_image_url,
   });
 
+
+const meshLinks = await getMeshLinks(page.slug);
+const meshHTML = `
+
+<!-- TP_LINK_MESH_START -->
+
+<div style="margin-top:40px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
+
+<h2 style="text-align:center">Explore More Porch Swings</h2>
+
+<ul>
+
+${meshLinks
+  .map((l: string) => `<li><a href="/pages/${l}">${l.replace(/-/g, " ")}</a></li>`)
+  .join("")}
+
+</ul>
+
+</div>
+
+<div style="margin-top:60px;border-top:1px solid #ddd;padding-top:30px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
+
+<h2 style="text-align:center">Porch Swing Guides</h2>
+
+<ul>
+<li><a href="/pages/best-porch-swings">Best Porch Swings</a></li>
+<li><a href="/pages/porch-swing-ideas">Porch Swing Ideas</a></li>
+<li><a href="/pages/porch-swing-buying-guide">Porch Swing Buying Guide</a></li>
+<li><a href="/pages/porch-swing-maintenance">Porch Swing Maintenance</a></li>
+<li><a href="/pages/porch-swing-safety-guide">Porch Swing Safety Guide</a></li>
+</ul>
+
+</div>
+
+<!-- TP_LINK_MESH_END -->
+
+`;
+
   if (!html || html.trim().length < 50) return;
 
   /* ---------- SEO Meta ---------- */
@@ -219,7 +258,7 @@ async function publishOne(page: any) {
   const shopifyPage = await safeCreateShopifyPage({
     title: page.title,
     handle: page.slug,
-    body_html: html,
+    body_html: html + meshHTML,
     template_suffix: page.template_suffix || null,
     meta_description: seoDescription,
   });

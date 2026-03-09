@@ -35,15 +35,14 @@ ${urls}
 </urlset>`;
 
     return new NextResponse(xml, {
-      status: 200,
       headers: {
-        "Content-Type": "application/xml; charset=utf-8",
+        "Content-Type": "application/xml",
         "Cache-Control": "public, max-age=600",
       },
     });
 
-  } catch (err) {
-    console.error(err);
-    return new NextResponse("Server error", { status: 500 });
+  } catch (err: any) {
+    console.error("Chunk sitemap error:", err?.message);
+    return new NextResponse("Internal server error", { status: 500 });
   }
 }

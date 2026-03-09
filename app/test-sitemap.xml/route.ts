@@ -23,7 +23,7 @@ export async function GET() {
       .map((row) => {
         return `
 <url>
-<loc>https://doorplaceusa.com${row.url}</loc>
+<loc>${row.url}</loc>
 <lastmod>${row.last_modified}</lastmod>
 </url>`;
       })

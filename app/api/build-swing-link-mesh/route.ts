@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { shopifyLimiter } from "@/lib/shopify/shopifyLimiter"
 
 const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
 const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN!;
@@ -19,6 +20,8 @@ return new Promise(res=>setTimeout(res,ms))
 async function shopifyFetch(path:string,options:RequestInit={}){
 
 for(let attempt=1;attempt<=MAX_RETRIES;attempt++){
+
+await shopifyLimiter()
 
 const res=await fetch(`https://${SHOP}/admin/api/${API_VERSION}${path}`,{
 ...options,

@@ -16,15 +16,16 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { createShopifyPage } from "@/lib/shopify/createShopifyPage";
 import { renderPageTemplateHTML } from "@/lib/renderers/renderPageTemplateHTML";
 import { buildMetaDescription } from "@/lib/seo/build_meta/description";
+import { shopifyLimiter } from "@/lib/shopify/shopifyLimiter"
 
 /* ======================================================
    ENTERPRISE SETTINGS
 ====================================================== */
 
-const BATCH_SIZE = 100;
+const BATCH_SIZE = 60;
 const INTERVAL_MS = 60_000;
 
-const SHOPIFY_DELAY_MS = 2000;
+const SHOPIFY_DELAY_MS = 0;
 const COOLDOWN_MS = 60_000;
 const MAX_RETRIES = 10;
 
@@ -67,7 +68,8 @@ function getPageType(template: string) {
 async function safeCreateShopifyPage(payload: any) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      return await createShopifyPage(payload);
+      await shopifyLimiter();
+return await createShopifyPage(payload);
     } catch (err: any) {
       const msg = err?.message || "";
 

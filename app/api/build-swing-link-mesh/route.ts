@@ -8,10 +8,10 @@ const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
 const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN!;
 const API_VERSION = "2024-01";
 
-const SHOPIFY_DELAY_MS = 600;
+const SHOPIFY_DELAY_MS = 1200;
 const MAX_RETRIES = 10;
-const BATCH_SIZE = 200;
-const MAX_BATCHES = 10000;
+const BATCH_SIZE = 120;
+const MAX_BATCHES = 15000;
 
 function sleep(ms:number){
 return new Promise(res=>setTimeout(res,ms))

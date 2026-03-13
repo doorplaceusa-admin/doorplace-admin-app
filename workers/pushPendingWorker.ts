@@ -23,11 +23,11 @@ import { getMeshLinks } from "@/lib/seo/getMeshLinks";
    ENTERPRISE SETTINGS
 ====================================================== */
 
-const BATCH_SIZE = 60;
-const INTERVAL_MS = 60_000;
+const BATCH_SIZE = 30;
+const INTERVAL_MS = 90_000;
 
-const SHOPIFY_DELAY_MS = 3000;
-const COOLDOWN_MS = 60_000;
+const SHOPIFY_DELAY_MS = 4500;
+const COOLDOWN_MS = 90_000;
 const MAX_RETRIES = 10;
 
 /* ======================================================

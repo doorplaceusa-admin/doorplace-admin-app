@@ -177,7 +177,7 @@ const dynamicLinks=`
 
 <div style="margin-top:40px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
 
-<h2 style="text-align:center">Explore More Porch Swings</h2>
+<h2 style="text-align:center">Explore More Custom Home Projects</h2>
 
 <ul>
 

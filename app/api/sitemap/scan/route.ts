@@ -48,7 +48,9 @@ async function fetchText(url: string) {
       Accept: "application/xml,text/xml,text/plain",
     },
   });
+
   if (!res.ok) throw new Error(`Failed fetch ${url}`);
+
   return res.text();
 }
 
@@ -74,6 +76,7 @@ function dedupeByPageUrl(rows: any[]) {
 
 export async function POST(req: Request) {
   try {
+
     const { input_url, company_name, is_internal } = await req.json();
 
     if (!input_url || !company_name) {
@@ -87,40 +90,22 @@ export async function POST(req: Request) {
     const root_domain = normalizeDomain(input_url);
     const base = input_url.replace(/\/$/, "");
 
-    let sitemapUrls: string[] = [];
     let totalUrlsFound = 0;
     let isSampled = false;
-
-    /* -------------------------------
-       ROBOTS.TXT DISCOVERY
-    -------------------------------- */
-    try {
-      const robots = await fetchText(`${base}/robots.txt`);
-      const matches = robots.match(/Sitemap:\s*(.*)/gi);
-      if (matches) {
-        sitemapUrls.push(
-          ...matches.map(m =>
-            m.split(":").slice(1).join(":").trim()
-          )
-        );
-      }
-    } catch {
-      // robots.txt optional
-    }
-
-    /* -------------------------------
-       COMMON FALLBACK SITEMAPS
-    -------------------------------- */
-    COMMON_SITEMAPS.forEach(p => sitemapUrls.push(`${base}${p}`));
-    sitemapUrls = [...new Set(sitemapUrls)];
 
     const CHUNK_SIZE = 100;
     let buffer: any[] = [];
 
+    /* Track visited sitemaps to avoid loops */
+    const visitedSitemaps = new Set<string>();
+
+
     /* -------------------------------
        SAFE FLUSH
     -------------------------------- */
+
     async function flush() {
+
       if (!buffer.length) return;
 
       const deduped = dedupeByPageUrl(buffer);
@@ -132,95 +117,179 @@ export async function POST(req: Request) {
       if (error) throw error;
 
       buffer = [];
+
     }
 
+
     /* -------------------------------
-       SITEMAP SCAN
+       RECURSIVE SITEMAP SCAN
     -------------------------------- */
-    for (const sitemapUrl of sitemapUrls) {
+
+    async function scanSitemap(sitemapUrl: string) {
+
+      if (visitedSitemaps.has(sitemapUrl)) return;
+      visitedSitemaps.add(sitemapUrl);
+
       let xml: string;
 
       try {
         xml = await fetchText(sitemapUrl);
       } catch {
-        continue;
+        return;
       }
 
       const isIndex = xml.includes("<sitemapindex");
+
       const locs = [...xml.matchAll(/<loc>(.*?)<\/loc>/g)].map(m => m[1]);
-      const childSitemaps = isIndex ? locs : [sitemapUrl];
 
-      for (const sm of childSitemaps) {
-        let smXml: string;
+      /* If sitemap index → recurse */
+      if (isIndex) {
 
-        try {
-          smXml = isIndex ? await fetchText(sm) : xml;
-        } catch {
-          continue;
+        for (const child of locs) {
+
+          await scanSitemap(child);
+
+          if (totalUrlsFound > MAX_SITEMAP_URLS) break;
+
         }
 
-        for (const block of extractBlocks(smXml)) {
-          const pageUrl = extractTag(block, "loc");
-          if (!pageUrl) continue;
+        return;
 
-          totalUrlsFound++;
-
-          /* 🚨 HARD CAP — STOP SCAN COMPLETELY */
-          if (totalUrlsFound > MAX_SITEMAP_URLS) {
-            isSampled = true;
-            break;
-          }
-
-          /* 🎯 SAMPLE ONLY — WRITE FIRST N */
-          if (totalUrlsFound <= SAMPLE_LIMIT) {
-            buffer.push({
-              company_name,
-              root_domain,
-              input_url,
-              is_internal: !!is_internal,
-
-              page_url: pageUrl,
-              normalized_path: normalizePath(pageUrl),
-              path_depth: pathDepth(pageUrl),
-
-              sitemap_source_urls: [sm],
-              lastmod: extractTag(block, "lastmod"),
-              changefreq: extractTag(block, "changefreq"),
-              priority: extractTag(block, "priority"),
-
-              scan_run_id,
-              last_seen_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            });
-          }
-
-          if (buffer.length >= CHUNK_SIZE) {
-            await flush();
-          }
-        }
       }
+
+      /* Otherwise parse URL blocks */
+
+      for (const block of extractBlocks(xml)) {
+
+        const pageUrl = extractTag(block, "loc");
+        if (!pageUrl) continue;
+
+        totalUrlsFound++;
+
+        /* 🚨 HARD STOP */
+        if (totalUrlsFound > MAX_SITEMAP_URLS) {
+          isSampled = true;
+          break;
+        }
+
+        /* SAMPLE FIRST N */
+        if (totalUrlsFound <= SAMPLE_LIMIT) {
+
+          buffer.push({
+
+            company_name,
+            root_domain,
+            input_url,
+            is_internal: !!is_internal,
+
+            page_url: pageUrl,
+            normalized_path: normalizePath(pageUrl),
+            path_depth: pathDepth(pageUrl),
+
+            sitemap_source_urls: [sitemapUrl],
+            lastmod: extractTag(block, "lastmod"),
+            changefreq: extractTag(block, "changefreq"),
+            priority: extractTag(block, "priority"),
+
+            scan_run_id,
+
+            last_seen_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+
+          });
+
+        }
+
+        if (buffer.length >= CHUNK_SIZE) {
+          await flush();
+        }
+
+      }
+
+    }
+
+
+    /* -------------------------------
+       DISCOVER SITEMAPS
+    -------------------------------- */
+
+    let sitemapUrls: string[] = [];
+
+    /* robots.txt */
+
+    try {
+
+      const robots = await fetchText(`${base}/robots.txt`);
+
+      const matches = robots.match(/Sitemap:\s*(.*)/gi);
+
+      if (matches) {
+
+        sitemapUrls.push(
+          ...matches.map(m =>
+            m.split(":").slice(1).join(":").trim()
+          )
+        );
+
+      }
+
+    } catch {
+      // robots optional
+    }
+
+
+    /* fallback sitemaps */
+
+    COMMON_SITEMAPS.forEach(p => sitemapUrls.push(`${base}${p}`));
+
+    sitemapUrls = [...new Set(sitemapUrls)];
+
+
+    /* -------------------------------
+       START SCAN
+    -------------------------------- */
+
+    for (const sitemapUrl of sitemapUrls) {
+
+      await scanSitemap(sitemapUrl);
+
+      if (totalUrlsFound > MAX_SITEMAP_URLS) break;
+
     }
 
     await flush();
 
+
     /* -------------------------------
        RESPONSE
     -------------------------------- */
+
     return NextResponse.json({
+
       success: true,
       root_domain,
       scan_run_id,
+
       scanned_urls: totalUrlsFound,
+
       sampled: isSampled,
       sample_limit: isSampled ? SAMPLE_LIMIT : null,
+
       max_allowed: MAX_SITEMAP_URLS,
+
+      sitemaps_scanned: visitedSitemaps.size
+
     });
 
+
   } catch (err: any) {
+
     console.error("SITEMAP SCAN ERROR:", err);
+
     return NextResponse.json(
       { error: err.message || "Scan failed" },
       { status: 500 }
     );
+
   }
 }

@@ -254,12 +254,14 @@ export function renderPageTemplateHTML(
     case "porch_swing_safety_city":
       return renderPorchSwingSafetyCityHTML(props);
 
-    /* -----------------------------
-       HOME REPAIR
-    ------------------------------ */
+   /* -----------------------------
+   HOME REPAIR
+------------------------------ */
 
-    case "home_repair_city":
-      return renderHomeRepairCityHTML(props);
+case "home_repair":
+case "home_repair_city":
+  return renderHomeRepairCityHTML(props);
+
 
     default:
       throw new Error(`Unsupported page_template: \${page_template}`);

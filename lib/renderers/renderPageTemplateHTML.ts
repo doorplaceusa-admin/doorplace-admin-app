@@ -56,6 +56,12 @@ import { renderCustomDoorInstallationCityHTML } from "../templates/renderCustomD
 import { renderInteriorDoorInstallationCityHTML } from "../templates/renderInteriorDoorInstallationCityHTML";
 
 /* =========================================
+   HOME REPAIR IMPORTS
+========================================= */
+
+import { renderHomeRepairCityHTML } from "../templates/renderHomeRepairCityHTML";
+
+/* =========================================
    Types
 ========================================= */
 
@@ -77,6 +83,7 @@ export type RenderPageTemplateProps = {
 export function renderPageTemplateHTML(
   props: RenderPageTemplateProps
 ): string {
+
   const { page_template, variant_key, mountType } = props;
 
   switch (page_template) {
@@ -247,7 +254,14 @@ export function renderPageTemplateHTML(
     case "porch_swing_safety_city":
       return renderPorchSwingSafetyCityHTML(props);
 
+    /* -----------------------------
+       HOME REPAIR
+    ------------------------------ */
+
+    case "home_repair_city":
+      return renderHomeRepairCityHTML(props);
+
     default:
-      throw new Error(`Unsupported page_template: ${page_template}`);
+      throw new Error(`Unsupported page_template: \${page_template}`);
   }
 }

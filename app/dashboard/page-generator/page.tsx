@@ -244,6 +244,12 @@ const TEMPLATE_OPTIONS = [
 { value: "custom_door_installation_city", label: "Custom Door Installation – City" },
 { value: "interior_door_installation_city", label: "Interior Door Installation – City" },
 
+
+/* =========================================
+HOME REPAIR
+========================================= */
+
+{ value: "home_repair_city", label: "Home Repair Services – City" },
   ];
 
 

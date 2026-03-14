@@ -384,6 +384,15 @@ case "interior_door_installation_city":
   slug = `interior-door-installation-${c.slug}-${stateCodeLower}`;
   break;
 
+/* -----------------------------
+   HOME REPAIR
+------------------------------ */
+
+case "home_repair_city":
+  title = `Home Repair Services in ${c.city_name}, ${stateCodeUpper}`;
+  slug = `home-repair-${c.slug}-${stateCodeLower}`;
+  break;
+
   default:
     throw new Error(`Unsupported template: ${page_template}`);
 }

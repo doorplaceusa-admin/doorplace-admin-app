@@ -1,244 +1,237 @@
-type CityLink = {
-  city: string;
-  slug: string;
-};
-
 type RenderProps = {
   city: string;
   state: string;
   stateCode: string;
   slug: string;
-  nearbyCities?: CityLink[];
+  nearbyCities?: { city: string; slug: string }[];
+  heroImageUrl?: string | null;
 };
 
-export function renderHomeRepairCityHTML({
+export function renderCustomDoorInstallationCityHTML({
   city,
   state,
-  stateCode
+  stateCode,
+  heroImageUrl,
+  nearbyCities,
 }: RenderProps): string {
 
 return `
+<div style="max-width:900px;margin:0 auto;padding:25px;font-family:'Times New Roman',serif;">
 
-<div style="max-width:950px;margin:0 auto;padding:30px;font-family:'Times New Roman',serif;">
-
-<!-- HERO IMAGE -->
-
-<div style="text-align:center;margin-bottom:25px;">
+${heroImageUrl ? `
+<div style="text-align:center;margin-bottom:20px;">
 <img
-src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/84F86B47-55B6-4071-A184-8541BA6C1629.png?v=1773489464"
-alt="Home repair contractor working in ${city}, ${stateCode}"
-style="width:100%;max-width:720px;border-radius:10px;"
-/>
+src="${heroImageUrl}"
+alt="Door installation services in ${city}, ${stateCode}"
+style="width:100%;max-width:650px;border-radius:10px;">
 </div>
+` : ""}
 
-<h1 style="color:#b80d0d;font-size:38px;text-align:center;margin-bottom:10px;">
-Home Repair Services in ${city}, ${stateCode}
+<h1 style="color:#b80d0d;font-size:36px;margin-bottom:10px;text-align:center;">
+Door Installation Services in ${city}, ${stateCode}
 </h1>
 
-<p style="font-size:18px;line-height:1.8;text-align:center;">
-Homeowners in ${city}, ${state} often need reliable professionals for repairs,
-installations, and home improvement projects. Our network connects homeowners
-with skilled contractors who handle a wide range of residential repairs,
-maintenance work, and installations.
+<p style="font-size:18px;line-height:1.7;text-align:center;max-width:760px;margin:0 auto;">
+Homeowners searching for <strong>door installation in ${city}, ${state}</strong>
+often need experienced installers for interior doors, exterior doors,
+barn doors, sliding doors, entry doors, patio doors, and custom door projects.
+Doorplace USA can help connect homeowners with independent contractors
+who provide professional door installation services.
 </p>
 
-<!-- ================================================= -->
-<!-- GENERAL HANDYMAN SERVICES -->
-<!-- ================================================= -->
+<div style="margin-top:25px;display:flex;flex-wrap:wrap;gap:15px;justify-content:center;">
 
-<h2 style="color:#b80d0d;margin-top:40px;">
-General Handyman Services
-</h2>
-
-<ul style="line-height:1.9;font-size:17px;">
-<li>General home maintenance</li>
-<li>Furniture assembly</li>
-<li>TV mounting</li>
-<li>Picture and mirror installation</li>
-<li>Minor carpentry work</li>
-<li>Small home repairs</li>
-<li>Door adjustments and hardware replacement</li>
-<li>Closet system installation</li>
-<li>Interior trim repairs</li>
-</ul>
-
-<!-- ================================================= -->
-<!-- INTERIOR HOME REPAIRS -->
-<!-- ================================================= -->
-
-<h2 style="color:#b80d0d;margin-top:40px;">
-Interior Home Repairs
-</h2>
-
-<ul style="line-height:1.9;font-size:17px;">
-<li>Drywall repair</li>
-<li>Drywall installation</li>
-<li>Wall patching</li>
-<li>Ceiling repair</li>
-<li>Interior door installation</li>
-<li>Sliding barn door installation</li>
-<li>Baseboard installation</li>
-<li>Crown molding installation</li>
-<li>Interior trim carpentry</li>
-<li>Interior painting</li>
-<li>Cabinet installation</li>
-<li>Cabinet repair</li>
-<li>Kitchen upgrades</li>
-<li>Bathroom repairs</li>
-</ul>
-
-<!-- IMAGE MID PAGE -->
-
-<div style="text-align:center;margin:40px 0;">
-<img
-src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/5770173D-7E56-41B8-9EF5-A970A7754B19.png?v=1773489463"
-alt="Contractor performing home repairs in ${city}"
-style="width:100%;max-width:720px;border-radius:10px;"
-/>
+<div style="border:1px solid #ddd;padding:12px 18px;border-radius:8px;font-size:16px;">
+✔ Independent door installers
 </div>
 
-<!-- ================================================= -->
-<!-- FLOORING SERVICES -->
-<!-- ================================================= -->
-
-<h2 style="color:#b80d0d;">
-Flooring Installation and Repair
-</h2>
-
-<ul style="line-height:1.9;font-size:17px;">
-<li>Hardwood flooring installation</li>
-<li>Laminate flooring installation</li>
-<li>Vinyl plank flooring</li>
-<li>Tile flooring installation</li>
-<li>Floor repairs</li>
-<li>Subfloor repair</li>
-<li>Floor trim installation</li>
-</ul>
-
-<!-- ================================================= -->
-<!-- WINDOW AND DOOR SERVICES -->
-<!-- ================================================= -->
-
-<h2 style="color:#b80d0d;">
-Window and Door Services
-</h2>
-
-<ul style="line-height:1.9;font-size:17px;">
-<li>Window installation</li>
-<li>Window replacement</li>
-<li>Window trim repair</li>
-<li>Exterior door installation</li>
-<li>Interior door installation</li>
-<li>Sliding door repair</li>
-<li>French door installation</li>
-<li>Door frame repair</li>
-<li>Door hardware replacement</li>
-</ul>
-
-<!-- ================================================= -->
-<!-- EXTERIOR HOME REPAIRS -->
-<!-- ================================================= -->
-
-<h2 style="color:#b80d0d;">
-Exterior Home Repairs
-</h2>
-
-<ul style="line-height:1.9;font-size:17px;">
-<li>Deck repair</li>
-<li>Deck installation</li>
-<li>Fence repair</li>
-<li>Fence installation</li>
-<li>Porch repair</li>
-<li>Porch installation</li>
-<li>Gutter repair</li>
-<li>Gutter installation</li>
-<li>Roof repair</li>
-<li>Siding repair</li>
-<li>Exterior trim repair</li>
-<li>Exterior painting</li>
-</ul>
-
-<!-- THIRD IMAGE -->
-
-<div style="text-align:center;margin:40px 0;">
-<img
-src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/95A692F3-BA27-4CFA-B7E6-2C1CB7452DC9.png?v=1773489462"
-alt="Home repair project in ${city}, ${stateCode}"
-style="width:100%;max-width:720px;border-radius:10px;"
-/>
+<div style="border:1px solid #ddd;padding:12px 18px;border-radius:8px;font-size:16px;">
+✔ Interior & exterior doors
 </div>
 
-<!-- ================================================= -->
-<!-- OUTDOOR HOME IMPROVEMENTS -->
-<!-- ================================================= -->
+<div style="border:1px solid #ddd;padding:12px 18px;border-radius:8px;font-size:16px;">
+✔ Custom and specialty doors
+</div>
 
-<h2 style="color:#b80d0d;">
-Outdoor Improvements
-</h2>
+</div>
 
-<ul style="line-height:1.9;font-size:17px;">
-<li>Pergola construction</li>
-<li>Gazebo installation</li>
-<li>Patio construction</li>
-<li>Outdoor stair repair</li>
-<li>Outdoor railing installation</li>
-<li>Backyard upgrades</li>
-<li>Outdoor carpentry</li>
-</ul>
+<div style="margin-top:30px;text-align:center;">
+<a href="https://doorplaceusa.com/pages/get-a-fast-quote"
+style="background:#b80d0d;color:#fff;padding:15px 34px;font-size:18px;text-decoration:none;border-radius:8px;display:inline-block;font-weight:bold;">
+Request Door Installation Help
+</a>
+</div>
 
-<!-- ================================================= -->
-<!-- WHY HIRE PROFESSIONAL CONTRACTORS -->
-<!-- ================================================= -->
+<!-- MAIN CONTENT -->
 
-<h2 style="color:#b80d0d;">
-Why Hire a Professional Contractor
+<div style="margin-top:45px;">
+
+<h2 style="color:#b80d0d;font-size:26px;">
+Professional Door Installation in ${city}
 </h2>
 
 <p style="font-size:17px;line-height:1.8;">
-Hiring a professional ensures repairs and installations are completed safely
-and correctly. Skilled contractors have the proper tools, experience,
-and knowledge needed to handle both small repairs and major home upgrades.
+If you need <strong>door installation in ${city}, ${state}</strong>,
+many homeowners search for experienced installers who can properly install
+many types of doors throughout the home.
 </p>
 
-<ul style="line-height:1.9;font-size:17px;">
-<li>Proper tools and materials</li>
-<li>Experienced workmanship</li>
-<li>Efficient project completion</li>
-<li>Improved property value</li>
-<li>Long-lasting repairs</li>
-</ul>
+<p style="font-size:17px;line-height:1.8;">
+Doorplace USA builds custom doors and may help connect customers
+with independent contractors who install doors in residential homes.
+Independent installers may handle projects such as installing interior doors,
+exterior entry doors, sliding barn doors, patio doors, closet doors,
+French doors, pocket doors, bifold doors, and custom door systems.
+</p>
 
-<!-- ================================================= -->
-<!-- FAQ -->
-<!-- ================================================= -->
+</div>
+
+<!-- INSTALLATION GALLERY -->
+
+<h2 style="color:#b80d0d;font-size:26px;margin-top:40px;">
+Examples of Door Installations
+</h2>
+
+<p style="font-size:16px;line-height:1.8;">
+Below are examples of real door installations. While many photos show barn doors,
+independent contractors also install many other types of doors including
+<strong>front entry doors, interior doors, sliding doors, patio doors,
+French doors, closet doors, pocket doors, cabinet doors, and custom doors</strong>.
+</p>
+
+<div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:20px;">
+
+<div style="flex:1 1 45%;max-width:320px;">
+<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3943.jpg?v=1735211397"
+alt="Barn door installation in ${city}, ${stateCode}"
+style="width:100%;border-radius:8px;">
+</div>
+
+<div style="flex:1 1 45%;max-width:320px;">
+<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_4164.heic?v=1735211284"
+alt="Interior sliding barn door installation in ${city}, ${stateCode}"
+style="width:100%;border-radius:8px;">
+</div>
+
+<div style="flex:1 1 45%;max-width:320px;">
+<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6737.jpg?v=1707839247"
+alt="Bypass barn door installation example in ${city}, ${stateCode}"
+style="width:100%;border-radius:8px;">
+</div>
+
+<div style="flex:1 1 45%;max-width:320px;">
+<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_8673.heic?v=1707839169"
+alt="Custom interior door installation example in ${city}, ${stateCode}"
+style="width:100%;border-radius:8px;">
+</div>
+
+<div style="flex:1 1 45%;max-width:320px;">
+<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_1357.jpg?v=1707838935"
+alt="Rustic barn door installation example in ${city}, ${stateCode}"
+style="width:100%;border-radius:8px;">
+</div>
+
+</div>
+
+<!-- TYPES OF DOORS -->
 
 <h2 style="color:#b80d0d;margin-top:40px;">
+Types of Doors That Can Be Installed
+</h2>
+
+<ul style="line-height:1.9;font-size:16px;">
+<li>Front entry doors</li>
+<li>Interior bedroom doors</li>
+<li>Sliding barn doors</li>
+<li>French doors</li>
+<li>Patio doors</li>
+<li>Closet doors</li>
+<li>Pocket doors</li>
+<li>Bifold doors</li>
+<li>Bypass sliding doors</li>
+<li>Steel and metal doors</li>
+<li>Glass interior doors</li>
+<li>Wood interior doors</li>
+<li>Custom-built doors</li>
+<li>Office doors</li>
+<li>Double door installations</li>
+</ul>
+
+<h2 style="color:#b80d0d;">
+How Door Installation Requests Work
+</h2>
+
+<ol style="line-height:1.9;font-size:16px;">
+<li>Send a photo of your door opening</li>
+<li>Tell us the type of door you want installed</li>
+<li>We may connect you with an independent contractor in ${city}</li>
+<li>The installer may contact you to discuss the project</li>
+</ol>
+
+<h2 style="color:#b80d0d;">
 Frequently Asked Questions
 </h2>
 
-<p style="font-size:17px;line-height:1.8;">
-<strong>Do you offer home repair services in ${city}?</strong><br>
-Yes. Homeowners in ${city}, ${state} can submit a request and we will help connect
-them with contractors who provide home repair services in their area.
+<p style="font-size:16px;line-height:1.8;">
+<strong>Do you install doors in ${city}, ${stateCode}?</strong><br>
+Doorplace USA may help connect homeowners with independent contractors
+who provide door installation services in the ${city} area.
 </p>
 
-<p style="font-size:17px;line-height:1.8;">
-<strong>What types of repairs can contractors handle?</strong><br>
-Contractors handle many types of residential work including drywall repair,
-door installation, flooring installation, deck construction, window replacement,
-and general handyman services.
+<p style="font-size:16px;line-height:1.8;">
+<strong>What types of doors can be installed?</strong><br>
+Installers may handle many types of doors including interior doors,
+exterior doors, barn doors, sliding doors, closet doors,
+French doors, glass doors, and custom door systems.
 </p>
 
-<!-- CTA -->
+<p style="font-size:16px;line-height:1.8;">
+<strong>Can custom doors be installed?</strong><br>
+Yes. Custom-built doors can be installed depending on the project
+and the installer handling the work.
+</p>
 
-<div style="text-align:center;margin-top:50px;">
+${
+nearbyCities && nearbyCities.length > 0
+? `
+<div style="margin-top:55px;">
+<h2 style="color:#b80d0d;">Nearby Areas</h2>
+
+<ul style="line-height:1.9;font-size:16px;padding-left:18px;">
+${nearbyCities.slice(0,8).map(c => `
+<li>
+<a href="https://doorplaceusa.com/pages/${c.slug}" style="color:#b80d0d;">
+Door Installation in ${c.city}
+</a>
+</li>
+`).join("")}
+</ul>
+</div>
+`
+: ""
+}
+
+<div style="margin-top:60px;text-align:center;">
+
+<h2 style="color:#b80d0d;">
+Need Help With Door Installation?
+</h2>
+
+<p style="font-size:16px;line-height:1.7;max-width:700px;margin:0 auto;">
+If you're searching for <strong>door installation in ${city}, ${state}</strong>,
+tell us about your project and we may help connect you
+with an independent contractor serving your area.
+</p>
+
+<div style="margin-top:25px;">
 <a href="https://doorplaceusa.com/pages/get-a-fast-quote"
-style="background:#b80d0d;color:#fff;padding:16px 36px;font-size:19px;text-decoration:none;border-radius:8px;">
-Request Home Repair Help in ${city}
+style="background:#b80d0d;color:#fff;padding:15px 34px;font-size:18px;text-decoration:none;border-radius:8px;display:inline-block;font-weight:bold;">
+Request a Quote
 </a>
 </div>
 
 </div>
 
+</div>
 `;
 }

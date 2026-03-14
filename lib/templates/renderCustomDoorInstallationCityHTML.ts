@@ -9,243 +9,236 @@ type RenderProps = {
   stateCode: string;
   slug: string;
   nearbyCities?: CityLink[];
-  heroImageUrl?: string | null;
 };
 
 export function renderHomeRepairCityHTML({
   city,
   state,
-  stateCode,
-  heroImageUrl,
-  nearbyCities,
+  stateCode
 }: RenderProps): string {
 
-  return `
-<div style="max-width:900px;margin:0 auto;padding:25px;font-family:'Times New Roman',serif;">
+return `
 
-  ${
-    heroImageUrl
-      ? `
-      <div style="text-align:center;margin-bottom:20px;">
-        <img
-          src="${heroImageUrl}"
-          alt="Home Repair Services in ${city}, ${stateCode}"
-          style="width:100%;max-width:650px;border-radius:10px;"
-        />
-      </div>
-      `
-      : ""
-  }
+<div style="max-width:950px;margin:0 auto;padding:30px;font-family:'Times New Roman',serif;">
 
-  <h1 style="color:#b80d0d;font-size:36px;margin-bottom:10px;text-align:center;">
-    Home Repair & Installation Services in ${city}, ${stateCode}
-  </h1>
+<!-- HERO IMAGE -->
 
-  <p style="font-size:18px;line-height:1.7;text-align:center;max-width:750px;margin:0 auto;">
-    Doorplace USA helps connect homeowners with trusted contractors for
-    home repair, installation, and maintenance services in ${city}, ${state}.
-  </p>
+<div style="text-align:center;margin-bottom:25px;">
+<img
+src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/84F86B47-55B6-4071-A184-8541BA6C1629.png?v=1773489464"
+alt="Home repair contractor working in ${city}, ${stateCode}"
+style="width:100%;max-width:720px;border-radius:10px;"
+/>
+</div>
 
-  <div style="margin-top:25px;display:flex;flex-wrap:wrap;gap:15px;justify-content:center;">
+<h1 style="color:#b80d0d;font-size:38px;text-align:center;margin-bottom:10px;">
+Home Repair Services in ${city}, ${stateCode}
+</h1>
 
-    <div style="border:1px solid #ddd;padding:12px 18px;border-radius:8px;font-size:16px;">
-      ✅ Experienced local contractors
-    </div>
+<p style="font-size:18px;line-height:1.8;text-align:center;">
+Homeowners in ${city}, ${state} often need reliable professionals for repairs,
+installations, and home improvement projects. Our network connects homeowners
+with skilled contractors who handle a wide range of residential repairs,
+maintenance work, and installations.
+</p>
 
-    <div style="border:1px solid #ddd;padding:12px 18px;border-radius:8px;font-size:16px;">
-      ✅ Repairs, replacements & installations
-    </div>
+<!-- ================================================= -->
+<!-- GENERAL HANDYMAN SERVICES -->
+<!-- ================================================= -->
 
-    <div style="border:1px solid #ddd;padding:12px 18px;border-radius:8px;font-size:16px;">
-      ✅ Fast quotes available
-    </div>
+<h2 style="color:#b80d0d;margin-top:40px;">
+General Handyman Services
+</h2>
 
-  </div>
+<ul style="line-height:1.9;font-size:17px;">
+<li>General home maintenance</li>
+<li>Furniture assembly</li>
+<li>TV mounting</li>
+<li>Picture and mirror installation</li>
+<li>Minor carpentry work</li>
+<li>Small home repairs</li>
+<li>Door adjustments and hardware replacement</li>
+<li>Closet system installation</li>
+<li>Interior trim repairs</li>
+</ul>
 
-  <div style="margin-top:30px;text-align:center;">
-    <a href="https://doorplaceusa.com/pages/get-a-fast-quote"
-       style="background:#b80d0d;color:#fff;padding:15px 34px;
-              font-size:18px;text-decoration:none;border-radius:8px;
-              display:inline-block;font-weight:bold;">
-      Request a Quote in ${city}
-    </a>
-  </div>
+<!-- ================================================= -->
+<!-- INTERIOR HOME REPAIRS -->
+<!-- ================================================= -->
 
-  <div style="margin-top:45px;">
+<h2 style="color:#b80d0d;margin-top:40px;">
+Interior Home Repairs
+</h2>
 
-    <h2 style="color:#b80d0d;font-size:26px;">
-      Common Home Repair & Installation Services
-    </h2>
+<ul style="line-height:1.9;font-size:17px;">
+<li>Drywall repair</li>
+<li>Drywall installation</li>
+<li>Wall patching</li>
+<li>Ceiling repair</li>
+<li>Interior door installation</li>
+<li>Sliding barn door installation</li>
+<li>Baseboard installation</li>
+<li>Crown molding installation</li>
+<li>Interior trim carpentry</li>
+<li>Interior painting</li>
+<li>Cabinet installation</li>
+<li>Cabinet repair</li>
+<li>Kitchen upgrades</li>
+<li>Bathroom repairs</li>
+</ul>
 
-    <ul style="line-height:1.9;font-size:16px;">
-      <li>Door installation and repair</li>
-      <li>Window installation and replacement</li>
-      <li>Deck building and repair</li>
-      <li>Fence installation and repair</li>
-      <li>Drywall repair and installation</li>
-      <li>Flooring installation and repair</li>
-      <li>Roof repair and maintenance</li>
-      <li>Gutter installation and repair</li>
-      <li>Garage door repair and installation</li>
-      <li>Interior trim and carpentry work</li>
-      <li>Pressure washing and exterior cleaning</li>
-      <li>General handyman services</li>
-    </ul>
+<!-- IMAGE MID PAGE -->
 
-  </div>
+<div style="text-align:center;margin:40px 0;">
+<img
+src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/5770173D-7E56-41B8-9EF5-A970A7754B19.png?v=1773489463"
+alt="Contractor performing home repairs in ${city}"
+style="width:100%;max-width:720px;border-radius:10px;"
+/>
+</div>
 
-  <div style="margin:45px 0;padding:25px;border:2px solid #b80d0d;
-              border-radius:10px;background:#fff8f8;">
+<!-- ================================================= -->
+<!-- FLOORING SERVICES -->
+<!-- ================================================= -->
 
-    <h2 style="margin-top:0;color:#b80d0d;">
-      Need Help With Home Repairs?
-    </h2>
+<h2 style="color:#b80d0d;">
+Flooring Installation and Repair
+</h2>
 
-    <p style="font-size:16px;line-height:1.7;">
-      Tell us about your project and we will help connect you with contractors
-      serving homeowners in ${city}, ${state}.
-    </p>
+<ul style="line-height:1.9;font-size:17px;">
+<li>Hardwood flooring installation</li>
+<li>Laminate flooring installation</li>
+<li>Vinyl plank flooring</li>
+<li>Tile flooring installation</li>
+<li>Floor repairs</li>
+<li>Subfloor repair</li>
+<li>Floor trim installation</li>
+</ul>
 
-    <div style="text-align:center;margin-top:20px;">
-      <a href="https://doorplaceusa.com/pages/get-a-fast-quote"
-         style="background:#b80d0d;color:#fff;padding:12px 28px;
-                font-size:17px;text-decoration:none;border-radius:6px;
-                font-weight:bold;">
-        Get My Quote
-      </a>
-    </div>
+<!-- ================================================= -->
+<!-- WINDOW AND DOOR SERVICES -->
+<!-- ================================================= -->
 
-  </div>
+<h2 style="color:#b80d0d;">
+Window and Door Services
+</h2>
 
-  <h2 style="color:#b80d0d;">
-    Interior Home Repairs
-  </h2>
+<ul style="line-height:1.9;font-size:17px;">
+<li>Window installation</li>
+<li>Window replacement</li>
+<li>Window trim repair</li>
+<li>Exterior door installation</li>
+<li>Interior door installation</li>
+<li>Sliding door repair</li>
+<li>French door installation</li>
+<li>Door frame repair</li>
+<li>Door hardware replacement</li>
+</ul>
 
-  <ul style="line-height:1.9;font-size:16px;">
-    <li>Drywall and ceiling repair</li>
-    <li>Interior door installation</li>
-    <li>Cabinet repair and installation</li>
-    <li>Floor installation and repairs</li>
-    <li>Trim, baseboards and crown molding</li>
-  </ul>
+<!-- ================================================= -->
+<!-- EXTERIOR HOME REPAIRS -->
+<!-- ================================================= -->
 
-  <h2 style="color:#b80d0d;">
-    Exterior Home Repairs
-  </h2>
+<h2 style="color:#b80d0d;">
+Exterior Home Repairs
+</h2>
 
-  <ul style="line-height:1.9;font-size:16px;">
-    <li>Roof repairs</li>
-    <li>Gutter installation</li>
-    <li>Deck and porch repairs</li>
-    <li>Fence repairs</li>
-    <li>Siding repairs</li>
-  </ul>
+<ul style="line-height:1.9;font-size:17px;">
+<li>Deck repair</li>
+<li>Deck installation</li>
+<li>Fence repair</li>
+<li>Fence installation</li>
+<li>Porch repair</li>
+<li>Porch installation</li>
+<li>Gutter repair</li>
+<li>Gutter installation</li>
+<li>Roof repair</li>
+<li>Siding repair</li>
+<li>Exterior trim repair</li>
+<li>Exterior painting</li>
+</ul>
 
-  <h2 style="color:#b80d0d;">
-    Why Homeowners in ${city} Choose Local Contractors
-  </h2>
+<!-- THIRD IMAGE -->
 
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-              gap:18px;margin-top:20px;">
+<div style="text-align:center;margin:40px 0;">
+<img
+src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/95A692F3-BA27-4CFA-B7E6-2C1CB7452DC9.png?v=1773489462"
+alt="Home repair project in ${city}, ${stateCode}"
+style="width:100%;max-width:720px;border-radius:10px;"
+/>
+</div>
 
-    <div style="border:1px solid #ddd;padding:18px;border-radius:10px;">
-      <strong>Skilled Professionals</strong>
-      <p style="margin-top:8px;font-size:15px;">
-        Work with contractors experienced in a wide range of home repairs.
-      </p>
-    </div>
+<!-- ================================================= -->
+<!-- OUTDOOR HOME IMPROVEMENTS -->
+<!-- ================================================= -->
 
-    <div style="border:1px solid #ddd;padding:18px;border-radius:10px;">
-      <strong>Wide Range of Services</strong>
-      <p style="margin-top:8px;font-size:15px;">
-        From small handyman jobs to major installation projects.
-      </p>
-    </div>
+<h2 style="color:#b80d0d;">
+Outdoor Improvements
+</h2>
 
-    <div style="border:1px solid #ddd;padding:18px;border-radius:10px;">
-      <strong>Fast Project Quotes</strong>
-      <p style="margin-top:8px;font-size:15px;">
-        Submit your request and get connected with professionals quickly.
-      </p>
-    </div>
+<ul style="line-height:1.9;font-size:17px;">
+<li>Pergola construction</li>
+<li>Gazebo installation</li>
+<li>Patio construction</li>
+<li>Outdoor stair repair</li>
+<li>Outdoor railing installation</li>
+<li>Backyard upgrades</li>
+<li>Outdoor carpentry</li>
+</ul>
 
-  </div>
+<!-- ================================================= -->
+<!-- WHY HIRE PROFESSIONAL CONTRACTORS -->
+<!-- ================================================= -->
 
-  <div style="margin-top:55px;">
+<h2 style="color:#b80d0d;">
+Why Hire a Professional Contractor
+</h2>
 
-    <h2 style="color:#b80d0d;">
-      Frequently Asked Questions
-    </h2>
+<p style="font-size:17px;line-height:1.8;">
+Hiring a professional ensures repairs and installations are completed safely
+and correctly. Skilled contractors have the proper tools, experience,
+and knowledge needed to handle both small repairs and major home upgrades.
+</p>
 
-    <p style="font-size:16px;line-height:1.8;">
-      <strong>What types of repairs can contractors handle?</strong><br>
-      Contractors can assist with door installation, drywall repair,
-      flooring installation, fence repair, deck building, and many other
-      home improvement projects.
-    </p>
+<ul style="line-height:1.9;font-size:17px;">
+<li>Proper tools and materials</li>
+<li>Experienced workmanship</li>
+<li>Efficient project completion</li>
+<li>Improved property value</li>
+<li>Long-lasting repairs</li>
+</ul>
 
-    <p style="font-size:16px;line-height:1.8;">
-      <strong>Do contractors serve ${city}, ${stateCode}?</strong><br>
-      Yes — professionals serve homeowners throughout ${state}.
-    </p>
+<!-- ================================================= -->
+<!-- FAQ -->
+<!-- ================================================= -->
 
-    <p style="font-size:16px;line-height:1.8;">
-      <strong>How do I request a quote?</strong><br>
-      Simply submit the form and provide details about your project.
-    </p>
+<h2 style="color:#b80d0d;margin-top:40px;">
+Frequently Asked Questions
+</h2>
 
-  </div>
+<p style="font-size:17px;line-height:1.8;">
+<strong>Do you offer home repair services in ${city}?</strong><br>
+Yes. Homeowners in ${city}, ${state} can submit a request and we will help connect
+them with contractors who provide home repair services in their area.
+</p>
 
-  ${
-    nearbyCities && nearbyCities.length > 0
-      ? `
-      <div style="margin-top:55px;">
-        <h2 style="color:#b80d0d;">
-          Nearby Areas We Also Serve
-        </h2>
+<p style="font-size:17px;line-height:1.8;">
+<strong>What types of repairs can contractors handle?</strong><br>
+Contractors handle many types of residential work including drywall repair,
+door installation, flooring installation, deck construction, window replacement,
+and general handyman services.
+</p>
 
-        <ul style="line-height:1.9;font-size:16px;padding-left:18px;">
-          ${nearbyCities
-            .slice(0, 8)
-            .map(
-              (c) => `
-              <li>
-                <a href="https://doorplaceusa.com/pages/${c.slug}"
-                   style="color:#b80d0d;">
-                  Home Repair Services in ${c.city}
-                </a>
-              </li>
-              `
-            )
-            .join("")}
-        </ul>
-      </div>
-      `
-      : ""
-  }
+<!-- CTA -->
 
-  <div style="margin-top:60px;text-align:center;">
-
-    <h2 style="color:#b80d0d;">
-      Ready to Start Your Project in ${city}?
-    </h2>
-
-    <p style="font-size:16px;line-height:1.7;max-width:700px;margin:0 auto;">
-      Submit your request and we will help connect you with contractors
-      serving homeowners throughout ${city}, ${state}.
-    </p>
-
-    <div style="margin-top:25px;">
-      <a href="https://doorplaceusa.com/pages/get-a-fast-quote"
-         style="background:#b80d0d;color:#fff;padding:15px 34px;
-                font-size:18px;text-decoration:none;border-radius:8px;
-                display:inline-block;font-weight:bold;">
-        Get a Fast Quote
-      </a>
-    </div>
-
-  </div>
+<div style="text-align:center;margin-top:50px;">
+<a href="https://doorplaceusa.com/pages/get-a-fast-quote"
+style="background:#b80d0d;color:#fff;padding:16px 36px;font-size:19px;text-decoration:none;border-radius:8px;">
+Request Home Repair Help in ${city}
+</a>
+</div>
 
 </div>
+
 `;
 }

@@ -56,6 +56,12 @@ import { renderCustomDoorInstallationCityHTML } from "../templates/renderCustomD
 import { renderInteriorDoorInstallationCityHTML } from "../templates/renderInteriorDoorInstallationCityHTML";
 
 /* =========================================
+   SLIDE DRIVE AUTOMATION
+========================================= */
+
+import { renderSlideDriveCityHTML } from "../templates/renderSlideDriveBarnDoorCityHTML";
+
+/* =========================================
    HOME REPAIR IMPORTS
 ========================================= */
 
@@ -101,6 +107,13 @@ export function renderPageTemplateHTML(
 
     case "interior_door_installation_city":
       return renderInteriorDoorInstallationCityHTML(props);
+
+    /* -----------------------------
+       AUTOMATIC BARN DOOR
+    ------------------------------ */
+
+    case "automatic_barn_door_city":
+      return renderSlideDriveCityHTML(props);
 
     /* -----------------------------
        CORE
@@ -254,14 +267,13 @@ export function renderPageTemplateHTML(
     case "porch_swing_safety_city":
       return renderPorchSwingSafetyCityHTML(props);
 
-   /* -----------------------------
-   HOME REPAIR
------------------------------- */
+    /* -----------------------------
+       HOME REPAIR
+    ------------------------------ */
 
-case "home_repair":
-case "home_repair_city":
-  return renderHomeRepairCityHTML(props);
-
+    case "home_repair":
+    case "home_repair_city":
+      return renderHomeRepairCityHTML(props);
 
     default:
       throw new Error(`Unsupported page_template: \${page_template}`);

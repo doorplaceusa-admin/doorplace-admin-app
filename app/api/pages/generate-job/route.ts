@@ -374,6 +374,11 @@ case "door_city":
   }
   break;
 
+case "automatic_barn_door_city":
+  title = `Automatic Barn Door System in ${c.city_name}, ${stateCodeUpper}`;
+  slug = `automatic-barn-door-${c.slug}-${stateCodeLower}`;
+  break;
+
 case "custom_door_installation_city":
   title = `Custom Door Installation in ${c.city_name}, ${stateCodeUpper}`;
   slug = `custom-door-installation-${c.slug}-${stateCodeLower}`;

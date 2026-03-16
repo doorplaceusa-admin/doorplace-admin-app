@@ -241,6 +241,7 @@ const TEMPLATE_OPTIONS = [
 ========================================= */
 
 { value: "door_city", label: "Barn Door Style – City" },
+{ value: "automatic_barn_door_city", label: "Automatic Barn Door System – City" },
 { value: "custom_door_installation_city", label: "Custom Door Installation – City" },
 { value: "interior_door_installation_city", label: "Interior Door Installation – City" },
 

@@ -10,6 +10,7 @@ dotenv.config({ path: "/var/www/doorplace-admin-app/.env.local" });
 /* ======================================================
    IMPORTS
 ====================================================== */
+
 import { getShopifyPageByHandle } from "@/lib/shopify/getShopifyPageByHandle";
 
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
@@ -44,6 +45,7 @@ function sleep(ms: number) {
 
 function getPageType(template: string) {
   switch (template) {
+
     case "porch_swing_material_city":
       return "material";
 
@@ -52,6 +54,7 @@ function getPageType(template: string) {
 
     case "door_city":
     case "custom_door_installation_city":
+    case "automatic_barn_door_city": // ✅ NEW AUTOMATION PAGE
       return "door";
 
     case "porch_swing_delivery":
@@ -69,9 +72,12 @@ function getPageType(template: string) {
 async function safeCreateShopifyPage(payload: any) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
+
       await shopifyLimiter();
-return await createShopifyPage(payload);
+      return await createShopifyPage(payload);
+
     } catch (err: any) {
+
       const msg = err?.message || "";
 
       const isThrottle =
@@ -80,6 +86,7 @@ return await createShopifyPage(payload);
         msg.includes("Exceeded 2 calls per second");
 
       if (isThrottle) {
+
         console.log(`⏳ Shopify throttled… retrying (${attempt}/${MAX_RETRIES})`);
 
         await sleep(2000 * attempt);
@@ -93,14 +100,14 @@ return await createShopifyPage(payload);
       }
 
       const isHandleTaken =
-  msg.includes("handle") &&
-  msg.includes("has already been taken");
+        msg.includes("handle") &&
+        msg.includes("has already been taken");
 
-if (isHandleTaken) {
-  return { handle_taken: true };
-}
+      if (isHandleTaken) {
+        return { handle_taken: true };
+      }
 
-throw err;
+      throw err;
     }
   }
 
@@ -108,17 +115,17 @@ throw err;
 }
 
 /* ======================================================
-   ✅ CLAIM + LOCK PAGES FIRST (WITH RECLAIM)
+   CLAIM + LOCK PAGES
 ====================================================== */
 
 async function claimPages() {
+
   console.log("🔍 Claiming pending pages...");
 
   const tenMinutesAgo = new Date(
     Date.now() - 10 * 60 * 1000
   ).toISOString();
 
-  // ✅ FAST CLAIM (NO JOIN)
   const { data: pages, error } = await supabaseAdmin
     .from("generated_pages")
     .select("id, slug, title, page_template, variant_key, template_suffix, hero_image_url")
@@ -139,7 +146,6 @@ async function claimPages() {
     return [];
   }
 
-  // ✅ Lock immediately
   const ids = pages.map((p) => p.id);
 
   await supabaseAdmin
@@ -155,14 +161,12 @@ async function claimPages() {
   return pages;
 }
 
-
-
 /* ======================================================
    PUBLISH ONE PAGE
 ====================================================== */
 
 async function publishOne(page: any) {
-    // ✅ Load full relational data AFTER claim
+
   const { data: fullPage, error } = await supabaseAdmin
     .from("generated_pages")
     .select(
@@ -192,6 +196,7 @@ async function publishOne(page: any) {
   if (!city || !state || !stateCode) return;
 
   /* ---------- Render HTML ---------- */
+
   const html = renderPageTemplateHTML({
     page_template: page.page_template,
     variant_key: page.variant_key ?? null,
@@ -202,9 +207,9 @@ async function publishOne(page: any) {
     heroImageUrl: page.hero_image_url,
   });
 
+  const meshLinks = await getMeshLinks(page.slug);
 
-const meshLinks = await getMeshLinks(page.slug);
-const meshHTML = `
+  const meshHTML = `
 
 <!-- TP_LINK_MESH_START -->
 
@@ -243,6 +248,7 @@ ${meshLinks
   if (!html || html.trim().length < 50) return;
 
   /* ---------- SEO Meta ---------- */
+
   const pageType = getPageType(page.page_template);
 
   const seoDescription = buildMetaDescription({
@@ -255,6 +261,7 @@ ${meshLinks
   });
 
   /* ---------- Shopify Push ---------- */
+
   const shopifyPage = await safeCreateShopifyPage({
     title: page.title,
     handle: page.slug,
@@ -262,41 +269,42 @@ ${meshLinks
     template_suffix: page.template_suffix || null,
     meta_description: seoDescription,
   });
-// ✅ HANDLE ALREADY EXISTS → LINK IT INSTEAD OF FAILING
-if (shopifyPage?.handle_taken) {
-  console.log(`🟡 Handle already exists → fetching page: ${page.slug}`);
 
-  const existing = await getShopifyPageByHandle(page.slug);
+  if (shopifyPage?.handle_taken) {
 
-  if (existing?.id) {
+    console.log(`🟡 Handle already exists → fetching page: ${page.slug}`);
+
+    const existing = await getShopifyPageByHandle(page.slug);
+
+    if (existing?.id) {
+
+      await supabaseAdmin
+        .from("generated_pages")
+        .update({
+          shopify_page_id: existing.id,
+          status: "published",
+          published_at: new Date().toISOString(),
+          publish_error: null,
+        })
+        .eq("id", page.id);
+
+      console.log(`✅ Linked existing Shopify page → ${page.slug}`);
+      return;
+    }
+
     await supabaseAdmin
       .from("generated_pages")
       .update({
-        shopify_page_id: existing.id,
-        status: "published",
-        published_at: new Date().toISOString(),
-        publish_error: null,
+        status: "error",
+        publish_error: "Handle taken but page not found in Shopify",
       })
       .eq("id", page.id);
 
-    console.log(`✅ Linked existing Shopify page → ${page.slug}`);
     return;
   }
 
-  // If we can't find it, mark error
-  await supabaseAdmin
-    .from("generated_pages")
-    .update({
-      status: "error",
-      publish_error: "Handle taken but page not found in Shopify",
-    })
-    .eq("id", page.id);
-
-  return;
-}
-
-  // ✅ If throttle wall → requeue instead of failing
   if (shopifyPage?.throttled_out) {
+
     console.log(`🟡 Throttle wall → requeueing ${page.slug}`);
 
     await supabaseAdmin
@@ -310,7 +318,6 @@ if (shopifyPage?.handle_taken) {
     return;
   }
 
-  /* ---------- Update Supabase ---------- */
   await supabaseAdmin
     .from("generated_pages")
     .update({
@@ -329,6 +336,7 @@ if (shopifyPage?.handle_taken) {
 ====================================================== */
 
 async function runBatch() {
+
   console.log("🚀 PUSH WORKER RUNNING...");
 
   const pages = await claimPages();
@@ -341,10 +349,14 @@ async function runBatch() {
   console.log(`📦 Processing ${pages.length} pages...`);
 
   for (const page of pages) {
+
     try {
+
       await publishOne(page);
       await sleep(SHOPIFY_DELAY_MS);
+
     } catch (err: any) {
+
       console.error(`❌ FAILED → ${page.slug}`, err?.message);
 
       await supabaseAdmin
@@ -361,15 +373,18 @@ async function runBatch() {
 }
 
 /* ======================================================
-   ✅ RUN FOREVER (NO OVERLAP)
+   RUN FOREVER
 ====================================================== */
 
 console.log("🔥 Push Pending Worker Started (Enterprise Mode)");
 
 async function runForever() {
+
   while (true) {
+
     await runBatch();
     await sleep(INTERVAL_MS);
+
   }
 }
 

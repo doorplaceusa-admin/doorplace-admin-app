@@ -16,7 +16,6 @@ export function renderSlideDriveCityHTML({
   city,
   state,
   stateCode,
-  heroImageUrl,
   nearbyCities
 }: RenderProps): string {
 
@@ -147,12 +146,12 @@ grid-template-columns:1fr;
 
 <div>
 
-<div class="dp-slide-title">SlideDrive™ Automatic Barn Door System in ${city}, ${stateCode}</div>
+<div class="dp-slide-title">Automatic Barn Door Opener in ${city}, ${stateCode}</div>
 
-<div class="dp-slide-sub">Smart Automation for Sliding Barn Doors</div>
+<div class="dp-slide-sub">Turn Any Sliding Barn Door Into a Smart Automatic Door</div>
 
 <p class="dp-slide-lead">
-The SlideDrive™ Automatic Barn Door System is a compact automation solution designed to open and close interior sliding barn doors smoothly and reliably for homes and businesses in ${city}, ${state}. Instead of using large overhead motors or complex track replacements, SlideDrive™ connects near the floor guide area and uses a drive wheel to move the door along its existing rail.
+The SlideDrive™ Automatic Barn Door Opener is a compact automation solution designed to open and close interior sliding barn doors smoothly and reliably for homes and businesses in ${city}, ${state}. Instead of large overhead motors or complicated track systems, SlideDrive™ connects near the floor guide area and uses a powered drive wheel to move the door along its existing rail.
 </p>
 
 <p class="dp-slide-lead">
@@ -163,15 +162,15 @@ This allows homeowners in ${city} to upgrade their sliding barn doors with moder
 
 <div>
 
-${
-heroImageUrl
-? `
 <div class="dp-media-box">
-<img src="${heroImageUrl}" alt="Automatic barn door system in ${city}, ${stateCode}">
+<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/7E4EC077-322F-41CA-8E84-F1D8C0D987E3.png?v=1773622412">
 </div>
-`
-: ""
-}
+
+<br>
+
+<div class="dp-media-box">
+<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/3DC88EAA-266E-44FD-B550-58764F07A01F.png?v=1773622605">
+</div>
 
 </div>
 
@@ -183,12 +182,26 @@ heroImageUrl
 <h2>Product Overview</h2>
 
 <p>
-SlideDrive™ is designed to automate sliding barn doors without requiring major structural changes. The drive system works alongside the existing overhead barn door rail while the motorized drive wheel moves the door smoothly across the opening.
+The SlideDrive™ system connects directly to the barn door floor guide location at the bottom of the doorway. Instead of replacing the track or installing a ceiling mounted operator, the SlideDrive™ unit uses a powered friction drive wheel to move the door open and closed while the door continues riding on its existing overhead rail.
 </p>
 
 <p>
-Because the system stays compact and positioned near the floor guide area, it avoids the bulky look of overhead operators while still delivering reliable automatic door movement.
+Because the drive unit stays stationary and the door slides past it, the system remains compact and simple to install.
 </p>
+
+<p>
+For new installations, SlideDrive™ can be shipped with a compatible floor guide. For existing installations, the drive unit can connect to many standard floor guide setups already installed.
+</p>
+
+<div class="dp-gallery">
+
+<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/B446062D-A83A-41ED-A372-4F18B97A848C.png?v=1773622604">
+
+<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/54409CA0-875C-4F48-BC4A-EBE57E863213.png?v=1773622416">
+
+<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/55B86FBC-0D1B-431F-BFD6-73E21C117D1F.png?v=1773622602">
+
+</div>
 
 </div>
 
@@ -200,23 +213,23 @@ Because the system stays compact and positioned near the floor guide area, it av
 <div class="dp-grid">
 
 <div class="dp-card">
-<h3>Drive Wheel System</h3>
-<p>A motorized friction drive wheel applies controlled pressure against the door to move it open or closed.</p>
+<h3>Guide Mounted Drive System</h3>
+<p>SlideDrive™ connects directly to the barn door floor guide assembly at the base of the doorway.</p>
 </div>
 
 <div class="dp-card">
-<h3>Floor Guide Alignment</h3>
-<p>The drive system operates near the floor guide location while the door continues to ride on the existing overhead rail.</p>
+<h3>Powered Drive Wheel</h3>
+<p>A motorized drive wheel applies controlled pressure against the door and moves it horizontally along the track.</p>
 </div>
 
 <div class="dp-card">
 <h3>Adjustable Drive Pressure</h3>
-<p>The pressure applied to the door can be adjusted depending on door weight and sliding resistance.</p>
+<p>The system allows installers to increase or decrease wheel pressure against the door for proper performance depending on door weight and sliding resistance.</p>
 </div>
 
 <div class="dp-card">
-<h3>Travel Stop Triggers</h3>
-<p>Adjustable stops prevent the door from traveling too far when reaching open or closed positions.</p>
+<h3>Stop Triggers</h3>
+<p>Adjustable stop triggers prevent the door from sliding too far once it reaches the open or closed position.</p>
 </div>
 
 </div>
@@ -230,45 +243,25 @@ Because the system stays compact and positioned near the floor guide area, it av
 
 <ul class="dp-bullets">
 
-<li>Automatic open and close operation</li>
-<li>Works with most standard barn door rail systems</li>
-<li>Compact drive mechanism design</li>
-<li>Adjustable pressure drive wheel</li>
-<li>Optional protective housing</li>
-<li>Travel stop triggers for safe operation</li>
-<li>12V wall power adapter</li>
-<li>Optional rechargeable battery system</li>
+<li>Automatic open and close door operation</li>
+<li>Guide-mounted drive system that connects to the floor guide location</li>
+<li>Works with most existing barn door rail systems</li>
+<li>Adjustable wheel pressure for different door weights</li>
+<li>Compact drive system design</li>
+<li>Optional protective housing around drive mechanism</li>
+<li>Travel stop triggers to prevent over-travel</li>
+<li>12V power adapter standard</li>
+<li>Optional rechargeable battery configuration</li>
 
 </ul>
 
-</div>
+<div class="dp-gallery">
 
+<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/526F0721-017D-4644-8458-8EF4C555A16B.png?v=1773622600">
 
-<div class="dp-section">
+<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/851317B9-D5E1-43C4-971F-5B416494747F.png?v=1773622413">
 
-<h2>Optional Upgrades</h2>
-
-<div class="dp-grid">
-
-<div class="dp-card">
-<h3>Remote Control</h3>
-<p>Open or close the door using a wireless handheld remote.</p>
-</div>
-
-<div class="dp-card">
-<h3>Wall Button</h3>
-<p>A push button can be installed on the wall for simple open and close operation.</p>
-</div>
-
-<div class="dp-card">
-<h3>Motion Detection</h3>
-<p>The door can automatically open when motion is detected near the doorway.</p>
-</div>
-
-<div class="dp-card">
-<h3>Smart Home Integration</h3>
-<p>Optional integration allows compatibility with Alexa and Google Home systems.</p>
-</div>
+<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/DCAB43EF-B031-4E4F-88F8-CC5D4AE067B0_6ea51a15-208c-4a1b-86f4-029c1483757c.png?v=1773622415">
 
 </div>
 
@@ -282,68 +275,13 @@ Because the system stays compact and positioned near the floor guide area, it av
 <ul class="dp-bullets">
 
 <li>Interior barn doors</li>
-<li>Pantry sliding doors</li>
+<li>Pantry doors</li>
 <li>Laundry room doors</li>
 <li>Office sliding doors</li>
-<li>Closet barn doors</li>
+<li>Closet sliding doors</li>
 <li>Accessibility automation</li>
 
 </ul>
-
-</div>
-
-
-<div class="dp-section">
-
-<h2>Specifications</h2>
-
-<table class="dp-spec">
-
-<tbody>
-
-<tr>
-<td>Product Name</td>
-<td>SlideDrive™ Automatic Barn Door System</td>
-</tr>
-
-<tr>
-<td>Brand</td>
-<td>Doorplace USA</td>
-</tr>
-
-<tr>
-<td>Mounting Type</td>
-<td>Guide Mounted Drive System</td>
-</tr>
-
-<tr>
-<td>Drive Method</td>
-<td>Motorized Friction Drive Wheel</td>
-</tr>
-
-<tr>
-<td>Power</td>
-<td>12V Power Adapter</td>
-</tr>
-
-<tr>
-<td>Optional Power</td>
-<td>Rechargeable Battery</td>
-</tr>
-
-<tr>
-<td>Controls</td>
-<td>Remote, Wall Button, Motion Sensor, Mobile App</td>
-</tr>
-
-<tr>
-<td>Compatibility</td>
-<td>Works with most standard barn door rails</td>
-</tr>
-
-</tbody>
-
-</table>
 
 </div>
 
@@ -363,7 +301,7 @@ ${nearbyCities
 (c)=>`
 <li>
 <a href="https://doorplaceusa.com/pages/${c.slug}" style="color:#b80d0d;">
-Automatic Barn Door Systems in ${c.city}
+Automatic Barn Door Opener in ${c.city}
 </a>
 </li>
 `
@@ -383,7 +321,7 @@ Automatic Barn Door Systems in ${c.city}
 <h2>Ready to Upgrade Your Barn Door?</h2>
 
 <p>
-Homeowners and builders in ${city}, ${state} can upgrade their sliding barn doors with the SlideDrive™ automatic door system. The compact drive design allows smooth automation while maintaining the clean appearance of traditional barn door hardware.
+Homeowners and builders in ${city}, ${state} can upgrade their sliding barn doors with the SlideDrive™ automatic barn door opener system.
 </p>
 
 <div style="margin-top:25px;text-align:center;">

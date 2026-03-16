@@ -161,7 +161,13 @@ This allows homeowners in ${city} to upgrade their sliding barn doors with moder
 </div>
 
 <div>
+<div class="dp-media-box">
 
+<video autoplay muted loop playsinline style="width:100%;border-radius:8px;">
+<source src="https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov" type="video/mp4">
+</video>
+
+</div>
 <div class="dp-media-box">
 <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/7E4EC077-322F-41CA-8E84-F1D8C0D987E3.png?v=1773622412">
 </div>

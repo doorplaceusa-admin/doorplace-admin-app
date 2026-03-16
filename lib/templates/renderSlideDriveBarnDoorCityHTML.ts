@@ -21,6 +21,8 @@ export function renderSlideDriveCityHTML({
 
 return `
 
+<div style="max-width:1200px;margin:0 auto;padding:24px;font-family:'Times New Roman',serif;color:#222;line-height:1.75;background:#fff;">
+
 <style>
 
 .dp-slide-page * {box-sizing:border-box;}
@@ -138,8 +140,6 @@ grid-template-columns:1fr;
 
 </style>
 
-<div style="max-width:1200px;margin:0 auto;padding:24px;font-family:'Times New Roman',serif;color:#222;line-height:1.75;background:#fff;">
-
 <div class="dp-slide-page">
 
 <div class="dp-slide-hero">
@@ -176,7 +176,6 @@ This allows homeowners in ${city} to upgrade their sliding barn doors with moder
 
 </div>
 
-
 <div class="dp-section">
 
 <h2>Product Overview</h2>
@@ -204,7 +203,6 @@ For new installations, SlideDrive™ can be shipped with a compatible floor guid
 </div>
 
 </div>
-
 
 <div class="dp-section">
 
@@ -236,7 +234,6 @@ For new installations, SlideDrive™ can be shipped with a compatible floor guid
 
 </div>
 
-
 <div class="dp-section">
 
 <h2>Core Features</h2>
@@ -267,7 +264,6 @@ For new installations, SlideDrive™ can be shipped with a compatible floor guid
 
 </div>
 
-
 <div class="dp-section">
 
 <h2>Ideal Applications</h2>
@@ -284,7 +280,6 @@ For new installations, SlideDrive™ can be shipped with a compatible floor guid
 </ul>
 
 </div>
-
 
 ${
 nearbyCities && nearbyCities.length > 0
@@ -315,7 +310,6 @@ Automatic Barn Door Opener in ${c.city}
 : ""
 }
 
-
 <div class="dp-section">
 
 <h2>Ready to Upgrade Your Barn Door?</h2>
@@ -332,7 +326,6 @@ Request a Quote
 </div>
 
 </div>
-
 
 </div>
 </div>

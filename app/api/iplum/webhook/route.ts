@@ -22,10 +22,7 @@ export async function POST(req: Request) {
   try {
     const payload = await req.json();
 
-    /* ======================================================
-       1️⃣ DETECT SMS OR CALL
-    ====================================================== */
-
+    // 🔥 1. SMS or CALL
     const message =
       payload.text ||
       payload.message ||
@@ -35,20 +32,14 @@ export async function POST(req: Request) {
     const isSMS = !!message;
     const eventType = isSMS ? "SMS" : "CALL";
 
-    /* ======================================================
-       2️⃣ DIRECTION
-    ====================================================== */
-
+    // 🔥 2. Direction
     const direction =
       payload.direction ||
       payload.call_direction ||
       payload.sms_direction ||
       "Incoming";
 
-    /* ======================================================
-       3️⃣ PHONE NUMBERS
-    ====================================================== */
-
+    // 🔥 3. Phones
     const from =
       payload.from_number ||
       payload.from ||
@@ -65,27 +56,17 @@ export async function POST(req: Request) {
 
     const cleanedPhone = cleanPhone(from || to);
 
-    /* ======================================================
-       4️⃣ INSERT EVENT (existing)
-    ====================================================== */
+    // 🔥 4. Save event
+    await supabaseAdmin.from("iplum_events").insert({
+      event_type: eventType,
+      direction,
+      from_number: from,
+      to_number: to,
+      message,
+      raw_payload: payload,
+    });
 
-    const { data: inserted } = await supabaseAdmin
-      .from("iplum_events")
-      .insert({
-        event_type: eventType,
-        direction,
-        from_number: from,
-        to_number: to,
-        message,
-        raw_payload: payload,
-      })
-      .select()
-      .single();
-
-    /* ======================================================
-       5️⃣ MATCH CUSTOMER
-    ====================================================== */
-
+    // 🔥 5. Match customer
     let lead = null;
     let invoice = null;
     let matchType: "lead" | "invoice" | "unknown" = "unknown";
@@ -114,33 +95,28 @@ export async function POST(req: Request) {
       }
     }
 
-    /* ======================================================
-       6️⃣ BUILD NOTIFICATION
-    ====================================================== */
-
+    // 🔥 6. Title (FIXED)
     const name =
       lead?.first_name ||
       invoice?.customer_name ||
       "Unknown Caller";
 
     const title =
-      eventType === "CALL"
-        ? `Missed Call from ${name}`
-        : `New Message from ${name}`;
+      eventType === "SMS"
+        ? `New Message from ${name}`
+        : `Missed Call from ${name}`;
 
-    /* ======================================================
-       7️⃣ INSERT NOTIFICATION 🔔
-    ====================================================== */
-
+    // 🔥 7. INSERT NOTIFICATION (FINAL FIX)
     await supabaseAdmin.from("notifications").insert({
       title,
-      type: eventType.toLowerCase(), // "call" or "sms"
-      recipient_user_id: null, // 🔥 we'll fix later if needed
-      company_id: null,        // 🔥 same here (optional)
+      type: eventType.toLowerCase(),
       is_read: false,
       created_at: new Date().toISOString(),
 
-      // 🔥 EXTRA DATA (IMPORTANT)
+      // 🔥 THESE FIX YOUR ISSUE
+      recipient_user_id: "admin",
+      company_id: "default",
+
       metadata: {
         phone: cleanedPhone,
         raw_phone: from || to,

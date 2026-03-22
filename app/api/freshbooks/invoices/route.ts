@@ -36,6 +36,7 @@ async function refreshFreshBooksToken(rid: string) {
   });
 
   const json = await res.json();
+
   if (!res.ok) {
     console.log(`[${rid}] ❌ Refresh failed`, json);
     throw new Error("Refresh failed");
@@ -101,29 +102,48 @@ export async function GET() {
 
     console.log(`[${rid}] 📦 invoices fetched:`, invoicesArr.length);
 
-    // 🔥 FETCH CLIENTS (for phone + email)
-    const clientsRes = await fetch(
-      `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/users/clients`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
+    // ============================
+    // 🔥 FETCH ALL CLIENTS (FIXED)
+    // ============================
+    let allClients: any[] = [];
+    let page = 1;
+    let totalPages = 1;
 
-    const clientsJson = await clientsRes.json();
-    const clientsArr = clientsJson?.response?.result?.clients || [];
+    while (page <= totalPages) {
+      const res = await fetch(
+        `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/users/clients?page=${page}&per_page=100`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
-    console.log(`[${rid}] 👥 clients fetched:`, clientsArr.length);
+      const data = await res.json();
+
+      const clients = data?.response?.result?.clients || [];
+      const meta = data?.response?.meta;
+
+      allClients.push(...clients);
+
+      totalPages = meta?.pages || 1;
+      console.log(`[${rid}] 📄 client page ${page}/${totalPages}`);
+
+      page++;
+    }
+
+    console.log(`[${rid}] 👥 TOTAL CLIENTS:`, allClients.length);
 
     const clientMap = new Map(
-      clientsArr.map((c: any) => [String(c.id), c])
+      allClients.map((c: any) => [String(c.id), c])
     );
 
+    // ============================
+    // 🔥 BUILD INVOICES
+    // ============================
     const invoices = invoicesArr.map((inv: any) => {
       const client: any = clientMap.get(String(inv.customerid)) || {};
 
-      // 🔥 PHONE (robust)
       const contactPhone =
         client?.phone ||
         client?.mobile ||
@@ -134,7 +154,6 @@ export async function GET() {
         (client?.contacts || []).find((c: any) => c?.value)?.value ||
         "";
 
-      // 🔥 EMAIL (robust)
       const contactEmail =
         client?.email ||
         client?.email_address ||
@@ -144,6 +163,7 @@ export async function GET() {
         (client?.contacts || []).find((c: any) =>
           (c?.value || "").includes("@")
         )?.value ||
+        inv.email || // fallback
         "";
 
       return {
@@ -187,7 +207,6 @@ export async function GET() {
       .from("invoices")
       .upsert(invoices, {
         onConflict: "invoiceid",
-        ignoreDuplicates: false,
       });
 
     if (error) {
@@ -199,9 +218,9 @@ export async function GET() {
     return NextResponse.json({ invoices, count: invoices.length, rid });
 
   } catch (e: any) {
-    console.log("❌ API ERROR:", e);
+    console.log(`❌ [${rid}] API ERROR:`, e);
     return NextResponse.json(
-      { error: e.message || "API error" },
+      { error: e.message || "API error", rid },
       { status: 500 }
     );
   }

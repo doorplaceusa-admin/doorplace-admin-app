@@ -126,39 +126,42 @@ export async function POST(req: Request) {
         ? `New Message from ${name}`
         : `Missed Call from ${name}`;
 
-    // 🔥 7. GET ADMIN USER (SAFE)
-    const { data: adminProfile } = await supabaseAdmin
-      .from("profiles")
-      .select("id, active_company_id")
-      .eq("role", "admin")
-      .limit(1)
-      .maybeSingle();
+  // 🔥 7. GET ALL ADMINS
+const { data: admins, error: adminsError } = await supabaseAdmin
+  .from("profiles")
+  .select("id, active_company_id")
+  .eq("role", "admin");
 
-    if (!adminProfile) {
-      console.error("❌ No admin profile found");
-    }
-
-    // 🔥 8. INSERT NOTIFICATION
-    const { data: notifData, error: notifError } = await supabaseAdmin
-  .from("notifications")
-  .insert({
+if (adminsError) {
+  console.error("❌ ADMIN FETCH FAILED:", adminsError);
+} else if (!admins || admins.length === 0) {
+  console.error("❌ No admin profiles found");
+} else {
+  // 🔥 8. INSERT NOTIFICATIONS FOR ALL ADMINS
+  const rows = admins.map((admin) => ({
     title,
-    body: message || `Missed call from ${name}`, // ✅ REQUIRED
+    body: message || `Missed call from ${name}`,
 
-    entity_type: matchType, // "lead" | "invoice" | "unknown"
+    entity_type: matchType,
     entity_id: lead?.id || invoice?.id || null,
 
     is_read: false,
     created_at: new Date().toISOString(),
 
-    recipient_user_id: adminProfile?.id || null,
-  })
-  .select();
+    recipient_user_id: admin.id,
+    company_id: admin.active_company_id || null,
+  }));
 
-if (notifError) {
-  console.error("❌ NOTIFICATION INSERT FAILED:", notifError);
-} else {
-  console.log("✅ NOTIFICATION INSERTED:", notifData);
+  const { data: notifData, error: notifError } = await supabaseAdmin
+    .from("notifications")
+    .insert(rows)
+    .select();
+
+  if (notifError) {
+    console.error("❌ NOTIFICATION INSERT FAILED:", notifError);
+  } else {
+    console.log("✅ NOTIFICATION INSERTED:", notifData);
+  }
 }
 
     console.log("🔔 Notification created:", title);

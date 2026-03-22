@@ -5,15 +5,15 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function mask(v?: string | null) {
-  if (!v) return "";
-  if (v.length <= 8) return "****";
-  return `${v.slice(0, 4)}****${v.slice(-4)}`;
+/* 🔹 normalize phone */
+function normalizePhone(phone?: string) {
+  if (!phone) return "";
+  return phone.replace(/\D/g, "").slice(-10);
 }
 
-/* 🟢 NEW — helper to refresh token */
+/* 🔹 refresh token */
 async function refreshFreshBooksToken(rid: string) {
-  console.log(`[${rid}] 🔄 Attempting token refresh`);
+  console.log(`[${rid}] 🔄 Refreshing token`);
 
   const { data: tokenRow } = await supabaseAdmin
     .from("freshbooks_tokens")
@@ -23,7 +23,7 @@ async function refreshFreshBooksToken(rid: string) {
     .single();
 
   if (!tokenRow?.refresh_token) {
-    throw new Error("No refresh_token available");
+    throw new Error("No refresh token");
   }
 
   const res = await fetch("https://api.freshbooks.com/auth/oauth/token", {
@@ -41,12 +41,11 @@ async function refreshFreshBooksToken(rid: string) {
 
   if (!res.ok) {
     console.log(`[${rid}] ❌ Refresh failed`, json);
-    throw new Error("Token refresh failed");
+    throw new Error("Refresh failed");
   }
 
   const expiresAt = new Date(Date.now() + json.expires_in * 1000).toISOString();
 
-  // single source of truth
   await supabaseAdmin.from("freshbooks_tokens").delete().neq("id", "");
 
   await supabaseAdmin.from("freshbooks_tokens").insert({
@@ -60,11 +59,11 @@ async function refreshFreshBooksToken(rid: string) {
   return json.access_token;
 }
 
-export async function GET(req: Request) {
-  const rid = `fb_inv_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+export async function GET() {
+  const rid = `fb_${Date.now()}`;
 
   try {
-    console.log(`\n========== [${rid}] FreshBooks invoices GET ==========`);
+    console.log(`\n==== [${rid}] Fetching invoices ====`);
 
     const tokenQuery = await supabaseAdmin
       .from("freshbooks_tokens")
@@ -86,9 +85,8 @@ export async function GET(req: Request) {
 
     const url =
       `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/invoices/invoices` +
-      `?include[]=lines&include[]=client&include[]=payments&per_page=500`;
+      `?include[]=client&per_page=500`;
 
-    /* 🟢 NEW — wrapped request so we can retry after refresh */
     async function fetchInvoices(token: string) {
       return fetch(url, {
         headers: {
@@ -101,9 +99,8 @@ export async function GET(req: Request) {
 
     let fbRes = await fetchInvoices(accessToken);
 
-    /* 🟢 NEW — auto refresh on 401 */
     if (fbRes.status === 401) {
-      console.log(`[${rid}] 🔁 Access token expired`);
+      console.log(`[${rid}] 🔁 Token expired`);
       accessToken = await refreshFreshBooksToken(rid);
       fbRes = await fetchInvoices(accessToken);
     }
@@ -113,9 +110,9 @@ export async function GET(req: Request) {
     if (!fbRes.ok) {
       return NextResponse.json(
         {
-          error: "FreshBooks request failed",
+          error: "FreshBooks failed",
           status: fbRes.status,
-          bodyPreview: raw.slice(0, 1200),
+          preview: raw.slice(0, 500),
           rid,
         },
         { status: 502 }
@@ -126,10 +123,7 @@ export async function GET(req: Request) {
     const invoicesArr = json?.response?.result?.invoices;
 
     if (!Array.isArray(invoicesArr)) {
-      return NextResponse.json(
-        { error: "Unexpected response shape", rid },
-        { status: 502 }
-      );
+      return NextResponse.json({ error: "Bad response", rid }, { status: 502 });
     }
 
     const invoices = invoicesArr.map((inv: any) => {
@@ -146,28 +140,19 @@ export async function GET(req: Request) {
           client.organization ||
           "",
         customer_email: client.email || "",
-        customer_phone: client?.phone || "",
-        street: client.p_street || "",
-        city: client.p_city || "",
-        province: client.p_province || "",
-        postal_code: client.p_postal_code || "",
-        currency_code: inv.amount?.currency || "USD",
+        customer_phone: normalizePhone(client?.phone),
         amount: inv.amount?.amount || "0",
         paid_amount: inv.paid?.amount || "0",
         outstanding_amount: inv.outstanding?.amount || "0",
-        notes: inv.notes || "",
-        lines: (inv.lines || []).map((l: any) => ({
-          name: l.name,
-          description: l.description,
-          qty: Number(l.qty || 1),
-          unit_cost: { amount: l.unit_cost?.amount || "0" },
-          amount: { amount: l.amount?.amount || "0" },
-        })),
-        pdf_url: inv.links?.client_view || "",
       };
     });
 
-    return NextResponse.json({ invoices, rid });
+    // 🟢 Save to Supabase
+    await supabaseAdmin
+      .from("invoices")
+      .upsert(invoices, { onConflict: "invoiceid" });
+
+    return NextResponse.json({ invoices, count: invoices.length, rid });
   } catch (e: any) {
     return NextResponse.json(
       { error: e?.message || "API error", rid },

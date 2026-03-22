@@ -1,0 +1,725 @@
+
+<div style="max-width:1200px;margin:0 auto;padding:24px;font-family:'Times New Roman',serif;color:#222;line-height:1.75;">
+
+  <style>
+    .dp-highlandpark-page * { box-sizing: border-box; }
+    .dp-highlandpark-page {
+      max-width: 1200px;
+      margin: 0 auto;
+      color: #222;
+      font-family: 'Times New Roman', serif;
+    }
+    .dp-hero {
+      text-align: center;
+      padding: 8px 0 20px 0;
+    }
+    .dp-hero h1 {
+      font-size: 42px;
+      color: #b80d0d;
+      margin: 0 0 14px 0;
+      line-height: 1.18;
+    }
+    .dp-hero p {
+      font-size: 18px;
+      max-width: 980px;
+      margin: 0 auto 16px auto;
+    }
+    .dp-btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 22px;
+    }
+    .dp-btn {
+      display: inline-block;
+      background: #b80d0d;
+      color: #fff !important;
+      text-decoration: none;
+      padding: 14px 26px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .dp-btn.secondary {
+      background: #111;
+    }
+    .dp-quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin: 24px 0 12px 0;
+    }
+    .dp-quick-links a {
+      text-decoration: none;
+      color: #111;
+      border: 1px solid #d9d9d9;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 15px;
+      background: #fafafa;
+    }
+    .dp-feature-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+      gap: 14px;
+      margin: 30px 0 34px 0;
+    }
+    .dp-feature-card {
+      border: 1px solid #e1e1e1;
+      padding: 16px;
+      border-radius: 12px;
+      background: #fff;
+      text-align: center;
+      font-size: 16px;
+    }
+    .dp-section {
+      margin: 48px 0;
+    }
+    .dp-section h2 {
+      color: #b80d0d;
+      font-size: 32px;
+      margin: 0 0 14px 0;
+      line-height: 1.2;
+    }
+    .dp-section h3 {
+      color: #b80d0d;
+      font-size: 23px;
+      margin: 24px 0 10px 0;
+      line-height: 1.3;
+    }
+    .dp-section p {
+      font-size: 17px;
+      margin: 0 0 16px 0;
+    }
+    .dp-info-box {
+      border: 2px solid #b80d0d;
+      background: #fff8f8;
+      border-radius: 14px;
+      padding: 22px;
+      margin: 34px 0;
+    }
+    .dp-image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+      gap: 16px;
+      margin: 24px 0 12px 0;
+    }
+    .dp-image-grid.two-col {
+      grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+    }
+    .dp-image-grid.three-col {
+      grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
+    }
+    .dp-image-card {
+      border-radius: 14px;
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid #ececec;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+    .dp-image-card img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .dp-image-caption {
+      padding: 10px 12px;
+      font-size: 15px;
+      background: #fff;
+    }
+    .dp-split-grid {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 24px;
+      align-items: center;
+      margin: 24px 0;
+    }
+    .dp-split-grid.reverse {
+      grid-template-columns: 0.92fr 1.08fr;
+    }
+    .dp-split-grid img {
+      width: 100%;
+      border-radius: 14px;
+      display: block;
+      border: 1px solid #ececec;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+    .dp-bullet-list {
+      padding-left: 22px;
+      font-size: 17px;
+      line-height: 1.85;
+      margin: 0 0 16px 0;
+    }
+    .dp-bullet-list li { margin-bottom: 6px; }
+    .dp-resource-links a {
+      color: #b80d0d;
+      text-decoration: none;
+    }
+    .dp-final-cta {
+      text-align: center;
+      border: 2px solid #b80d0d;
+      background: #fff8f8;
+      border-radius: 16px;
+      padding: 34px 20px;
+      margin: 56px 0 10px 0;
+    }
+    .dp-final-cta h2 {
+      color: #b80d0d;
+      font-size: 34px;
+      margin: 0 0 12px 0;
+    }
+    .dp-final-cta p {
+      max-width: 860px;
+      margin: 0 auto 20px auto;
+      font-size: 18px;
+    }
+    @media (max-width: 900px) {
+      .dp-split-grid,
+      .dp-split-grid.reverse {
+        grid-template-columns: 1fr;
+      }
+      .dp-hero h1 { font-size: 34px; }
+      .dp-section h2 { font-size: 28px; }
+    }
+  </style>
+
+  <div class="dp-Highland Park-page">
+
+    <div class="dp-hero">
+      <div style="text-align:center;margin-bottom:20px;">
+        <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6335.jpg?v=1763042914" alt="Luxury custom porch swing inspiration for Highland Park TX homes" style="width:100%;max-width:560px;border-radius:14px;display:block;margin:0 auto;box-shadow:0 8px 24px rgba(0,0,0,0.08);">
+      </div>
+
+      <h1>Luxury Porch Swings in Highland Park, TX</h1>
+<p style="font-size:20px;max-width:900px;margin:10px auto 18px auto;">
+  Custom swing beds, pergola swings, and high-end handcrafted outdoor swings designed for upscale Highland Park homes.
+</p>
+      <p>
+ Doorplace USA builds <strong>luxury porch swings in Highland Park, TX</strong> for homeowners who expect architectural consistency, refined proportions, and a higher level of finish detail.
+These are not standard retail swings. Each piece is custom-built to complement estate-style homes, covered patios, and outdoor living spaces where materials, scale, and visual balance matter just as much as comfort.
+</p>
+<p style="font-size:16px;color:#555;max-width:820px;margin:0 auto;">
+  Our swings are built for homeowners investing in long-term outdoor design across Highland Park and surrounding North Texas luxury communities — not mass-produced retail options.
+</p>
+      <p>
+        Highland Park, TX homes often feature large covered patios, custom backyards, outdoor kitchens, resort-style pools, expansive porches, and
+        well-designed entertaining spaces. A handcrafted swing belongs naturally in that setting. Whether your home leans modern, traditional,
+        timeless, farmhouse, transitional, or estate-inspired, a custom wood swing can become one of the strongest visual pieces in the entire
+        outdoor area. Our focus is on <strong>luxury custom swings</strong>, while pergolas are shown throughout this page to help homeowners
+        visualize how a finished high-end swing installation can look in a complete outdoor setting.
+      </p>
+
+      <div class="dp-btn-row">
+        <a class="dp-btn" href="https://doorplaceusa.com/pages/get-a-fast-quote">Get a Fast Quote</a>
+        <a class="dp-btn secondary" href="https://doorplaceusa.com/pages/porch-swings">See More Custom Swings</a>
+      </div>
+
+      <div class="dp-quick-links">
+        <a href="#highlandpark-luxury">Highland Park Luxury Style</a>
+        <a href="#swing-types">Luxury Swing Types</a>
+        <a href="#pergola-vision">Pergola Swing Vision</a>
+        <a href="#front-porch">Front Porch Swings</a>
+        <a href="#backyard-retreats">Backyard Retreats</a>
+        <a href="#materials-finishes">Materials &amp; Finishes</a>
+        <a href="#sizes-options">Sizes &amp; Options</a>
+        <a href="#gallery">Photo Gallery</a>
+      </div>
+
+      <div class="dp-feature-bar">
+        
+        <div class="dp-feature-card">✅ Custom porch swings built for upscale outdoor spaces</div>
+        <div class="dp-feature-card">✅ Bed swings, porch swings, patio swings, and pergola swing inspiration</div>
+        <div class="dp-feature-card">✅ Luxury styling for Highland Park porches, patios, pools, and backyards</div>
+        <div class="dp-feature-card">✅ Handcrafted wood swings with custom finish options</div>
+      </div>
+    </div>
+
+    <div class="dp-image-grid three-col">
+      <div class="dp-image-card">
+        <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_4956.jpg?v=1769607563" alt="Luxury painted swing bed for Highland Park patio">
+        <div class="dp-image-caption">A large handcrafted swing creates a more finished, upscale outdoor seating area.</div>
+      </div>
+      <div class="dp-image-card">
+        <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3903.jpg?v=1769607561" alt="High-end farmhouse swing bed for Highland Park TX outdoor space">
+        <div class="dp-image-caption">Luxury swing beds work beautifully in covered patios and designer backyard layouts.</div>
+      </div>
+      <div class="dp-image-card">
+        <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_2626.jpg?v=1773181972" alt="Custom porch swing for Highland Park TX home">
+        <div class="dp-image-caption">A custom swing can become a visual anchor for the entire porch or patio.</div>
+      </div>
+    </div>
+
+    <div id="HighlandPark-luxury" class="dp-info-box">
+      <h2 style="color:#b80d0d;font-size:29px;margin-top:0;">Luxury Porch Swing Design for Highland Park Homes</h2>
+      <p>
+        Highland Park, TX is known for luxury estates, private communities, and high-end outdoor living spaces. Homeowners invest in quality materials, strong design, comfort, and a
+        finished look that feels intentional from every angle. That is why a true <strong>luxury porch swing in Highland Park, TX</strong> should not
+        look generic. It should feel built for the home. The right swing can soften a large patio, make a covered porch more inviting, create a
+        peaceful lounge area by the pool, or complete a pergola structure with a strong high-end focal point.
+      </p>
+      <p>
+        This page is built around the kinds of <strong>custom swings</strong> that work especially well in upscale North Texas neighborhoods:
+        <strong>bed swings</strong>, <strong>daybed swings</strong>, <strong>front porch swings</strong>, <strong>covered patio swings</strong>,
+        <strong>pergola swings</strong>, and <strong>high-end outdoor wood swings</strong> with painted or stained finishes. The goal is not to
+        fill a space with something ordinary. The goal is to create a custom outdoor feature that looks like it belongs there.
+      </p>
+    </div>
+
+    <div id="swing-types" class="dp-section">
+      <h2>Luxury Swing Types for Highland Park Patios, Porches, Pergolas, and Outdoor Living Areas</h2>
+      <p>
+        A <strong>luxury porch swing</strong> can take several forms depending on the space and the look you want. Some Highland Park homeowners want
+        a classic front porch swing with cleaner proportions and understated elegance. Others want a larger <strong>bed swing</strong> or
+        <strong>daybed swing</strong> for stretching out, relaxing, and turning the patio into a true retreat. Larger properties and more custom
+        backyard layouts often pair beautifully with oversized swings that feel more like outdoor furniture pieces than simple hanging benches.
+      </p>
+      <p>
+        We also include <strong>pergola swing inspiration</strong> throughout the page because many higher-end backyards already have a pergola,
+        patio cover, or defined architectural structure where a swing naturally belongs. In those settings, the swing remains the main product,
+        but the pergola helps complete the visual story and gives customers a better sense of how a finished setup can feel.
+      </p>
+
+      <div class="dp-image-grid three-col">
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_0134.jpg?v=1769607547" alt="Twin size luxury bed swing Highland Park TX">
+          <div class="dp-image-caption">Twin size swing beds are one of the strongest choices for upscale comfort and visual balance.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6338.jpg?v=1769607531" alt="Luxury daybed porch swing in Highland Park">
+          <div class="dp-image-caption">A daybed-style swing adds a more resort-inspired feel to a covered patio or porch.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_2583.jpg?v=1763779960" alt="Full size swing bed for Highland Park TX luxury backyard">
+          <div class="dp-image-caption">Full size swings make a stronger statement in larger outdoor entertaining areas.</div>
+        </div>
+      </div>
+
+      <div class="dp-split-grid">
+        <div>
+          <h3>Popular Luxury Swing Directions</h3>
+          <ul class="dp-bullet-list">
+            <li>Large bed swings for covered patios and backyard lounge areas</li>
+            <li>Classic front porch swings with premium paint or stain finishes</li>
+            <li>Pergola-mounted swings for poolside and outdoor entertaining spaces</li>
+            <li>Modern black swings for clean architectural homes</li>
+            <li>Farmhouse-inspired swings with soft rope details and relaxed styling</li>
+            <li>Dark stained wood swings for a richer, more dramatic outdoor look</li>
+          </ul>
+          <p>
+            In higher-end neighborhoods, the right swing is not just about seating. It is about atmosphere, finish level, proportion, and how the
+            piece works with the architecture of the home.
+          </p>
+        </div>
+        <div>
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_5919.jpg?v=1763779955" alt="Luxury outdoor swing bed for Highland Park patio">
+        </div>
+      </div>
+    </div>
+
+    <div id="pergola-vision" class="dp-section">
+      <h2>Pergola Swing Inspiration for Highland Park Backyards and High-End Outdoor Layouts</h2>
+      <p>
+        A pergola is often the structure that helps homeowners picture the full finished result. That is why pergola photos matter on a swing
+        page like this. The primary focus remains the <strong>custom swing</strong>, but the pergola provides the context. It shows how a luxury
+        swing can look when placed within a more complete outdoor design. Many Highland Park backyards already include pergolas, pool decks, covered
+        entertaining areas, outdoor kitchens, or custom landscape layouts, so it makes sense to show swings in those kinds of environments.
+      </p>
+      <p>
+        Whether you are planning a pergola from the ground up or simply want to visualize a swing under an existing structure, these examples help
+        show how <strong>luxury swing beds</strong> and <strong>custom porch swings</strong> can elevate a premium outdoor setting. The pergola
+        adds the architecture. The swing adds the comfort, warmth, and lifestyle feel.
+      </p>
+
+      <div class="dp-image-grid three-col">
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_4691.jpg?v=1773181955" alt="Pergola swing inspiration for Highland Park TX backyard">
+          <div class="dp-image-caption">Pergola swing layouts help define a complete outdoor room.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_0134_a95b33eb-ee90-4a0f-982e-f813be7f56cf.jpg?v=1773181939" alt="Luxury pergola bed swing for upscale home">
+          <div class="dp-image-caption">A pergola and swing bed combination creates a strong luxury centerpiece.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_4960.jpg?v=1773181921" alt="Custom pergola swing bed in premium backyard">
+          <div class="dp-image-caption">The swing stays the star, while the pergola frames the experience.</div>
+        </div>
+      </div>
+
+      <div class="dp-split-grid reverse">
+        <div>
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3233.jpg?v=1773181920" alt="Modern pergola swing idea for luxury Highland Park home">
+        </div>
+        <div>
+          <h3>Why Pergola Photos Belong on a Luxury Swing Page</h3>
+          <ul class="dp-bullet-list">
+            <li>They help customers imagine the swing in a more complete outdoor setting</li>
+            <li>They show how a swing can work beside pools, patios, and landscaped backyards</li>
+            <li>They support higher-end design vision without changing the main product focus</li>
+            <li>They appeal to homeowners who already have pergolas or plan to add one later</li>
+          </ul>
+          <p>
+            For many homeowners, seeing the swing in context is what turns the idea into a real plan.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div id="front-porch" class="dp-section">
+      <h2>Luxury Front Porch Swings in Highland Park, TX</h2>
+      <p>
+        A <strong>luxury front porch swing</strong> can make the entrance of a home feel more welcoming, more relaxed, and more custom. In a place
+        like Highland Park, where curb appeal and finish details matter, a front porch swing should feel intentional. It should complement the brick,
+        trim, columns, ceiling finish, and overall style of the exterior. Some homeowners prefer a painted swing in white or black for a cleaner
+        look. Others prefer a hand-stained wood finish for warmth and depth.
+      </p>
+      <p>
+        Front porch swings can range from smaller classic styles to more substantial cushioned or bed-style swings, depending on the size of the
+        porch. Rope-hung swings often feel softer and more upscale visually, while chain-hung swings offer a timeless, clean, traditional look.
+      </p>
+
+      <div class="dp-image-grid three-col">
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6206.jpg?v=1773181969" alt="Dark front porch swing for Highland Park home">
+          <div class="dp-image-caption">Dark finishes can add contrast and a more custom architectural feel.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6071.jpg?v=1773181968" alt="White luxury front porch swing Highland Park Texas">
+          <div class="dp-image-caption">White swings keep the look bright, timeless, and polished.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3909.jpg?v=1773181968" alt="Large front porch swing for high-end Texas home">
+          <div class="dp-image-caption">A larger swing brings more presence to a substantial covered porch.</div>
+        </div>
+      </div>
+
+      <div class="dp-image-grid three-col">
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_0273.jpg?v=1773181967" alt="Custom front porch swing for Highland Park luxury residence">
+          <div class="dp-image-caption">A custom fit and finish helps the swing feel like part of the home.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_9174.jpg?v=1773181967" alt="Small luxury porch swing for elegant front porch">
+          <div class="dp-image-caption">Even smaller swings can deliver strong style when the details are right.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6748.jpg?v=1773181966" alt="Painted swing for upscale front porch">
+          <div class="dp-image-caption">Painted finishes work especially well with refined exterior color palettes.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="backyard-retreats" class="dp-section">
+      <h2>Luxury Backyard Swing Beds and Patio Swings for Highland Park Outdoor Living</h2>
+      <p>
+        Backyard spaces in Highland Park often deserve more than standard patio furniture. A <strong>luxury backyard swing</strong> or
+        <strong>custom bed swing</strong> can create a full outdoor retreat. These swings work especially well in covered patios, near outdoor
+        kitchens, beside pools, under patio ceilings, and inside larger backyard layouts where comfort and visual presence are equally important.
+      </p>
+      <p>
+        Many homeowners searching for <strong>high-end porch swings in Highland Park, TX</strong> are looking for a piece that feels comfortable enough to
+        actually use, but polished enough to fit the rest of the home. That is why larger swing beds, deeper seating, and premium finish options
+        are so popular in upscale markets.
+      </p>
+
+      <div class="dp-image-grid three-col">
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_2386.jpg?v=1773181966" alt="Luxury backyard swing bed Highland Park TX">
+          <div class="dp-image-caption">A backyard swing bed can instantly make the space feel more relaxed and refined.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_1566.jpg?v=1773181964" alt="Covered patio swing for Highland Park backyard">
+          <div class="dp-image-caption">Covered patio swings create destination seating within the larger outdoor layout.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_9603.jpg?v=1773181963" alt="Natural wood luxury swing for backyard">
+          <div class="dp-image-caption">Natural wood tones remain a strong choice for warm, elevated outdoor spaces.</div>
+        </div>
+      </div>
+
+      <div class="dp-split-grid">
+        <div>
+          <h3>What Makes a Backyard Swing Feel Luxury</h3>
+          <ul class="dp-bullet-list">
+            <li>Larger proportions that fit the scale of the patio or porch</li>
+            <li>Premium finishes that work with the home and landscaping</li>
+            <li>Strong visual placement under a patio cover or pergola</li>
+            <li>Comfort-forward styling that invites longer use</li>
+            <li>A look that feels custom instead of mass-produced</li>
+          </ul>
+          <p>
+            In premium outdoor spaces, the right swing should feel like it was planned from the beginning.
+          </p>
+        </div>
+        <div>
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_7738.jpg?v=1773181961" alt="High-end patio swing inspiration for Highland Park">
+        </div>
+      </div>
+
+      <div class="dp-image-grid three-col">
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3816.jpg?v=1773181960" alt="Luxury daybed swing for outdoor living">
+          <div class="dp-image-caption">Daybed swings are ideal for higher-end patios and covered backyard lounges.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_9210.jpg?v=1773181960" alt="Covered patio daybed swing luxury Texas">
+          <div class="dp-image-caption">Larger swings often become the most used seat in the whole backyard.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6764.jpg?v=1773181955" alt="Luxury custom outdoor swing inspiration">
+          <div class="dp-image-caption">A well-designed swing can bring both comfort and prestige to the space.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="materials-finishes" class="dp-section">
+      <h2>Luxury Swing Materials, Colors, and Finish Options</h2>
+      <p>
+        The finish of a swing changes everything. Some Highland Park homeowners want bright painted tones that feel clean and timeless. Others want
+        richer stained wood that adds warmth and depth. Others prefer black for a bolder, more modern architectural feel. The right finish depends
+        on the home, the patio, the pergola or ceiling above, the flooring below, and the overall outdoor design direction.
+      </p>
+      <p>
+        We build swings that work across a wide range of upscale looks, from soft farmhouse-inspired patios to more modern black-and-white outdoor
+        spaces. Whether the goal is a warm stained-wood retreat, a clean painted luxury porch, or a bold designer backyard swing, the finish
+        should feel intentional and balanced.
+      </p>
+
+      <div class="dp-image-grid three-col">
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_1521.jpg?v=1769607815" alt="Farmhouse style luxury swing">
+          <div class="dp-image-caption">Farmhouse-style swings remain popular because they feel warm, inviting, and timeless.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_1523.jpg?v=1769607812" alt="Rope-hung luxury farmhouse swing">
+          <div class="dp-image-caption">Rope details can soften the look and help a large swing feel even more custom.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_2092.jpg?v=1769607596" alt="Black luxury porch swing Highland Park style">
+          <div class="dp-image-caption">Black swings offer a stronger, cleaner, more modern statement.</div>
+        </div>
+      </div>
+
+      <div class="dp-image-grid three-col">
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6531.jpg?v=1769607561" alt="Modern black luxury swing">
+          <div class="dp-image-caption">Modern black finishes pair well with contemporary patios and refined outdoor palettes.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3998.jpg?v=1769607560" alt="Natural stained wood luxury porch swing">
+          <div class="dp-image-caption">Stained wood gives the swing warmth, depth, and a high-end custom look.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3746.jpg?v=1769607559" alt="Luxury patio swing in clean modern finish">
+          <div class="dp-image-caption">Simple lines and balanced finishes help the swing feel more elevated.</div>
+        </div>
+      </div>
+
+      <div class="dp-split-grid reverse">
+        <div>
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3574.jpg?v=1769607559" alt="Modern rope swing for luxury Texas home">
+        </div>
+        <div>
+          <h3>Common Finish Directions for High-End Homes</h3>
+          <ul class="dp-bullet-list">
+            <li>White for a clean and timeless upscale porch look</li>
+            <li>Black for a bold, more architectural presence</li>
+            <li>Stained wood for warmth, richness, and natural character</li>
+            <li>Farmhouse-inspired tones for softer relaxed luxury</li>
+            <li>Modern neutral styling for updated patios and pergolas</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div id="sizes-options" class="dp-section">
+      <h2>Luxury Swing Sizes, Hanging Options, and Upgrade Possibilities</h2>
+      <p>
+        Choosing the right swing for a Highland Park home is not only about appearance. It is also about scale, comfort, and how the swing will
+        actually be used. Some spaces call for a compact custom porch swing. Others can support a large <strong>twin</strong> or
+        <strong>full-size swing bed</strong> that feels more like a major outdoor furniture piece. Hanging style matters too. Rope tends to feel
+        softer and more upscale. Chain can feel classic, timeless, and clean.
+      </p>
+
+      <ul class="dp-bullet-list">
+        <li>
+<strong>Crib size swings:</strong> ideal for tighter porches and smaller seating areas</li>
+        <li>
+<strong>Twin size swings:</strong> one of the most versatile sizes for comfort and proportion</li>
+        <li>
+<strong>Full size swings:</strong> best for homeowners wanting more presence and lounging space</li>
+        <li>
+<strong>Rope hanging:</strong> excellent for luxury, farmhouse, and pergola-style setups</li>
+        <li>
+<strong>Chain hanging:</strong> strong choice for classic front porch and timeless patio designs</li>
+        <li>
+<strong>Cushion-ready layouts:</strong> perfect for more comfort-focused outdoor living spaces</li>
+      </ul>
+
+      <div class="dp-image-grid three-col">
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3399.jpg?v=1763778129" alt="Smaller custom swing for elegant patio">
+          <div class="dp-image-caption">Smaller swings still work beautifully when matched to the scale of the porch.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_4602.jpg?v=1763778127" alt="Twin size luxury porch swing">
+          <div class="dp-image-caption">Twin size swings hit a strong balance between comfort and proportion.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_4167.jpg?v=1763778124" alt="Large full size luxury swing bed">
+          <div class="dp-image-caption">Full size swings make the biggest visual statement in premium outdoor spaces.</div>
+        </div>
+      </div>
+
+      <div class="dp-info-box">
+        <h3 style="margin-top:0;">Helpful Swing Details</h3>
+        <ul class="dp-bullet-list" style="margin-bottom:0;">
+          <li>
+<strong>Crib Mattress:</strong> 27” × 51”</li>
+          <li>
+<strong>Twin Mattress:</strong> 38” × 75”</li>
+          <li>
+<strong>Full Mattress:</strong> 54” × 75”</li>
+          <li>
+<strong>Crib Size Swing:</strong> 30” × 57”</li>
+          <li>
+<strong>Twin Size Swing:</strong> 40” × 81”</li>
+          <li>
+<strong>Full Size Swing:</strong> 57” × 81”</li>
+        </ul>
+      </div>
+    </div>
+
+    <div id="gallery" class="dp-section">
+      <h2>Luxury Highland Park Swing Inspiration Gallery</h2>
+      <p>
+        The gallery below showcases a curated collection of handcrafted porch swings, bed swings, pergola installations, covered patio layouts, and front porch designs. Each example is selected to help Highland Park homeowners visualize how a custom swing can elevate their outdoor living space. From timeless, classic elegance to relaxed farmhouse charm, modern dark-stained designs, and full-scale backyard retreat environments, these images provide real inspiration to help you refine your vision and choose a swing style that complements both your home’s architecture and lifestyle.
+      </p>
+
+      <div class="dp-image-grid three-col">
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_2710.jpg?v=1773181972" alt="Luxury custom swing inspiration image">
+          <div class="dp-image-caption">A custom swing adds depth, comfort, and visual warmth to outdoor living spaces.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3920.jpg?v=1773181972" alt="Modern luxury swing inspiration">
+          <div class="dp-image-caption">High-end outdoor swings work across both classic and modern home styles.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_8286.jpg?v=1773181965" alt="Farmhouse luxury swing Highland Park">
+          <div class="dp-image-caption">Classic farmhouse influence still pairs beautifully with upscale homes.</div>
+        </div>
+      </div>
+
+      <div class="dp-image-grid three-col">
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_7739.jpg?v=1763778138" alt="Rope-hung luxury swing bed">
+          <div class="dp-image-caption">Rope hanging details help create a softer, more custom luxury look.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6808.jpg?v=1763778136" alt="Chain hanging luxury porch swing">
+          <div class="dp-image-caption">Chain hanging swings continue to work well in timeless front porch settings.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3702.jpg?v=1763778135" alt="Luxury rope porch swing">
+          <div class="dp-image-caption">Both rope and chain can work beautifully depending on the mood of the home.</div>
+        </div>
+      </div>
+
+      <div class="dp-image-grid three-col">
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6529.jpg?v=1763778131" alt="High-end porch swing style inspiration">
+          <div class="dp-image-caption">The right finish and hanging style can completely change the feel of the swing.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_1530.jpg?v=1763778121" alt="Outdoor swing idea for upscale Texas home">
+          <div class="dp-image-caption">Custom swings fit naturally into thoughtfully designed outdoor spaces.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_4039.jpg?v=1763778122" alt="Covered patio swing idea">
+          <div class="dp-image-caption">Covered patios remain one of the best locations for a luxury swing setup.</div>
+        </div>
+      </div>
+
+      <div class="dp-image-grid three-col">
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3350.jpg?v=1763778119" alt="Porch swing bed for luxury outdoor retreat">
+          <div class="dp-image-caption">A larger swing bed helps turn an ordinary patio into a true retreat.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/4D145448-BD09-4637-8C49-6E5030E4E21F.jpg?v=1763778118" alt="Patio swing inspiration for premium home">
+          <div class="dp-image-caption">Luxury outdoor design often comes down to selecting the right focal piece.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6798.jpg?v=1763042917" alt="Luxury back patio swing image">
+          <div class="dp-image-caption">The right swing can anchor the entire patio design with comfort and style.</div>
+        </div>
+      </div>
+
+      <div class="dp-image-grid three-col">
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3127.jpg?v=1735272015" alt="Luxury swing gallery image one">
+          <div class="dp-image-caption">A handcrafted swing should feel substantial, comfortable, and custom-built.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3122.jpg?v=1735272015" alt="Luxury swing gallery image two">
+          <div class="dp-image-caption">Real images help homeowners picture how the swing may work in their own space.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3084.jpg?v=1735272015" alt="Luxury swing gallery image three">
+          <div class="dp-image-caption">A quality outdoor swing can feel casual, elegant, and high-end at the same time.</div>
+        </div>
+      </div>
+
+      <div class="dp-image-grid two-col">
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3895.jpg?v=1735201362" alt="Large custom porch swing image">
+          <div class="dp-image-caption">A clean, well-proportioned swing looks right at home in premium outdoor settings.</div>
+        </div>
+        <div class="dp-image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_4956.jpg?v=1769607563" alt="Luxury painted swing bed image repeat">
+          <div class="dp-image-caption">Large painted swings remain one of the strongest looks for high-end covered patios.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dp-section">
+  
+
+      <div class="dp-resource-links dp-info-box">
+        <h2 style="color:#b80d0d;font-size:28px;margin-top:0;">Helpful Swing Resources</h2>
+        <p style="margin-bottom:10px;">Keep exploring finishes, comfort options, installation guidance, and additional custom swing pages.</p>
+        <ul class="dp-bullet-list" style="margin-bottom:0;">
+          <li><a href="https://doorplaceusa.com/pages/porch-swings">Custom Swings Home Page</a></li>
+          <li><a href="https://doorplaceusa.com/pages/porch-swing-stain-guide">Porch Swing Stain Guide</a></li>
+          <li><a href="https://doorplaceusa.com/pages/cushion-guide">Swing Cushion Guide</a></li>
+          <li><a href="https://doorplaceusa.com/pages/how-to-install-a-porch-swing">How to Install a Porch Swing</a></li>
+          <li><a href="https://doorplaceusa.com/pages/get-a-fast-quote">Request a Fast Quote</a></li>
+          <li><a href="/pages/best-porch-swings">Best Porch Swings</a></li>
+          <li><a href="/pages/porch-swing-ideas">Porch Swing Ideas</a></li>
+          <li><a href="/pages/porch-swing-buying-guide">Porch Swing Buying Guide</a></li>
+          <li><a href="/pages/porch-swing-maintenance">Porch Swing Maintenance</a></li>
+          <li><a href="/pages/porch-swing-safety-guide">Porch Swing Safety Guide</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="dp-final-cta">
+      <h2>Design a Custom Luxury Swing for Your Highland Park Home</h2>
+      <p>
+       Doorplace USA designs and builds custom porch swings, swing beds, patio swings, front porch swings, backyard swings, and pergola swing designs for
+        homeowners who want a more elevated outdoor space. If you are ready to price out a swing for your Highland Park home, send us your idea and
+        let us help you build the right look for your porch, patio, pergola, or backyard retreat.
+      </p>
+      <div class="dp-btn-row">
+        <a class="dp-btn" href="https://doorplaceusa.com/pages/get-a-fast-quote">Get My Quote</a>
+        <a class="dp-btn secondary" href="https://doorplaceusa.com/pages/porch-swings">See More Custom Swings</a>
+      </div>
+      <p style="margin-top:20px;font-size:18px;"><strong>Call or text: 1-844-377-5872</strong></p>
+    </div>
+
+  </div>
+</div>
+

@@ -212,18 +212,44 @@ export default function InvoicesPage() {
                       setViewItem(i);
 
                       // 🔥 SYNC FROM FRESHBOOKS
-                      await fetch("/api/sync/freshbooks", {
-                        method: "POST",
-                        body: JSON.stringify({ invoiceId: i.invoiceid }),
-                      });
+const res = await fetch("/api/sync/freshbooks", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ invoiceId: i.invoiceid }),
+});
 
-                      // 🔥 LOAD FROM SUPABASE
-                      const { data } = await supabase
-                        .from("invoice_line_items")
-                        .select("*")
-                        .eq("invoice_id", i.invoiceid);
+const result = await res.json();
 
-                      setLineItems(data || []);
+console.log("SYNC RESULT:", result);
+
+// 🚨 HANDLE API ERROR
+if (!res.ok || result.error) {
+  console.error("❌ SYNC FAILED:", result);
+  alert("Failed to sync invoice. Check console.");
+  return;
+}
+
+// 🔥 SMALL DELAY (ensures DB write completes)
+await new Promise((r) => setTimeout(r, 200));
+
+// 🔥 LOAD FROM SUPABASE
+const { data, error } = await supabase
+  .from("invoice_line_items")
+  .select("*")
+  .eq("invoice_id", i.invoiceid);
+
+console.log("SUPABASE LINE ITEMS:", data);
+
+// 🚨 HANDLE SUPABASE ERROR
+if (error) {
+  console.error("❌ SUPABASE ERROR:", error);
+  alert("Failed to load line items.");
+  return;
+}
+
+setLineItems(data || []);
                     }
 
                     if (v === "pdf" && i.pdf_url) {

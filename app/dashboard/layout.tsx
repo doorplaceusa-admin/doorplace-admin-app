@@ -42,6 +42,7 @@ import {
   ScanLineIcon,
   DatabaseBackup,
 } from "lucide-react";
+import { subscribe } from "diagnostics_channel";
 
 
 
@@ -91,7 +92,7 @@ const realtimeVoice = useRealtimeAdminVoice(aiTone);
 
 
   const profileRef = useRef<HTMLDivElement>(null);
-
+const loadNotificationsRef = useRef<() => void>(() => {});
   
 
 useEffect(() => {
@@ -235,7 +236,7 @@ useEffect(() => {
     setUnreadCount(data.filter(n => !n.is_read).length);
   }
 }
-
+loadNotificationsRef.current = loadNotifications;
 
 useEffect(() => {
   if (!realtimeVoice.finalTranscript) return;
@@ -261,12 +262,11 @@ useEffect(() => {
     filter: `recipient_user_id=eq.${userId}`,
   },
   payload => {
-    setNotifications(prev => {
-      const next = [payload.new, ...prev].slice(0, 10);
-      setUnreadCount(next.filter(n => !n.is_read).length);
-      return next;
-    });
-  }
+  console.log("🔔 REALTIME TRIGGER:", payload.new);
+
+  // 🔥 USE REF (FIXES STALE FUNCTION)
+  loadNotificationsRef.current();
+}
 )
   .subscribe();
 

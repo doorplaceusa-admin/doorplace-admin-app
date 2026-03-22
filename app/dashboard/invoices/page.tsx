@@ -10,8 +10,8 @@ import { supabase } from "@/lib/supabaseClient";
 type LineItem = {
   name?: string;
   description?: string;
-  qty?: number;
-  total?: string;
+  quantity?: number;
+  total?: number;
 };
 
 type Invoice = {
@@ -35,7 +35,6 @@ type Invoice = {
   due_date?: string;
 
   notes?: string;
-  line_items?: LineItem[];
   pdf_url?: string;
 };
 
@@ -51,6 +50,9 @@ export default function InvoicesPage() {
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
 
   const [viewItem, setViewItem] = useState<Invoice | null>(null);
+
+  // 🔥 NEW STATE FOR LINE ITEMS
+  const [lineItems, setLineItems] = useState<LineItem[]>([]);
 
   const PAGE_SIZE = 25;
 
@@ -142,7 +144,7 @@ export default function InvoicesPage() {
 
         <div className="flex gap-2 flex-wrap">
 
-          {/* 🔥 SYNC BUTTON */}
+          {/* SYNC BUTTON */}
           <button
             onClick={() => fetch("/api/freshbooks/invoices")}
             className="bg-black text-white px-3 py-2 rounded"
@@ -202,12 +204,31 @@ export default function InvoicesPage() {
               return (
                 <select
                   className="border rounded px-2 py-1 text-xs w-full max-w-35"
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const v = e.target.value;
                     e.target.value = "";
-                    if (v === "view") setViewItem(i);
-                    if (v === "pdf" && i.pdf_url)
+
+                    if (v === "view") {
+                      setViewItem(i);
+
+                      // 🔥 SYNC FROM FRESHBOOKS
+                      await fetch("/api/sync/freshbooks", {
+                        method: "POST",
+                        body: JSON.stringify({ invoiceId: i.invoiceid }),
+                      });
+
+                      // 🔥 LOAD FROM SUPABASE
+                      const { data } = await supabase
+                        .from("invoice_line_items")
+                        .select("*")
+                        .eq("invoice_id", i.invoiceid);
+
+                      setLineItems(data || []);
+                    }
+
+                    if (v === "pdf" && i.pdf_url) {
                       window.open(i.pdf_url, "_blank");
+                    }
                   }}
                 >
                   <option value="">Select</option>
@@ -219,14 +240,14 @@ export default function InvoicesPage() {
         }}
       />
 
-      {/* 🔥 LOADING MORE */}
+      {/* LOADING MORE */}
       {loading && rows.length > 0 && (
         <div className="text-center py-4 text-gray-500">
           Loading more invoices...
         </div>
       )}
 
-      {/* MODAL (UNCHANGED BUT FIXED) */}
+      {/* MODAL */}
       {viewItem && (
         <div
           className="fixed inset-0 bg-black/40 flex items-start justify-center z-50 p-4"
@@ -259,13 +280,13 @@ export default function InvoicesPage() {
               <div>
                 <b>Line Items</b>
                 <div className="mt-2 space-y-2">
-                  {viewItem.line_items?.length ? (
-                    viewItem.line_items.map((l, idx) => (
+                  {lineItems.length ? (
+                    lineItems.map((l, idx) => (
                       <div key={idx} className="border rounded p-2">
                         <div className="font-medium">{l.name}</div>
                         <div className="text-xs text-gray-600">{l.description}</div>
                         <div className="text-xs">
-                          Qty: {l.qty} — {viewItem.currency_code}{" "}
+                          Qty: {l.quantity} — {viewItem.currency_code}{" "}
                           {Number(l.total || 0).toFixed(2)}
                         </div>
                       </div>

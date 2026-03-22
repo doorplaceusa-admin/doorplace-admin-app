@@ -10,9 +10,13 @@ export async function POST(req: Request) {
   try {
     const { invoiceId } = await req.json();
 
-    // 🔑 FreshBooks API call
-    const response = await fetch(
-      `https://api.freshbooks.com/accounting/account/YOUR_ACCOUNT_ID/invoices/invoices/${invoiceId}`,
+    if (!invoiceId) {
+      return NextResponse.json({ error: "Missing invoiceId" }, { status: 400 });
+    }
+
+    // 🔥 Pull invoice from FreshBooks
+    const fbRes = await fetch(
+      `https://api.freshbooks.com/accounting/account/${process.env.FRESHBOOKS_ACCOUNT_ID}/invoices/invoices/${invoiceId}`,
       {
         headers: {
           Authorization: `Bearer ${process.env.FRESHBOOKS_ACCESS_TOKEN}`,
@@ -21,43 +25,46 @@ export async function POST(req: Request) {
       }
     );
 
-    const data = await response.json();
+    const fbData = await fbRes.json();
 
-    const lines = data?.response?.result?.invoice?.lines || [];
+    const lines = fbData?.response?.result?.invoice?.lines || [];
 
     if (!lines.length) {
       return NextResponse.json({ message: "No line items found" });
     }
 
-    // 🧱 Format for Supabase
-    const formatted = lines.map((item: any) => ({
+    // 🔁 Clean + format
+    const items = lines.map((l: any) => ({
       invoice_id: invoiceId,
-      name: item.name,
-      description: item.description,
-      quantity: item.qty,
-      unit_price: item.unit_cost?.amount || 0,
-      total: item.amount?.amount || 0,
+      name: l.name,
+      description: l.description,
+      quantity: l.qty,
+      unit_price: Number(l.unit_cost?.amount || 0),
+      total: Number(l.amount?.amount || 0),
     }));
 
-    // 🧹 Delete old ones first (avoid duplicates)
+    // 🧹 Replace existing items
     await supabase
       .from("invoice_line_items")
       .delete()
       .eq("invoice_id", invoiceId);
 
-    // ➕ Insert new ones
+    // ➕ Insert new
     const { error } = await supabase
       .from("invoice_line_items")
-      .insert(formatted);
+      .insert(items);
 
     if (error) throw error;
 
     return NextResponse.json({
       success: true,
-      inserted: formatted.length,
+      count: items.length,
     });
 
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json(
+      { error: err.message },
+      { status: 500 }
+    );
   }
 }

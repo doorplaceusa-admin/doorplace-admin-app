@@ -224,12 +224,11 @@ useEffect(() => {
   if (!userId || !companyId) return;
 
   const { data, error } = await supabase
-    .from("notifications")
-    .select("id, title, type, created_at, is_read")
-    .eq("recipient_user_id", userId)
-    .eq("company_id", companyId)
-    .order("created_at", { ascending: false })
-    .limit(10);
+  .from("notifications")
+  .select("id, title, type, created_at, is_read")
+  .or(`recipient_user_id.eq.${userId},company_id.eq.${companyId}`)
+  .order("created_at", { ascending: false })
+  .limit(10);
 
   if (!error && data) {
     setNotifications(data);
@@ -262,7 +261,10 @@ useEffect(() => {
       filter: `recipient_user_id=eq.${userId}`,
     },
     payload => {
-      if (payload.new.company_id !== companyId) return;
+      if (
+  payload.new.recipient_user_id !== userId &&
+  payload.new.company_id !== companyId
+) return;
 
       setNotifications(prev => {
         const next = [payload.new, ...prev].slice(0, 10);

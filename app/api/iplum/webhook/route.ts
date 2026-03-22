@@ -139,25 +139,27 @@ export async function POST(req: Request) {
     }
 
     // 🔥 8. INSERT NOTIFICATION
-    await supabaseAdmin.from("notifications").insert({
-      title,
-      type: eventType.toLowerCase(),
-      is_read: false,
-      created_at: new Date().toISOString(),
+    const { data: notifData, error: notifError } = await supabaseAdmin
+  .from("notifications")
+  .insert({
+    title,
+    body: message || `Missed call from ${name}`, // ✅ REQUIRED
 
-      recipient_user_id: adminProfile?.id || null,
-      company_id: adminProfile?.active_company_id || null,
+    entity_type: matchType, // "lead" | "invoice" | "unknown"
+    entity_id: lead?.id || invoice?.id || null,
 
-      metadata: {
-        phone: cleanedPhone,
-        raw_phone: from || to,
-        name,
-        match_type: matchType,
-        lead_id: lead?.id || null,
-        invoice_id: invoice?.id || null,
-        message,
-      },
-    });
+    is_read: false,
+    created_at: new Date().toISOString(),
+
+    recipient_user_id: adminProfile?.id || null,
+  })
+  .select();
+
+if (notifError) {
+  console.error("❌ NOTIFICATION INSERT FAILED:", notifError);
+} else {
+  console.log("✅ NOTIFICATION INSERTED:", notifData);
+}
 
     console.log("🔔 Notification created:", title);
 

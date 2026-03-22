@@ -18,10 +18,10 @@ function cleanPhone(phone: string | null) {
   return null;
 }
 
-// 🔹 Track last logged call (prevents spam)
-let lastLoggedCallId: string | null = null;
-
 export async function GET() {
+  // 🔥 DEDUPE WITHIN THIS REQUEST
+  const loggedIds = new Set<string>();
+
   const { data: events, error } = await supabaseAdmin
     .from("iplum_events")
     .select("*")
@@ -83,9 +83,9 @@ export async function GET() {
       }
     }
 
-    // 🔥 CLEAN LOGGING (ONLY NEW CALLS)
-    if (event.id !== lastLoggedCallId) {
-      lastLoggedCallId = event.id;
+    // 🔥 CLEAN LOGGING (NO DUPES PER REQUEST)
+    if (!loggedIds.has(event.id)) {
+      loggedIds.add(event.id);
 
       const name =
         lead?.first_name ||

@@ -89,7 +89,7 @@ export async function GET() {
     const json = await fbRes.json();
     const invoicesArr = json?.response?.result?.invoices || [];
 
-    // 🔥 FETCH CLIENTS (for phone only)
+    // 🔥 FETCH CLIENTS (for phone)
     const clientsRes = await fetch(
       `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/users/clients`,
       {
@@ -108,15 +108,16 @@ export async function GET() {
 
     const invoices = invoicesArr.map((inv: any) => {
       const client: any = clientMap.get(String(inv.customerid)) || {};
-      const contacts = client?.contacts || [];
 
+      // 🔥 FINAL PHONE FIX (covers ALL FreshBooks cases)
       const contactPhone =
         client?.phone ||
         client?.mobile ||
         client?.bus_phone ||
-        contacts.find((c: any) =>
-          (c?.type || "").toLowerCase().includes("phone")
-        )?.value ||
+        client?.work_phone ||
+        client?.home_phone ||
+        client?.phone_number ||
+        (client?.contacts || []).find((c: any) => c?.value)?.value ||
         "";
 
       return {
@@ -126,7 +127,7 @@ export async function GET() {
         issued_at: inv.create_date,
         due_date: inv.due_date,
 
-        // ✅ NAME from invoice
+        // ✅ name from invoice
         customer_name:
           [inv.fname, inv.lname].filter(Boolean).join(" ") ||
           inv.organization ||
@@ -134,10 +135,10 @@ export async function GET() {
 
         customer_email: inv.email || "",
 
-        // 🔥 PHONE from CLIENT
+        // 🔥 phone from client (fixed)
         customer_phone: normalizePhone(contactPhone),
 
-        // ✅ ADDRESS from invoice
+        // ✅ address from invoice
         street: inv.street || "",
         city: inv.city || "",
         province: inv.province || "",

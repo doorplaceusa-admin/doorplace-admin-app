@@ -221,13 +221,9 @@ useEffect(() => {
   }, []);
 
   async function loadNotifications() {
-  if (!userId || !companyId) return;
-
   const { data, error } = await supabase
     .from("notifications")
-    .select("id, title, type, created_at, is_read")
-    .eq("recipient_user_id", userId)
-    .eq("company_id", companyId)
+    .select("id, title, type, created_at, is_read, metadata")
     .order("created_at", { ascending: false })
     .limit(10);
 
@@ -236,6 +232,7 @@ useEffect(() => {
     setUnreadCount(data.filter(n => !n.is_read).length);
   }
 }
+
 
 
 useEffect(() => {
@@ -247,38 +244,33 @@ useEffect(() => {
 
 
 useEffect(() => {
-  if (!ready || !userId || !companyId) return;
+  if (!ready) return;
 
   loadNotifications();
 
- const channel = supabase
-  .channel(`notifications-${userId}`)
-  .on(
-    "postgres_changes",
-    {
-      event: "INSERT",
-      schema: "public",
-      table: "notifications",
-      filter: `recipient_user_id=eq.${userId}`,
-    },
-    payload => {
-      if (payload.new.company_id !== companyId) return;
-
-      setNotifications(prev => {
-        const next = [payload.new, ...prev].slice(0, 10);
-        setUnreadCount(next.filter(n => !n.is_read).length);
-        return next;
-      });
-    }
-  )
-  .subscribe();
-
-
+  const channel = supabase
+    .channel("notifications-live")
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "notifications",
+      },
+      payload => {
+        setNotifications(prev => {
+          const next = [payload.new, ...prev].slice(0, 10);
+          setUnreadCount(next.filter(n => !n.is_read).length);
+          return next;
+        });
+      }
+    )
+    .subscribe();
 
   return () => {
     supabase.removeChannel(channel);
   };
-}, [ready, userId, companyId]);
+}, [ready]);
 
 useEffect(() => {
   if (open) {
@@ -539,7 +531,6 @@ async function askAdminAI() {
 </main>
 
 </AdminPresenceProvider>
-<IncomingCallPopup />
 
 {aiOpen && (
 

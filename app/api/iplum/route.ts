@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
+// 🔹 Normalize phone
 function cleanPhone(phone: string | null) {
   if (!phone) return null;
 
@@ -17,6 +18,9 @@ function cleanPhone(phone: string | null) {
   return null;
 }
 
+// 🔹 Track last logged call (prevents spam)
+let lastLoggedCallId: string | null = null;
+
 export async function GET() {
   const { data: events, error } = await supabaseAdmin
     .from("iplum_events")
@@ -28,12 +32,16 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: error.message });
   }
 
-  // 🔥 STEP 1: collect all cleaned phones
-  const phones = (events || [])
-    .map((e) => cleanPhone(e.from_number || e.to_number))
-    .filter(Boolean);
+  // 🔥 STEP 1: collect unique cleaned phones
+  const phones = [
+    ...new Set(
+      (events || [])
+        .map((e) => cleanPhone(e.from_number || e.to_number))
+        .filter(Boolean)
+    ),
+  ];
 
-  // 🔥 STEP 2: fetch ALL matches in bulk
+  // 🔥 STEP 2: fetch matches in bulk
   const { data: leads } = await supabaseAdmin
     .from("leads")
     .select("*")
@@ -44,9 +52,9 @@ export async function GET() {
     .select("*")
     .in("phone_clean", phones);
 
-  // 🔥 STEP 3: create lookup maps (SUPER FAST)
-  const leadMap = new Map();
-  const invoiceMap = new Map();
+  // 🔥 STEP 3: maps for fast lookup
+  const leadMap = new Map<string, any>();
+  const invoiceMap = new Map<string, any>();
 
   (leads || []).forEach((l) => {
     if (l.phone_clean) leadMap.set(l.phone_clean, l);
@@ -63,7 +71,7 @@ export async function GET() {
 
     let lead = null;
     let invoice = null;
-    let matchType = "unknown";
+    let matchType: "lead" | "invoice" | "unknown" = "unknown";
 
     if (cleanedPhone) {
       if (leadMap.has(cleanedPhone)) {
@@ -75,15 +83,21 @@ export async function GET() {
       }
     }
 
-    console.log("CALL:", rawPhone);
-    console.log("CLEANED:", cleanedPhone);
-    console.log("TYPE:", matchType);
-    console.log(
-      "NAME:",
-      lead?.first_name ||
+    // 🔥 CLEAN LOGGING (ONLY NEW CALLS)
+    if (event.id !== lastLoggedCallId) {
+      lastLoggedCallId = event.id;
+
+      const name =
+        lead?.first_name ||
         invoice?.customer_name ||
-        "UNKNOWN"
-    );
+        "UNKNOWN";
+
+      console.log("\n📞 NEW CALL EVENT");
+      console.log("📱 Phone:", rawPhone);
+      console.log("🔢 Cleaned:", cleanedPhone);
+      console.log("📊 Type:", matchType);
+      console.log("👤 Name:", name);
+    }
 
     return {
       ...event,

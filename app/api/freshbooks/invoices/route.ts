@@ -126,6 +126,9 @@ export async function GET() {
       return NextResponse.json({ error: "Bad invoices response", rid }, { status: 502 });
     }
 
+    // 🔥 LOG INVOICE SAMPLE
+    console.log("INVOICE SAMPLE:", invoicesArr[0]);
+
     // 🔹 fetch clients (FULL DATA)
     const clientsRes = await fetch(
       `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/users/clients`,
@@ -140,17 +143,27 @@ export async function GET() {
     const clientsJson = await clientsRes.json();
     const clientsArr = clientsJson?.response?.result?.clients || [];
 
+    // 🔥 LOG CLIENT SAMPLE
+    console.log("CLIENT SAMPLE:", clientsArr[0]);
+
     const clientMap = new Map(
-  clientsArr.map((c: any) => [String(c.id), c])
-);
+      clientsArr.map((c: any) => [String(c.id), c])
+    );
 
     // 🔹 map invoices + attach FULL client data
     const invoices = invoicesArr.map((inv: any) => {
+      console.log("MATCH TEST:", {
+        inv_customerid: inv.customerid,
+        inv_customer_id: inv.customer_id,
+        inv_clientid: inv.clientid,
+      });
+
       const client: any =
-  clientMap.get(inv.customerid) ||
-  clientMap.get(Number(inv.customerid)) ||
-  clientMap.get(String(inv.customerid)) ||
-  {};
+        clientMap.get(String(inv.customerid)) ||
+        clientMap.get(String(inv.customer_id)) ||
+        clientMap.get(String(inv.clientid)) ||
+        {};
+
       const contacts = client?.contacts || [];
 
       const contactPhone =
@@ -175,10 +188,8 @@ export async function GET() {
           "",
 
         customer_email: client.email || "",
-
         customer_phone: normalizePhone(contactPhone),
 
-        // 🔥 FULL ADDRESS
         street: client?.p_street || "",
         city: client?.p_city || "",
         province: client?.p_province || "",
@@ -190,7 +201,6 @@ export async function GET() {
       };
     });
 
-    // 🔹 save to Supabase
     await supabaseAdmin
       .from("invoices")
       .upsert(invoices, { onConflict: "invoiceid" });

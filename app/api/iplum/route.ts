@@ -19,9 +19,6 @@ function cleanPhone(phone: string | null) {
 }
 
 export async function GET() {
-  // 🔥 DEDUPE WITHIN THIS REQUEST
-  const loggedIds = new Set<string>();
-
   const { data: events, error } = await supabaseAdmin
     .from("iplum_events")
     .select("*")
@@ -41,7 +38,7 @@ export async function GET() {
     ),
   ];
 
-  // 🔥 STEP 2: fetch matches in bulk
+  // 🔥 STEP 2: fetch matches
   const { data: leads } = await supabaseAdmin
     .from("leads")
     .select("*")
@@ -52,7 +49,6 @@ export async function GET() {
     .select("*")
     .in("phone_clean", phones);
 
-  // 🔥 STEP 3: maps for fast lookup
   const leadMap = new Map<string, any>();
   const invoiceMap = new Map<string, any>();
 
@@ -64,49 +60,60 @@ export async function GET() {
     if (i.phone_clean) invoiceMap.set(i.phone_clean, i);
   });
 
-  // 🔥 STEP 4: enrich events
-  const enriched = (events || []).map((event) => {
-    const rawPhone = event.from_number || event.to_number || null;
-    const cleanedPhone = cleanPhone(rawPhone);
+  // 🔥 STEP 3: enrich + TRUE DEDUPE
+  const enriched = await Promise.all(
+    (events || []).map(async (event) => {
+      const rawPhone = event.from_number || event.to_number || null;
+      const cleanedPhone = cleanPhone(rawPhone);
 
-    let lead = null;
-    let invoice = null;
-    let matchType: "lead" | "invoice" | "unknown" = "unknown";
+      let lead = null;
+      let invoice = null;
+      let matchType: "lead" | "invoice" | "unknown" = "unknown";
 
-    if (cleanedPhone) {
-      if (leadMap.has(cleanedPhone)) {
-        lead = leadMap.get(cleanedPhone);
-        matchType = "lead";
-      } else if (invoiceMap.has(cleanedPhone)) {
-        invoice = invoiceMap.get(cleanedPhone);
-        matchType = "invoice";
+      if (cleanedPhone) {
+        if (leadMap.has(cleanedPhone)) {
+          lead = leadMap.get(cleanedPhone);
+          matchType = "lead";
+        } else if (invoiceMap.has(cleanedPhone)) {
+          invoice = invoiceMap.get(cleanedPhone);
+          matchType = "invoice";
+        }
       }
-    }
 
-    // 🔥 CLEAN LOGGING (NO DUPES PER REQUEST)
-    if (!loggedIds.has(event.id)) {
-      loggedIds.add(event.id);
+      // 🔥 CHECK IF ALREADY PROCESSED
+      const { data: existing } = await supabaseAdmin
+        .from("processed_calls")
+        .select("event_id")
+        .eq("event_id", event.id)
+        .single();
 
-      const name =
-        lead?.first_name ||
-        invoice?.customer_name ||
-        "UNKNOWN";
+      if (!existing) {
+        const name =
+          lead?.first_name ||
+          invoice?.customer_name ||
+          "UNKNOWN";
 
-      console.log("\n📞 NEW CALL EVENT");
-      console.log("📱 Phone:", rawPhone);
-      console.log("🔢 Cleaned:", cleanedPhone);
-      console.log("📊 Type:", matchType);
-      console.log("👤 Name:", name);
-    }
+        console.log("\n📞 NEW CALL EVENT");
+        console.log("📱 Phone:", rawPhone);
+        console.log("🔢 Cleaned:", cleanedPhone);
+        console.log("📊 Type:", matchType);
+        console.log("👤 Name:", name);
 
-    return {
-      ...event,
-      cleaned_phone: cleanedPhone,
-      lead,
-      invoice,
-      match_type: matchType,
-    };
-  });
+        // 🔥 MARK AS PROCESSED
+        await supabaseAdmin
+          .from("processed_calls")
+          .insert({ event_id: event.id });
+      }
+
+      return {
+        ...event,
+        cleaned_phone: cleanedPhone,
+        lead,
+        invoice,
+        match_type: matchType,
+      };
+    })
+  );
 
   return NextResponse.json({
     ok: true,

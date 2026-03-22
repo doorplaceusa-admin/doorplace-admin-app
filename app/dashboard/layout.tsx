@@ -11,6 +11,7 @@ import { useRealtimeAdminVoice } from "@/lib/ai/useRealtimeAdminVoice";
 
 
 
+
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import {
@@ -222,12 +223,13 @@ useEffect(() => {
   async function loadNotifications() {
   if (!userId || !companyId) return;
 
- const { data, error } = await supabase
-  .from("notifications")
-  .select("id, title, type, created_at, is_read, metadata")
-  .or(`recipient_user_id.eq.${userId},company_id.eq.${companyId}`)
-  .order("created_at", { ascending: false })
-  .limit(10);
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("id, title, type, created_at, is_read")
+    .eq("recipient_user_id", userId)
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: false })
+    .limit(10);
 
   if (!error && data) {
     setNotifications(data);
@@ -260,10 +262,7 @@ useEffect(() => {
       filter: `recipient_user_id=eq.${userId}`,
     },
     payload => {
-      if (
-  payload.new.recipient_user_id !== userId &&
-  payload.new.company_id !== companyId
-) return;
+      if (payload.new.company_id !== companyId) return;
 
       setNotifications(prev => {
         const next = [payload.new, ...prev].slice(0, 10);
@@ -491,41 +490,28 @@ async function askAdminAI() {
   <button
     key={n.id}
     onClick={async () => {
-  const meta = n.metadata || {};
+      // 1️⃣ Update DB
+      await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", n.id);
 
-  // 1️⃣ mark as read
-  await supabase
-    .from("notifications")
-    .update({ is_read: true })
-    .eq("id", n.id);
+      // 2️⃣ Optimistically update UI
+      setNotifications(prev =>
+        prev.map(item =>
+          item.id === n.id ? { ...item, is_read: true } : item
+        )
+      );
 
-  // 2️⃣ update UI
-  setNotifications(prev =>
-    prev.map(item =>
-      item.id === n.id ? { ...item, is_read: true } : item
-    )
-  );
+      // 3️⃣ Update unread badge
+      setUnreadCount(prev => Math.max(prev - 1, 0));
 
-  setUnreadCount(prev => Math.max(prev - 1, 0));
-
-  setOpen(false); // close dropdown
-
-  // 🔥 3️⃣ NAVIGATION (THE FIX)
-  if (meta.lead_id) {
-    router.push(`/dashboard/leads?id=${meta.lead_id}`);
-    return;
-  }
-
-  if (meta.invoice_id) {
-    router.push(`/dashboard/invoices?id=${meta.invoice_id}`);
-    return;
-  }
-
-  console.log("No navigation target");
-}}
+      // (optional) navigate here later if needed
+      // router.push(...)
+    }}
     className={`w-full text-left px-3 py-2 text-sm border-b hover:bg-gray-50 ${
-  !n.is_read ? "bg-red-50 font-semibold" : ""
-}`}
+      !n.is_read ? "bg-red-50" : ""
+    }`}
   >
 
           <div className="font-medium">{n.title}</div>
@@ -553,6 +539,7 @@ async function askAdminAI() {
 </main>
 
 </AdminPresenceProvider>
+
 
 {aiOpen && (
 

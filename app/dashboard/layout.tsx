@@ -8,7 +8,7 @@ import { AdminPresenceProvider } from "@/app/components/presence/AdminPresenceCo
 import { useAppViewTracker } from "@/lib/useAppViewTracker";
 import { getLiveSessionCount } from "@/lib/getLiveSessionCount";
 import { useRealtimeAdminVoice } from "@/lib/ai/useRealtimeAdminVoice";
-
+import IncomingCallPopup from "@/app/components/IncomingCallPopup";
 
 
 
@@ -539,6 +539,7 @@ async function askAdminAI() {
 </main>
 
 </AdminPresenceProvider>
+<IncomingCallPopup />
 
 {aiOpen && (
 

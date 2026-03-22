@@ -223,10 +223,10 @@ useEffect(() => {
   async function loadNotifications() {
   if (!userId || !companyId) return;
 
-  const { data, error } = await supabase
+ const { data, error } = await supabase
   .from("notifications")
   .select("id, title, type, created_at, is_read")
-  .or(`recipient_user_id.eq.${userId},company_id.eq.${companyId}`)
+  .eq("recipient_user_id", userId)
   .order("created_at", { ascending: false })
   .limit(10);
 
@@ -253,26 +253,21 @@ useEffect(() => {
  const channel = supabase
   .channel(`notifications-${userId}`)
   .on(
-    "postgres_changes",
-    {
-      event: "INSERT",
-      schema: "public",
-      table: "notifications",
-      filter: `recipient_user_id=eq.${userId}`,
-    },
-    payload => {
-      if (
-  payload.new.recipient_user_id !== userId &&
-  payload.new.company_id !== companyId
-) return;
-
-      setNotifications(prev => {
-        const next = [payload.new, ...prev].slice(0, 10);
-        setUnreadCount(next.filter(n => !n.is_read).length);
-        return next;
-      });
-    }
-  )
+  "postgres_changes",
+  {
+    event: "INSERT",
+    schema: "public",
+    table: "notifications",
+    filter: `recipient_user_id=eq.${userId}`,
+  },
+  payload => {
+    setNotifications(prev => {
+      const next = [payload.new, ...prev].slice(0, 10);
+      setUnreadCount(next.filter(n => !n.is_read).length);
+      return next;
+    });
+  }
+)
   .subscribe();
 
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import AdminTable from "../../components/ui/admintable";
+import { supabase } from "@/lib/supabaseClient";
 
 /* ===============================
    TYPES
@@ -44,24 +45,61 @@ type Invoice = {
 export default function InvoicesPage() {
   const [rows, setRows] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [offset, setOffset] = useState(0);
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
 
   const [viewItem, setViewItem] = useState<Invoice | null>(null);
 
-  async function loadInvoices() {
+  const PAGE_SIZE = 25;
+
+  /* 🔥 LOAD FROM SUPABASE (FAST) */
+  async function loadInvoices(reset = false) {
     setLoading(true);
-    const res = await fetch("/api/freshbooks/invoices");
-    const json = await res.json();
-    setRows(json.invoices || []);
+
+    const start = reset ? 0 : offset;
+
+    const { data, error } = await supabase
+      .from("invoices")
+      .select("*")
+      .order("issued_at", { ascending: false })
+      .range(start, start + PAGE_SIZE - 1);
+
+    if (!error && data) {
+      if (reset) {
+        setRows(data);
+        setOffset(PAGE_SIZE);
+      } else {
+        setRows((prev) => [...prev, ...data]);
+        setOffset((prev) => prev + PAGE_SIZE);
+      }
+    }
+
     setLoading(false);
   }
 
+  /* 🔥 INITIAL LOAD */
   useEffect(() => {
-    loadInvoices();
+    loadInvoices(true);
   }, [sort]);
 
+  /* 🔥 SCROLL LOAD */
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >=
+        document.body.offsetHeight - 200
+      ) {
+        loadInvoices();
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [offset]);
+
+  /* 🔥 FILTER + SORT */
   const filteredRows = useMemo(() => {
     let list = [...rows];
 
@@ -83,17 +121,18 @@ export default function InvoicesPage() {
     return list;
   }, [rows, search, sort]);
 
-  if (loading) return <div className="p-6">Loading invoices…</div>;
+  if (loading && rows.length === 0)
+    return <div className="p-6">Loading invoices…</div>;
 
   return (
     <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-375 w-full mx-auto">
-      
+
       {/* HEADER */}
       <div className="sticky top-0 bg-white z-30 border-b pb-4">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-red-700">Invoices</h1>
           <span className="text-sm text-gray-600">
-            Total: {filteredRows.length}
+            Total Loaded: {filteredRows.length}
           </span>
         </div>
 
@@ -102,6 +141,15 @@ export default function InvoicesPage() {
         </p>
 
         <div className="flex gap-2 flex-wrap">
+
+          {/* 🔥 SYNC BUTTON */}
+          <button
+            onClick={() => fetch("/api/freshbooks/invoices")}
+            className="bg-black text-white px-3 py-2 rounded"
+          >
+            Sync
+          </button>
+
           <input
             className="border rounded px-3 py-2 w-full md:max-w-sm"
             placeholder="Search invoice #, customer, email"
@@ -171,7 +219,14 @@ export default function InvoicesPage() {
         }}
       />
 
-      {/* MODAL */}
+      {/* 🔥 LOADING MORE */}
+      {loading && rows.length > 0 && (
+        <div className="text-center py-4 text-gray-500">
+          Loading more invoices...
+        </div>
+      )}
+
+      {/* MODAL (UNCHANGED BUT FIXED) */}
       {viewItem && (
         <div
           className="fixed inset-0 bg-black/40 flex items-start justify-center z-50 p-4"
@@ -189,11 +244,7 @@ export default function InvoicesPage() {
 
               <div><b>Invoice #:</b> {viewItem.invoice_number}</div>
               <div><b>Customer:</b> {viewItem.customer_name}</div>
-
-              {/* 🔥 FIXED EMAIL */}
               <div><b>Email:</b> {viewItem.customer_email || "—"}</div>
-
-              {/* 🔥 FIXED PHONE */}
               <div><b>Phone:</b> {viewItem.customer_phone || "—"}</div>
 
               <div>
@@ -205,24 +256,23 @@ export default function InvoicesPage() {
 
               <hr />
 
-              {/* 🔥 FIXED LINE ITEMS */}
               <div>
                 <b>Line Items</b>
                 <div className="mt-2 space-y-2">
-                  {viewItem.line_items?.map((l, idx) => (
-                    <div key={idx} className="border rounded p-2">
-                      <div className="font-medium">{l.name}</div>
-
-                      <div className="text-xs text-gray-600">
-                        {l.description}
+                  {viewItem.line_items?.length ? (
+                    viewItem.line_items.map((l, idx) => (
+                      <div key={idx} className="border rounded p-2">
+                        <div className="font-medium">{l.name}</div>
+                        <div className="text-xs text-gray-600">{l.description}</div>
+                        <div className="text-xs">
+                          Qty: {l.qty} — {viewItem.currency_code}{" "}
+                          {Number(l.total || 0).toFixed(2)}
+                        </div>
                       </div>
-
-                      <div className="text-xs">
-                        Qty: {l.qty} — {viewItem.currency_code}{" "}
-                        {Number(l.total || 0).toFixed(2)}
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="text-gray-400">No line items</div>
+                  )}
                 </div>
               </div>
 

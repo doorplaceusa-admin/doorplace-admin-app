@@ -13,6 +13,8 @@ function normalizePhone(phone?: string) {
 
 /* 🔹 refresh token */
 async function refreshFreshBooksToken(rid: string) {
+  console.log(`[${rid}] 🔄 Refreshing token`);
+
   const { data: tokenRow } = await supabaseAdmin
     .from("freshbooks_tokens")
     .select("refresh_token")
@@ -34,7 +36,10 @@ async function refreshFreshBooksToken(rid: string) {
   });
 
   const json = await res.json();
-  if (!res.ok) throw new Error("Refresh failed");
+  if (!res.ok) {
+    console.log(`[${rid}] ❌ Refresh failed`, json);
+    throw new Error("Refresh failed");
+  }
 
   const expiresAt = new Date(Date.now() + json.expires_in * 1000).toISOString();
 
@@ -46,6 +51,7 @@ async function refreshFreshBooksToken(rid: string) {
     expires_at: expiresAt,
   });
 
+  console.log(`[${rid}] ✅ Token refreshed`);
   return json.access_token;
 }
 
@@ -53,6 +59,8 @@ export async function GET() {
   const rid = `fb_${Date.now()}`;
 
   try {
+    console.log(`🔥 [${rid}] INVOICE API HIT`);
+
     const tokenQuery = await supabaseAdmin
       .from("freshbooks_tokens")
       .select("access_token")
@@ -76,12 +84,14 @@ export async function GET() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        cache: "no-store",
       });
     }
 
     let fbRes = await fetchInvoices(accessToken);
 
     if (fbRes.status === 401) {
+      console.log(`[${rid}] 🔁 Token expired`);
       accessToken = await refreshFreshBooksToken(rid);
       fbRes = await fetchInvoices(accessToken);
     }
@@ -89,7 +99,9 @@ export async function GET() {
     const json = await fbRes.json();
     const invoicesArr = json?.response?.result?.invoices || [];
 
-    // 🔥 FETCH CLIENTS (for phone)
+    console.log(`[${rid}] 📦 invoices fetched:`, invoicesArr.length);
+
+    // 🔥 FETCH CLIENTS (for phone + email)
     const clientsRes = await fetch(
       `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/users/clients`,
       {
@@ -102,6 +114,8 @@ export async function GET() {
     const clientsJson = await clientsRes.json();
     const clientsArr = clientsJson?.response?.result?.clients || [];
 
+    console.log(`[${rid}] 👥 clients fetched:`, clientsArr.length);
+
     const clientMap = new Map(
       clientsArr.map((c: any) => [String(c.id), c])
     );
@@ -109,7 +123,7 @@ export async function GET() {
     const invoices = invoicesArr.map((inv: any) => {
       const client: any = clientMap.get(String(inv.customerid)) || {};
 
-      // 🔥 FINAL PHONE FIX (covers ALL FreshBooks cases)
+      // 🔥 PHONE (robust)
       const contactPhone =
         client?.phone ||
         client?.mobile ||
@@ -120,6 +134,18 @@ export async function GET() {
         (client?.contacts || []).find((c: any) => c?.value)?.value ||
         "";
 
+      // 🔥 EMAIL (robust)
+      const contactEmail =
+        client?.email ||
+        client?.email_address ||
+        (client?.contacts || []).find((c: any) =>
+          (c?.type || "").toLowerCase().includes("email")
+        )?.value ||
+        (client?.contacts || []).find((c: any) =>
+          (c?.value || "").includes("@")
+        )?.value ||
+        "";
+
       return {
         invoiceid: inv.id,
         invoice_number: inv.invoice_number,
@@ -127,22 +153,27 @@ export async function GET() {
         issued_at: inv.create_date,
         due_date: inv.due_date,
 
-        // ✅ name from invoice
         customer_name:
           [inv.fname, inv.lname].filter(Boolean).join(" ") ||
           inv.organization ||
           "",
 
-        customer_email: inv.email || "",
-
-        // 🔥 phone from client (fixed)
+        customer_email: contactEmail,
         customer_phone: normalizePhone(contactPhone),
 
-        // ✅ address from invoice
         street: inv.street || "",
         city: inv.city || "",
         province: inv.province || "",
         postal_code: inv.code || "",
+
+        // 🔥 LINE ITEMS
+        line_items: (inv.lines || []).map((line: any) => ({
+          name: line.name || "",
+          description: line.description || "",
+          qty: line.qty || 0,
+          unit_price: line.unit_cost?.amount || "0",
+          total: line.amount?.amount || "0",
+        })),
 
         amount: inv.amount?.amount || "0",
         paid_amount: inv.paid?.amount || "0",
@@ -150,15 +181,27 @@ export async function GET() {
       };
     });
 
-    await supabaseAdmin
+    console.log(`[${rid}] 💾 inserting into Supabase...`);
+
+    const { error } = await supabaseAdmin
       .from("invoices")
-      .upsert(invoices, { onConflict: "invoiceid" });
+      .upsert(invoices, {
+        onConflict: "invoiceid",
+        ignoreDuplicates: false,
+      });
+
+    if (error) {
+      console.log(`[${rid}] ❌ Supabase error:`, error);
+    } else {
+      console.log(`[${rid}] ✅ Supabase insert success`);
+    }
 
     return NextResponse.json({ invoices, count: invoices.length, rid });
 
   } catch (e: any) {
+    console.log("❌ API ERROR:", e);
     return NextResponse.json(
-      { error: e.message || "API error", rid },
+      { error: e.message || "API error" },
       { status: 500 }
     );
   }

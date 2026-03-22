@@ -83,12 +83,12 @@ export async function GET() {
       return NextResponse.json({ error: "No account id", rid }, { status: 500 });
     }
 
-    const url =
-      `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/invoices/invoices` +
-      `?include[]=client&include[]=contacts&per_page=500`;
+    // 🔹 fetch invoices
+    const invoiceUrl =
+      `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/invoices/invoices?per_page=500`;
 
     async function fetchInvoices(token: string) {
-      return fetch(url, {
+      return fetch(invoiceUrl, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -110,7 +110,7 @@ export async function GET() {
     if (!fbRes.ok) {
       return NextResponse.json(
         {
-          error: "FreshBooks failed",
+          error: "FreshBooks invoices failed",
           status: fbRes.status,
           preview: raw.slice(0, 500),
           rid,
@@ -123,17 +123,41 @@ export async function GET() {
     const invoicesArr = json?.response?.result?.invoices;
 
     if (!Array.isArray(invoicesArr)) {
-      return NextResponse.json({ error: "Bad response", rid }, { status: 502 });
+      return NextResponse.json({ error: "Bad invoices response", rid }, { status: 502 });
     }
 
+    // 🔹 fetch clients (FULL DATA)
+    const clientsRes = await fetch(
+      `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/users/clients`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const clientsJson = await clientsRes.json();
+    const clientsArr = clientsJson?.response?.result?.clients || [];
+
+    const clientMap = new Map(
+  clientsArr.map((c: any) => [String(c.id), c])
+);
+
+    // 🔹 map invoices + attach FULL client data
     const invoices = invoicesArr.map((inv: any) => {
-      const client = inv.client || {};
+      const client: any =
+  clientMap.get(inv.customerid) ||
+  clientMap.get(Number(inv.customerid)) ||
+  clientMap.get(String(inv.customerid)) ||
+  {};
+      const contacts = client?.contacts || [];
 
       const contactPhone =
         client?.phone ||
         client?.mobile ||
         client?.bus_phone ||
-        (inv?.contacts || []).find((c: any) =>
+        contacts.find((c: any) =>
           (c?.type || "").toLowerCase().includes("phone")
         )?.value ||
         "";
@@ -144,24 +168,35 @@ export async function GET() {
         status: inv.status,
         issued_at: inv.create_date,
         due_date: inv.due_date,
+
         customer_name:
           [client.fname, client.lname].filter(Boolean).join(" ") ||
           client.organization ||
           "",
+
         customer_email: client.email || "",
+
         customer_phone: normalizePhone(contactPhone),
+
+        // 🔥 FULL ADDRESS
+        street: client?.p_street || "",
+        city: client?.p_city || "",
+        province: client?.p_province || "",
+        postal_code: client?.p_postal_code || "",
+
         amount: inv.amount?.amount || "0",
         paid_amount: inv.paid?.amount || "0",
         outstanding_amount: inv.outstanding?.amount || "0",
       };
     });
 
-    // 🟢 Save to Supabase
+    // 🔹 save to Supabase
     await supabaseAdmin
       .from("invoices")
       .upsert(invoices, { onConflict: "invoiceid" });
 
     return NextResponse.json({ invoices, count: invoices.length, rid });
+
   } catch (e: any) {
     return NextResponse.json(
       { error: e?.message || "API error", rid },

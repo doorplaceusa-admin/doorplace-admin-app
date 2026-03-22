@@ -85,7 +85,7 @@ export async function GET() {
 
     const url =
       `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/invoices/invoices` +
-      `?include[]=client&per_page=500`;
+      `?include[]=client&include[]=contacts&per_page=500`;
 
     async function fetchInvoices(token: string) {
       return fetch(url, {
@@ -129,6 +129,15 @@ export async function GET() {
     const invoices = invoicesArr.map((inv: any) => {
       const client = inv.client || {};
 
+      const contactPhone =
+        client?.phone ||
+        client?.mobile ||
+        client?.bus_phone ||
+        (inv?.contacts || []).find((c: any) =>
+          (c?.type || "").toLowerCase().includes("phone")
+        )?.value ||
+        "";
+
       return {
         invoiceid: inv.id,
         invoice_number: inv.invoice_number,
@@ -140,7 +149,7 @@ export async function GET() {
           client.organization ||
           "",
         customer_email: client.email || "",
-        customer_phone: normalizePhone(client?.phone),
+        customer_phone: normalizePhone(contactPhone),
         amount: inv.amount?.amount || "0",
         paid_amount: inv.paid?.amount || "0",
         outstanding_amount: inv.outstanding?.amount || "0",

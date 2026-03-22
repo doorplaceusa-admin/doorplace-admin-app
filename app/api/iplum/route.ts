@@ -28,35 +28,71 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: error.message });
   }
 
-  // 🔥 NEW: attach lead data
-  const enriched = await Promise.all(
-    (events || []).map(async (event) => {
-      const rawPhone = event.from_number || event.to_number || null;
-      const cleanedPhone = cleanPhone(rawPhone);
+  // 🔥 STEP 1: collect all cleaned phones
+  const phones = (events || [])
+    .map((e) => cleanPhone(e.from_number || e.to_number))
+    .filter(Boolean);
 
-      let lead = null;
+  // 🔥 STEP 2: fetch ALL matches in bulk
+  const { data: leads } = await supabaseAdmin
+    .from("leads")
+    .select("*")
+    .in("phone_clean", phones);
 
-      if (cleanedPhone) {
-        const { data } = await supabaseAdmin
-          .from("leads")
-          .select("*")
-          .eq("phone_clean", cleanedPhone)
-          .maybeSingle();
+  const { data: invoices } = await supabaseAdmin
+    .from("invoices")
+    .select("*")
+    .in("phone_clean", phones);
 
-        lead = data;
+  // 🔥 STEP 3: create lookup maps (SUPER FAST)
+  const leadMap = new Map();
+  const invoiceMap = new Map();
+
+  (leads || []).forEach((l) => {
+    if (l.phone_clean) leadMap.set(l.phone_clean, l);
+  });
+
+  (invoices || []).forEach((i) => {
+    if (i.phone_clean) invoiceMap.set(i.phone_clean, i);
+  });
+
+  // 🔥 STEP 4: enrich events
+  const enriched = (events || []).map((event) => {
+    const rawPhone = event.from_number || event.to_number || null;
+    const cleanedPhone = cleanPhone(rawPhone);
+
+    let lead = null;
+    let invoice = null;
+    let matchType = "unknown";
+
+    if (cleanedPhone) {
+      if (leadMap.has(cleanedPhone)) {
+        lead = leadMap.get(cleanedPhone);
+        matchType = "lead";
+      } else if (invoiceMap.has(cleanedPhone)) {
+        invoice = invoiceMap.get(cleanedPhone);
+        matchType = "invoice";
       }
+    }
 
-      console.log("CALL:", rawPhone);
-      console.log("CLEANED:", cleanedPhone);
-      console.log("MATCH:", lead?.first_name || "NONE");
+    console.log("CALL:", rawPhone);
+    console.log("CLEANED:", cleanedPhone);
+    console.log("TYPE:", matchType);
+    console.log(
+      "NAME:",
+      lead?.first_name ||
+        invoice?.customer_name ||
+        "UNKNOWN"
+    );
 
-      return {
-        ...event,
-        cleaned_phone: cleanedPhone,
-        lead,
-      };
-    })
-  );
+    return {
+      ...event,
+      cleaned_phone: cleanedPhone,
+      lead,
+      invoice,
+      match_type: matchType,
+    };
+  });
 
   return NextResponse.json({
     ok: true,

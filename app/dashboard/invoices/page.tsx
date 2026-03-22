@@ -33,7 +33,7 @@ customer_phone?:string;
   due_date?: string;
 
   notes?: string;
-  lines?: LineItem[];
+  line_items?: LineItem[];
   pdf_url?: string;
 };
 
@@ -202,20 +202,18 @@ export default function InvoicesPage() {
 
               <div>
                 <b>Line Items</b>
-                <div className="mt-2 space-y-2">
-                  {viewItem.lines?.map((l, idx) => (
-                    <div key={idx} className="border rounded p-2">
-                      <div className="font-medium">{l.name}</div>
-                      <div className="text-xs text-gray-600">
-                        {l.description}
-                      </div>
-                      <div className="text-xs">
-                        Qty: {l.qty} — {viewItem.currency_code}{" "}
-                        {Number(l.amount?.amount || 0).toFixed(2)}
-                      </div>
+                {viewItem.line_items?.map((l: any, idx: number) => (
+                  <div key={idx} className="border rounded p-2">
+                    <div className="font-medium">{l.name}</div>
+                    <div className="text-xs text-gray-600">
+                      {l.description}
                     </div>
-                  ))}
-                </div>
+                    <div className="text-xs">
+                      Qty: {l.qty} — {viewItem.currency_code}{" "}
+                      {Number(l.total || 0).toFixed(2)}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <hr />
@@ -241,6 +239,7 @@ export default function InvoicesPage() {
           </div>
         </div>
       )}
+
     </div>
   );
 }

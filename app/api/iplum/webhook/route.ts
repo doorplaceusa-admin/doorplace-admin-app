@@ -22,6 +22,25 @@ export async function POST(req: Request) {
   try {
     const payload = await req.json();
 
+    // 🔥 UNIQUE EVENT ID (IMPORTANT FOR DEDUPE)
+    const eventId =
+      payload.id ||
+      payload.call_id ||
+      payload.message_id ||
+      `${Date.now()}-${Math.random()}`;
+
+    // 🔥 PREVENT DUPLICATE PROCESSING
+    const { data: existingEvent } = await supabaseAdmin
+      .from("iplum_events")
+      .select("id")
+      .eq("external_id", eventId)
+      .maybeSingle();
+
+    if (existingEvent) {
+      console.log("⏭️ Skipping duplicate event:", eventId);
+      return NextResponse.json({ ok: true });
+    }
+
     // 🔥 1. SMS or CALL
     const message =
       payload.text ||
@@ -56,8 +75,9 @@ export async function POST(req: Request) {
 
     const cleanedPhone = cleanPhone(from || to);
 
-    // 🔥 4. Save event
+    // 🔥 4. Save event (WITH external_id)
     await supabaseAdmin.from("iplum_events").insert({
+      external_id: eventId,
       event_type: eventType,
       direction,
       from_number: from,
@@ -95,7 +115,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 🔥 6. Title
+    // 🔥 6. Name + Title (FIXED)
     const name =
       lead?.first_name ||
       invoice?.customer_name ||
@@ -106,23 +126,27 @@ export async function POST(req: Request) {
         ? `New Message from ${name}`
         : `Missed Call from ${name}`;
 
-    // 🔥 7. GET REAL USER + COMPANY
+    // 🔥 7. GET ADMIN USER (SAFE)
     const { data: adminProfile } = await supabaseAdmin
       .from("profiles")
       .select("id, active_company_id")
       .eq("role", "admin")
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    // 🔥 8. INSERT NOTIFICATION (CORRECT)
+    if (!adminProfile) {
+      console.error("❌ No admin profile found");
+    }
+
+    // 🔥 8. INSERT NOTIFICATION
     await supabaseAdmin.from("notifications").insert({
       title,
       type: eventType.toLowerCase(),
       is_read: false,
       created_at: new Date().toISOString(),
 
-      recipient_user_id: adminProfile?.id,
-      company_id: adminProfile?.active_company_id,
+      recipient_user_id: adminProfile?.id || null,
+      company_id: adminProfile?.active_company_id || null,
 
       metadata: {
         phone: cleanedPhone,

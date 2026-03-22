@@ -83,7 +83,6 @@ export async function GET() {
       return NextResponse.json({ error: "No account id", rid }, { status: 500 });
     }
 
-    // 🔹 fetch invoices
     const invoiceUrl =
       `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/invoices/invoices?per_page=500`;
 
@@ -126,53 +125,14 @@ export async function GET() {
       return NextResponse.json({ error: "Bad invoices response", rid }, { status: 502 });
     }
 
-    // 🔥 LOG INVOICE SAMPLE
     console.log("INVOICE SAMPLE:", invoicesArr[0]);
 
-    // 🔹 fetch clients (FULL DATA)
-    const clientsRes = await fetch(
-      `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/users/clients`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const clientsJson = await clientsRes.json();
-    const clientsArr = clientsJson?.response?.result?.clients || [];
-
-    // 🔥 LOG CLIENT SAMPLE
-    console.log("CLIENT SAMPLE:", clientsArr[0]);
-
-    const clientMap = new Map(
-      clientsArr.map((c: any) => [String(c.id), c])
-    );
-
-    // 🔹 map invoices + attach FULL client data
+    // 🔥 FINAL CORRECT MAPPING (from invoice itself)
     const invoices = invoicesArr.map((inv: any) => {
-      console.log("MATCH TEST:", {
-        inv_customerid: inv.customerid,
-        inv_customer_id: inv.customer_id,
-        inv_clientid: inv.clientid,
-      });
-
-      const client: any =
-        clientMap.get(String(inv.customerid)) ||
-        clientMap.get(String(inv.customer_id)) ||
-        clientMap.get(String(inv.clientid)) ||
-        {};
-
-      const contacts = client?.contacts || [];
-
       const contactPhone =
-        client?.phone ||
-        client?.mobile ||
-        client?.bus_phone ||
-        contacts.find((c: any) =>
-          (c?.type || "").toLowerCase().includes("phone")
-        )?.value ||
+        inv?.phone ||
+        inv?.customer_phone ||
+        inv?.organization_phone ||
         "";
 
       return {
@@ -183,17 +143,19 @@ export async function GET() {
         due_date: inv.due_date,
 
         customer_name:
-          [client.fname, client.lname].filter(Boolean).join(" ") ||
-          client.organization ||
+          [inv.fname, inv.lname].filter(Boolean).join(" ") ||
+          inv.organization ||
           "",
 
-        customer_email: client.email || "",
+        customer_email: inv.email || "",
+
         customer_phone: normalizePhone(contactPhone),
 
-        street: client?.p_street || "",
-        city: client?.p_city || "",
-        province: client?.p_province || "",
-        postal_code: client?.p_postal_code || "",
+        // ✅ address comes directly from invoice (confirmed from your logs)
+        street: inv.street || "",
+        city: inv.city || "",
+        province: inv.province || "",
+        postal_code: inv.code || "",
 
         amount: inv.amount?.amount || "0",
         paid_amount: inv.paid?.amount || "0",

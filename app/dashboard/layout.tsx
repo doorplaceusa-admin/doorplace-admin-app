@@ -225,7 +225,7 @@ useEffect(() => {
 
  const { data, error } = await supabase
   .from("notifications")
-  .select("id, title, type, created_at, is_read")
+  .select("id, title, body, created_at, is_read")
   .eq("recipient_user_id", userId)
   .order("created_at", { ascending: false })
   .limit(10);
@@ -512,6 +512,7 @@ async function askAdminAI() {
   >
 
           <div className="font-medium">{n.title}</div>
+          <div className="text-xs text-gray-600">{n.body}</div>
           <div className="text-xs text-gray-500">
             {new Date(n.created_at).toLocaleString()}
           </div>

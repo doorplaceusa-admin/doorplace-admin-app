@@ -56,6 +56,23 @@ async function refreshFreshBooksToken(rid: string) {
   return json.access_token;
 }
 
+/* 🔥 fetch single client (for missing ones) */
+async function fetchSingleClient(id: string, token: string) {
+  const ACCOUNT_ID = process.env.FRESHBOOKS_ACCOUNT_ID;
+
+  const res = await fetch(
+    `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/users/clients/${id}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const json = await res.json();
+  return json?.response?.result?.client || {};
+}
+
 export async function GET() {
   const rid = `fb_${Date.now()}`;
 
@@ -103,7 +120,7 @@ export async function GET() {
     console.log(`[${rid}] 📦 invoices fetched:`, invoicesArr.length);
 
     // ============================
-    // 🔥 FETCH ALL CLIENTS (FIXED)
+    // 🔥 FETCH ALL CLIENTS (PAGINATED)
     // ============================
     let allClients: any[] = [];
     let page = 1;
@@ -141,8 +158,16 @@ export async function GET() {
     // ============================
     // 🔥 BUILD INVOICES
     // ============================
-    const invoices = invoicesArr.map((inv: any) => {
-      const client: any = clientMap.get(String(inv.customerid)) || {};
+    const invoices = [];
+
+    for (const inv of invoicesArr) {
+      let client: any = clientMap.get(String(inv.customerid));
+
+      // 🔥 fallback fetch for missing clients
+      if (!client && inv.customerid) {
+        console.log(`[${rid}] 🔍 fetching missing client ${inv.customerid}`);
+        client = await fetchSingleClient(String(inv.customerid), accessToken);
+      }
 
       const contactPhone =
         client?.phone ||
@@ -166,7 +191,7 @@ export async function GET() {
         inv.email || // fallback
         "";
 
-      return {
+      invoices.push({
         invoiceid: inv.id,
         invoice_number: inv.invoice_number,
         status: inv.status,
@@ -198,16 +223,14 @@ export async function GET() {
         amount: inv.amount?.amount || "0",
         paid_amount: inv.paid?.amount || "0",
         outstanding_amount: inv.outstanding?.amount || "0",
-      };
-    });
+      });
+    }
 
     console.log(`[${rid}] 💾 inserting into Supabase...`);
 
     const { error } = await supabaseAdmin
       .from("invoices")
-      .upsert(invoices, {
-        onConflict: "invoiceid",
-      });
+      .upsert(invoices, { onConflict: "invoiceid" });
 
     if (error) {
       console.log(`[${rid}] ❌ Supabase error:`, error);
@@ -218,9 +241,9 @@ export async function GET() {
     return NextResponse.json({ invoices, count: invoices.length, rid });
 
   } catch (e: any) {
-    console.log(`❌ [${rid}] API ERROR:`, e);
+    console.log(`❌ API ERROR:`, e);
     return NextResponse.json(
-      { error: e.message || "API error", rid },
+      { error: e.message || "API error" },
       { status: 500 }
     );
   }

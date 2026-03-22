@@ -209,54 +209,65 @@ export default function InvoicesPage() {
                     e.target.value = "";
 
                     if (v === "view") {
-                      setViewItem(i);
+  setViewItem(i);
 
-                      // 🔥 SYNC FROM FRESHBOOKS
-const res = await fetch("/api/sync/freshbooks", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ invoiceId: i.invoiceid }),
-});
+  console.log("📄 Opening invoice:", i.invoiceid);
 
-const result = await res.json();
+  // 🔥 LOAD FROM SUPABASE FIRST (FAST)
+  const { data: initialData, error: initialError } = await supabase
+    .from("invoice_line_items")
+    .select("*")
+    .eq("invoice_id", i.invoiceid);
 
-console.log("SYNC RESULT:", result);
+  console.log("INITIAL LINE ITEMS:", initialData);
 
-// 🚨 HANDLE API ERROR
-if (!res.ok || result.error) {
-  console.error("❌ SYNC FAILED:", result);
-  alert("Failed to sync invoice. Check console.");
-  return;
+  if (initialError) {
+    console.error("❌ INITIAL LOAD ERROR:", initialError);
+  } else {
+    setLineItems(initialData || []);
+  }
+
+  // 🔥 BACKGROUND SYNC (DO NOT BLOCK UI)
+  fetch("/api/sync/freshbooks", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ invoiceId: i.invoiceid }),
+  })
+    .then((res) => res.json())
+    .then(async (result) => {
+      console.log("🔄 SYNC RESULT:", result);
+
+      if (!result.success) {
+        console.error("❌ SYNC FAILED:", result);
+        return;
+      }
+
+      // 🔥 RELOAD UPDATED DATA AFTER SYNC
+      const { data: updatedData, error: updatedError } = await supabase
+        .from("invoice_line_items")
+        .select("*")
+        .eq("invoice_id", i.invoiceid);
+
+      console.log("UPDATED LINE ITEMS:", updatedData);
+
+      if (updatedError) {
+        console.error("❌ RELOAD ERROR:", updatedError);
+        return;
+      }
+
+      setLineItems(updatedData || []);
+    })
+    .catch((err) => {
+      console.error("🔥 SYNC CRASH:", err);
+    });
 }
 
-// 🔥 SMALL DELAY (ensures DB write completes)
-await new Promise((r) => setTimeout(r, 200));
-
-// 🔥 LOAD FROM SUPABASE
-const { data, error } = await supabase
-  .from("invoice_line_items")
-  .select("*")
-  .eq("invoice_id", i.invoiceid);
-
-console.log("SUPABASE LINE ITEMS:", data);
-
-// 🚨 HANDLE SUPABASE ERROR
-if (error) {
-  console.error("❌ SUPABASE ERROR:", error);
-  alert("Failed to load line items.");
-  return;
-}
-
-setLineItems(data || []);
-                    }
-
-                    if (v === "pdf" && i.pdf_url) {
-                      window.open(i.pdf_url, "_blank");
-                    }
-                  }}
-                >
+if (v === "pdf" && i.pdf_url) {
+  window.open(i.pdf_url, "_blank");
+}}
+          }          >
                   <option value="">Select</option>
                   <option value="view">View</option>
                   <option value="pdf">Open PDF</option>

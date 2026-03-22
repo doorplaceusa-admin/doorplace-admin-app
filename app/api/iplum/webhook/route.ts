@@ -95,7 +95,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 🔥 6. Title (FIXED)
+    // 🔥 6. Title
     const name =
       lead?.first_name ||
       invoice?.customer_name ||
@@ -106,16 +106,23 @@ export async function POST(req: Request) {
         ? `New Message from ${name}`
         : `Missed Call from ${name}`;
 
-    // 🔥 7. INSERT NOTIFICATION (FINAL FIX)
+    // 🔥 7. GET REAL USER + COMPANY
+    const { data: adminProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("id, active_company_id")
+      .eq("role", "admin")
+      .limit(1)
+      .single();
+
+    // 🔥 8. INSERT NOTIFICATION (CORRECT)
     await supabaseAdmin.from("notifications").insert({
       title,
       type: eventType.toLowerCase(),
       is_read: false,
       created_at: new Date().toISOString(),
 
-      // 🔥 THESE FIX YOUR ISSUE
-      recipient_user_id: "admin",
-      company_id: "default",
+      recipient_user_id: adminProfile?.id,
+      company_id: adminProfile?.active_company_id,
 
       metadata: {
         phone: cleanedPhone,

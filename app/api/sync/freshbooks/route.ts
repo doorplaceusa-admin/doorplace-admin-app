@@ -14,109 +14,104 @@ export async function POST(req: Request) {
     console.log("🚀 SYNC START:", invoiceId);
 
     if (!invoiceId) {
-      console.log("❌ Missing invoiceId");
       return NextResponse.json({ error: "Missing invoiceId" }, { status: 400 });
     }
 
-    // 🔥 FETCH FROM FRESHBOOKS
-    const url = `https://api.freshbooks.com/accounting/account/${process.env.FRESHBOOKS_ACCOUNT_ID}/invoices/invoices/${invoiceId}`;
+    // 🔥 FETCH FROM FRESHBOOKS (same logic style as working route)
+    const response = await fetch(
+      `https://api.freshbooks.com/accounting/account/${process.env.FRESHBOOKS_ACCOUNT_ID}/invoices/invoices/${invoiceId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${process.env.FRESHBOOKS_ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    console.log("📡 Fetching FreshBooks:", url);
+    const json = await response.json();
 
-    const fbRes = await fetch(url, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${process.env.FRESHBOOKS_ACCESS_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    console.log("📡 FreshBooks status:", fbRes.status);
-
-    if (!fbRes.ok) {
-      const text = await fbRes.text();
-      console.log("❌ FreshBooks ERROR:", text);
-      throw new Error(`FreshBooks error: ${text}`);
+    if (!response.ok) {
+      console.error("❌ FreshBooks API error:", json);
+      return NextResponse.json({ error: "FreshBooks fetch failed" }, { status: 500 });
     }
 
-    const fbData = await fbRes.json();
-
-    console.log("📦 FULL FreshBooks Response:", JSON.stringify(fbData, null, 2));
-
-    const invoice = fbData?.response?.result?.invoice;
+    const invoice = json?.response?.result?.invoice;
 
     if (!invoice) {
-      console.log("❌ Invoice missing in response");
-      throw new Error("Invoice not found in FreshBooks response");
+      console.log("❌ No invoice found");
+      return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
     }
 
-    const lines = invoice.lines || [];
+    console.log("✅ FreshBooks invoice pulled:", invoice.invoiceid);
 
-    console.log("📦 LINE ITEMS FOUND:", lines.length);
+    // ===============================
+    // 🔥 UPSERT INVOICE
+    // ===============================
+    const invoicePayload = {
+      invoice_id: String(invoice.invoiceid),
+      customer_name: invoice?.organization || "",
+      email: invoice?.contacts?.[0]?.email || "",
+      phone: invoice?.contacts?.[0]?.phone || "",
+      amount: invoice?.amount?.amount || 0,
+      status: invoice?.status || "",
+      updated_at: new Date().toISOString(),
+    };
 
-    // 🔥 DELETE OLD
-    const { error: deleteError } = await supabase
+    const { error: invoiceError } = await supabase
+      .from("invoices")
+      .upsert(invoicePayload, { onConflict: "invoice_id" });
+
+    if (invoiceError) {
+      console.error("❌ Invoice upsert error:", invoiceError);
+    } else {
+      console.log("✅ Invoice upserted");
+    }
+
+    // ===============================
+    // 🔥 DELETE OLD LINE ITEMS
+    // ===============================
+    await supabase
       .from("invoice_line_items")
       .delete()
-      .eq("invoice_id", invoiceId);
-
-    if (deleteError) {
-      console.log("❌ DELETE ERROR:", deleteError);
-      throw deleteError;
-    }
+      .eq("invoice_id", invoice.invoiceid);
 
     console.log("🧹 Old line items cleared");
 
-    if (!lines.length) {
-      console.log("⚠️ No line items on this invoice");
+    // ===============================
+    // 🔥 INSERT LINE ITEMS
+    // ===============================
+    const lineItems =
+      invoice?.lines?.map((line: any) => ({
+        invoice_id: String(invoice.invoiceid),
+        name: line?.name || "",
+        description: line?.description || "",
+        qty: line?.qty || 0,
+        unit_cost: line?.unit_cost?.amount || 0,
+        total: line?.amount?.amount || 0,
+      })) || [];
 
-      return NextResponse.json({
-        success: true,
-        count: 0,
-        message: "No line items on invoice",
-      });
+    if (lineItems.length > 0) {
+      const { error: lineError } = await supabase
+        .from("invoice_line_items")
+        .insert(lineItems);
+
+      if (lineError) {
+        console.error("❌ Line item insert error:", lineError);
+      } else {
+        console.log("✅ Line items inserted:", lineItems.length);
+      }
     }
 
-    // 🔁 FORMAT
-    const items = lines.map((l: any, idx: number) => {
-      const item = {
-        invoice_id: invoiceId,
-        name: l.name || "",
-        description: l.description || "",
-        quantity: Number(l.qty || 0),
-        unit_price: Number(l.unit_cost?.amount || 0),
-        total: Number(l.amount?.amount || 0),
-      };
-
-      console.log(`📦 Item ${idx}:`, item);
-      return item;
-    });
-
-    // 🔥 INSERT
-    const { error: insertError } = await supabase
-      .from("invoice_line_items")
-      .insert(items);
-
-    if (insertError) {
-      console.log("❌ INSERT ERROR:", insertError);
-      throw insertError;
-    }
-
-    console.log("✅ INSERT SUCCESS:", items.length);
+    console.log("🎯 SYNC COMPLETE");
 
     return NextResponse.json({
       success: true,
-      count: items.length,
+      invoiceId,
+      lineItemsCount: lineItems.length,
     });
-
-  } catch (err: any) {
-    console.error("🔥 FINAL ERROR:", err);
-
-    return NextResponse.json(
-      {
-        error: err.message || "Unknown error",
-      },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error("🔥 SYNC ERROR:", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

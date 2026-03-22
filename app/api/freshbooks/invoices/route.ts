@@ -13,8 +13,6 @@ function normalizePhone(phone?: string) {
 
 /* 🔹 refresh token */
 async function refreshFreshBooksToken(rid: string) {
-  console.log(`[${rid}] 🔄 Refreshing token`);
-
   const { data: tokenRow } = await supabaseAdmin
     .from("freshbooks_tokens")
     .select("refresh_token")
@@ -22,9 +20,7 @@ async function refreshFreshBooksToken(rid: string) {
     .limit(1)
     .single();
 
-  if (!tokenRow?.refresh_token) {
-    throw new Error("No refresh token");
-  }
+  if (!tokenRow?.refresh_token) throw new Error("No refresh token");
 
   const res = await fetch("https://api.freshbooks.com/auth/oauth/token", {
     method: "POST",
@@ -38,16 +34,11 @@ async function refreshFreshBooksToken(rid: string) {
   });
 
   const json = await res.json();
-
-  if (!res.ok) {
-    console.log(`[${rid}] ❌ Refresh failed`, json);
-    throw new Error("Refresh failed");
-  }
+  if (!res.ok) throw new Error("Refresh failed");
 
   const expiresAt = new Date(Date.now() + json.expires_in * 1000).toISOString();
 
   await supabaseAdmin.from("freshbooks_tokens").delete().neq("id", "");
-
   await supabaseAdmin.from("freshbooks_tokens").insert({
     access_token: json.access_token,
     refresh_token: json.refresh_token,
@@ -55,7 +46,6 @@ async function refreshFreshBooksToken(rid: string) {
     expires_at: expiresAt,
   });
 
-  console.log(`[${rid}] ✅ Token refreshed`);
   return json.access_token;
 }
 
@@ -63,8 +53,6 @@ export async function GET() {
   const rid = `fb_${Date.now()}`;
 
   try {
-    console.log(`\n==== [${rid}] Fetching invoices ====`);
-
     const tokenQuery = await supabaseAdmin
       .from("freshbooks_tokens")
       .select("access_token")
@@ -78,11 +66,7 @@ export async function GET() {
 
     let accessToken = tokenQuery.data.access_token;
 
-    const ACCOUNT_ID = process.env.FRESHBOOKS_ACCOUNT_ID;
-    if (!ACCOUNT_ID) {
-      return NextResponse.json({ error: "No account id", rid }, { status: 500 });
-    }
-
+    const ACCOUNT_ID = process.env.FRESHBOOKS_ACCOUNT_ID!;
     const invoiceUrl =
       `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/invoices/invoices?per_page=500`;
 
@@ -92,47 +76,47 @@ export async function GET() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        cache: "no-store",
       });
     }
 
     let fbRes = await fetchInvoices(accessToken);
 
     if (fbRes.status === 401) {
-      console.log(`[${rid}] 🔁 Token expired`);
       accessToken = await refreshFreshBooksToken(rid);
       fbRes = await fetchInvoices(accessToken);
     }
 
-    const raw = await fbRes.text();
+    const json = await fbRes.json();
+    const invoicesArr = json?.response?.result?.invoices || [];
 
-    if (!fbRes.ok) {
-      return NextResponse.json(
-        {
-          error: "FreshBooks invoices failed",
-          status: fbRes.status,
-          preview: raw.slice(0, 500),
-          rid,
+    // 🔥 FETCH CLIENTS (for phone only)
+    const clientsRes = await fetch(
+      `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/users/clients`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
         },
-        { status: 502 }
-      );
-    }
+      }
+    );
 
-    const json = JSON.parse(raw);
-    const invoicesArr = json?.response?.result?.invoices;
+    const clientsJson = await clientsRes.json();
+    const clientsArr = clientsJson?.response?.result?.clients || [];
 
-    if (!Array.isArray(invoicesArr)) {
-      return NextResponse.json({ error: "Bad invoices response", rid }, { status: 502 });
-    }
+    const clientMap = new Map(
+      clientsArr.map((c: any) => [String(c.id), c])
+    );
 
-    console.log("INVOICE SAMPLE:", invoicesArr[0]);
-
-    // 🔥 FINAL CORRECT MAPPING (from invoice itself)
     const invoices = invoicesArr.map((inv: any) => {
+      const client: any = clientMap.get(String(inv.customerid)) || {};
+      const contacts = client?.contacts || [];
+
       const contactPhone =
-        inv?.phone ||
-        inv?.customer_phone ||
-        inv?.organization_phone ||
+        client?.phone ||
+        client?.mobile ||
+        client?.bus_phone ||
+        contacts.find((c: any) =>
+          (c?.type || "").toLowerCase().includes("phone")
+        )?.value ||
         "";
 
       return {
@@ -142,6 +126,7 @@ export async function GET() {
         issued_at: inv.create_date,
         due_date: inv.due_date,
 
+        // ✅ NAME from invoice
         customer_name:
           [inv.fname, inv.lname].filter(Boolean).join(" ") ||
           inv.organization ||
@@ -149,9 +134,10 @@ export async function GET() {
 
         customer_email: inv.email || "",
 
+        // 🔥 PHONE from CLIENT
         customer_phone: normalizePhone(contactPhone),
 
-        // ✅ address comes directly from invoice (confirmed from your logs)
+        // ✅ ADDRESS from invoice
         street: inv.street || "",
         city: inv.city || "",
         province: inv.province || "",
@@ -171,7 +157,7 @@ export async function GET() {
 
   } catch (e: any) {
     return NextResponse.json(
-      { error: e?.message || "API error", rid },
+      { error: e.message || "API error", rid },
       { status: 500 }
     );
   }

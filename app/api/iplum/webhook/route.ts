@@ -43,19 +43,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    // 🔥 MESSAGE
-   const message =
-  payload.text ||
-  payload.message ||
-  payload.body ||
-  payload.content || // 🔥 THIS IS YOUR REAL DATA
-  null;
+    // 🔥 MESSAGE (kept internally, NOT shown in notifications)
+    const message =
+      payload.text ||
+      payload.message ||
+      payload.body ||
+      payload.content ||
+      null;
 
-    // 🔥 SMS DETECTION
+    // 🔥 SMS DETECTION (FIXED)
     const isSMS =
-  payload.usage === "text" ||   // 🔥 PRIMARY SIGNAL
-  !!payload.content ||          // 🔥 BACKUP
-  payload.type === "sms";
+      payload.usage === "text" ||   // 🔥 PRIMARY SIGNAL
+      !!payload.content ||          // 🔥 BACKUP
+      payload.type === "sms";
 
     // 🔥 DIRECTION
     const direction =
@@ -82,7 +82,7 @@ export async function POST(req: Request) {
     const cleanedPhone = cleanPhone(from || to);
 
     // ===============================
-    // 🔥 MATCH CUSTOMER FIRST
+    // 🔥 MATCH CUSTOMER
     // ===============================
     let lead = null;
     let invoice = null;
@@ -120,7 +120,7 @@ export async function POST(req: Request) {
       "Unknown";
 
     // ===============================
-    // 🔥 EVENT TYPE DETECTION (FIXED)
+    // 🔥 EVENT TYPE DETECTION
     // ===============================
     const callStatus =
       payload.status ||
@@ -132,12 +132,14 @@ export async function POST(req: Request) {
     let title = "";
     let bodyText = "";
 
+    // ✅ SMS (NO MESSAGE SHOWN)
     if (isSMS) {
       eventType = "SMS";
       title = `New Message from ${name}`;
-      bodyText = message || "New message received";
+      bodyText = "Tap to view on your phone"; // 🔥 CLEAN ALERT ONLY
     }
 
+    // ✅ MISSED CALL
     else if (
       callStatus.toLowerCase().includes("missed") ||
       callStatus.toLowerCase().includes("no-answer")
@@ -147,18 +149,21 @@ export async function POST(req: Request) {
       bodyText = "Missed call";
     }
 
+    // ✅ INCOMING CALL
     else if (direction.toLowerCase().includes("incoming")) {
       eventType = "CALL";
       title = `Incoming Call from ${name}`;
       bodyText = "Call received";
     }
 
+    // ✅ OUTGOING CALL
     else if (direction.toLowerCase().includes("outgoing")) {
       eventType = "OUTGOING_CALL";
       title = `Outgoing Call to ${name}`;
       bodyText = "Call placed";
     }
 
+    // ✅ FALLBACK
     else {
       eventType = "CALL";
       title = `Call Activity from ${name}`;
@@ -166,7 +171,7 @@ export async function POST(req: Request) {
     }
 
     // ===============================
-    // 🔥 SAVE EVENT (NOW CORRECT)
+    // 🔥 SAVE EVENT
     // ===============================
     await supabaseAdmin.from("iplum_events").insert({
       external_id: eventId,
@@ -175,7 +180,7 @@ export async function POST(req: Request) {
       from_number: from,
       to_number: to,
       phone_clean: cleanedPhone,
-      message,
+      message, // 🔥 still stored internally if you ever need it
       raw_payload: payload,
     });
 

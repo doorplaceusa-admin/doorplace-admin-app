@@ -45,6 +45,7 @@ export default function InvoicesPage() {
   const [rows, setRows] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [offset, setOffset] = useState(0);
+  const [layout, setLayout] = useState<"cards" | "table">("cards");
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
@@ -141,7 +142,31 @@ export default function InvoicesPage() {
         <p className="text-sm text-gray-500 mb-3">
           Doorplace USA — Accounting
         </p>
+<div className="flex items-center gap-2 mb-3">
+  <span className="text-xs text-gray-500">Layout</span>
 
+  <button
+    className={`px-3 py-1 rounded text-xs border ${
+      layout === "cards"
+        ? "bg-black text-white"
+        : "bg-white text-gray-700"
+    }`}
+    onClick={() => setLayout("cards")}
+  >
+    Cards
+  </button>
+
+  <button
+    className={`px-3 py-1 rounded text-xs border ${
+      layout === "table"
+        ? "bg-black text-white"
+        : "bg-white text-gray-700"
+    }`}
+    onClick={() => setLayout("table")}
+  >
+    Table
+  </button>
+</div>
         <div className="flex gap-2 flex-wrap">
 
           {/* SYNC BUTTON */}
@@ -170,112 +195,215 @@ export default function InvoicesPage() {
         </div>
       </div>
 
-      {/* TABLE */}
-      <AdminTable<Invoice>
-        columns={[
-          { key: "invoice", label: "Invoice" },
-          { key: "amount", label: "Amount" },
-          { key: "actions", label: "Actions" },
-        ]}
-        rows={filteredRows}
-        rowKey={(i) => String(i.invoiceid)}
-        renderCell={(i, key) => {
-          switch (key) {
-            case "invoice":
-              return (
-                <div>
-                  <div className="font-medium">
-                    #{i.invoice_number || i.invoiceid}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {i.customer_name || "—"}
-                  </div>
-                </div>
-              );
+      
+      {/* ===============================
+    CARDS LAYOUT (NEW)
+================================ */}
+{layout === "cards" && (
+  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
 
-            case "amount":
-              return (
-                <div className="text-right font-medium">
-                  {i.currency_code} {Number(i.amount).toFixed(2)}
-                </div>
-              );
+    {filteredRows.map((i) => (
+      <div
+        key={i.invoiceid}
+        className="border rounded-lg p-4 shadow-sm bg-white space-y-2"
+      >
+        {/* HEADER */}
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="font-semibold text-lg">
+              {i.customer_name || "No Name"}
+            </div>
+            <div className="text-xs text-gray-500">
+              {i.customer_email || "—"}
+            </div>
+          </div>
 
-            case "actions":
-              return (
-                <select
-                  className="border rounded px-2 py-1 text-xs w-full max-w-35"
-                  onChange={async (e) => {
-                    const v = e.target.value;
-                    e.target.value = "";
+          {/* STATUS */}
+          <span
+            className={`text-xs font-semibold px-2 py-1 rounded ${
+              i.outstanding_amount && Number(i.outstanding_amount) > 0
+                ? "bg-red-100 text-red-700"
+                : "bg-green-100 text-green-700"
+            }`}
+          >
+            {i.outstanding_amount && Number(i.outstanding_amount) > 0
+              ? "Unpaid"
+              : "Paid"}
+          </span>
+        </div>
 
-                    if (v === "view") {
-  setViewItem(i);
+        {/* DETAILS */}
+        <div className="text-xs text-gray-600 space-y-1">
 
-  console.log("📄 Opening invoice:", i.invoiceid);
+          <div>
+            <b>Invoice:</b> #{i.invoice_number || i.invoiceid}
+          </div>
 
-  // 🔥 LOAD FROM SUPABASE FIRST (FAST)
-  const { data: initialData, error: initialError } = await supabase
-    .from("invoice_line_items")
-    .select("*")
-    .eq("invoice_id", i.invoiceid);
+          <div>
+            <b>Date:</b>{" "}
+            {i.issued_at
+              ? new Date(i.issued_at).toLocaleDateString()
+              : "—"}
+          </div>
 
-  console.log("INITIAL LINE ITEMS:", initialData);
+          <div>
+            <b>Total:</b> {i.currency_code}{" "}
+            {Number(i.amount).toFixed(2)}
+          </div>
 
-  if (initialError) {
-    console.error("❌ INITIAL LOAD ERROR:", initialError);
-  } else {
-    setLineItems(initialData || []);
-  }
+          <div>
+            <b>Balance:</b> {i.currency_code}{" "}
+            {Number(i.outstanding_amount || 0).toFixed(2)}
+          </div>
 
-  // 🔥 BACKGROUND SYNC (DO NOT BLOCK UI)
-  fetch("/api/sync/freshbooks", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ invoiceId: i.invoiceid }),
-  })
-    .then((res) => res.json())
-    .then(async (result) => {
-      console.log("🔄 SYNC RESULT:", result);
+        </div>
 
-      if (!result.success) {
-        console.error("❌ SYNC FAILED:", result);
-        return;
+        {/* ACTIONS */}
+        <div className="flex gap-2 pt-2">
+
+          <button
+            className="text-xs border px-2 py-1 rounded"
+            onClick={async () => {
+              setViewItem(i);
+
+              const { data } = await supabase
+                .from("invoice_line_items")
+                .select("*")
+                .eq("invoice_id", i.invoiceid);
+
+              setLineItems(data || []);
+
+              fetch("/api/sync/freshbooks", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ invoiceId: i.invoiceid }),
+              })
+                .then((res) => res.json())
+                .then(async () => {
+                  const { data: updated } = await supabase
+                    .from("invoice_line_items")
+                    .select("*")
+                    .eq("invoice_id", i.invoiceid);
+
+                  setLineItems(updated || []);
+                });
+            }}
+          >
+            View
+          </button>
+
+          <button
+            className="text-xs border px-2 py-1 rounded"
+            onClick={() => {
+              if (i.pdf_url) window.open(i.pdf_url, "_blank");
+            }}
+          >
+            PDF
+          </button>
+
+          <button
+            className="text-xs border px-2 py-1 rounded"
+            onClick={() => {
+              fetch("/api/sync/freshbooks", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ invoiceId: i.invoiceid }),
+              });
+            }}
+          >
+            Sync
+          </button>
+
+        </div>
+      </div>
+    ))}
+
+  </div>
+)}
+
+{/* ===============================
+    TABLE (YOUR ORIGINAL)
+================================ */}
+{layout === "table" && (
+  <AdminTable<Invoice>
+    columns={[
+      { key: "invoice", label: "Invoice" },
+      { key: "amount", label: "Amount" },
+      { key: "actions", label: "Actions" },
+    ]}
+    rows={filteredRows}
+    rowKey={(i) => String(i.invoiceid)}
+    renderCell={(i, key) => {
+      switch (key) {
+        case "invoice":
+          return (
+            <div>
+              <div className="font-medium">
+                #{i.invoice_number || i.invoiceid}
+              </div>
+              <div className="text-xs text-gray-500">
+                {i.customer_name || "—"}
+              </div>
+            </div>
+          );
+
+        case "amount":
+          return (
+            <div className="text-right font-medium">
+              {i.currency_code} {Number(i.amount).toFixed(2)}
+            </div>
+          );
+
+        case "actions":
+          return (
+            <select
+              className="border rounded px-2 py-1 text-xs w-full max-w-35"
+              onChange={async (e) => {
+                const v = e.target.value;
+                e.target.value = "";
+
+                if (v === "view") {
+                  setViewItem(i);
+
+                  const { data } = await supabase
+                    .from("invoice_line_items")
+                    .select("*")
+                    .eq("invoice_id", i.invoiceid);
+
+                  setLineItems(data || []);
+
+                  fetch("/api/sync/freshbooks", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ invoiceId: i.invoiceid }),
+                  })
+                    .then((res) => res.json())
+                    .then(async () => {
+                      const { data: updated } = await supabase
+                        .from("invoice_line_items")
+                        .select("*")
+                        .eq("invoice_id", i.invoiceid);
+
+                      setLineItems(updated || []);
+                    });
+                }
+
+                if (v === "pdf" && i.pdf_url) {
+                  window.open(i.pdf_url, "_blank");
+                }
+              }}
+            >
+              <option value="">Select</option>
+              <option value="view">View</option>
+              <option value="pdf">Open PDF</option>
+            </select>
+          );
       }
-
-      // 🔥 RELOAD UPDATED DATA AFTER SYNC
-      const { data: updatedData, error: updatedError } = await supabase
-        .from("invoice_line_items")
-        .select("*")
-        .eq("invoice_id", i.invoiceid);
-
-      console.log("UPDATED LINE ITEMS:", updatedData);
-
-      if (updatedError) {
-        console.error("❌ RELOAD ERROR:", updatedError);
-        return;
-      }
-
-      setLineItems(updatedData || []);
-    })
-    .catch((err) => {
-      console.error("🔥 SYNC CRASH:", err);
-    });
-}
-
-if (v === "pdf" && i.pdf_url) {
-  window.open(i.pdf_url, "_blank");
-}}
-          }          >
-                  <option value="">Select</option>
-                  <option value="view">View</option>
-                  <option value="pdf">Open PDF</option>
-                </select>
-              );
-          }
-        }}
-      />
+    }}
+  />
+)}
 
       {/* LOADING MORE */}
       {loading && rows.length > 0 && (

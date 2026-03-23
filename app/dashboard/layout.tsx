@@ -226,7 +226,7 @@ useEffect(() => {
 
  const { data, error } = await supabase
   .from("notifications")
-  .select("id, title, body, created_at, is_read")
+  .select("id, title, body, created_at, is_read, entity_type, entity_id")
   .eq("recipient_user_id", userId)
   .order("created_at", { ascending: false })
   .limit(10);
@@ -487,25 +487,36 @@ async function askAdminAI() {
   <button
     key={n.id}
     onClick={async () => {
-      // 1️⃣ Update DB
-      await supabase
-        .from("notifications")
-        .update({ is_read: true })
-        .eq("id", n.id);
+  // 1️⃣ mark as read
+  await supabase
+    .from("notifications")
+    .update({ is_read: true })
+    .eq("id", n.id);
 
-      // 2️⃣ Optimistically update UI
-      setNotifications(prev =>
-        prev.map(item =>
-          item.id === n.id ? { ...item, is_read: true } : item
-        )
-      );
+  // 2️⃣ update UI
+  setNotifications(prev =>
+    prev.map(item =>
+      item.id === n.id ? { ...item, is_read: true } : item
+    )
+  );
 
-      // 3️⃣ Update unread badge
-      setUnreadCount(prev => Math.max(prev - 1, 0));
+  setUnreadCount(prev => Math.max(prev - 1, 0));
 
-      // (optional) navigate here later if needed
-      // router.push(...)
-    }}
+  setOpen(false); // close dropdown
+
+  // 🔥 3️⃣ NAVIGATION
+  if (n.entity_type === "lead" && n.entity_id) {
+    router.push(`/dashboard/leads?id=${n.entity_id}`);
+    return;
+  }
+
+  if (n.entity_type === "invoice" && n.entity_id) {
+    router.push(`/dashboard/invoices?id=${n.entity_id}`);
+    return;
+  }
+
+  console.log("No navigation target");
+}}
     className={`w-full text-left px-3 py-2 text-sm border-b hover:bg-gray-50 ${
       !n.is_read ? "bg-red-50" : ""
     }`}

@@ -48,9 +48,15 @@ export async function POST(req: Request) {
       payload.body ||
       null;
 
-    const isSMS = !!message;
-    const eventType = isSMS ? "SMS" : "CALL";
+    const isSMS =
+  payload.type === "sms" ||
+  payload.event_type === "sms" ||
+  payload.sms === true ||
+  !!payload.text ||
+  !!payload.message ||
+  !!payload.body;
 
+const eventType = isSMS ? "SMS" : "CALL";
     // 🔥 2. Direction
     const direction =
       payload.direction ||
@@ -117,9 +123,10 @@ export async function POST(req: Request) {
 
     // 🔥 6. Name + Title (FIXED)
     const name =
-      lead?.first_name ||
-      invoice?.customer_name ||
-      "Unknown Caller";
+  lead?.first_name ||
+  invoice?.customer_name ||
+  cleanedPhone ||
+  "Unknown Caller";
 
     const title =
       eventType === "SMS"

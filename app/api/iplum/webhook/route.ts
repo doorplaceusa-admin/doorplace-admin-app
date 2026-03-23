@@ -44,20 +44,18 @@ export async function POST(req: Request) {
     }
 
     // 🔥 MESSAGE
-    const message =
-      payload.text ||
-      payload.message ||
-      payload.body ||
-      null;
+   const message =
+  payload.text ||
+  payload.message ||
+  payload.body ||
+  payload.content || // 🔥 THIS IS YOUR REAL DATA
+  null;
 
     // 🔥 SMS DETECTION
     const isSMS =
-      payload.type === "sms" ||
-      payload.event_type === "sms" ||
-      payload.sms === true ||
-      !!payload.text ||
-      !!payload.message ||
-      !!payload.body;
+  payload.usage === "text" ||   // 🔥 PRIMARY SIGNAL
+  !!payload.content ||          // 🔥 BACKUP
+  payload.type === "sms";
 
     // 🔥 DIRECTION
     const direction =

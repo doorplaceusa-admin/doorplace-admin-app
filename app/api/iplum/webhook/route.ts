@@ -22,14 +22,16 @@ export async function POST(req: Request) {
   try {
     const payload = await req.json();
 
-    // 🔥 UNIQUE EVENT ID (IMPORTANT FOR DEDUPE)
+    console.log("📩 IPLUM PAYLOAD:", payload);
+
+    // 🔥 UNIQUE EVENT ID (DEDUP)
     const eventId =
       payload.id ||
       payload.call_id ||
       payload.message_id ||
       `${Date.now()}-${Math.random()}`;
 
-    // 🔥 PREVENT DUPLICATE PROCESSING
+    // 🔥 PREVENT DUPLICATE
     const { data: existingEvent } = await supabaseAdmin
       .from("iplum_events")
       .select("id")
@@ -37,34 +39,34 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (existingEvent) {
-      console.log("⏭️ Skipping duplicate event:", eventId);
+      console.log("⏭️ Skipping duplicate:", eventId);
       return NextResponse.json({ ok: true });
     }
 
-    // 🔥 1. SMS or CALL
+    // 🔥 MESSAGE
     const message =
       payload.text ||
       payload.message ||
       payload.body ||
       null;
 
+    // 🔥 SMS DETECTION
     const isSMS =
-  payload.type === "sms" ||
-  payload.event_type === "sms" ||
-  payload.sms === true ||
-  !!payload.text ||
-  !!payload.message ||
-  !!payload.body;
+      payload.type === "sms" ||
+      payload.event_type === "sms" ||
+      payload.sms === true ||
+      !!payload.text ||
+      !!payload.message ||
+      !!payload.body;
 
-const eventType = isSMS ? "SMS" : "CALL";
-    // 🔥 2. Direction
+    // 🔥 DIRECTION
     const direction =
       payload.direction ||
       payload.call_direction ||
       payload.sms_direction ||
-      "Incoming";
+      "incoming";
 
-    // 🔥 3. Phones
+    // 🔥 PHONES
     const from =
       payload.from_number ||
       payload.from ||
@@ -81,18 +83,9 @@ const eventType = isSMS ? "SMS" : "CALL";
 
     const cleanedPhone = cleanPhone(from || to);
 
-    // 🔥 4. Save event (WITH external_id)
-    await supabaseAdmin.from("iplum_events").insert({
-      external_id: eventId,
-      event_type: eventType,
-      direction,
-      from_number: from,
-      to_number: to,
-      message,
-      raw_payload: payload,
-    });
-
-    // 🔥 5. Match customer
+    // ===============================
+    // 🔥 MATCH CUSTOMER FIRST
+    // ===============================
     let lead = null;
     let invoice = null;
     let matchType: "lead" | "invoice" | "unknown" = "unknown";
@@ -121,59 +114,104 @@ const eventType = isSMS ? "SMS" : "CALL";
       }
     }
 
-    // 🔥 6. Name + Title (FIXED)
+    // 🔥 NAME
     const name =
-  lead?.first_name ||
-  invoice?.customer_name ||
-  cleanedPhone ||
-  "Unknown Caller";
+      lead?.first_name ||
+      invoice?.customer_name ||
+      cleanedPhone ||
+      "Unknown";
 
-    const title =
-      eventType === "SMS"
-        ? `New Message from ${name}`
-        : `Missed Call from ${name}`;
+    // ===============================
+    // 🔥 EVENT TYPE DETECTION (FIXED)
+    // ===============================
+    const callStatus =
+      payload.status ||
+      payload.call_status ||
+      payload.event ||
+      "";
 
-  // 🔥 7. GET ALL ADMINS
-const { data: admins, error: adminsError } = await supabaseAdmin
-  .from("profiles")
-  .select("id, active_company_id")
-  .eq("role", "admin");
+    let eventType = "UNKNOWN";
+    let title = "";
+    let bodyText = "";
 
-if (adminsError) {
-  console.error("❌ ADMIN FETCH FAILED:", adminsError);
-} else if (!admins || admins.length === 0) {
-  console.error("❌ No admin profiles found");
-} else {
-  // 🔥 8. INSERT NOTIFICATIONS FOR ALL ADMINS
-  const rows = admins.map((admin) => ({
-    title,
-    body: message || `Missed call from ${name}`,
+    if (isSMS) {
+      eventType = "SMS";
+      title = `New Message from ${name}`;
+      bodyText = message || "New message received";
+    }
 
-    entity_type: matchType,
-    entity_id: lead?.id || invoice?.id || null,
+    else if (
+      callStatus.toLowerCase().includes("missed") ||
+      callStatus.toLowerCase().includes("no-answer")
+    ) {
+      eventType = "MISSED_CALL";
+      title = `Missed Call from ${name}`;
+      bodyText = "Missed call";
+    }
 
-    is_read: false,
-    created_at: new Date().toISOString(),
+    else if (direction.toLowerCase().includes("incoming")) {
+      eventType = "CALL";
+      title = `Incoming Call from ${name}`;
+      bodyText = "Call received";
+    }
 
-    recipient_user_id: admin.id,
-    company_id: admin.active_company_id || null,
-  }));
+    else if (direction.toLowerCase().includes("outgoing")) {
+      eventType = "OUTGOING_CALL";
+      title = `Outgoing Call to ${name}`;
+      bodyText = "Call placed";
+    }
 
-  const { data: notifData, error: notifError } = await supabaseAdmin
-    .from("notifications")
-    .insert(rows)
-    .select();
+    else {
+      eventType = "CALL";
+      title = `Call Activity from ${name}`;
+      bodyText = "Call event";
+    }
 
-  if (notifError) {
-    console.error("❌ NOTIFICATION INSERT FAILED:", notifError);
-  } else {
-    console.log("✅ NOTIFICATION INSERTED:", notifData);
-  }
-}
+    // ===============================
+    // 🔥 SAVE EVENT (NOW CORRECT)
+    // ===============================
+    await supabaseAdmin.from("iplum_events").insert({
+      external_id: eventId,
+      event_type: eventType,
+      direction,
+      from_number: from,
+      to_number: to,
+      phone_clean: cleanedPhone,
+      message,
+      raw_payload: payload,
+    });
 
-    console.log("🔔 Notification created:", title);
+    // ===============================
+    // 🔥 SEND NOTIFICATIONS
+    // ===============================
+    const { data: admins } = await supabaseAdmin
+      .from("profiles")
+      .select("id, active_company_id")
+      .eq("role", "admin");
+
+    if (admins && admins.length > 0) {
+      const rows = admins.map((admin) => ({
+        title,
+        body: bodyText,
+        type: eventType,
+
+        entity_type: matchType,
+        entity_id: lead?.id || invoice?.id || null,
+
+        is_read: false,
+        created_at: new Date().toISOString(),
+
+        recipient_user_id: admin.id,
+        company_id: admin.active_company_id || null,
+      }));
+
+      await supabaseAdmin.from("notifications").insert(rows);
+    }
+
+    console.log("🔔 Notification:", title);
 
     return NextResponse.json({ ok: true });
+
   } catch (err) {
     console.error("❌ iPlum webhook error", err);
     return NextResponse.json({ ok: false }, { status: 500 });

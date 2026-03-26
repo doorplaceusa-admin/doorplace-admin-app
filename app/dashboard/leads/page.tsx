@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import AdminTable from "../../components/ui/admintable";
-
+import { useSearchParams } from "next/navigation";
 
 
 /* ===============================
@@ -68,6 +68,8 @@ const [editLead, setEditLead] = useState<Lead | null>(null);
 const [layout, setLayout] = useState<"cards" | "table">("cards");
 
 const [selectedIds, setSelectedIds] = useState<string[]>([]);
+const searchParams = useSearchParams();
+const highlightId = searchParams.get("id");
 
 
   /* ===============================
@@ -91,6 +93,19 @@ const [selectedIds, setSelectedIds] = useState<string[]>([]);
     loadLeads();
   }, []);
 
+
+// 🔥 ADD THIS RIGHT HERE
+useEffect(() => {
+  if (!highlightId || !leads.length) return;
+
+  const found = leads.find(
+    (l) => String(l.id) === String(highlightId)
+  );
+
+  if (found) {
+    setViewLead(found); // 🔥 THIS OPENS THE PERSON
+  }
+}, [highlightId, leads]);
   /* ===============================
      FILTER
   ================================ */
@@ -165,7 +180,7 @@ async function updateLeadStatus(
      RENDER
   ================================ */
   return (
-<div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-[1500px] w-full mx-auto">
+<div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-375 w-full mx-auto">
       {/* HEADER */}
       <div className="sticky top-0 bg-white z-30 border-b pb-4">
         <div className="flex justify-between items-center">
@@ -410,7 +425,7 @@ async function updateLeadStatus(
       case "actions":
         return (
           <select
-            className="border rounded px-2 py-1 text-xs w-full max-w-[140px]"
+            className="border rounded px-2 py-1 text-xs w-full max-w-35"
             onChange={(e) => {
               const v = e.target.value;
               e.target.value = "";

@@ -8,7 +8,7 @@ import { AdminPresenceProvider } from "@/app/components/presence/AdminPresenceCo
 import { useAppViewTracker } from "@/lib/useAppViewTracker";
 import { getLiveSessionCount } from "@/lib/getLiveSessionCount";
 import { useRealtimeAdminVoice } from "@/lib/ai/useRealtimeAdminVoice";
-
+const [customerPanel, setCustomerPanel] = useState<any>(null);
 
 
 
@@ -75,6 +75,7 @@ const [aiQuestion, setAiQuestion] = useState("");
 const [aiAnswer, setAiAnswer] = useState("");
 const [aiLoading, setAiLoading] = useState(false);
 const aiTextareaRef = useRef<HTMLTextAreaElement>(null);
+
 
 const [aiTone, setAiTone] = useState<
   "neutral" | "direct" | "technical" | "sales"
@@ -506,7 +507,48 @@ async function askAdminAI() {
 
   // 🔥 3️⃣ NAVIGATION
   if (n.entity_type === "lead" && n.entity_id) {
-    router.push(`/dashboard/leads?id=${n.entity_id}`);
+    async function handleNotificationClick(n) {
+  const phone = n.phone_clean || n.from_number || null;
+  if (!phone) return;
+
+  let lead = null;
+  let invoice = null;
+  let partner = null;
+
+  // 🔥 LEAD
+  const { data: leadData } = await supabase
+    .from("leads")
+    .select("*")
+    .eq("phone_clean", phone)
+    .maybeSingle();
+
+  if (leadData) lead = leadData;
+
+  // 🔥 INVOICE
+  const { data: invoiceData } = await supabase
+    .from("invoices")
+    .select("*")
+    .eq("phone_clean", phone)
+    .maybeSingle();
+
+  if (invoiceData) invoice = invoiceData;
+
+  // 🔥 PARTNER
+  const { data: partnerData } = await supabase
+    .from("partners")
+    .select("*")
+    .eq("phone_clean", phone)
+    .maybeSingle();
+
+  if (partnerData) partner = partnerData;
+
+  setCustomerPanel({
+    phone,
+    lead,
+    invoice,
+    partner,
+  });
+}
     return;
   }
 
@@ -514,15 +556,23 @@ async function askAdminAI() {
     router.push(`/dashboard/invoices?id=${n.entity_id}`);
     return;
   }
-
-  console.log("No navigation target");
-}}
+if (n.entity_type === "partner" && n.entity_id) {
+  router.push(`/dashboard/partners?id=${n.entity_id}`);
+  return;
+}
+alert("No matching customer found for this number");}}
     className={`w-full text-left px-3 py-2 text-sm border-b hover:bg-gray-50 ${
       !n.is_read ? "bg-red-50" : ""
     }`}
   >
 
-          <div className="font-medium">{n.title}</div>
+          <div className="font-medium flex items-center gap-2">
+  {n.type === "SMS" && "📩"}
+  {n.type === "MISSED_CALL" && "📞"}
+  {n.type === "CALL" && "📲"}
+
+  {n.title}
+</div>
           <div className="text-xs text-gray-600">{n.body}</div>
           <div className="text-xs text-gray-500">
             {new Date(n.created_at).toLocaleString()}

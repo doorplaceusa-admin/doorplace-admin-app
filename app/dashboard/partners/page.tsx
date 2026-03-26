@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import AdminTable from "../../components/ui/admintable";
-
+import { useSearchParams } from "next/navigation";
 /* ===============================
    TYPES
 ================================ */
@@ -59,7 +59,8 @@ export default function PartnersPage() {
   const [viewItem, setViewItem] = useState<Partner | null>(null);
   const [editItem, setEditItem] = useState<Partner | null>(null);
   const [layout, setLayout] = useState<"cards" | "table">("cards");
-  
+  const searchParams = useSearchParams();
+const highlightId = searchParams.get("id");
 
 
 
@@ -117,7 +118,17 @@ export default function PartnersPage() {
   useEffect(() => {
     loadRows();
   }, [sort]);
+useEffect(() => {
+  if (!highlightId || !rows.length) return;
 
+  const found = rows.find(
+    (p) => String(p.id) === String(highlightId)
+  );
+
+  if (found) {
+    setViewItem(found); // 🔥 AUTO OPENS PARTNER
+  }
+}, [highlightId, rows]);
   const filteredRows = useMemo(() => {
     let list = [...rows];
 

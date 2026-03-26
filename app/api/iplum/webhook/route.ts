@@ -86,7 +86,9 @@ export async function POST(req: Request) {
     // ===============================
     let lead = null;
     let invoice = null;
-    let matchType: "lead" | "invoice" | "unknown" = "unknown";
+    let partner = null;
+
+let matchType: "lead" | "invoice" | "partner" | "unknown" = "unknown";
 
     if (cleanedPhone) {
       const { data: leadData } = await supabaseAdmin
@@ -111,13 +113,25 @@ export async function POST(req: Request) {
         }
       }
     }
+if (!lead) {
+  const { data: partnerData } = await supabaseAdmin
+    .from("partners")
+    .select("*")
+    .eq("phone_clean", cleanedPhone)
+    .maybeSingle();
 
+  if (partnerData) {
+    partner = partnerData;
+    matchType = "partner";
+  }
+}
     // 🔥 NAME
     const name =
-      lead?.first_name ||
-      invoice?.customer_name ||
-      cleanedPhone ||
-      "Unknown";
+  lead?.first_name ||
+  invoice?.customer_name ||
+  partner?.name ||
+  cleanedPhone ||
+  "Unknown";
 
     // ===============================
     // 🔥 EVENT TYPE DETECTION
@@ -199,8 +213,7 @@ export async function POST(req: Request) {
         type: eventType,
 
         entity_type: matchType,
-        entity_id: lead?.id || invoice?.id || null,
-
+entity_id: lead?.id || invoice?.id || partner?.id || null,
         is_read: false,
         created_at: new Date().toISOString(),
 

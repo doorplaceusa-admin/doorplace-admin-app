@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AdminTable from "../../components/ui/admintable";
 import { supabase } from "@/lib/supabaseClient";
-
+import { useSearchParams } from "next/navigation";
 /* ===============================
    TYPES
 ================================ */
@@ -51,6 +51,8 @@ export default function InvoicesPage() {
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
 
   const [viewItem, setViewItem] = useState<Invoice | null>(null);
+  const searchParams = useSearchParams();
+const highlightId = searchParams.get("id");
 
   // 🔥 NEW STATE FOR LINE ITEMS
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
@@ -86,6 +88,28 @@ export default function InvoicesPage() {
   useEffect(() => {
     loadInvoices(true);
   }, [sort]);
+
+useEffect(() => {
+  if (!highlightId || !rows.length) return;
+
+  const found = rows.find(
+    (i) => String(i.invoiceid) === String(highlightId)
+  );
+
+  if (found) {
+    setViewItem(found); // 🔥 AUTO OPENS INVOICE
+
+    // 🔥 ALSO LOAD LINE ITEMS (IMPORTANT)
+    supabase
+      .from("invoice_line_items")
+      .select("*")
+      .eq("invoice_id", found.invoiceid)
+      .then(({ data }) => {
+        setLineItems(data || []);
+      });
+  }
+}, [highlightId, rows]);
+
 
   /* 🔥 SCROLL LOAD */
   useEffect(() => {

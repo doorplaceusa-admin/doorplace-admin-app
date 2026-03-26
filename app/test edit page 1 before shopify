@@ -1,0 +1,803 @@
+<div style="max-width:1200px;margin:0 auto;padding:24px;font-family:'Times New Roman',serif;color:#222;line-height:1.75;">
+
+  <style>
+    .swing-ideas-page * { box-sizing: border-box; }
+    .swing-ideas-page {
+      max-width: 1200px;
+      margin: 0 auto;
+      color: #222;
+      font-family: 'Times New Roman', serif;
+    }
+    .swing-hero {
+      text-align: center;
+      padding: 10px 0 20px 0;
+    }
+    .swing-hero h1 {
+      font-size: 40px;
+      color: #b80d0d;
+      margin: 0 0 14px 0;
+      line-height: 1.2;
+    }
+    .swing-hero p {
+      font-size: 18px;
+      max-width: 920px;
+      margin: 0 auto 18px auto;
+    }
+    .swing-btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .swing-btn {
+      display: inline-block;
+      background: #b80d0d;
+      color: #fff !important;
+      text-decoration: none;
+      padding: 14px 26px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .swing-btn.secondary {
+      background: #111;
+    }
+    .quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin: 22px 0 10px 0;
+    }
+    .quick-links a {
+      text-decoration: none;
+      color: #111;
+      border: 1px solid #d9d9d9;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 15px;
+      background: #fafafa;
+    }
+    .feature-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(210px,1fr));
+      gap: 14px;
+      margin: 28px 0 34px 0;
+    }
+    .feature-card {
+      border: 1px solid #e1e1e1;
+      padding: 16px;
+      border-radius: 12px;
+      background: #fff;
+      text-align: center;
+      font-size: 16px;
+    }
+    .section-block {
+      margin: 46px 0;
+    }
+    .section-block h2 {
+      color: #b80d0d;
+      font-size: 31px;
+      margin: 0 0 14px 0;
+      line-height: 1.2;
+    }
+    .section-block h3 {
+      color: #b80d0d;
+      font-size: 23px;
+      margin: 24px 0 10px 0;
+      line-height: 1.3;
+    }
+    .section-block p {
+      font-size: 17px;
+      margin: 0 0 16px 0;
+    }
+    .info-box {
+      border: 2px solid #b80d0d;
+      background: #fff8f8;
+      border-radius: 14px;
+      padding: 22px;
+      margin: 32px 0;
+    }
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+      gap: 16px;
+      margin: 24px 0 12px 0;
+    }
+    .image-grid.two-col {
+      grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+    }
+    .image-grid.three-col {
+      grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
+    }
+    .image-card {
+      border-radius: 14px;
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid #ececec;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+    .image-card img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-caption {
+      padding: 10px 12px;
+      font-size: 15px;
+      background: #fff;
+    }
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 24px;
+      align-items: center;
+      margin: 24px 0;
+    }
+    .split-grid.reverse {
+      grid-template-columns: 0.9fr 1.1fr;
+    }
+    .split-grid img {
+      width: 100%;
+      border-radius: 14px;
+      display: block;
+      border: 1px solid #ececec;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    }
+    .bullet-list {
+      padding-left: 22px;
+      font-size: 17px;
+      line-height: 1.85;
+      margin: 0 0 16px 0;
+    }
+    .bullet-list li { margin-bottom: 6px; }
+    .resource-links a {
+      color: #b80d0d;
+      text-decoration: none;
+    }
+    .final-cta {
+      text-align: center;
+      border: 2px solid #b80d0d;
+      background: #fff8f8;
+      border-radius: 16px;
+      padding: 34px 20px;
+      margin: 52px 0 10px 0;
+    }
+    .final-cta h2 {
+      color: #b80d0d;
+      font-size: 34px;
+      margin: 0 0 12px 0;
+    }
+    .final-cta p {
+      max-width: 820px;
+      margin: 0 auto 20px auto;
+      font-size: 18px;
+    }
+    @media (max-width: 900px) {
+      .split-grid,
+      .split-grid.reverse {
+        grid-template-columns: 1fr;
+      }
+      .swing-hero h1 { font-size: 34px; }
+      .section-block h2 { font-size: 28px; }
+    }
+  </style>
+
+  <div class="swing-ideas-page">
+
+    <div class="swing-hero">
+<h1>Porch Swing Ideas (Modern, Farmhouse & Custom Designs)</h1>
+  <p>
+    Looking for porch swing ideas that actually look good on real homes?
+
+    At <strong>Doorplace USA</strong>, we design and build custom porch swings for front porches, patios, pergolas, and backyards — built to match your space, your style, and your layout.
+
+    This page is packed with real <strong>porch swing ideas</strong>, including <strong>front porch swing ideas</strong>, <strong>backyard swing ideas</strong>, <strong>patio swing ideas</strong>, <strong>pergola swing setups</strong>, <strong>farmhouse porch swings</strong>, and <strong>modern swing designs</strong> — all based on real builds and real customer projects.
+  </p>
+
+  <p>
+    Whether you're planning a cozy front porch, a backyard retreat, a pergola swing setup, or a large <strong>bed swing</strong> for outdoor lounging, this page will help you find the right direction.
+
+    You’ll see <strong>crib size swings</strong>, <strong>twin size porch swings</strong>, and <strong>full size swing beds</strong>, along with <strong>rope hanging</strong> and <strong>chain hanging</strong> styles, plus farmhouse, modern, cedar, pine, stained, white, and black finishes.
+  </p>
+
+  <p style="font-weight:600;">
+    👉 Scroll through the ideas below — and when you find a style you like, we can build it for your space.
+  </p>
+
+  <div class="swing-btn-row">
+    <a class="swing-btn" href="https://doorplaceusa.com/pages/get-a-fast-quote">Get a Fast Quote</a>
+  </div>
+</div>
+
+      <div class="quick-links">
+        <a href="#front-porch-ideas">Front Porch Swing Ideas</a>
+        <a href="#backyard-ideas">Backyard Swing Ideas</a>
+        <a href="#pergola-ideas">Pergola Swing Ideas</a>
+        <a href="#farmhouse-ideas">Farmhouse Swing Ideas</a>
+        <a href="#modern-ideas">Modern Swing Ideas</a>
+        <a href="#bed-swing-ideas">Bed Swing Ideas</a>
+        <a href="#rope-chain-ideas">Rope &amp; Chain Ideas</a>
+        <a href="#sizes-materials">Sizes &amp; Materials</a>
+      </div>
+
+      <div class="feature-bar">
+        <div class="feature-card">✅ Custom porch swings built for real outdoor spaces</div>
+        <div class="feature-card">✅ Ideas for front porches, patios, pergolas, decks, and balconies</div>
+        <div class="feature-card">✅ Rope and chain hanging inspiration</div>
+        <div class="feature-card">✅ Crib, twin, and full size swing ideas</div>
+      </div>
+    </div>
+
+    <div class="image-grid three-col">
+      <div class="image-card">
+        <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_2626.jpg?v=1773181972" alt="Front porch swing ideas with custom wood porch swing">
+        <div class="image-caption">Porch swing inspiration for classic covered porch settings.</div>
+      </div>
+      <div class="image-card">
+        <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_2710.jpg?v=1773181972" alt="Back porch swing ideas with wood swing seating">
+        <div class="image-caption">Real custom swing examples for everyday outdoor living.</div>
+      </div>
+      <div class="image-card">
+        <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3920.jpg?v=1773181972" alt="Modern porch swing ideas for covered patio">
+        <div class="image-caption">A strong mix of comfort, style, and visual inspiration.</div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <h2 style="color:#b80d0d;font-size:28px;margin-top:0;">Why This Swing Ideas Page Matters</h2>
+      <p>
+        A good <strong>porch swing inspiration page</strong> should do more than show random pictures. It should help you imagine how a swing can
+        fit into your real home, porch, patio, pergola, deck, or backyard. That is why this page includes a wide range of real examples and
+        practical content around <strong>porch swing styles</strong>, <strong>outdoor swing ideas</strong>, <strong>pergola swings</strong>,
+        <strong>bed swings</strong>, <strong>farmhouse porch swings</strong>, <strong>modern porch swings</strong>, and
+        <strong>front porch seating ideas</strong>.
+      </p>
+      <p>
+        Doorplace USA builds custom swings designed for comfort, durability, and style. If you are collecting ideas before requesting a quote,
+        this page is meant to give you a better feel for different looks, colors, finishes, mounting styles, and swing sizes so you can narrow
+        down what fits your home best.
+      </p>
+    </div>
+
+    <div id="front-porch-ideas" class="section-block">
+      <h2>Front Porch Swing Ideas for Comfortable Everyday Outdoor Living</h2>
+      <p>
+        <strong>Front porch swing ideas</strong> are some of the most popular searches because a porch swing instantly changes the feel of a home.
+        A front porch swing can make the entrance feel warmer, more welcoming, and more relaxing. Some homeowners prefer a smaller
+        <strong>crib size porch swing</strong> for tighter spaces, while others prefer a larger <strong>twin size porch swing</strong> or
+        <strong>bed swing</strong> that gives the porch a luxury feel. Front porch designs work especially well with
+        <strong>rope hanging porch swings</strong>, though <strong>chain hanging porch swings</strong> can also create a clean, timeless look.
+      </p>
+      <p>
+        If you are searching for <strong>front porch swing ideas</strong>, you may want to think about how the swing color works with your brick,
+        siding, columns, ceiling, and flooring. White swings create a bright farmhouse look, black swings feel bold and modern, and stained wood
+        swings give a more natural custom-built appearance. The images below show a range of front porch swing inspiration for different homes.
+      </p>
+
+      <div class="image-grid three-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6206.jpg?v=1773181969" alt="Front porch swing ideas with dark porch swing">
+          <div class="image-caption">Dark porch swing styling for a bold front porch look.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6071.jpg?v=1773181968" alt="White porch swing on front porch">
+          <div class="image-caption">White painted swing inspiration for a clean farmhouse feel.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3909.jpg?v=1773181968" alt="Twin size porch swing ideas for front porch">
+          <div class="image-caption">Large swing ideas for front porch lounging and relaxing.</div>
+        </div>
+      </div>
+
+      <div class="split-grid">
+        <div>
+          <h3>Ideas That Work Well on Front Porches</h3>
+          <ul class="bullet-list">
+            <li>White, black, or stained wood porch swings paired with matching trim colors</li>
+            <li>Rope hanging porch swings for a softer, more upscale visual style</li>
+            <li>Chain hanging porch swings for a classic and durable mounting look</li>
+            <li>Crib size and twin size swings for porches with limited clearance</li>
+            <li>Bed swings and cushioned swings for larger covered front porch layouts</li>
+          </ul>
+          <p>
+            A front porch swing can be simple and traditional or oversized and dramatic. The right setup depends on your available width, ceiling
+            support, and the mood you want the porch to create.
+          </p>
+        </div>
+        <div>
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_0273.jpg?v=1773181967" alt="Custom porch swing ideas for front porch">
+        </div>
+      </div>
+
+      <div class="image-grid three-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_9174.jpg?v=1773181967" alt="Crib size porch swing ideas">
+          <div class="image-caption">Smaller swing ideas can still make a big visual impact.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6748.jpg?v=1773181966" alt="Painted porch swing for front porch inspiration">
+          <div class="image-caption">Painted porch swings work beautifully with modern exterior colors.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_8286.jpg?v=1773181965" alt="Farmhouse front porch swing ideas">
+          <div class="image-caption">Classic farmhouse swing styling for covered front porches.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="backyard-ideas" class="section-block">
+      <h2>Backyard Porch Swing Ideas for Patios, Outdoor Lounges, and Relaxing Retreats</h2>
+      <p>
+        <strong>Backyard porch swing ideas</strong> give you more freedom because backyard spaces often allow larger swings, more flexible layouts,
+        and more room for pergolas, covered patios, decks, and poolside seating. A backyard swing can be used as a quiet relaxation spot, a cozy
+        outdoor seating area, or a major visual feature. This is where <strong>bed swings</strong>, <strong>daybed swings</strong>, and
+        <strong>twin size porch swing beds</strong> become especially popular.
+      </p>
+      <p>
+        Many people searching for <strong>back porch swing ideas</strong> or <strong>backyard swing ideas</strong> want inspiration for a more
+        private outdoor space. Dark stained wood swings, cedar swings, pine swings, and black swings all work well in back patio areas. Cushions,
+        pillows, outdoor rugs, and nearby landscaping can also help a backyard porch swing feel more finished and intentional.
+      </p>
+
+      <div class="image-grid three-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_2386.jpg?v=1773181966" alt="Backyard porch swing bed ideas">
+          <div class="image-caption">Backyard swing ideas for outdoor lounging and comfort.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_1566.jpg?v=1773181964" alt="Covered backyard patio swing ideas">
+          <div class="image-caption">Covered patio swings create comfortable backyard seating zones.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_9603.jpg?v=1773181963" alt="Outdoor wood swing inspiration">
+          <div class="image-caption">Natural wood tones look great in backyard settings.</div>
+        </div>
+      </div>
+
+      <div class="split-grid reverse">
+        <div>
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_7738.jpg?v=1773181961" alt="Back patio porch swing inspiration">
+        </div>
+        <div>
+          <h3>Backyard Swing Inspiration Tips</h3>
+          <ul class="bullet-list">
+            <li>Use darker stains when you want a richer, more dramatic outdoor look</li>
+            <li>Choose a bed swing for reading, napping, or full-body lounging</li>
+            <li>Install swings under a patio cover or pergola for shade and visual structure</li>
+            <li>Add cushions to soften the look and make the space feel finished</li>
+            <li>Match rope or chain hardware to the style of the surrounding patio area</li>
+          </ul>
+          <p>
+            Backyard swing spaces are often where homeowners go bigger on comfort and visual impact. If you want your outdoor area to feel more
+            like a destination, a larger swing with thoughtful styling can do a lot.
+          </p>
+        </div>
+      </div>
+
+      <div class="image-grid three-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3816.jpg?v=1773181960" alt="Backyard daybed swing ideas">
+          <div class="image-caption">Outdoor bed swing inspiration for larger patio and backyard spaces.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_9210.jpg?v=1773181960" alt="Covered backyard swing bed ideas">
+          <div class="image-caption">A larger swing can turn a patio into a full relaxation area.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6764.jpg?v=1773181955" alt="Luxury outdoor swing ideas">
+          <div class="image-caption">Luxury swing styling for elevated backyard seating.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pergola-ideas" class="section-block">
+      <h2>Pergola Swing Ideas for Backyard Structure, Shade, and Visual Impact</h2>
+      <p>
+        <strong>Pergola swing ideas</strong> are ideal for homeowners who want a defined outdoor feature with strong visual appeal. A pergola
+        gives the swing a destination of its own. It can frame the seating area, make the backyard feel more intentional, and create a natural
+        place for a <strong>rope hanging swing</strong> or <strong>chain hanging swing</strong>. Pergola-mounted swings also work especially well
+        in poolside settings, open patios, and landscaped backyard lounges.
+      </p>
+      <p>
+        If you are searching for <strong>pergola porch swing ideas</strong> or <strong>backyard pergola swing inspiration</strong>, think about
+        whether you want a bench-style swing or a <strong>swing bed</strong>. Pergola swings can feel rustic, farmhouse, modern, or luxury
+        depending on the swing color, wood type, and overall backyard design.
+      </p>
+
+      <div class="image-grid three-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_4691.jpg?v=1773181955" alt="Pergola porch swing ideas">
+          <div class="image-caption">Pergola swings make a backyard feel planned and elevated.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_0134_a95b33eb-ee90-4a0f-982e-f813be7f56cf.jpg?v=1773181939" alt="Pergola bed swing inspiration">
+          <div class="image-caption">Bed swings under pergolas create a luxury outdoor retreat.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_4960.jpg?v=1773181921" alt="Backyard pergola swing bed ideas">
+          <div class="image-caption">Strong visual inspiration for covered backyard pergola seating.</div>
+        </div>
+      </div>
+
+      <div class="split-grid">
+        <div>
+          <h3>Why Pergola Swings Are So Popular</h3>
+          <p>
+            Pergolas create a strong architectural focal point. They frame the swing, give it support, and make the seating area look intentional
+            rather than temporary. For many homes, a pergola swing setup feels like the most complete form of outdoor swing inspiration.
+          </p>
+          <ul class="bullet-list">
+            <li>Works beautifully in backyards, near pools, and beside patios</li>
+            <li>Pairs well with cedar, pine, stained wood, white, and black swings</li>
+            <li>Great for both rope hanging and chain hanging styles</li>
+            <li>Helps define an outdoor room without enclosing it</li>
+          </ul>
+        </div>
+        <div>
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3233.jpg?v=1773181920" alt="Modern pergola porch swing ideas">
+        </div>
+      </div>
+    </div>
+
+    <div id="farmhouse-ideas" class="section-block">
+      <h2>Farmhouse Porch Swing Ideas with Classic Comfort and Timeless Style</h2>
+      <p>
+        <strong>Farmhouse porch swing ideas</strong> remain some of the most popular because farmhouse styling feels warm, familiar, and timeless.
+        Wide boards, deep seating, white finishes, stained wood, soft cushions, and simple hanging ropes all fit naturally into farmhouse porch
+        design. A farmhouse swing can work on a front porch, under a pergola, on a covered patio, or in a backyard lounge area.
+      </p>
+      <p>
+        If you want a swing that looks custom, cozy, and inviting, farmhouse porch swings are an excellent direction. They work especially well
+        with brick homes, white columns, wood ceilings, black hardware, outdoor pillows, and neutral color palettes.
+      </p>
+
+      <div class="image-grid three-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_1521.jpg?v=1769607815" alt="Farmhouse porch swing ideas for front porch">
+          <div class="image-caption">Farmhouse styling works beautifully in covered porch settings.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_1523.jpg?v=1769607812" alt="Farmhouse swing with rope hanging">
+          <div class="image-caption">Rope hanging details help farmhouse swings feel softer and warmer.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_2092.jpg?v=1769607596" alt="Black farmhouse porch swing ideas">
+          <div class="image-caption">A black finish can still feel farmhouse when paired with the right setting.</div>
+        </div>
+      </div>
+
+      <div class="image-grid two-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_4956.jpg?v=1769607563" alt="Painted farmhouse porch swing bed ideas">
+          <div class="image-caption">Painted bed swings are popular for larger farmhouse porches and patios.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3903.jpg?v=1769607561" alt="Farmhouse swing bed inspiration">
+          <div class="image-caption">Farmhouse swing beds create a relaxed and upscale outdoor seating area.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="modern-ideas" class="section-block">
+      <h2>Modern Porch Swing Ideas for Clean Lines, Bold Colors, and Updated Outdoor Design</h2>
+      <p>
+        <strong>Modern porch swing ideas</strong> usually focus on cleaner lines, darker finishes, simpler silhouettes, and uncluttered outdoor
+        design. Black swings, dark stained wood swings, neutral cushions, and streamlined rope or chain hardware can all contribute to a more
+        modern look. These swings work especially well with white brick homes, contemporary patios, metal pergolas, large windows, and simple
+        architectural lines.
+      </p>
+      <p>
+        If you are drawn to a more updated design style, a modern porch swing can still feel warm and comfortable while giving your porch or patio
+        a more intentional designer look.
+      </p>
+
+      <div class="image-grid three-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6531.jpg?v=1769607561" alt="Modern black porch swing ideas">
+          <div class="image-caption">Modern black swings create strong contrast in light outdoor spaces.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3998.jpg?v=1769607560" alt="Modern wood porch swing ideas">
+          <div class="image-caption">Natural wood can still feel modern with clean lines and simple styling.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3746.jpg?v=1769607559" alt="Modern patio swing inspiration">
+          <div class="image-caption">Simple finishes and open spaces create a cleaner modern outdoor look.</div>
+        </div>
+      </div>
+
+      <div class="split-grid reverse">
+        <div>
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3574.jpg?v=1769607559" alt="Modern rope hanging porch swing">
+        </div>
+        <div>
+          <h3>Modern Swing Design Details</h3>
+          <ul class="bullet-list">
+            <li>Black finishes for a bold architectural look</li>
+            <li>Stained wood for warmth without losing a clean feel</li>
+            <li>Minimal hardware and simple hanging lines</li>
+            <li>Patio and pergola placements that feel open and uncluttered</li>
+            <li>Large swing beds styled with neutral cushions and pillows</li>
+          </ul>
+          <p>
+            Modern swings often work best when the surrounding patio or porch is kept simple and intentional. The swing becomes a strong focal
+            point without making the area feel too busy.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div id="bed-swing-ideas" class="section-block">
+      <h2>Bed Swing and Daybed Swing Ideas for Luxury Porch and Patio Spaces</h2>
+      <p>
+        <strong>Bed swing ideas</strong> and <strong>daybed porch swing ideas</strong> are ideal for homeowners who want more than a standard bench.
+        These larger swings are built for stretching out, lounging longer, and turning a porch or patio into a real retreat. Bed swings are often
+        chosen for covered back patios, large front porches, pergolas, and poolside outdoor spaces.
+      </p>
+      <p>
+        Twin size and full size swing beds are popular because they create strong visual impact while also delivering more comfort. If you want a
+        more upscale outdoor look, this category is often where people end up.
+      </p>
+
+      <div class="image-grid three-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_0134.jpg?v=1769607547" alt="Twin size bed swing inspiration">
+          <div class="image-caption">Twin size swing bed inspiration for covered porch and patio spaces.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6338.jpg?v=1769607531" alt="Daybed porch swing ideas">
+          <div class="image-caption">Daybed swings bring a luxury feel to outdoor lounging areas.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_2583.jpg?v=1763779960" alt="Full size swing bed inspiration">
+          <div class="image-caption">Larger swings are excellent for relaxing, reading, and unwinding outdoors.</div>
+        </div>
+      </div>
+
+      <div class="image-grid three-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_5919.jpg?v=1763779955" alt="Outdoor bed swing ideas">
+          <div class="image-caption">Outdoor bed swings can completely change the feel of a patio.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3131.jpg?v=1763779955" alt="Luxury porch swing bed ideas">
+          <div class="image-caption">Luxury swing bed styling for more comfortable outdoor living.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6337.jpg?v=1763779951" alt="Covered patio bed swing ideas">
+          <div class="image-caption">A covered patio is one of the best locations for a bed swing setup.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="rope-chain-ideas" class="section-block">
+      <h2>Rope Hanging Porch Swings vs Chain Hanging Porch Swings</h2>
+      <p>
+        One of the biggest visual choices in outdoor swing design is whether to use <strong>rope</strong> or <strong>chains</strong>.
+        <strong>Rope hanging porch swings</strong> tend to feel softer, warmer, and more custom. They are common in farmhouse, rustic, and luxury
+        outdoor spaces. <strong>Chain hanging porch swings</strong> often feel more traditional, classic, and straightforward while also providing
+        a strong visual contrast against painted swings and darker finishes.
+      </p>
+      <p>
+        Both mounting styles can work beautifully. The right choice often depends on the look of your porch ceiling, pergola, patio cover,
+        surrounding trim, and the type of visual mood you want the space to create.
+      </p>
+
+      <div class="split-grid">
+        <div>
+          <h3>Rope Hanging Swing Ideas</h3>
+          <ul class="bullet-list">
+            <li>Works especially well with farmhouse porch swings and bed swings</li>
+            <li>Often looks softer and more custom in photos and real life</li>
+            <li>Pairs beautifully with white, black, gray, and stained wood swings</li>
+            <li>Excellent choice for pergola swings and covered patio swings</li>
+          </ul>
+          <h3>Chain Hanging Swing Ideas</h3>
+          <ul class="bullet-list">
+            <li>Creates a timeless traditional porch swing look</li>
+            <li>Works great for both smaller bench swings and larger porch swings</li>
+            <li>Pairs especially well with black, white, and classic wood finishes</li>
+            <li>Often a strong choice for clean front porch design</li>
+          </ul>
+        </div>
+        <div>
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_7739.jpg?v=1763778138" alt="Rope hanging porch swing ideas">
+        </div>
+      </div>
+
+      <div class="image-grid three-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6808.jpg?v=1763778136" alt="Chain hanging porch swing ideas">
+          <div class="image-caption">Chain hanging swings bring a classic porch look.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3702.jpg?v=1763778135" alt="Rope porch swing inspiration">
+          <div class="image-caption">Rope details can elevate the overall design of the swing space.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6529.jpg?v=1763778131" alt="Chain and rope swing ideas">
+          <div class="image-caption">Both mounting styles can work beautifully depending on the look you want.</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sizes-materials" class="section-block">
+      <h2>Porch Swing Sizes, Materials, Finishes, and Style Options</h2>
+      <p>
+        Choosing the right swing is not just about appearance. It is also about size, wood type, finish, and how the swing will be used.
+        Some homeowners want a smaller <strong>crib size swing</strong> for a compact area. Others prefer a
+        <strong>twin size porch swing</strong> for more comfort, or a <strong>full size swing bed</strong> for a high-end lounging setup.
+        Material and finish choices matter too. <strong>Cedar porch swings</strong>, <strong>pine porch swings</strong>,
+        stained wood swings, white swings, gray swings, and black swings all create different visual results.
+      </p>
+
+      <ul class="bullet-list">
+        <li>
+<strong>Crib size swings:</strong> great for smaller porches, tighter patios, and compact seating areas</li>
+        <li>
+<strong>Twin size swings:</strong> one of the most popular sizes for balancing comfort and space</li>
+        <li>
+<strong>Full size swings:</strong> larger visual presence and more lounging room</li>
+        <li>
+<strong>Pine porch swings:</strong> a strong choice for classic painted or stained builds</li>
+        <li>
+<strong>Cedar porch swings:</strong> excellent natural beauty and popular for outdoor use</li>
+        <li>
+<strong>Black porch swings:</strong> bold, modern, and visually strong</li>
+        <li>
+<strong>White porch swings:</strong> timeless, bright, and ideal for farmhouse styling</li>
+        <li>
+<strong>Stained wood swings:</strong> warm, rich, and custom looking</li>
+      </ul>
+
+      <div class="image-grid three-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3399.jpg?v=1763778129" alt="Crib size porch swing ideas">
+          <div class="image-caption">Crib size swing ideas for smaller porches and cozy seating areas.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_4602.jpg?v=1763778127" alt="Twin size porch swing inspiration">
+          <div class="image-caption">Twin size swings remain one of the most popular choices.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_4167.jpg?v=1763778124" alt="Full size porch swing bed inspiration">
+          <div class="image-caption">Larger swings make a strong visual and comfort statement outdoors.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <h2>More Porch Swing Inspiration Photos</h2>
+      <p>
+        The section below continues the inspiration gallery with even more real examples of front porch swings, patio swings, pergola swings,
+        modern swing ideas, farmhouse swing ideas, bed swings, and backyard swing inspiration. These images help show how different swing styles
+        can look across a wide variety of outdoor spaces.
+      </p>
+
+      <div class="image-grid three-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_1530.jpg?v=1763778121" alt="Outdoor porch swing ideas">
+          <div class="image-caption">Outdoor porch swing inspiration for custom home settings.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_4039.jpg?v=1763778122" alt="Covered patio swing ideas">
+          <div class="image-caption">Covered patio swing styling with comfortable proportions and design balance.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3350.jpg?v=1763778119" alt="Porch swing bed inspiration">
+          <div class="image-caption">More swing bed ideas for those wanting upscale outdoor lounging.</div>
+        </div>
+      </div>
+
+      <div class="image-grid three-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/4D145448-BD09-4637-8C49-6E5030E4E21F.jpg?v=1763778118" alt="Patio swing inspiration ideas">
+          <div class="image-caption">Patio swing placement ideas for real outdoor living areas.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6798.jpg?v=1763042917" alt="Back patio bed swing ideas">
+          <div class="image-caption">A custom swing can anchor the whole patio design.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_6335.jpg?v=1763042914" alt="Luxury pergola swing inspiration">
+          <div class="image-caption">Pergola swing ideas for more luxurious backyard lounging.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <h2>Even More Real Swing Gallery Photos</h2>
+      <p>
+        This final gallery section keeps the page loaded with visual content and gives you even more ideas for color, mounting style, structure,
+        spacing, and overall outdoor design. If you are building out a mood board for your future swing, these examples can help you identify the
+        styles you are most drawn to.
+      </p>
+
+      <div class="image-grid three-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3127.jpg?v=1735272015" alt="Porch swing gallery image one">
+          <div class="image-caption">Additional swing inspiration for porch and patio layouts.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3122.jpg?v=1735272015" alt="Porch swing gallery image two">
+          <div class="image-caption">More visual ideas for swing placement, finish, and proportion.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3084.jpg?v=1735272015" alt="Porch swing gallery image three">
+          <div class="image-caption">Real swing builds provide stronger inspiration than stock images.</div>
+        </div>
+      </div>
+
+      <div class="image-grid two-col">
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_3895.jpg?v=1735201362" alt="Custom porch swing gallery image four">
+          <div class="image-caption">A final large visual example to round out the inspiration page.</div>
+        </div>
+        <div class="image-card">
+          <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/IMG_2626.jpg?v=1773181972" alt="Front porch swing feature image repeat for closing section">
+          <div class="image-caption">A clean, classic swing look to close out the inspiration page.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <h2>How to Use This Porch Swing Ideas Page</h2>
+      <p>
+        The best way to use this page is to save the looks you like most, notice the common patterns, and narrow down the size, color, and
+        mounting style that fit your home. Pay attention to whether you prefer a <strong>crib size swing</strong>, a
+        <strong>twin size porch swing</strong>, or a larger <strong>bed swing</strong>. Notice whether you are more drawn to
+        <strong>rope hanging porch swings</strong> or <strong>chain hanging porch swings</strong>. Think about whether your ideal setup looks more
+        <strong>farmhouse</strong>, <strong>modern</strong>, <strong>rustic</strong>, or <strong>luxury</strong>.
+      </p>
+      <p>
+        This page is intentionally built as a high-content <strong>swing inspiration page</strong> so that you can browse ideas, compare styles,
+        and move closer to the right custom swing for your porch, patio, pergola, balcony, or backyard.
+      </p>
+
+      <div class="resource-links info-box">
+        <h2 style="color:#b80d0d;font-size:28px;margin-top:0;">Helpful Swing Resources</h2>
+        <p style="margin-bottom:10px;">Use these pages to keep exploring finishes, comfort options, installation guidance, and custom swing details.</p>
+        <ul class="bullet-list" style="margin-bottom:0;">
+
+<li><a href="https://doorplaceusa.com/pages/porch-swings">Custom Swings Home Page</a></li>
+
+<li><a href="https://doorplaceusa.com/pages/porch-swing-stain-guide">Porch Swing Stain Guide</a></li>
+
+<li><a href="https://doorplaceusa.com/pages/cushion-guide">Swing Cushion Guide</a></li>
+
+<li><a href="https://doorplaceusa.com/pages/how-to-install-a-porch-swing">How to Install a Porch Swing</a></li>
+
+<li><a href="https://doorplaceusa.com/pages/get-a-fast-quote">Request a Fast Quote</a></li>
+
+<li><a href="/pages/best-porch-swings">Best Porch Swings</a></li>
+
+<li><a href="/pages/porch-swing-ideas">Porch Swing Ideas</a></li>
+
+<li><a href="/pages/porch-swing-buying-guide">Porch Swing Buying Guide</a></li>
+
+<li><a href="/pages/porch-swing-maintenance">Porch Swing Maintenance</a></li>
+
+<li><a href="/pages/porch-swing-safety-guide">Porch Swing Safety Guide</a></li>
+
+</ul>
+      </div>
+    </div>
+
+      
+    <div class="final-cta">
+      <h2>Ready to Build Your Custom Porch Swing?</h2>
+      <p>
+        Doorplace USA builds custom porch swings, bed swings, farmhouse swings, pergola swings, front porch swings, patio swings, and backyard
+        swing designs for customers across the United States. If this inspiration page helped you narrow down the look you want, the next step is
+        easy — send us your idea and let us help you build the right swing for your space.
+      </p>
+      <div class="swing-btn-row">
+        <a class="swing-btn" href="https://doorplaceusa.com/pages/get-a-fast-quote">Get My Quote</a>
+        <a class="swing-btn secondary" href="https://doorplaceusa.com/pages/porch-swings">See More Custom Swings</a>
+      </div>
+    </div>
+
+  </div>

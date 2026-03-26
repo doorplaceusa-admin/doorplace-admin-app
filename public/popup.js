@@ -28,8 +28,8 @@
           font-family: Arial, sans-serif;
         ">
 
-          <div style="font-size:28px;font-weight:700;margin-bottom:8px;">
-            $150 OFF
+          <div style="font-size:26px;font-weight:700;margin-bottom:8px;">
+            Get $150 OFF Your Custom Build
           </div>
 
           <div style="font-size:16px;margin-bottom:18px;color:#444;">
@@ -45,6 +45,14 @@
           ">
 
           <input id="dp-phone" placeholder="Phone Number" style="
+            width:100%;
+            margin-bottom:10px;
+            padding:12px;
+            border:1px solid #ddd;
+            border-radius:6px;
+          ">
+
+          <input id="dp-email" placeholder="Email Address" style="
             width:100%;
             margin-bottom:14px;
             padding:12px;
@@ -68,10 +76,10 @@
 
           <div style="
             margin-top:12px;
-            font-size:12px;
-            color:#777;
+            font-size:13px;
+            color:#666;
           ">
-            Limited build slots available
+            We’ll text you shortly to get your details and apply your $150 discount to your quote
           </div>
 
           <div onclick="this.closest('#dp-overlay').remove()" style="
@@ -94,6 +102,7 @@
 function dpSubmit() {
   const name = document.getElementById("dp-name").value;
   const phone = document.getElementById("dp-phone").value;
+  const email = document.getElementById("dp-email").value;
 
   if (!name || !phone) {
     alert("Please enter your info");
@@ -102,12 +111,12 @@ function dpSubmit() {
 
   const formData = new FormData();
 
-  // Split name into first + last
   const nameParts = name.split(" ");
   formData.append("first_name", nameParts[0] || "");
   formData.append("last_name", nameParts.slice(1).join(" ") || "");
 
   formData.append("phone", phone);
+  formData.append("email", email || "");
   formData.append("submission_type", "general_inquiry");
 
   fetch("https://tradepilot.doorplaceusa.com/api/leads/intake", {
@@ -123,7 +132,7 @@ function dpSubmit() {
       text-align:center;
     ">
       <h2 style="margin-bottom:10px;">You're In ✅</h2>
-      <p>We’ll reach out shortly with your discounted pricing.</p>
+      <p>We’ll text you shortly to go over your project and apply your $150 discount.</p>
     </div>
   `;
 

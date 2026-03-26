@@ -28,14 +28,22 @@
           font-family: Arial, sans-serif;
         ">
 
-          <!-- 🎥 VIDEO -->
-          <video autoplay muted loop playsinline style="
+          <!-- 🎥 VIDEO (FIXED HEIGHT + CROPPED) -->
+          <div style="
             width:100%;
+            height:180px;
+            overflow:hidden;
             border-radius:10px;
             margin-bottom:15px;
           ">
-            <source src="https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov" type="video/mp4">
-          </video>
+            <video autoplay muted loop playsinline style="
+              width:100%;
+              height:100%;
+              object-fit:cover;
+            ">
+              <source src="https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov" type="video/mp4">
+            </video>
+          </div>
 
           <div style="font-size:26px;font-weight:700;margin-bottom:8px;">
             Unlock Your Custom Discount
@@ -146,4 +154,4 @@ function dpSubmit() {
   `;
 
   localStorage.setItem("dp_discount_popup", "true");
-}s
+}

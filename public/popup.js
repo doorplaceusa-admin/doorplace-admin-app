@@ -19,7 +19,7 @@
       ">
         <div style="
           background:#ffffff;
-          padding:35px 28px;
+          padding:30px 24px;
           border-radius:14px;
           max-width:420px;
           width:92%;
@@ -28,12 +28,21 @@
           font-family: Arial, sans-serif;
         ">
 
+          <!-- 🎥 VIDEO -->
+          <video autoplay muted loop playsinline style="
+            width:100%;
+            border-radius:10px;
+            margin-bottom:15px;
+          ">
+            <source src="https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov" type="video/mp4">
+          </video>
+
           <div style="font-size:26px;font-weight:700;margin-bottom:8px;">
-            Get $150 OFF Your Custom Build
+            Unlock Your Custom Discount
           </div>
 
           <div style="font-size:16px;margin-bottom:18px;color:#444;">
-            Unlock exclusive pricing on your custom door or swing
+            Exclusive pricing available for your door, swing, or automatic system
           </div>
 
           <input id="dp-name" placeholder="Full Name" style="
@@ -71,7 +80,7 @@
             cursor:pointer;
             font-size:16px;
           ">
-            Unlock My Discount
+            Reveal My Discount
           </button>
 
           <div style="
@@ -79,7 +88,7 @@
             font-size:13px;
             color:#666;
           ">
-            We’ll text you shortly to get your details and apply your $150 discount to your quote
+            We’ll text you shortly to go over your project and apply your custom discount
           </div>
 
           <div onclick="this.closest('#dp-overlay').remove()" style="
@@ -132,9 +141,9 @@ function dpSubmit() {
       text-align:center;
     ">
       <h2 style="margin-bottom:10px;">You're In ✅</h2>
-      <p>We’ll text you shortly to go over your project and apply your $150 discount.</p>
+      <p>We’ll text you shortly to go over your project and apply your custom discount.</p>
     </div>
   `;
 
   localStorage.setItem("dp_discount_popup", "true");
-}
+}s

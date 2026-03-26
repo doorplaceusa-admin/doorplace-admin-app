@@ -507,8 +507,7 @@ async function askAdminAI() {
 
   // 🔥 3️⃣ NAVIGATION
   if (n.entity_type === "lead" && n.entity_id) {
-    async function handleNotificationClick(n) {
-  const phone = n.phone_clean || n.from_number || null;
+async function handleNotificationClick(n: any) {  const phone = n.phone_clean || n.from_number || null;
   if (!phone) return;
 
   let lead = null;

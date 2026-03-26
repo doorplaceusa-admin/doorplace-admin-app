@@ -30,20 +30,23 @@
 
           <!-- 🎥 VIDEO (FIXED HEIGHT + CROPPED) -->
           <div style="
-            width:100%;
-            height:180px;
-            overflow:hidden;
-            border-radius:10px;
-            margin-bottom:15px;
-          ">
-            <video autoplay muted loop playsinline style="
-              width:100%;
-              height:100%;
-              object-fit:cover;
-            ">
-              <source src="https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov" type="video/mp4">
-            </video>
-          </div>
+  width:100%;
+  height:180px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:15px;
+">
+  <video autoplay muted loop playsinline style="
+    max-width:100%;
+    max-height:100%;
+    border-radius:10px;
+    object-fit:contain;
+    background:#000;
+  ">
+    <source src="https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov" type="video/mp4">
+  </video>
+</div>
 
           <div style="font-size:26px;font-weight:700;margin-bottom:8px;">
             Unlock Your Custom Discount

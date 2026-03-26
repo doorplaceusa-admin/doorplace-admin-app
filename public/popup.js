@@ -100,16 +100,19 @@ function dpSubmit() {
     return;
   }
 
-  fetch("https://tradepilot.doorplaceusa.com/api/leads", {
+  const formData = new FormData();
+
+  // Split name into first + last
+  const nameParts = name.split(" ");
+  formData.append("first_name", nameParts[0] || "");
+  formData.append("last_name", nameParts.slice(1).join(" ") || "");
+
+  formData.append("phone", phone);
+  formData.append("submission_type", "general_inquiry");
+
+  fetch("https://tradepilot.doorplaceusa.com/api/leads/intake", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      name,
-      phone,
-      source: "popup_discount"
-    })
+    body: formData
   });
 
   document.getElementById("dp-overlay").innerHTML = `

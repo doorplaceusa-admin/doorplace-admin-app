@@ -8,7 +8,6 @@ import { AdminPresenceProvider } from "@/app/components/presence/AdminPresenceCo
 import { useAppViewTracker } from "@/lib/useAppViewTracker";
 import { getLiveSessionCount } from "@/lib/getLiveSessionCount";
 import { useRealtimeAdminVoice } from "@/lib/ai/useRealtimeAdminVoice";
-const [customerPanel, setCustomerPanel] = useState<any>(null);
 
 
 
@@ -75,6 +74,8 @@ const [aiQuestion, setAiQuestion] = useState("");
 const [aiAnswer, setAiAnswer] = useState("");
 const [aiLoading, setAiLoading] = useState(false);
 const aiTextareaRef = useRef<HTMLTextAreaElement>(null);
+const [customerPanel, setCustomerPanel] = useState<any>(null);
+
 
 
 const [aiTone, setAiTone] = useState<
@@ -505,11 +506,11 @@ async function askAdminAI() {
 
   setOpen(false); // close dropdown
 
-  // 🔥 3️⃣ NAVIGATION
-  if (n.entity_type === "lead" && n.entity_id) {
-async function handleNotificationClick(n: any) {  const phone = n.phone_clean || n.from_number || null;
-  if (!phone) return;
+ // 🔥 3️⃣ NAVIGATION
 
+const phone = n.phone_clean || n.from_number || null;
+
+if (n.entity_type === "lead" && phone) {
   let lead = null;
   let invoice = null;
   let partner = null;
@@ -547,9 +548,9 @@ async function handleNotificationClick(n: any) {  const phone = n.phone_clean ||
     invoice,
     partner,
   });
+
+  return;
 }
-    return;
-  }
 
   if (n.entity_type === "invoice" && n.entity_id) {
     router.push(`/dashboard/invoices?id=${n.entity_id}`);

@@ -201,6 +201,12 @@ const [latestChunkNumber, setLatestChunkNumber] = useState<number | null>(null);
     );
   }
 
+  function openLivePage(handle: string) {
+  const domain = "https://doorplaceusa.com"; // your store domain
+  window.open(`${domain}/pages/${handle}`, "_blank");
+}
+
+
   /* ======================================================
      LOAD SITEMAP JOB STATUS (UPGRADED: dynamic polling)
   ====================================================== */
@@ -741,12 +747,21 @@ try {
                   <p className="text-xs text-gray-500">{p.handle}</p>
                 </div>
 
-                <button
-                  onClick={() => openShopifyEditor(p.id)}
-                  className="px-3 py-1 rounded bg-blue-600 text-white text-xs hover:bg-blue-700"
-                >
-                  Edit
-                </button>
+                <div className="flex gap-2">
+  <button
+    onClick={() => openLivePage(p.handle)}
+    className="px-3 py-1 rounded bg-gray-700 text-white text-xs hover:bg-gray-800"
+  >
+    View
+  </button>
+
+  <button
+    onClick={() => openShopifyEditor(p.id)}
+    className="px-3 py-1 rounded bg-blue-600 text-white text-xs hover:bg-blue-700"
+  >
+    Edit
+  </button>
+</div>
               </div>
             ))}
           </div>

@@ -1,5 +1,9 @@
 (function () {
-  if (localStorage.getItem("dp_discount_popup")) return;
+
+  const lastShown = localStorage.getItem("dp_popup_time");
+
+  // ⏱️ 24-hour reset
+  if (lastShown && Date.now() - lastShown < 86400000) return;
 
   setTimeout(() => {
     const popup = document.createElement("div");
@@ -28,7 +32,7 @@
           font-family: Arial, sans-serif;
         ">
 
-          <!-- 🎥 VIDEO (NO CROP - FULL VIEW) -->
+          <!-- 🎥 VIDEO -->
           <div style="
             width:100%;
             height:160px;
@@ -117,6 +121,7 @@
     `;
 
     document.body.appendChild(popup);
+
   }, 5000);
 })();
 
@@ -157,5 +162,6 @@ function dpSubmit() {
     </div>
   `;
 
-  localStorage.setItem("dp_discount_popup", "true");
+  // ⏱️ Save timestamp instead of permanent block
+  localStorage.setItem("dp_popup_time", Date.now());
 }

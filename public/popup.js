@@ -29,20 +29,21 @@
         ">
 
           <!-- 🎥 VIDEO (FIXED HEIGHT + CROPPED) -->
-          <div style="
+         <div style="
   width:100%;
-  height:180px;
+  height:220px;
   display:flex;
   align-items:center;
   justify-content:center;
   margin-bottom:15px;
+  border-radius:10px;
+  overflow:hidden;
+  background:#f5f5f5;
 ">
   <video autoplay muted loop playsinline style="
     max-width:100%;
     max-height:100%;
-    border-radius:10px;
     object-fit:contain;
-    background:#000;
   ">
     <source src="https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov" type="video/mp4">
   </video>

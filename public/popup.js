@@ -1,6 +1,8 @@
 (function () {
   if (localStorage.getItem("dp_discount_popup")) return;
 
+  const isDesktop = window.innerWidth >= 768;
+
   setTimeout(() => {
     const popup = document.createElement("div");
 
@@ -28,26 +30,26 @@
           font-family: Arial, sans-serif;
         ">
 
-          <!-- 🎥 VIDEO (FIXED HEIGHT + CROPPED) -->
-         <div style="
-  width:100%;
-  height:220px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin-bottom:15px;
-  border-radius:10px;
-  overflow:hidden;
-  background:#f5f5f5;
-">
-  <video autoplay muted loop playsinline style="
-    max-width:100%;
-    max-height:100%;
-    object-fit:contain;
-  ">
-    <source src="https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov" type="video/mp4">
-  </video>
-</div>
+          <!-- 🎥 VIDEO -->
+          <div style="
+            width:100%;
+            height:200px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            margin-bottom:15px;
+            border-radius:10px;
+            overflow:hidden;
+            background:#f5f5f5;
+          ">
+            <video autoplay muted loop playsinline style="
+              ${isDesktop 
+                ? "width:100%; height:100%; object-fit:cover;" 
+                : "max-width:100%; max-height:100%; object-fit:contain;"}
+            ">
+              <source src="https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov" type="video/mp4">
+            </video>
+          </div>
 
           <div style="font-size:26px;font-weight:700;margin-bottom:8px;">
             Unlock Your Custom Discount

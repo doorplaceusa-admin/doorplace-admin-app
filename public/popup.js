@@ -1,8 +1,6 @@
 (function () {
   if (localStorage.getItem("dp_discount_popup")) return;
 
-  const isDesktop = window.innerWidth >= 768;
-
   setTimeout(() => {
     const popup = document.createElement("div");
 
@@ -21,19 +19,19 @@
       ">
         <div style="
           background:#ffffff;
-          padding:30px 24px;
+          padding:22px 18px;
           border-radius:14px;
-          max-width:420px;
-          width:92%;
+          max-width:360px;
+          width:88%;
           text-align:center;
           position:relative;
           font-family: Arial, sans-serif;
         ">
 
-          <!-- 🎥 VIDEO -->
+          <!-- 🎥 VIDEO (NO CROP - FULL VIEW) -->
           <div style="
             width:100%;
-            height:200px;
+            height:160px;
             display:flex;
             align-items:center;
             justify-content:center;
@@ -43,9 +41,9 @@
             background:#f5f5f5;
           ">
             <video autoplay muted loop playsinline style="
-              ${isDesktop 
-                ? "width:100%; height:100%; object-fit:cover;" 
-                : "max-width:100%; max-height:100%; object-fit:contain;"}
+              max-width:100%;
+              max-height:100%;
+              object-fit:contain;
             ">
               <source src="https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov" type="video/mp4">
             </video>

@@ -2,10 +2,34 @@
 
   const lastShown = localStorage.getItem("dp_popup_time");
 
-  // ⏱️ 24-hour reset
-  if (lastShown && Date.now() - lastShown < 86400000) return;
+  // ⏱️ 24-hour reset (FIXED string issue)
+  if (lastShown && Date.now() - Number(lastShown) < 86400000) return;
 
   setTimeout(() => {
+
+    // 🔥 VARIANTS
+    const variants = [
+      {
+        headline: "Unlock Your Custom Discount",
+        sub: "Exclusive pricing available for your door, swing, or automatic system",
+        button: "Get My Price + Discount"
+      },
+      {
+        headline: "Get a Fast Price for Your Project",
+        sub: "We’ll text you a custom quote for your door or swing",
+        button: "Get My Quote"
+      },
+      {
+        headline: "See Your Exact Price Today",
+        sub: "No guessing — we’ll send your real price based on your project",
+        button: "See My Price"
+      }
+    ];
+
+    // 🎯 RANDOM PICK
+    const vIndex = Math.floor(Math.random() * variants.length);
+    const v = variants[vIndex];
+
     const popup = document.createElement("div");
 
     popup.innerHTML = `
@@ -49,16 +73,16 @@
               max-height:100%;
               object-fit:contain;
             ">
-              <source src="https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov" type="video/mp4">
+              <source src="https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov" type="video/quicktime">
             </video>
           </div>
 
           <div style="font-size:26px;font-weight:700;margin-bottom:8px;">
-            Unlock Your Custom Discount
+            ${v.headline}
           </div>
 
           <div style="font-size:16px;margin-bottom:18px;color:#444;">
-            Exclusive pricing available for your door, swing, or automatic system
+            ${v.sub}
           </div>
 
           <input id="dp-name" placeholder="Full Name" style="
@@ -85,7 +109,7 @@
             border-radius:6px;
           ">
 
-          <button onclick="dpSubmit()" style="
+          <button onclick="dpSubmit(${vIndex})" style="
             width:100%;
             background:#b80d0d;
             color:#fff;
@@ -96,7 +120,7 @@
             cursor:pointer;
             font-size:16px;
           ">
-            Reveal My Discount
+            ${v.button}
           </button>
 
           <div style="
@@ -104,7 +128,7 @@
             font-size:13px;
             color:#666;
           ">
-            We’ll text you shortly to go over your project and apply your custom discount
+            Limited build slots available this week — we’ll text you shortly to lock in your pricing
           </div>
 
           <div onclick="this.closest('#dp-overlay').remove()" style="
@@ -122,10 +146,29 @@
 
     document.body.appendChild(popup);
 
+    // 📞 PHONE FORMATTER
+    setTimeout(() => {
+      const phoneInput = document.getElementById("dp-phone");
+      if (!phoneInput) return;
+
+      phoneInput.addEventListener("input", function(e) {
+        let x = e.target.value.replace(/\D/g, "").slice(0,10);
+        let formatted = x;
+
+        if (x.length > 6) {
+          formatted = "(" + x.slice(0,3) + ") " + x.slice(3,6) + "-" + x.slice(6);
+        } else if (x.length > 3) {
+          formatted = "(" + x.slice(0,3) + ") " + x.slice(3);
+        }
+
+        e.target.value = formatted;
+      });
+    }, 100);
+
   }, 5000);
 })();
 
-function dpSubmit() {
+function dpSubmit(variantIndex) {
   const name = document.getElementById("dp-name").value;
   const phone = document.getElementById("dp-phone").value;
   const email = document.getElementById("dp-email").value;
@@ -145,9 +188,18 @@ function dpSubmit() {
   formData.append("email", email || "");
   formData.append("submission_type", "general_inquiry");
 
+  // 🔥 TRACK VARIANT
+  formData.append("popup_variant", "variant_" + variantIndex);
+
   fetch("https://tradepilot.doorplaceusa.com/api/leads/intake", {
     method: "POST",
     body: formData
+  })
+  .then(() => {
+    console.log("Lead sent");
+  })
+  .catch(() => {
+    alert("Something went wrong. Please try again.");
   });
 
   document.getElementById("dp-overlay").innerHTML = `
@@ -162,6 +214,6 @@ function dpSubmit() {
     </div>
   `;
 
-  // ⏱️ Save timestamp instead of permanent block
+  // ⏱️ Save timestamp
   localStorage.setItem("dp_popup_time", Date.now());
 }

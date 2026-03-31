@@ -2,264 +2,179 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
-import { shopifyLimiter } from "@/lib/shopify/shopifyLimiter"
+import { shopifyLimiter } from "@/lib/shopify/shopifyLimiter";
 
 const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
 const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN!;
 const API_VERSION = "2024-01";
 
-const SHOPIFY_DELAY_MS = 5000;
+const SHOPIFY_DELAY_MS = 4000;
 const MAX_RETRIES = 10;
-const BATCH_SIZE = 120;
-const MAX_BATCHES = 15000;
+const BATCH_SIZE = 100;
 
-function sleep(ms:number){
-return new Promise(res=>setTimeout(res,ms))
+function sleep(ms: number) {
+  return new Promise((res) => setTimeout(res, ms));
 }
 
-async function shopifyFetch(path:string,options:RequestInit={}){
+async function shopifyFetch(path: string, options: RequestInit = {}) {
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    await shopifyLimiter();
 
-for(let attempt=1;attempt<=MAX_RETRIES;attempt++){
+    const res = await fetch(`https://${SHOP}/admin/api/${API_VERSION}${path}`, {
+      ...options,
+      headers: {
+        "X-Shopify-Access-Token": TOKEN,
+        "Content-Type": "application/json",
+      },
+    });
 
-await shopifyLimiter()
+    if (res.status === 429) {
+      console.log("⏳ Shopify throttle", attempt);
+      await sleep(2000 * attempt);
+      continue;
+    }
 
-const res=await fetch(`https://${SHOP}/admin/api/${API_VERSION}${path}`,{
-...options,
-headers:{
-"X-Shopify-Access-Token":TOKEN,
-"Content-Type":"application/json"
-}
-})
+    if (!res.ok) {
+      const txt = await res.text();
+      console.log("❌ Shopify error", txt);
+      throw new Error(txt);
+    }
 
-if(res.status===429){
-console.log("⏳ Shopify throttle",attempt)
-await sleep(2000*attempt)
-continue
-}
+    return res;
+  }
 
-if(!res.ok){
-const txt=await res.text()
-console.log("❌ Shopify error",txt)
-
-if(txt.includes("has already been taken")){
-console.log("⚠️ Duplicate handle detected — skipping")
-return { duplicate:true }
-}
-
-throw new Error(txt)
+  throw new Error("Shopify failed");
 }
 
-return res
+function extractHandle(url: string) {
+  return url
+    .replace("https://doorplaceusa.com/pages/", "")
+    .replace("/pages/", "")
+    .trim();
 }
 
-throw new Error("Shopify failed")
+// ✅ Clean readable title
+function formatTitle(slug: string) {
+  return slug
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
-function extractHandle(url:string){
-return url
-.replace("https://doorplaceusa.com/pages/","")
-.replace("/pages/","")
-.trim()
-}
+export async function POST() {
+  console.log("🧹 CLEANING LINK MESH");
 
-function randomLinkCount(){
-return Math.floor(Math.random() * 11) + 10
-}
+  let offset = 0;
+  let totalUpdated = 0;
 
-const GUIDE_BLOCK=`
+  // Get all swing pages
+  const { data: inventory } = await supabaseAdmin
+    .from("shopify_url_inventory")
+    .select("url")
+    .or("url.ilike.%swing%,url.ilike.%swings%");
 
-<div style="margin-top:60px;border-top:1px solid #ddd;padding-top:30px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
+  if (!inventory) {
+    return NextResponse.json({ success: false });
+  }
 
-<h2 style="text-align:center">Porch Swing Guides</h2>
+  const allPages = inventory.map((row) => ({
+    slug: extractHandle(row.url),
+  }));
 
-<ul>
-<li><a href="/pages/best-porch-swings">Best Porch Swings</a></li>
-<li><a href="/pages/porch-swing-ideas">Porch Swing Ideas</a></li>
-<li><a href="/pages/porch-swing-buying-guide">Porch Swing Buying Guide</a></li>
-<li><a href="/pages/porch-swing-maintenance">Porch Swing Maintenance</a></li>
-<li><a href="/pages/porch-swing-safety-guide">Porch Swing Safety Guide</a></li>
-</ul>
+  while (true) {
+    const batch = inventory.slice(offset, offset + BATCH_SIZE);
 
-</div>
-`
+    if (!batch.length) break;
 
-export async function POST(){
+    for (const row of batch) {
+      const handle = extractHandle(row.url);
 
-console.log("🚀 LINK MESH START")
+      console.log("Checking:", handle);
 
-let totalUpdated=0
-let batchCount=0
+      // Get page
+      const findRes = await shopifyFetch(`/pages.json?handle=${handle}`);
+      const findJson = await findRes.json();
 
-const {data:job}=await supabaseAdmin
-.from("system_jobs")
-.select("*")
-.eq("job_name","swing_link_mesh")
-.single()
+      if (!findJson.pages || findJson.pages.length === 0) continue;
 
-let offset=job?.last_offset || 0
+      const page = findJson.pages[0];
+      const pageId = page.id;
+      let body = page.body_html || "";
 
-console.log("Resuming from offset:",offset)
+      // ✅ ONLY process pages that already have mesh
+      if (!body.includes("TP_LINK_MESH_START")) {
+        continue;
+      }
 
-const {data:inventory}=await supabaseAdmin
-.from("shopify_url_inventory")
-.select("url")
-.or("url.ilike.%swing%,url.ilike.%swings%")
+      console.log("✂️ Cleaning page:", handle);
 
-if(!inventory){
-console.log("No inventory")
-return NextResponse.json({success:false})
-}
+      // Remove old block
+      body = body.replace(
+        /<!-- TP_LINK_MESH_START -->[\s\S]*?<!-- TP_LINK_MESH_END -->/g,
+        ""
+      );
 
-const allPages = inventory.map(row=>{
-return{
-slug: extractHandle(row.url),
-title: extractHandle(row.url)
-}
-})
+      // Pick 3 random pages (excluding itself)
+      const filtered = allPages.filter((p) => p.slug !== handle);
 
-const totalPages = allPages.length
+      const selected = [];
+      while (selected.length < 3 && filtered.length > 0) {
+        const index = Math.floor(Math.random() * filtered.length);
+        const pick = filtered.splice(index, 1)[0];
+        selected.push(pick);
+      }
 
-const {data:rotation}=await supabaseAdmin
-.from("mesh_rotation_state")
-.select("cursor_position")
-.eq("id",1)
-.single()
-
-let cursor = rotation?.cursor_position || 0
-
-while(true){
-
-if(batchCount>MAX_BATCHES){
-console.log("Safety stop")
-break
-}
-
-console.log("Batch",batchCount)
-
-const {data:pages}=await supabaseAdmin
-.from("shopify_url_inventory")
-.select("url")
-.or("url.ilike.%swing%,url.ilike.%swings%")
-.range(offset,offset+BATCH_SIZE-1)
-
-if(!pages||pages.length===0){
-console.log("Finished")
-break
-}
-
-for(let i=0;i<pages.length;i++){
-
-const url=pages[i].url
-const handle=extractHandle(url)
-
-console.log("Processing",handle)
-
-let relatedLinks:{slug:string,title:string}[]=[]
-
-const targetCount = randomLinkCount()
-
-while(relatedLinks.length < targetCount){
-
-const index = cursor % totalPages
-const candidate = allPages[index]
-
-cursor++
-
-if(candidate.slug !== handle && !relatedLinks.find(l=>l.slug===candidate.slug)){
-relatedLinks.push(candidate)
-}
-
-}
-
-const dynamicLinks=`
-
+      // Build new CLEAN block
+      const newBlock = `
 <!-- TP_LINK_MESH_START -->
 
 <div style="margin-top:40px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
 
-<h2 style="text-align:center">Explore More Custom Home Projects</h2>
+<h2 style="text-align:center">Related Porch Swing Options</h2>
 
 <ul>
-
-${relatedLinks.map(link=>`<li><a href="/pages/${link.slug}">${link.title}</a></li>`).join("")}
-
+${selected
+  .map(
+    (link) => `
+<li>
+<a href="/pages/${link.slug}">
+${formatTitle(link.slug)}
+</a>
+</li>`
+  )
+  .join("")}
 </ul>
 
 </div>
 
-${GUIDE_BLOCK}
-
 <!-- TP_LINK_MESH_END -->
+`;
 
-`
+      // Add cleaned block back
+      const updatedBody = body + newBlock;
 
-const findRes:any = await shopifyFetch(`/pages.json?handle=${handle}`)
+      // Update Shopify
+      await shopifyFetch(`/pages/${pageId}.json`, {
+        method: "PUT",
+        body: JSON.stringify({
+          page: {
+            id: pageId,
+            body_html: updatedBody,
+          },
+        }),
+      });
 
-if(findRes?.duplicate){
-continue
-}
+      totalUpdated++;
 
-const findJson=await findRes.json()
+      await sleep(SHOPIFY_DELAY_MS);
+    }
 
-if(!findJson.pages||findJson.pages.length===0){
-console.log("Page not found",handle)
-continue
-}
+    offset += BATCH_SIZE;
+  }
 
-const pageId=findJson.pages[0].id
-let existingBody=findJson.pages[0].body_html||""
+  console.log("✅ DONE:", totalUpdated);
 
-existingBody=existingBody.replace(
-/<!-- TP_LINK_MESH_START -->[\s\S]*?<!-- TP_LINK_MESH_END -->/g,
-""
-)
-
-const updateRes:any = await shopifyFetch(`/pages/${pageId}.json`,{
-method:"PUT",
-body:JSON.stringify({
-page:{
-id:pageId,
-body_html:existingBody+dynamicLinks
-}
-})
-})
-
-if(updateRes?.duplicate){
-continue
-}
-
-totalUpdated++
-
-await sleep(SHOPIFY_DELAY_MS)
-
-}
-
-offset+=pages.length
-batchCount++
-
-await supabaseAdmin
-.from("system_jobs")
-.update({last_offset:offset})
-.eq("job_name","swing_link_mesh")
-
-await supabaseAdmin
-.from("mesh_rotation_state")
-.update({
-cursor_position: cursor,
-updated_at: new Date()
-})
-.eq("id",1)
-
-console.log("Saved offset:",offset)
-
-}
-
-console.log("Updated",totalUpdated)
-
-return NextResponse.json({
-success:true,
-updated:totalUpdated,
-finalOffset:offset
-})
-
+  return NextResponse.json({
+    success: true,
+    updated: totalUpdated,
+  });
 }

@@ -1,8 +1,12 @@
 (function () {
 
   const lastShown = localStorage.getItem("dp_popup_time");
+  const seenThisSession = sessionStorage.getItem("dp_popup_seen");
 
-  // ⏱️ 24-hour reset (FIXED string issue)
+  // ❌ Already seen this session
+  if (seenThisSession) return;
+
+  // ❌ Seen within last 24 hours
   if (lastShown && Date.now() - Number(lastShown) < 86400000) return;
 
   setTimeout(() => {
@@ -131,7 +135,7 @@
             Limited build slots available this week — we’ll text you shortly to lock in your pricing
           </div>
 
-          <div onclick="this.closest('#dp-overlay').remove()" style="
+          <div onclick="closeDpPopup()" style="
             position:absolute;
             top:12px;
             right:16px;
@@ -145,6 +149,10 @@
     `;
 
     document.body.appendChild(popup);
+
+    // ✅ SAVE immediately so it doesn't keep popping up
+    localStorage.setItem("dp_popup_time", Date.now());
+    sessionStorage.setItem("dp_popup_seen", "true");
 
     // 📞 PHONE FORMATTER
     setTimeout(() => {
@@ -168,6 +176,13 @@
   }, 5000);
 })();
 
+// ❌ CLOSE HANDLER (IMPORTANT)
+function closeDpPopup() {
+  const overlay = document.getElementById("dp-overlay");
+  if (overlay) overlay.remove();
+}
+
+// ✅ SUBMIT
 function dpSubmit(variantIndex) {
   const name = document.getElementById("dp-name").value;
   const phone = document.getElementById("dp-phone").value;
@@ -213,7 +228,4 @@ function dpSubmit(variantIndex) {
       <p>We’ll text you shortly to go over your project and apply your custom discount.</p>
     </div>
   `;
-
-  // ⏱️ Save timestamp
-  localStorage.setItem("dp_popup_time", Date.now());
 }

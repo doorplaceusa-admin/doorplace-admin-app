@@ -60,13 +60,29 @@ function formatTitle(slug: string) {
     .replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
+// ✅ KEEP YOUR GUIDE SECTION SAFE
+const GUIDE_BLOCK = `
+<div style="margin-top:60px;border-top:1px solid #ddd;padding-top:30px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
+
+<h2 style="text-align:center">Porch Swing Guides</h2>
+
+<ul>
+<li><a href="/pages/best-porch-swings">Best Porch Swings</a></li>
+<li><a href="/pages/porch-swing-ideas">Porch Swing Ideas</a></li>
+<li><a href="/pages/porch-swing-buying-guide">Porch Swing Buying Guide</a></li>
+<li><a href="/pages/porch-swing-maintenance">Porch Swing Maintenance</a></li>
+<li><a href="/pages/porch-swing-safety-guide">Porch Swing Safety Guide</a></li>
+</ul>
+
+</div>
+`;
+
 export async function POST() {
-  console.log("🧹 CLEANING LINK MESH");
+  console.log("🧹 CLEANING + FIXING LINK MESH");
 
   let offset = 0;
   let totalUpdated = 0;
 
-  // Get all swing pages
   const { data: inventory } = await supabaseAdmin
     .from("shopify_url_inventory")
     .select("url")
@@ -82,7 +98,6 @@ export async function POST() {
 
   while (true) {
     const batch = inventory.slice(offset, offset + BATCH_SIZE);
-
     if (!batch.length) break;
 
     for (const row of batch) {
@@ -90,7 +105,6 @@ export async function POST() {
 
       console.log("Checking:", handle);
 
-      // Get page
       const findRes = await shopifyFetch(`/pages.json?handle=${handle}`);
       const findJson = await findRes.json();
 
@@ -100,20 +114,20 @@ export async function POST() {
       const pageId = page.id;
       let body = page.body_html || "";
 
-      // ✅ ONLY process pages that already have mesh
+      // ✅ ONLY TOUCH pages that already have mesh
       if (!body.includes("TP_LINK_MESH_START")) {
         continue;
       }
 
       console.log("✂️ Cleaning page:", handle);
 
-      // Remove old block
+      // 🔥 Remove ONLY mesh block
       body = body.replace(
         /<!-- TP_LINK_MESH_START -->[\s\S]*?<!-- TP_LINK_MESH_END -->/g,
         ""
       );
 
-      // Pick 3 random pages (excluding itself)
+      // Pick 3 random links (excluding itself)
       const filtered = allPages.filter((p) => p.slug !== handle);
 
       const selected = [];
@@ -123,7 +137,7 @@ export async function POST() {
         selected.push(pick);
       }
 
-      // Build new CLEAN block
+      // ✅ NEW CLEAN BLOCK + GUIDES RESTORED
       const newBlock = `
 <!-- TP_LINK_MESH_START -->
 
@@ -146,13 +160,13 @@ ${formatTitle(link.slug)}
 
 </div>
 
+${GUIDE_BLOCK}
+
 <!-- TP_LINK_MESH_END -->
 `;
 
-      // Add cleaned block back
       const updatedBody = body + newBlock;
 
-      // Update Shopify
       await shopifyFetch(`/pages/${pageId}.json`, {
         method: "PUT",
         body: JSON.stringify({

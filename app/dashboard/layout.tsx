@@ -234,10 +234,10 @@ useEffect(() => {
 
   if (!userId) return;
 
-  const { data, error } = await supabase
+const { data, error } = await supabase
   .from("notifications")
-  .select("id, title, body, created_at, is_read, entity_type, entity_id")
-  .eq("recipient_user_id", userId)
+  .select("id, title, body, created_at, is_read, entity_type, entity_id, phone_clean, from_number")
+  .eq("target_role", "admin")
   .order("created_at", { ascending: false })
   .limit(10);
 
@@ -273,7 +273,7 @@ useEffect(() => {
     event: "INSERT",
     schema: "public",
     table: "notifications",
-    filter: `recipient_user_id=eq.${userId}`,
+    filter: `target_role=eq.admin`,
   },
   payload => {
   console.log("🔔 REALTIME TRIGGER:", payload.new);

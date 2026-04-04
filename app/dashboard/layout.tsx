@@ -265,23 +265,22 @@ useEffect(() => {
 
   loadNotifications();
 
-  const channel = supabase
-  .channel(`notifications-${userId}`)
+ const channel = supabase
+  .channel("notifications-admin")
   .on(
-  "postgres_changes",
-  {
-    event: "INSERT",
-    schema: "public",
-    table: "notifications",
-    filter: `target_role=eq.admin`,
-  },
-  payload => {
-  console.log("🔔 REALTIME TRIGGER:", payload.new);
+    "postgres_changes",
+    {
+      event: "INSERT",
+      schema: "public",
+      table: "notifications",
+      filter: `target_role=eq.admin`,
+    },
+    payload => {
+      console.log("🔔 REALTIME TRIGGER:", payload.new);
 
-  // 🔥 USE REF (FIXES STALE FUNCTION)
-  loadNotificationsRef.current();
-}
-)
+      loadNotificationsRef.current();
+    }
+  )
   .subscribe();
 
 

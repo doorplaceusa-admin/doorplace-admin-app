@@ -224,7 +224,7 @@ useEffect(() => {
   }, []);
 
   async function loadNotifications() {
-  if (!userId || !companyId) return;
+  if (!userId) return;
 
  const { data, error } = await supabase
   .from("notifications")

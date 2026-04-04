@@ -606,49 +606,54 @@ alert("No matching customer found for this number");}}
   <div className="fixed inset-0 z-50 flex">
 
     
-  <button
-  onClick={() => {
-    realtimeVoice.connected
-      ? realtimeVoice.stop()
-      : realtimeVoice.start();
-  }}
-  className={`absolute top-4 left-4 px-3 py-1 text-xs rounded text-white ${
-    realtimeVoice.connected ? "bg-red-700" : "bg-black"
-  }`}
->
-  {realtimeVoice.connected ? "■ End Voice" : "🎙 Start Voice"}
-</button>
+  
 
 
-    {/* Overlay */}
-    <div
-      className="flex-1 bg-black/40"
-      onClick={() => setAiOpen(false)}
-    />
+   {/* Overlay */}
+<div
+  className="flex-1 bg-black/40"
+  onClick={() => setAiOpen(false)}
+/>
 
-    {/* Panel */}
-    <div className="w-full max-w-md bg-white shadow-xl flex flex-col">
-      <div className="p-4 border-b flex items-center justify-between">
-        <span className="font-semibold">Admin AI</span>
-        <button
-          onClick={() => setAiOpen(false)}
-          className="text-sm px-2 py-1 border rounded"
-        >
-          Close
-        </button>
-      </div>
+{/* Panel */}
+<div className="w-full max-w-md bg-white shadow-xl flex flex-col">
 
+  <div className="p-4 border-b flex items-center justify-between">
+    <span className="font-semibold">Admin AI</span>
 
-<select
-  value={aiTone}
-  onChange={(e) => setAiTone(e.target.value as any)}
-  className="w-full border rounded p-1 text-xs mb-2"
->
-  <option value="neutral">Neutral</option>
-  <option value="direct">Direct / Blunt</option>
-  <option value="technical">Technical</option>
-  <option value="sales">Sales / Persuasive</option>
-</select>
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() => {
+          realtimeVoice.connected
+            ? realtimeVoice.stop()
+            : realtimeVoice.start();
+        }}
+        className={`px-2 py-1 text-xs rounded text-white ${
+          realtimeVoice.connected ? "bg-red-700" : "bg-black"
+        }`}
+      >
+        {realtimeVoice.connected ? "■" : "🎙"}
+      </button>
+
+      <button
+        onClick={() => setAiOpen(false)}
+        className="text-sm px-2 py-1 border rounded"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+
+  <select
+    value={aiTone}
+    onChange={(e) => setAiTone(e.target.value as any)}
+    className="w-full border rounded p-1 text-xs mb-2"
+  >
+    <option value="neutral">Neutral</option>
+    <option value="direct">Direct / Blunt</option>
+    <option value="technical">Technical</option>
+    <option value="sales">Sales / Persuasive</option>
+  </select>
 
 
 

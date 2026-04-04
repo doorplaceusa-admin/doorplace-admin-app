@@ -249,11 +249,11 @@ useEffect(() => {
 
 
 useEffect(() => {
-  if (!ready || !userId || !companyId) return;
+  if (!ready || !userId) return;
 
   loadNotifications();
 
- const channel = supabase
+  const channel = supabase
   .channel(`notifications-${userId}`)
   .on(
   "postgres_changes",

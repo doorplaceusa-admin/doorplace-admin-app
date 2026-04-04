@@ -229,9 +229,12 @@ useEffect(() => {
   }, []);
 
   async function loadNotifications() {
+  console.log("🚀 loadNotifications CALLED");
+  console.log("USER ID:", userId);
+
   if (!userId) return;
 
- const { data, error } = await supabase
+  const { data, error } = await supabase
   .from("notifications")
   .select("id, title, body, created_at, is_read, entity_type, entity_id, phone_clean, from_number")
   .eq("recipient_user_id", userId)
@@ -239,9 +242,13 @@ useEffect(() => {
   .limit(10);
 
   if (!error && data) {
-    setNotifications(data);
-    setUnreadCount(data.filter(n => !n.is_read).length);
-  }
+  console.log("✅ DATA FROM SUPABASE:", data);
+
+  setNotifications(data);
+  setUnreadCount(data.filter(n => !n.is_read).length);
+} else {
+  console.log("❌ ERROR:", error);
+}
 }
 loadNotificationsRef.current = loadNotifications;
 

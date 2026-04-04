@@ -183,7 +183,12 @@ useEffect(() => {
     setUserId(user.id);
     setCompanyId(profile.active_company_id);
     setReady(true);
-    setLoading(false);
+setLoading(false);
+
+// 🔥 FORCE FIRST LOAD
+setTimeout(() => {
+  loadNotificationsRef.current();
+}, 0);
   };
 
   checkAccess();
@@ -277,7 +282,7 @@ useEffect(() => {
   return () => {
     supabase.removeChannel(channel);
   };
-}, [ready, userId, companyId]);
+}, [ready, userId]);
 
 useEffect(() => {
   if (open) {

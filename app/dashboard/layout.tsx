@@ -228,7 +228,7 @@ useEffect(() => {
 
  const { data, error } = await supabase
   .from("notifications")
-  .select("id, title, body, created_at, is_read, entity_type, entity_id")
+  .select("id, title, body, created_at, is_read, entity_type, entity_id, phone_clean, from_number")
   .eq("recipient_user_id", userId)
   .order("created_at", { ascending: false })
   .limit(10);
@@ -606,7 +606,18 @@ alert("No matching customer found for this number");}}
   <div className="fixed inset-0 z-50 flex">
 
     
-  {realtimeVoice.connected ? "■ End Live Voice" : "🎙 Start Live Voice"}
+  <button
+  onClick={() => {
+    realtimeVoice.connected
+      ? realtimeVoice.stop()
+      : realtimeVoice.start();
+  }}
+  className={`absolute top-4 left-4 px-3 py-1 text-xs rounded text-white ${
+    realtimeVoice.connected ? "bg-red-700" : "bg-black"
+  }`}
+>
+  {realtimeVoice.connected ? "■ End Voice" : "🎙 Start Voice"}
+</button>
 
 
     {/* Overlay */}

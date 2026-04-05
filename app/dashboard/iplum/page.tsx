@@ -8,6 +8,7 @@ type IPlumEvent = {
   direction: string | null;
   from_number: string | null;
   to_number: string | null;
+  phone_clean: string | null; // ✅ added (future-safe)
   message: string | null;
   created_at: string;
 };
@@ -35,6 +36,17 @@ function formatTime(ts: string) {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+/* ---------- helpers (NEW) ---------- */
+
+// ✅ Safe display fallback
+function displayNumber(
+  from: string | null,
+  to: string | null,
+  clean: string | null
+) {
+  return from || to || clean || "Unknown";
 }
 
 /* ---------- page ---------- */
@@ -91,6 +103,18 @@ export default function IPlumPage() {
           const kind = getEventKind(e.event_type);
           const dir = formatDirection(e.direction);
 
+          const fromDisplay = displayNumber(
+            e.from_number,
+            null,
+            e.phone_clean
+          );
+
+          const toDisplay = displayNumber(
+            e.to_number,
+            null,
+            null
+          );
+
           return (
             <div
               key={e.id}
@@ -124,11 +148,11 @@ export default function IPlumPage() {
               {/* Numbers */}
               <div className="mt-2 text-sm">
                 <span className="font-medium">
-                  {e.from_number || "Unknown"}
+                  {fromDisplay}
                 </span>
                 <span className="mx-2 text-gray-400">→</span>
                 <span className="font-medium">
-                  {e.to_number || "Unknown"}
+                  {toDisplay}
                 </span>
               </div>
 

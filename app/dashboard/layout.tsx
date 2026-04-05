@@ -525,59 +525,49 @@ if (error) {
   setUnreadCount(prev => Math.max(prev - 1, 0));
 
   setOpen(false); // close dropdown
+// 🔥 3️⃣ UNIFIED CUSTOMER PANEL
 
- // 🔥 3️⃣ NAVIGATION
+if (n.phone_clean) {
+  const phone = n.phone_clean;
 
-const phone = null;
-
-if (n.entity_type === "lead" && phone) {
-  let lead = null;
-  let invoice = null;
-  let partner = null;
-
-  // 🔥 LEAD
-  const { data: leadData } = await supabase
+  const { data: leads } = await supabase
     .from("leads")
     .select("*")
-.eq("phone", phone)    .maybeSingle();
+    .eq("phone_clean", phone);
 
-  if (leadData) lead = leadData;
-
-  // 🔥 INVOICE
-  const { data: invoiceData } = await supabase
-    .from("invoices")
-    .select("*")
-.eq("phone", phone)    .maybeSingle();
-
-  if (invoiceData) invoice = invoiceData;
-
-  // 🔥 PARTNER
-  const { data: partnerData } = await supabase
+  const { data: partners } = await supabase
     .from("partners")
     .select("*")
-.eq("phone", phone)    .maybeSingle();
+    .eq("phone_clean", phone);
 
-  if (partnerData) partner = partnerData;
+  const { data: invoices } = await supabase
+    .from("invoices")
+    .select("*")
+    .eq("phone_clean", phone);
 
   setCustomerPanel({
     phone,
-    lead,
-    invoice,
-    partner,
+    leads: leads || [],
+    partners: partners || [],
+    invoices: invoices || [],
   });
 
   return;
 }
 
-  if (n.entity_type === "invoice" && n.entity_id) {
-    router.push(`/dashboard/invoices?id=${n.entity_id}`);
-    return;
-  }
+// fallback if no phone
+if (n.entity_type === "invoice" && n.entity_id) {
+  router.push(`/dashboard/invoices?id=${n.entity_id}`);
+  return;
+}
+
 if (n.entity_type === "partner" && n.entity_id) {
   router.push(`/dashboard/partners?id=${n.entity_id}`);
   return;
 }
-alert("No matching customer found for this number");}}
+ // 🔥 3️⃣ NAVIGATION
+
+}}
     className={`w-full text-left px-3 py-2 text-sm border-b hover:bg-gray-50 ${
       !n.is_read ? "bg-red-50" : ""
     }`}
@@ -734,7 +724,79 @@ alert("No matching customer found for this number");}}
   
 )}
 
+{customerPanel && (
+  <div className="fixed inset-0 bg-black/40 z-50 flex justify-end">
+    <div className="w-full max-w-md bg-white h-full shadow-xl overflow-y-auto">
 
+      <div className="p-4 border-b flex justify-between items-center">
+        <strong>Customer</strong>
+        <button onClick={() => setCustomerPanel(null)}>✕</button>
+      </div>
+
+      <div className="p-4 space-y-6">
+
+        {/* PHONE */}
+        <div>
+          <h3 className="font-bold text-sm text-gray-500">Phone</h3>
+          <p className="text-base">{customerPanel.phone}</p>
+        </div>
+
+        {/* LEADS */}
+        <div>
+          <h3 className="font-bold">Leads</h3>
+          {customerPanel.leads?.length === 0 && (
+            <p className="text-sm text-gray-500">No leads found</p>
+          )}
+          {customerPanel.leads?.map((l: any) => (
+            <div key={l.id} className="border p-3 rounded mb-2">
+              <p className="font-medium">
+                {l.name || `${l.first_name || ""} ${l.last_name || ""}`}
+              </p>
+              <p className="text-xs text-gray-500">{l.email}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* PARTNERS */}
+        <div>
+          <h3 className="font-bold">Partners</h3>
+          {customerPanel.partners?.length === 0 && (
+            <p className="text-sm text-gray-500">No partners found</p>
+          )}
+          {customerPanel.partners?.map((p: any) => (
+            <div key={p.id} className="border p-3 rounded mb-2">
+              <p className="font-medium">
+                {p.first_name} {p.last_name}
+              </p>
+              <p className="text-xs text-gray-500">
+                {p.email_address}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* INVOICES */}
+        <div>
+          <h3 className="font-bold">Invoices</h3>
+          {customerPanel.invoices?.length === 0 && (
+            <p className="text-sm text-gray-500">No invoices found</p>
+          )}
+          {customerPanel.invoices?.map((i: any) => (
+            <div key={i.id} className="border p-3 rounded mb-2">
+              <p className="font-medium">
+                Invoice #{i.invoice_number}
+              </p>
+              <p className="text-xs text-gray-500">
+                ${i.amount}
+              </p>
+            </div>
+          ))}
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
         {/* ===== MOBILE BOTTOM NAV ===== */}
         <MobileBottomNav />
       </div>

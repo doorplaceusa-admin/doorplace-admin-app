@@ -269,16 +269,21 @@ useEffect(() => {
       event: "INSERT",
       schema: "public",
       table: "notifications",
-      filter: `target_role=eq.admin`,
     },
     payload => {
-      console.log("🔔 REALTIME TRIGGER:", payload.new);
+      console.log("🔥 REALTIME TRIGGER:", payload.new);
+
+      const n = payload.new as any;
+
+      // ✅ Frontend filter instead (reliable)
+      if (n.target_role !== "admin") return;
 
       loadNotificationsRef.current();
     }
   )
-  .subscribe();
-
+  .subscribe((status) => {
+    console.log("📡 Realtime status:", status);
+  });
 
 
   return () => {

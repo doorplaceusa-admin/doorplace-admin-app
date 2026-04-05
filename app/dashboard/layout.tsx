@@ -494,7 +494,7 @@ async function askAdminAI() {
 
  // 🔥 3️⃣ NAVIGATION
 
-const phone = n.phone_clean || n.from_number || null;
+const phone = null;
 
 if (n.entity_type === "lead" && phone) {
   let lead = null;

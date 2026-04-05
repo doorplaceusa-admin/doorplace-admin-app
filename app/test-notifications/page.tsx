@@ -65,13 +65,12 @@ export default function TestNotificationsPage() {
     const channel = supabase
       .channel("test-notifications-live")
       .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `recipient_user_id=eq.${userId}`,
-        },
+  "postgres_changes",
+  {
+    event: "INSERT",
+    schema: "public",
+    table: "notifications",
+  },
         (payload) => {
           console.log("🔥 REALTIME NOTIFICATION:", payload.new);
           setNotifications((prev) => [

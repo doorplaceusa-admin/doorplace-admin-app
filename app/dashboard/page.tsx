@@ -130,7 +130,7 @@ export default function DashboardPage() {
       const { data: profile, error: profileErr } = await supabase
         .from("profiles")
         .select("role")
-        .eq("id", userId)
+        .eq("user_id", userId)
         .single();
 
       

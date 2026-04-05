@@ -527,8 +527,14 @@ if (error) {
   setOpen(false); // close dropdown
 // 🔥 3️⃣ UNIFIED CUSTOMER PANEL
 
-if (n.phone_clean) {
-  const phone = n.phone_clean;
+// 🔥 ALWAYS EXTRACT PHONE FROM TEXT
+
+const phoneMatch = (n.title + " " + n.body).match(/\d{10}/);
+
+if (phoneMatch) {
+  const phone = phoneMatch[0];
+
+  console.log("📞 EXTRACTED PHONE:", phone);
 
   const { data: leads } = await supabase
     .from("leads")
@@ -545,6 +551,8 @@ if (n.phone_clean) {
     .select("*")
     .eq("phone_clean", phone);
 
+  console.log("🔥 PANEL DATA:", { leads, partners, invoices });
+
   setCustomerPanel({
     phone,
     leads: leads || [],
@@ -552,7 +560,7 @@ if (n.phone_clean) {
     invoices: invoices || [],
   });
 
-  return;
+  return; // 🚨 STOPS routing
 }
 
 // fallback if no phone

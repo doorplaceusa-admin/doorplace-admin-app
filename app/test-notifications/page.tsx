@@ -9,6 +9,7 @@ type Notification = {
   body: string | null;
   created_at: string;
   is_read: boolean | null;
+  user_id?: string;
 };
 
 export default function TestNotificationsPage() {
@@ -16,11 +17,10 @@ export default function TestNotificationsPage() {
   const [status, setStatus] = useState("Loading...");
   const [userId, setUserId] = useState<string | null>(null);
 
-  /* ============================
-     LOAD USER + NOTIFICATIONS
-  ============================ */
   useEffect(() => {
     const load = async () => {
+      console.log("🚀 STARTING LOAD...");
+
       const {
         data: { user },
         error: userError,
@@ -32,22 +32,30 @@ export default function TestNotificationsPage() {
         return;
       }
 
+      console.log("🟢 USER:", user);
+
       setUserId(user.id);
 
-      // ✅ NO FILTER HERE — RLS HANDLES IT
+      // 🔥 DEBUG: try BOTH versions
       const { data, error } = await supabase
         .from("notifications")
-        .select("id, title, body, created_at, is_read")
+        .select("id, title, body, created_at, is_read, user_id")
+        // 🔴 TEMP: FORCE FILTER (helps debug RLS issues)
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(20);
 
       if (error) {
-        console.error("❌ Fetch error:", error);
-        setStatus("Fetch error — check RLS");
+        console.error("❌ FETCH ERROR:", error);
+        setStatus("Fetch error — check console");
         return;
       }
 
-      console.log("✅ Notifications:", data);
+      console.log("✅ RAW DATA:", data);
+
+      if (!data || data.length === 0) {
+        console.warn("⚠️ NO DATA RETURNED");
+      }
 
       setNotifications(data || []);
       setStatus(`Loaded ${data?.length || 0} notifications`);
@@ -56,9 +64,6 @@ export default function TestNotificationsPage() {
     load();
   }, []);
 
-  /* ============================
-     UI
-  ============================ */
   return (
     <div style={{ padding: 24, maxWidth: 800 }}>
       <h1>🔔 Notification Test Page</h1>
@@ -85,9 +90,14 @@ export default function TestNotificationsPage() {
         >
           <strong>{n.title || "No title"}</strong>
           <p>{n.body || "No message"}</p>
-          <small>
-            {new Date(n.created_at).toLocaleString()}
-          </small>
+
+          <div style={{ fontSize: 12, color: "#666" }}>
+            <div>ID: {n.id}</div>
+            <div>User: {n.user_id}</div>
+            <div>
+              {new Date(n.created_at).toLocaleString()}
+            </div>
+          </div>
         </div>
       ))}
     </div>

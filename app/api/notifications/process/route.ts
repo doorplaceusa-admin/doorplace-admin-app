@@ -12,6 +12,7 @@ export async function POST() {
       .order("created_at", { ascending: true });
 
     if (error) throw error;
+
     if (!notifications || notifications.length === 0) {
       return NextResponse.json({ ok: true, sent: 0 });
     }
@@ -19,6 +20,14 @@ export async function POST() {
     let sent = 0;
 
     for (const n of notifications) {
+      // 🔥 DEBUG LOG (optional but recommended)
+      console.log("📧 PROCESSING NOTIFICATION:", {
+        id: n.id,
+        user_id: n.user_id,
+        type: n.type,
+      });
+
+      // 🔥 SEND EMAIL
       await sendAdminNotification({
         type:
           n.type === "partner_message"
@@ -36,10 +45,19 @@ export async function POST() {
         },
       });
 
-      await supabaseAdmin
+      // 🔥 MARK AS EMAILED (FIXED)
+      const { error: updateError } = await supabaseAdmin
         .from("notifications")
-        .update({ emailed_at: new Date().toISOString() })
-        .eq("id", n.id);
+        .update({
+          emailed_at: new Date().toISOString(),
+        })
+        .eq("id", n.id)
+        .eq("user_id", n.user_id); // ✅ IMPORTANT FIX
+
+      if (updateError) {
+        console.error("❌ FAILED TO UPDATE emailed_at:", updateError);
+        continue;
+      }
 
       sent++;
     }

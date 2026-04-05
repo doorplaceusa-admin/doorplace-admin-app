@@ -539,8 +539,7 @@ if (n.entity_type === "lead" && phone) {
   const { data: leadData } = await supabase
     .from("leads")
     .select("*")
-    .eq("phone_clean", phone)
-    .maybeSingle();
+.eq("phone", phone)    .maybeSingle();
 
   if (leadData) lead = leadData;
 
@@ -548,8 +547,7 @@ if (n.entity_type === "lead" && phone) {
   const { data: invoiceData } = await supabase
     .from("invoices")
     .select("*")
-    .eq("phone_clean", phone)
-    .maybeSingle();
+.eq("phone", phone)    .maybeSingle();
 
   if (invoiceData) invoice = invoiceData;
 
@@ -557,8 +555,7 @@ if (n.entity_type === "lead" && phone) {
   const { data: partnerData } = await supabase
     .from("partners")
     .select("*")
-    .eq("phone_clean", phone)
-    .maybeSingle();
+.eq("phone", phone)    .maybeSingle();
 
   if (partnerData) partner = partnerData;
 

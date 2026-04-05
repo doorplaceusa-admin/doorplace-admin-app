@@ -10,7 +10,6 @@ export default function OnboardingPage() {
   const [err, setErr] = useState<string>("");
   useAppViewTracker({
   role: "unknown", // or "admin" | "partner"
-  companyId: null,
 });
 
 

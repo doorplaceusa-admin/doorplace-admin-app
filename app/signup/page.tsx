@@ -11,7 +11,6 @@ export default function SignupPage() {
   const router = useRouter();
   useAppViewTracker({
   role: "unknown", // or "admin" | "partner"
-  companyId: null,
 });
 
   const [email, setEmail] = useState("");

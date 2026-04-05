@@ -58,7 +58,6 @@ export default function DashboardLayout({
   const pathname = usePathname();
   useAppViewTracker({
   role: "admin",
-  companyId: null,
 });
 
   const [loading, setLoading] = useState(true);
@@ -68,7 +67,6 @@ export default function DashboardLayout({
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
 const [userId, setUserId] = useState<string | null>(null);
-const [companyId, setCompanyId] = useState<string | null>(null);
 const [aiOpen, setAiOpen] = useState(false);
 const [aiQuestion, setAiQuestion] = useState("");
 const [aiAnswer, setAiAnswer] = useState("");
@@ -171,8 +169,7 @@ useEffect(() => {
 
     const { data: profile, error } = await supabase
       .from("profiles")
-      .select("role, active_company_id")
-      .eq("id", user.id)
+.select("role")      .eq("id", user.id)
       .single();
 
     if (error || !profile || profile.role !== "admin") {
@@ -181,7 +178,6 @@ useEffect(() => {
     }
 
     setUserId(user.id);
-    setCompanyId(profile.active_company_id);
     setReady(true);
 setLoading(false);
 

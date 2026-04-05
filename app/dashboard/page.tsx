@@ -129,25 +129,16 @@ export default function DashboardPage() {
 
       const { data: profile, error: profileErr } = await supabase
         .from("profiles")
-        .select("active_company_id, role")
+        .select("role")
         .eq("id", userId)
         .single();
 
-      if (profileErr || !profile?.active_company_id) {
-        console.error("NO COMPANY ID", profileErr, profile);
-        setLoading(false);
-        return;
-      }
-
-      const companyId = profile.active_company_id;
+      
 
       const { data: sess } = await supabase.auth.getSession();
       setSessionEmail(sess.session?.user.email || "");
 
-      // ✅ NOTE:
-      // Some of these are global counts (no company filter) because I don't want to break you
-      // if your partners table doesn't have company_id.
-      // If partners DOES have company_id, tell me and we’ll filter them (big speed-up).
+
 
       const [
   totalPartnersRes,
@@ -184,19 +175,16 @@ export default function DashboardPage() {
     .select(
       "lifetime_site_views,lifetime_partner_views,lifetime_app_views"
     )
-    .eq("company_id", companyId)
     .maybeSingle(),
 
   supabase
     .from("leads")
     .select("*", { count: "estimated", head: true })
-    .eq("company_id", companyId)
     .neq("submission_type", "partner_order"),
 
   supabase
     .from("leads")
     .select("*", { count: "estimated", head: true })
-    .eq("company_id", companyId)
     .eq("submission_type", "partner_order"),
 
   supabase
@@ -215,7 +203,6 @@ export default function DashboardPage() {
       state
     `
     )
-    .eq("company_id", companyId)
     .order("created_at", { ascending: false })
     .limit(3),
 ]);
@@ -225,7 +212,6 @@ export default function DashboardPage() {
       // ✅ STEP 1 DEBUG LOGS (PASTE HERE)
       // ================================
 
-      console.log("🔥 companyId:", companyId);
 
       console.log("🔥 siteMetricsRes:", {
         data: siteMetricsRes.data,
@@ -251,8 +237,7 @@ const totalAppViews =
 
 
 if (!siteMetricsRes.data) {
-  console.warn("⚠️ No site_metrics row yet for company:", companyId);
-}
+console.warn("⚠️ No site_metrics row yet");}
 
 
 

@@ -9,7 +9,6 @@ export async function POST(req: Request) {
       body,
       entityType,
       entityId,
-      companyId,
     } = await req.json();
 
     // Find admins
@@ -28,7 +27,6 @@ export async function POST(req: Request) {
         body: body ?? null,
         entity_type: entityType,
         entity_id: entityId,
-        company_id: companyId,
         is_read: false,
       });
     }

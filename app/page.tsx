@@ -13,9 +13,8 @@ export default function Home() {
   useUnknownPresence("home");
 
   useAppViewTracker({
-    role: "unknown",
-    companyId: null,
-  });
+  role: "unknown",
+});
 
   useEffect(() => {
     let isMounted = true;

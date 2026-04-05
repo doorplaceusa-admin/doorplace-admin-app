@@ -29,7 +29,6 @@ useUnknownPresence("login");
 
   useAppViewTracker({
     role: "unknown",
-    companyId: null,
   });
 
   const [email, setEmail] = useState("");

@@ -153,7 +153,7 @@ export async function readTable(
     case "profiles":
       return supabaseAdmin
         .from("profiles")
-        .select("id, role, email, active_company_id, created_at")
+        .select("id, role, email, created_at")
         .order(orderBy, { ascending })
         .limit(limit);
 

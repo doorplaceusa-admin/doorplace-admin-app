@@ -12,7 +12,6 @@ import { supabase } from "@/lib/supabaseClient";
  */
 export function useAppViewTracker(options: {
   role: "admin" | "partner" | "unknown";
-  companyId?: string | null;
 }) {
   const pathname = usePathname();
 
@@ -31,7 +30,6 @@ export function useAppViewTracker(options: {
         page_path: pathname,
         session_id: sessionId,
         user_role: options.role,
-        company_id: options.companyId ?? null,
       });
     };
 

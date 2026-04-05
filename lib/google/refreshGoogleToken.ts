@@ -1,11 +1,10 @@
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-export async function refreshGoogleTokenIfNeeded(companyId: string) {
+export async function refreshGoogleTokenIfNeeded() {
   // 1️⃣ Load stored tokens
   const { data: account, error } = await supabaseAdmin
     .from("google_oauth_accounts")
     .select("*")
-    .eq("company_id", companyId)
     .eq("provider", "google")
     .single();
 

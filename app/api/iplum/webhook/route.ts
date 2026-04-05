@@ -203,7 +203,7 @@ if (!lead) {
     // ===============================
     const { data: admins } = await supabaseAdmin
       .from("profiles")
-      .select("id, active_company_id")
+      .select("id")
       .eq("role", "admin");
 
     if (admins && admins.length > 0) {
@@ -218,7 +218,6 @@ entity_id: lead?.id || invoice?.id || partner?.id || null,
         created_at: new Date().toISOString(),
 
         recipient_user_id: admin.id,
-        company_id: admin.active_company_id || null,
       }));
 
       await supabaseAdmin.from("notifications").insert(rows);

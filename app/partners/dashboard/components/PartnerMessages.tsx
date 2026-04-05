@@ -8,7 +8,6 @@ type Sender = "partner" | "admin" | "system";
 type Message = {
   id: string;
   partner_id: string;
-  company_id: string | null;
   sender: Sender | null;
   message: string | null;
   image_url: string | null;
@@ -19,7 +18,6 @@ type PartnerRecord = {
   partner_id: string | null;
   first_name: string | null;
   last_name: string | null;
-  company_id: string | null;
 };
 
 function getDisplayName(p: PartnerRecord | null) {
@@ -66,7 +64,7 @@ export default function PartnerMessages({
   async function loadPartner() {
     const { data, error } = await supabase
       .from("partners")
-      .select("partner_id,first_name,last_name,company_id")
+      .select("partner_id,first_name,last_name")
       .eq("partner_id", partnerId)
       .single();
 
@@ -76,7 +74,7 @@ export default function PartnerMessages({
   async function loadMessages() {
     const { data, error } = await supabase
       .from("partner_messages")
-      .select("id,partner_id,company_id,sender,message,image_url,created_at")
+      .select("id,partner_id,sender,message,image_url,created_at")
       .eq("partner_id", partnerId)
       .order("created_at", { ascending: true });
 
@@ -104,24 +102,7 @@ export default function PartnerMessages({
     setSending(true);
 
     try {
-      // Must have partner company_id (you confirmed all partners do)
-      let companyId = partner?.company_id ?? null;
-
-      if (!companyId) {
-        const { data: p2, error: pErr } = await supabase
-          .from("partners")
-          .select("company_id,first_name,last_name,partner_id")
-          .eq("partner_id", partnerId)
-          .single();
-
-        if (pErr) throw pErr;
-        setPartner(p2 as PartnerRecord);
-        companyId = (p2 as any)?.company_id ?? null;
-      }
-
-      if (!companyId) {
-        throw new Error("Partner is not linked to a company_id.");
-      }
+      
 
       // 1) Upload image (optional)
       let imagePath: string | null = null;
@@ -149,14 +130,13 @@ export default function PartnerMessages({
         .from("partner_messages")
         .insert({
           partner_id: partnerId,
-          company_id: companyId,
           sender,
           message: hasText ? text.trim() : null,
           image_url: imagePath,
           // keep your existing column usage compatible:
           is_read: false,
         })
-        .select("id,partner_id,company_id,sender,message,image_url,created_at")
+        .select("id,partner_id,sender,message,image_url,created_at")
         .single();
 
       if (insertRes.error) throw insertRes.error;
@@ -214,7 +194,7 @@ export default function PartnerMessages({
         .from("partner_messages")
         .update({ message: newVal })
         .eq("id", messageId)
-        .select("id,partner_id,company_id,sender,message,image_url,created_at")
+        .select("id,partner_id,sender,message,image_url,created_at")
         .single();
 
       if (error) throw error;

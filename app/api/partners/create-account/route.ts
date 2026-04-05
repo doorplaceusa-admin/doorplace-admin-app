@@ -5,10 +5,7 @@ import crypto from "crypto";
 
 export const runtime = "nodejs";
 
-/* ============================================================
-   DOORPLACE USA COMPANY ID (Multi-Tenant Anchor)
-============================================================ */
-const DOORPLACE_COMPANY_ID = "88c22910-7bd1-42fc-bc81-8144a50d7b41";
+
 
 /**
  * Generate Doorplace USA Partner ID
@@ -134,13 +131,9 @@ export async function POST(req: Request) {
     const tracking_link = `https://doorplaceusa.com/pages/swing-partner-lead?partner_id=${partner_id}`;
     const email_verify_token = crypto.randomUUID();
 
-    /* ============================================================
-       CREATE PARTNER (WITH COMPANY_ID FIX)
-    ============================================================ */
     const { data: partner, error } = await supabaseAdmin
       .from("partners")
       .insert({
-        company_id: DOORPLACE_COMPANY_ID, // 🔥 FIXED
 
         auth_user_id,
         partner_id,

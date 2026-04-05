@@ -16,9 +16,8 @@ export default function CreateAccountPage() {
 
   
  useAppViewTracker({
-    role: "unknown",
-    companyId: null,
-  });
+  role: "unknown",
+});
 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");

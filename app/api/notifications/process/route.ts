@@ -32,7 +32,6 @@ export async function POST() {
           entity_type: n.entity_type,
           entity_id: n.entity_id,
           body: n.body,
-          company_id: n.company_id,
           created_at: n.created_at,
         },
       });

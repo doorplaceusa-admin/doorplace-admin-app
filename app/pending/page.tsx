@@ -7,7 +7,6 @@ import { useAppViewTracker } from "@/lib/useAppViewTracker";
 export default function PartnerPendingPage() {
   useAppViewTracker({
   role: "unknown", // or "admin" | "partner"
-  companyId: null,
 });
 
   return (

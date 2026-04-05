@@ -150,20 +150,17 @@ const zip =
 =============================== */
 
 let partnerName: string | null = null;
-let companyId: string | null = null;
 
 
 if (partnerId) {
   const { data: partner } = await supabase
     .from("partners")
-    .select("first_name, last_name, company_id")
-    .eq("partner_id", partnerId)
+.select("first_name, last_name")    .eq("partner_id", partnerId)
     .single();
 
 
   if (partner) {
     partnerName = `${partner.first_name ?? ""} ${partner.last_name ?? ""}`.trim();
-    companyId = partner.company_id;
   }
 }
 
@@ -177,7 +174,6 @@ const { data: leadData, error: leadError } = await supabaseAdmin
 .insert([
   {
     lead_id,
-    company_id: companyId ?? "88c22910-7bd1-42fc-bc81-8144a50d7b41",
     partner_id: partnerId,
     partner_name: partnerName,
 
@@ -262,7 +258,6 @@ try {
     message: `New lead from ${leadData.first_name ?? ""} ${leadData.last_name ?? ""}`,
     entity_type: "lead",
     entity_id: leadData.id,
-    company_id: leadData.company_id,
   });
 } catch (err) {
   console.error("Lead admin notification failed (non-fatal):", err);

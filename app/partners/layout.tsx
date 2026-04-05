@@ -39,7 +39,6 @@ export default function PartnerLayout({
   const pathname = usePathname();
   useAppViewTracker({
   role: "partner",
-  companyId: null,
 });
 
   const [loading, setLoading] = useState(true);

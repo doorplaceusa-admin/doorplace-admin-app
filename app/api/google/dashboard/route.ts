@@ -4,7 +4,6 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const companyId = "88c22910-7bd1-42fc-bc81-8144a50d7b41"; // TEMP
 
   /**
    * 1️⃣ SUMMARY (ALL TIME, AGGREGATED)
@@ -12,7 +11,6 @@ export async function GET() {
   const { data: summaryRows, error: summaryError } = await supabaseAdmin
     .from("google_search_console_daily")
     .select("clicks, impressions, ctr, position")
-    .eq("company_id", companyId);
 
   if (summaryError) {
     return NextResponse.json({ error: summaryError.message }, { status: 500 });
@@ -41,7 +39,6 @@ export async function GET() {
    */
   const { data: topPages, error: pagesError } = await supabaseAdmin.rpc(
     "google_top_pages",
-    { company_id_param: companyId }
   );
 
   if (pagesError) {
@@ -53,8 +50,7 @@ export async function GET() {
    */
   const { data: topQueries, error: queriesError } = await supabaseAdmin.rpc(
     "google_top_queries",
-    { company_id_param: companyId }
-  );
+{}  );
 
   if (queriesError) {
     return NextResponse.json({ error: queriesError.message }, { status: 500 });
@@ -66,7 +62,6 @@ export async function GET() {
   const { data: lastRow } = await supabaseAdmin
     .from("google_search_console_daily")
     .select("date")
-    .eq("company_id", companyId)
     .order("date", { ascending: false })
     .limit(1)
     .maybeSingle();

@@ -11,7 +11,7 @@ export async function POST() {
      */
     const { data: oauth, error: oauthError } = await supabaseAdmin
       .from("google_oauth_accounts")
-      .select("company_id")
+      .select("*")
       .eq("provider", "google")
       .single();
 
@@ -22,12 +22,10 @@ export async function POST() {
       );
     }
 
-    const companyId = oauth.company_id;
-
     /**
      * 2️⃣ Get VALID access token (auto-refresh)
      */
-    const accessToken = await refreshGoogleTokenIfNeeded(companyId);
+    const accessToken = await refreshGoogleTokenIfNeeded();
 
     /**
      * 3️⃣ Fetch Search Console sites
@@ -56,12 +54,11 @@ export async function POST() {
     for (const site of sites) {
       await supabaseAdmin.from("google_sites").upsert(
         {
-          company_id: companyId,
           site_url: site.siteUrl,
           permission_level: site.permissionLevel,
         },
         {
-          onConflict: "company_id,site_url",
+          onConflict: "site_url",
         }
       );
     }
@@ -112,7 +109,6 @@ export async function POST() {
         const [page, query] = row.keys;
 
         await supabaseAdmin.from("google_search_console_daily").insert({
-          company_id: companyId,
           site_url: site.siteUrl,
           page,
           query,

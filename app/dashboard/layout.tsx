@@ -178,6 +178,7 @@ useEffect(() => {
     }
 
     setUserId(user.id);
+console.log("🟢 USER SET:", user.id);
     setReady(true);
 setLoading(false);
 
@@ -257,39 +258,42 @@ useEffect(() => {
 
 
 useEffect(() => {
-  if (!ready || !userId) return;
+  if (!userId) {
+    console.log("⏳ Waiting for userId...");
+    return;
+  }
+
+  console.log("✅ Starting realtime with userId:", userId);
 
   loadNotifications();
 
- const channel = supabase
-  .channel("notifications-admin")
-  .on(
-    "postgres_changes",
-    {
-      event: "INSERT",
-      schema: "public",
-      table: "notifications",
-    },
-    payload => {
-      console.log("🔥 REALTIME TRIGGER:", payload.new);
+  const channel = supabase
+    .channel("notifications-admin")
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "notifications",
+      },
+      (payload) => {
+        console.log("🔥 REALTIME TRIGGER:", payload.new);
 
-      const n = payload.new as any;
+        const n = payload.new as any;
+        if (n.target_role !== "admin") return;
 
-      // ✅ Frontend filter instead (reliable)
-      if (n.target_role !== "admin") return;
-
-      loadNotificationsRef.current();
-    }
-  )
-  .subscribe((status) => {
-    console.log("📡 Realtime status:", status);
-  });
-
+        loadNotificationsRef.current();
+      }
+    )
+    .subscribe((status) => {
+      console.log("📡 Realtime status:", status);
+    });
 
   return () => {
+    console.log("🧹 Cleaning up realtime");
     supabase.removeChannel(channel);
   };
-}, [ready, userId]);
+}, [userId]);
 
 useEffect(() => {
   if (open) {

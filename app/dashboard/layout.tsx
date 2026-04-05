@@ -234,7 +234,6 @@ useEffect(() => {
 const { data, error } = await supabase
   .from("notifications")
   .select("id, title, body, created_at, is_read, entity_type, entity_id, phone_clean, from_number")
-  .eq("target_role", "admin")
   .order("created_at", { ascending: false })
   .limit(10);
 

@@ -208,18 +208,21 @@ if (!lead) {
 
     if (admins && admins.length > 0) {
       const rows = admins.map((admin) => ({
-        title,
-        body: bodyText,
-        type: eventType,
+  title,
+  body: bodyText,
+  type: eventType,
 
-        entity_type: matchType,
-entity_id: lead?.id || invoice?.id || partner?.id || null,
-        is_read: false,
-        created_at: new Date().toISOString(),
+  entity_type: matchType,
+  entity_id: lead?.id || invoice?.id || partner?.id || null,
 
-        recipient_user_id: admin.id,
-      }));
+  is_read: false,
+  created_at: new Date().toISOString(),
 
+  recipient_user_id: admin.id,
+
+  phone: from || to || null,
+  phone_clean: cleanedPhone,
+}));
       await supabaseAdmin.from("notifications").insert(rows);
     }
 

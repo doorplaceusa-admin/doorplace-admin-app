@@ -85,53 +85,52 @@ export async function POST(req: Request) {
     // 🔥 MATCH CUSTOMER
     // ===============================
     let lead = null;
-    let invoice = null;
-    let partner = null;
+let invoice = null;
+let partner = null;
 
 let matchType: "lead" | "invoice" | "partner" | "unknown" = "unknown";
 
-    if (cleanedPhone) {
-      const { data: leadData } = await supabaseAdmin
-        .from("leads")
-        .select("*")
-        .eq("phone_clean", cleanedPhone)
-        .maybeSingle();
-
-      if (leadData) {
-        lead = leadData;
-        matchType = "lead";
-      } else {
-        const { data: invoiceData } = await supabaseAdmin
-          .from("invoices")
-          .select("*")
-          .eq("phone_clean", cleanedPhone)
-          .maybeSingle();
-
-        if (invoiceData) {
-          invoice = invoiceData;
-          matchType = "invoice";
-        }
-      }
-    }
-if (!lead) {
-  const { data: partnerData } = await supabaseAdmin
-    .from("partners")
+if (cleanedPhone) {
+  // 🔍 1. LEADS FIRST (highest priority)
+  const { data: leadData } = await supabaseAdmin
+    .from("leads")
     .select("*")
     .eq("phone_clean", cleanedPhone)
     .maybeSingle();
 
-  if (partnerData) {
-    partner = partnerData;
-    matchType = "partner";
+  if (leadData) {
+    lead = leadData;
+    matchType = "lead";
+  }
+
+  // 🔍 2. INVOICE (only if no lead)
+  if (!lead) {
+    const { data: invoiceData } = await supabaseAdmin
+      .from("invoices")
+      .select("*")
+      .eq("phone_clean", cleanedPhone)
+      .maybeSingle();
+
+    if (invoiceData) {
+      invoice = invoiceData;
+      matchType = "invoice";
+    }
+  }
+
+  // 🔍 3. PARTNER (only if nothing else)
+  if (!lead && !invoice) {
+    const { data: partnerData } = await supabaseAdmin
+      .from("partners")
+      .select("*")
+      .eq("phone_clean", cleanedPhone)
+      .maybeSingle();
+
+    if (partnerData) {
+      partner = partnerData;
+      matchType = "partner";
+    }
   }
 }
-    // 🔥 NAME
-    const name =
-  lead?.first_name ||
-  invoice?.customer_name ||
-  partner?.name ||
-  cleanedPhone ||
-  "Unknown";
 
     // ===============================
     // 🔥 EVENT TYPE DETECTION

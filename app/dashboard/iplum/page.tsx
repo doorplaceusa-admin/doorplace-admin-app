@@ -71,7 +71,7 @@ export default function IPlumPage() {
   }, []);
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-10 max-w-[1400px] w-full mx-auto px-4">
+    <div className="h-[calc(100vh-64px)] overflow-y-auto pb-10 max-w-350 w-full mx-auto px-4">
       {/* Header */}
       <div className="flex items-center justify-between py-6 border-b">
         <h1 className="text-2xl font-bold flex items-center gap-2">

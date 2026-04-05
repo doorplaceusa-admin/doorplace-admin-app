@@ -6,11 +6,9 @@ import { supabase } from "@/lib/supabaseClient";
 type Notification = {
   id: string;
   title: string | null;
-  message: string | null;
-  type: string | null;
+  body: string | null;
   created_at: string;
-  read: boolean | null;
-  recipient_user_id: string;
+  is_read: boolean | null;
 };
 
 export default function TestNotificationsPage() {
@@ -19,7 +17,7 @@ export default function TestNotificationsPage() {
   const [userId, setUserId] = useState<string | null>(null);
 
   /* ============================
-     1️⃣ LOAD USER + NOTIFICATIONS
+     LOAD USER + NOTIFICATIONS
   ============================ */
   useEffect(() => {
     const load = async () => {
@@ -36,10 +34,10 @@ export default function TestNotificationsPage() {
 
       setUserId(user.id);
 
+      // ✅ NO FILTER HERE — RLS HANDLES IT
       const { data, error } = await supabase
         .from("notifications")
-        .select("*")
-        .eq("recipient_user_id", user.id)
+        .select("id, title, body, created_at, is_read")
         .order("created_at", { ascending: false })
         .limit(20);
 
@@ -49,42 +47,14 @@ export default function TestNotificationsPage() {
         return;
       }
 
+      console.log("✅ Notifications:", data);
+
       setNotifications(data || []);
       setStatus(`Loaded ${data?.length || 0} notifications`);
     };
 
     load();
   }, []);
-
-  /* ============================
-     2️⃣ REALTIME LISTENER
-  ============================ */
-  useEffect(() => {
-    if (!userId) return;
-
-    const channel = supabase
-      .channel("test-notifications-live")
-      .on(
-  "postgres_changes",
-  {
-    event: "INSERT",
-    schema: "public",
-    table: "notifications",
-  },
-        (payload) => {
-          console.log("🔥 REALTIME NOTIFICATION:", payload.new);
-          setNotifications((prev) => [
-            payload.new as Notification,
-            ...prev,
-          ]);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId]);
 
   /* ============================
      UI
@@ -110,11 +80,11 @@ export default function TestNotificationsPage() {
             padding: 12,
             marginBottom: 10,
             borderRadius: 6,
-            background: n.read ? "#f9f9f9" : "#fff",
+            background: n.is_read ? "#f9f9f9" : "#fff",
           }}
         >
           <strong>{n.title || "No title"}</strong>
-          <p>{n.message || "No message"}</p>
+          <p>{n.body || "No message"}</p>
           <small>
             {new Date(n.created_at).toLocaleString()}
           </small>

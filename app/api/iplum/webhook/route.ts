@@ -133,16 +133,27 @@ export async function POST(req: Request) {
     }
 
     // ===============================
-    // 🔥 RESOLVE NAME (FIXED BUG)
+    // 🔥 RESOLVE NAME (IMPROVED)
     // ===============================
-    const name =
-      lead?.name ||
-      `${lead?.first_name || ""} ${lead?.last_name || ""}`.trim() ||
-      `${partner?.first_name || ""} ${partner?.last_name || ""}`.trim() ||
-      partner?.business_name ||
-      invoice?.customer_name ||
-      cleanedPhone ||
-      "Unknown";
+    let name = "Unknown";
+
+    if (lead) {
+      name =
+        lead.name ||
+        `${lead.first_name || ""} ${lead.last_name || ""}`.trim() ||
+        cleanedPhone ||
+        "Unknown";
+    } else if (partner) {
+      name =
+        `${partner.first_name || ""} ${partner.last_name || ""}`.trim() ||
+        partner.business_name ||
+        cleanedPhone ||
+        "Unknown";
+    } else if (invoice) {
+      name = invoice.customer_name || cleanedPhone || "Unknown";
+    } else {
+      name = cleanedPhone || "Unknown";
+    }
 
     // ===============================
     // 🔥 EVENT TYPE
@@ -159,7 +170,7 @@ export async function POST(req: Request) {
 
     if (isSMS) {
       eventType = "SMS";
-      title = `New Message from ${name}`;
+      title = `New Message from ${cleanedPhone}`; // 🔥 ALWAYS USE PHONE
       bodyText = "Tap to view on your phone";
     } else if (
       callStatus.toLowerCase().includes("missed") ||
@@ -216,10 +227,10 @@ export async function POST(req: Request) {
         is_read: false,
         created_at: new Date().toISOString(),
 
-        user_id: admin.id, // ✅ FIXED FIELD NAME
+        user_id: admin.id,
 
         phone: from || to || null,
-        phone_clean: cleanedPhone,
+        phone_clean: cleanedPhone, // 🔥 CRITICAL FIX
       }));
 
       await supabaseAdmin.from("notifications").insert(rows);

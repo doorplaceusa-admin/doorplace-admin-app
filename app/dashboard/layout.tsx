@@ -182,16 +182,20 @@ console.log("🟢 USER SET:", user.id);
     setReady(true);
 setLoading(false);
 
-// 🔥 FORCE FIRST LOAD
-setTimeout(() => {
-  loadNotificationsRef.current();
-}, 0);
+
   };
 
   checkAccess();
 }, [router]);
 
+useEffect(() => {
+  if (!userId || typeof userId !== "string") {
+  console.log("⛔ userId not ready:", userId);
+  return;
+}
 
+  loadNotifications();
+}, [userId]);
 
 
 
@@ -229,12 +233,30 @@ useEffect(() => {
   console.log("🚀 loadNotifications CALLED");
   console.log("USER ID:", userId);
 
-  if (!userId) return;
+  if (!userId || typeof userId !== "string") {
+  console.log("⛔ userId not ready:", userId);
+  return;
+}
+
+// ✅ ADD THIS RIGHT HERE
+console.log("🔥 QUERYING WITH USER ID:", userId);
 
 const { data, error } = await supabase
   .from("notifications")
-  .select("*")
-  .eq("user_id", userId);
+  .select(`
+    id,
+    type,
+    title,
+    body,
+    entity_type,
+    entity_id,
+    is_read,
+    created_at,
+    user_id
+  `)
+  .eq("user_id", userId)
+  .order("created_at", { ascending: false })
+  .limit(10);
 
   if (!error && data) {
   console.log("✅ DATA FROM SUPABASE:", data);

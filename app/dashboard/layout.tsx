@@ -498,10 +498,22 @@ async function askAdminAI() {
         return;
       }
 
-      await supabase
-        .from("notifications")
-        .update({ is_read: true })
-        .eq("id", n.id);
+     console.log("UPDATING NOTIFICATION:", {
+  id: n.id,
+  user_id: userId,
+});
+
+const { data, error } = await supabase
+  .from("notifications")
+  .update({ is_read: true })
+  .eq("id", n.id)
+  .eq("user_id", userId);
+
+if (error) {
+  console.error("❌ UPDATE ERROR:", error);
+} else {
+  console.log("✅ UPDATE SUCCESS:", data);
+}
 
   // 2️⃣ update UI
   setNotifications(prev =>

@@ -234,6 +234,7 @@ useEffect(() => {
 const { data, error } = await supabase
   .from("notifications")
   .select("id, title, body, created_at, is_read, entity_type, entity_id, phone_clean, from_number")
+  .eq("user_id", userId) // ✅ THIS IS THE FIX
   .order("created_at", { ascending: false })
   .limit(10);
 
@@ -463,15 +464,24 @@ async function askAdminAI() {
         </div>
       )}
 
-      {notifications.map(n => (
+    {notifications.map(n => (
   <button
     key={n.id}
     onClick={async () => {
-  // 1️⃣ mark as read
-  await supabase
-    .from("notifications")
-    .update({ is_read: true })
-    .eq("id", n.id);
+
+      // 🔥 ADD THIS LINE RIGHT HERE
+      console.log("CLICKED NOTIFICATION:", n);
+
+      // 1️⃣ mark as read
+      if (!n.id || typeof n.id !== "string") {
+        console.warn("❌ Invalid notification ID:", n);
+        return;
+      }
+
+      await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("id", n.id);
 
   // 2️⃣ update UI
   setNotifications(prev =>

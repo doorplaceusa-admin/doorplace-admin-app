@@ -233,10 +233,8 @@ useEffect(() => {
 
 const { data, error } = await supabase
   .from("notifications")
-  .select("id, title, body, created_at, is_read, entity_type, entity_id, phone_clean, from_number")
-  .eq("user_id", userId) // ✅ THIS IS THE FIX
-  .order("created_at", { ascending: false })
-  .limit(10);
+  .select("*")
+  .eq("user_id", userId);
 
   if (!error && data) {
   console.log("✅ DATA FROM SUPABASE:", data);

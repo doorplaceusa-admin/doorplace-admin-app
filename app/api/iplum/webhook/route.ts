@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    // 🔥 MESSAGE (kept internally, NOT shown in notifications)
+    // 🔥 MESSAGE
     const message =
       payload.text ||
       payload.message ||
@@ -51,10 +51,10 @@ export async function POST(req: Request) {
       payload.content ||
       null;
 
-    // 🔥 SMS DETECTION (FIXED)
+    // 🔥 SMS DETECTION
     const isSMS =
-      payload.usage === "text" ||   // 🔥 PRIMARY SIGNAL
-      !!payload.content ||          // 🔥 BACKUP
+      payload.usage === "text" ||
+      !!payload.content ||
       payload.type === "sms";
 
     // 🔥 DIRECTION
@@ -82,58 +82,70 @@ export async function POST(req: Request) {
     const cleanedPhone = cleanPhone(from || to);
 
     // ===============================
-    // 🔥 MATCH CUSTOMER
+    // 🔥 MATCH CUSTOMER (CORRECT ORDER)
     // ===============================
     let lead = null;
-let invoice = null;
-let partner = null;
+    let invoice = null;
+    let partner = null;
 
-let matchType: "lead" | "invoice" | "partner" | "unknown" = "unknown";
+    let matchType: "lead" | "invoice" | "partner" | "unknown" = "unknown";
 
-if (cleanedPhone) {
-  // 🔍 1. LEADS FIRST (highest priority)
-  const { data: leadData } = await supabaseAdmin
-    .from("leads")
-    .select("*")
-    .eq("phone_clean", cleanedPhone)
-    .maybeSingle();
+    if (cleanedPhone) {
+      // 🔥 1️⃣ LEADS FIRST
+      const { data: leadData } = await supabaseAdmin
+        .from("leads")
+        .select("*")
+        .eq("phone_clean", cleanedPhone)
+        .maybeSingle();
 
-  if (leadData) {
-    lead = leadData;
-    matchType = "lead";
-  }
+      if (leadData) {
+        lead = leadData;
+        matchType = "lead";
+      }
 
-  // 🔍 2. INVOICE (only if no lead)
-  if (!lead) {
-    const { data: invoiceData } = await supabaseAdmin
-      .from("invoices")
-      .select("*")
-      .eq("phone_clean", cleanedPhone)
-      .maybeSingle();
+      // 🔥 2️⃣ INVOICES
+      if (!lead) {
+        const { data: invoiceData } = await supabaseAdmin
+          .from("invoices")
+          .select("*")
+          .eq("phone_clean", cleanedPhone)
+          .maybeSingle();
 
-    if (invoiceData) {
-      invoice = invoiceData;
-      matchType = "invoice";
+        if (invoiceData) {
+          invoice = invoiceData;
+          matchType = "invoice";
+        }
+      }
+
+      // 🔥 3️⃣ PARTNERS LAST
+      if (!lead && !invoice) {
+        const { data: partnerData } = await supabaseAdmin
+          .from("partners")
+          .select("*")
+          .eq("phone_clean", cleanedPhone)
+          .maybeSingle();
+
+        if (partnerData) {
+          partner = partnerData;
+          matchType = "partner";
+        }
+      }
     }
-  }
-
-  // 🔍 3. PARTNER (only if nothing else)
-  if (!lead && !invoice) {
-    const { data: partnerData } = await supabaseAdmin
-      .from("partners")
-      .select("*")
-      .eq("phone_clean", cleanedPhone)
-      .maybeSingle();
-
-    if (partnerData) {
-      partner = partnerData;
-      matchType = "partner";
-    }
-  }
-}
 
     // ===============================
-    // 🔥 EVENT TYPE DETECTION
+    // 🔥 RESOLVE NAME (FIXED BUG)
+    // ===============================
+    const name =
+      lead?.name ||
+      `${lead?.first_name || ""} ${lead?.last_name || ""}`.trim() ||
+      `${partner?.first_name || ""} ${partner?.last_name || ""}`.trim() ||
+      partner?.business_name ||
+      invoice?.customer_name ||
+      cleanedPhone ||
+      "Unknown";
+
+    // ===============================
+    // 🔥 EVENT TYPE
     // ===============================
     const callStatus =
       payload.status ||
@@ -145,39 +157,26 @@ if (cleanedPhone) {
     let title = "";
     let bodyText = "";
 
-    // ✅ SMS (NO MESSAGE SHOWN)
     if (isSMS) {
       eventType = "SMS";
       title = `New Message from ${name}`;
-      bodyText = "Tap to view on your phone"; // 🔥 CLEAN ALERT ONLY
-    }
-
-    // ✅ MISSED CALL
-    else if (
+      bodyText = "Tap to view on your phone";
+    } else if (
       callStatus.toLowerCase().includes("missed") ||
       callStatus.toLowerCase().includes("no-answer")
     ) {
       eventType = "MISSED_CALL";
       title = `Missed Call from ${name}`;
       bodyText = "Missed call";
-    }
-
-    // ✅ INCOMING CALL
-    else if (direction.toLowerCase().includes("incoming")) {
+    } else if (direction.toLowerCase().includes("incoming")) {
       eventType = "CALL";
       title = `Incoming Call from ${name}`;
       bodyText = "Call received";
-    }
-
-    // ✅ OUTGOING CALL
-    else if (direction.toLowerCase().includes("outgoing")) {
+    } else if (direction.toLowerCase().includes("outgoing")) {
       eventType = "OUTGOING_CALL";
       title = `Outgoing Call to ${name}`;
       bodyText = "Call placed";
-    }
-
-    // ✅ FALLBACK
-    else {
+    } else {
       eventType = "CALL";
       title = `Call Activity from ${name}`;
       bodyText = "Call event";
@@ -193,7 +192,7 @@ if (cleanedPhone) {
       from_number: from,
       to_number: to,
       phone_clean: cleanedPhone,
-      message, // 🔥 still stored internally if you ever need it
+      message,
       raw_payload: payload,
     });
 
@@ -207,21 +206,22 @@ if (cleanedPhone) {
 
     if (admins && admins.length > 0) {
       const rows = admins.map((admin) => ({
-  title,
-  body: bodyText,
-  type: eventType,
+        title,
+        body: bodyText,
+        type: eventType,
 
-  entity_type: matchType,
-  entity_id: lead?.id || invoice?.id || partner?.id || null,
+        entity_type: matchType,
+        entity_id: lead?.id || invoice?.id || partner?.id || null,
 
-  is_read: false,
-  created_at: new Date().toISOString(),
+        is_read: false,
+        created_at: new Date().toISOString(),
 
-  recipient_user_id: admin.id,
+        user_id: admin.id, // ✅ FIXED FIELD NAME
 
-  phone: from || to || null,
-  phone_clean: cleanedPhone,
-}));
+        phone: from || to || null,
+        phone_clean: cleanedPhone,
+      }));
+
       await supabaseAdmin.from("notifications").insert(rows);
     }
 

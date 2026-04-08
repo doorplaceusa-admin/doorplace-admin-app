@@ -11,22 +11,22 @@
 
   setTimeout(() => {
 
-    // 🔥 VARIANTS
+    // 🔥 UPDATED VARIANTS (HIGH CONVERSION)
     const variants = [
       {
-        headline: "Unlock Your Custom Discount",
-        sub: "Exclusive pricing available for your door, swing, or automatic system",
-        button: "Get My Price + Discount"
+        headline: "Get Your Exact Price (Not an Estimate)",
+        sub: "We’ll text you a real quote for your door, swing, or automatic system",
+        button: "Get My Exact Price"
       },
       {
-        headline: "Get a Fast Price for Your Project",
-        sub: "We’ll text you a custom quote for your door or swing",
-        button: "Get My Quote"
-      },
-      {
-        headline: "See Your Exact Price Today",
-        sub: "No guessing — we’ll send your real price based on your project",
+        headline: "See Your Real Price Today",
+        sub: "No guessing — we’ll send your exact cost based on your project",
         button: "See My Price"
+      },
+      {
+        headline: "Custom Built = Custom Price",
+        sub: "Tell us what you need and we’ll text you your exact quote",
+        button: "Get My Quote"
       }
     ];
 
@@ -107,11 +107,16 @@
 
           <input id="dp-email" placeholder="Email Address" style="
             width:100%;
-            margin-bottom:14px;
+            margin-bottom:6px;
             padding:12px;
             border:1px solid #ddd;
             border-radius:6px;
           ">
+
+          <!-- 🔥 TRUST LINE -->
+          <div style="font-size:12px;color:#777;margin-bottom:14px;">
+            We’ll text you — no spam, just your quote.
+          </div>
 
           <button onclick="dpSubmit(${vIndex})" style="
             width:100%;
@@ -132,7 +137,7 @@
             font-size:13px;
             color:#666;
           ">
-            Limited build slots available this week — we’ll text you shortly to lock in your pricing
+            Limited build slots this week — lock in your price before spots fill up
           </div>
 
           <div onclick="closeDpPopup()" style="
@@ -150,7 +155,7 @@
 
     document.body.appendChild(popup);
 
-    // ✅ SAVE immediately so it doesn't keep popping up
+    // ✅ SAVE immediately
     localStorage.setItem("dp_popup_time", Date.now());
     sessionStorage.setItem("dp_popup_seen", "true");
 
@@ -176,7 +181,7 @@
   }, 5000);
 })();
 
-// ❌ CLOSE HANDLER (IMPORTANT)
+// ❌ CLOSE HANDLER
 function closeDpPopup() {
   const overlay = document.getElementById("dp-overlay");
   if (overlay) overlay.remove();
@@ -210,22 +215,24 @@ function dpSubmit(variantIndex) {
     method: "POST",
     body: formData
   })
-  .then(() => {
+  .then((res) => {
+    if (!res.ok) throw new Error("Failed");
     console.log("Lead sent");
+
+    // ✅ SUCCESS MESSAGE ONLY AFTER SUCCESS
+    document.getElementById("dp-overlay").innerHTML = `
+      <div style="
+        background:#fff;
+        padding:40px;
+        border-radius:12px;
+        text-align:center;
+      ">
+        <h2 style="margin-bottom:10px;">You're In ✅</h2>
+        <p>We’re reviewing your project now — expect a text shortly with your exact price.</p>
+      </div>
+    `;
   })
   .catch(() => {
     alert("Something went wrong. Please try again.");
   });
-
-  document.getElementById("dp-overlay").innerHTML = `
-    <div style="
-      background:#fff;
-      padding:40px;
-      border-radius:12px;
-      text-align:center;
-    ">
-      <h2 style="margin-bottom:10px;">You're In ✅</h2>
-      <p>We’ll text you shortly to go over your project and apply your custom discount.</p>
-    </div>
-  `;
 }

@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import PartnerMessages from "app/partners/dashboard/components/PartnerMessages";
-
+import PartnerMessages from "@/app/partners/dashboard/components/PartnerMessages";
 type PartnerInfo = {
   first_name: string | null;
   last_name: string | null;

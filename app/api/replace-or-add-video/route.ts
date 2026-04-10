@@ -13,16 +13,15 @@ const MAX_RETRIES = 10;
 const TARGET_VIDEO =
   "https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov";
 
+// ✅ FIXED: NO dp-media-box wrapper
 const YOUTUBE_VIDEO_BLOCK = `
-<div class="dp-media-box">
-  <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;">
-    <iframe src="https://www.youtube.com/embed/RGSK62chHlY?rel=0&modestbranding=1&playsinline=1"
-    frameborder="0"
-    allow="encrypted-media"
-    allowfullscreen
-    style="position:absolute;top:0;left:0;width:100%;height:100%;">
-    </iframe>
-  </div>
+<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;">
+  <iframe src="https://www.youtube.com/embed/RGSK62chHlY?rel=0&modestbranding=1&playsinline=1"
+  frameborder="0"
+  allow="encrypted-media"
+  allowfullscreen
+  style="position:absolute;top:0;left:0;width:100%;height:100%;">
+  </iframe>
 </div>
 `;
 
@@ -60,7 +59,7 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
 }
 
 export async function POST() {
-  console.log("🔥 CLEAN + FIX VIDEO SYSTEM STARTED");
+  console.log("🔥 MASTER CLEAN + VIDEO FIX STARTED");
 
   let pageInfo: string | null = null;
   let totalUpdated = 0;
@@ -86,29 +85,26 @@ export async function POST() {
       let updated = false;
 
       // =========================
-      // 🔥 STEP 1: AGGRESSIVE CLEAN
+      // 🔥 STEP 1: REMOVE ALL VIDEO + IFRAME + JUNK
       // =========================
       let cleaned = body
-        // remove ALL video tags
         .replace(/<video[\s\S]*?>[\s\S]*?<\/video>/gi, "")
         .replace(/<video[\s\S]*?>/gi, "")
         .replace(/<\/video>/gi, "")
-
-        // remove source tags
         .replace(/<source[\s\S]*?>/gi, "")
-
-        // remove encoded broken html
-        .replace(/&lt;div[\s\S]*?&gt;/gi, "")
-        .replace(/&lt;iframe[\s\S]*?&gt;/gi, "")
-
-        // remove iframe blocks accidentally injected
         .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
-
-        // remove leftover junk
         .replace(/type="video\/mp4"/gi, "")
         .replace(/"\s*&gt;/gi, "")
         .replace(/&gt;/gi, "")
         .replace(new RegExp(TARGET_VIDEO, "g"), "");
+
+      // =========================
+      // 🔥 STEP 2: REMOVE NESTED MEDIA BOXES
+      // =========================
+      cleaned = cleaned.replace(
+        /<div class="dp-media-box">\s*<div class="dp-media-box">/g,
+        '<div class="dp-media-box">'
+      );
 
       if (cleaned !== body) {
         body = cleaned;
@@ -116,23 +112,25 @@ export async function POST() {
       }
 
       // =========================
-      // 🎯 STEP 2: SMART INSERT (HERO ONLY)
+      // 🎯 STEP 3: INSERT VIDEO PROPERLY
       // =========================
       if (!body.includes("youtube.com/embed/RGSK62chHlY")) {
 
-        // target FIRST hero media box only
-        const heroMediaRegex = /(<div class="dp-slide-hero">[\s\S]*?<div class="dp-media-box">)/;
+        const mediaBoxRegex = /<div class="dp-media-box">/;
 
-        if (heroMediaRegex.test(body)) {
+        if (mediaBoxRegex.test(body)) {
           body = body.replace(
-            heroMediaRegex,
-            `$1${YOUTUBE_VIDEO_BLOCK}`
+            mediaBoxRegex,
+            `<div class="dp-media-box">\n${YOUTUBE_VIDEO_BLOCK}`
           );
 
-          console.log("🎯 Inserted into hero:", p.handle);
+          console.log("🎯 Inserted video:", p.handle);
           updated = true;
         } else {
-          console.log("⚠️ No hero found, skipping:", p.handle);
+          // fallback (top)
+          body = YOUTUBE_VIDEO_BLOCK + body;
+          console.log("⬆️ Inserted at top:", p.handle);
+          updated = true;
         }
       }
 

@@ -131,9 +131,10 @@ export async function POST() {
         await shopifyFetch(`/pages/${p.id}.json`, {
           method: "PUT",
           body: JSON.stringify({
-            id: p.id,
-            body_html: body,
-          }),
+  page: {
+    body_html: body,
+  },
+}),
         });
 
         totalUpdated++;

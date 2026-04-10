@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { shopifyLimiter } from "@/lib/shopify/shopifyLimiter";
+import { load } from "cheerio";
 
 const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
 const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN!;
@@ -46,11 +47,9 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
   throw new Error("Shopify failed");
 }
 
-function extractHandle(url: string) {
-  return url
-    .replace("https://doorplaceusa.com/pages/", "")
-    .replace("/pages/", "")
-    .trim();
+// ✅ Upgraded: Robust URL extraction
+function extractHandle(urlString: string) {
+  return urlString.split("/").pop()?.trim() || "";
 }
 
 // ✅ Clean readable title
@@ -62,7 +61,7 @@ function formatTitle(slug: string) {
 
 // ✅ KEEP YOUR GUIDE SECTION SAFE
 const GUIDE_BLOCK = `
-<div style="margin-top:60px;border-top:1px solid #ddd;padding-top:30px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
+<div class="tp-guide-block" style="margin-top:60px;border-top:1px solid #ddd;padding-top:30px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
 
 <h2 style="text-align:center">Porch Swing Guides</h2>
 
@@ -89,7 +88,7 @@ export async function POST() {
     .or("url.ilike.%swing%,url.ilike.%swings%");
 
   if (!inventory) {
-    return NextResponse.json({ success: false });
+    return NextResponse.json({ success: false, message: "No inventory found." });
   }
 
   const allPages = inventory.map((row) => ({
@@ -102,6 +101,8 @@ export async function POST() {
 
     for (const row of batch) {
       const handle = extractHandle(row.url);
+
+      if (!handle) continue;
 
       console.log("Checking:", handle);
 
@@ -121,16 +122,16 @@ export async function POST() {
 
       console.log("✂️ Cleaning page:", handle);
 
-      // 🔥 Remove ONLY mesh block
+      // 🔥 Remove ONLY mesh block using Regex (Safest way to target comments)
       body = body.replace(
-        /<!-- TP_LINK_MESH_START -->[\s\S]*?<!-- TP_LINK_MESH_END -->/g,
+        /[\s\S]*?/g,
         ""
       );
 
       // Pick 3 random links (excluding itself)
       const filtered = allPages.filter((p) => p.slug !== handle);
-
       const selected = [];
+      
       while (selected.length < 3 && filtered.length > 0) {
         const index = Math.floor(Math.random() * filtered.length);
         const pick = filtered.splice(index, 1)[0];
@@ -139,12 +140,8 @@ export async function POST() {
 
       // ✅ NEW CLEAN BLOCK + GUIDES RESTORED
       const newBlock = `
-<!-- TP_LINK_MESH_START -->
-
 <div style="margin-top:40px;max-width:700px;margin-left:auto;margin-right:auto;text-align:left">
-
 <h2 style="text-align:center">Related Porch Swing Options</h2>
-
 <ul>
 ${selected
   .map(
@@ -157,26 +154,34 @@ ${formatTitle(link.slug)}
   )
   .join("")}
 </ul>
-
 </div>
-
 ${GUIDE_BLOCK}
-
-<!-- TP_LINK_MESH_END -->
 `;
 
-      const updatedBody = body + newBlock;
+      // ✅ Upgraded: Use Cheerio to safely sweep old guides and append the new block 
+      // This guarantees the new block stays inside your page's layout constraints
+      const $ = load(body, null, false);
+      
+      // Sweep up any old stranded guide blocks that might be floating outside the comments
+      $('.tp-guide-block').remove();
+      
+      // Safely append to the root of the layout
+      $.root().append(`\n${newBlock}`);
+
+      const updatedBody = $.html();
 
       await shopifyFetch(`/pages/${pageId}.json`, {
         method: "PUT",
         body: JSON.stringify({
-         page: {
-  body_html: updatedBody,
-}
+          page: {
+            id: pageId,
+            body_html: updatedBody,
+          },
         }),
       });
 
       totalUpdated++;
+      console.log(`✅ Pushed mesh update for ${handle}`);
 
       await sleep(SHOPIFY_DELAY_MS);
     }

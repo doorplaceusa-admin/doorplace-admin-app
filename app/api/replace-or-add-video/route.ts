@@ -93,13 +93,11 @@ export async function POST() {
       if (body.includes(TARGET_VIDEO)) {
         console.log("🔁 Replacing video:", p.handle);
 
-        // Remove entire video tag if exists
         body = body.replace(
           /<video[\s\S]*?<\/video>/g,
           YOUTUBE_VIDEO_BLOCK
         );
 
-        // Fallback (if only raw URL exists)
         body = body.replace(
           new RegExp(TARGET_VIDEO, "g"),
           YOUTUBE_VIDEO_BLOCK
@@ -114,7 +112,6 @@ export async function POST() {
       if (!body.includes("youtube.com/embed/RGSK62chHlY")) {
         console.log("➕ Adding video:", p.handle);
 
-        // Find RIGHT COLUMN of hero
         const heroRightRegex = /(<div class="dp-slide-hero">[\s\S]*?<div>[\s\S]*?<div>)/;
 
         if (heroRightRegex.test(body)) {
@@ -128,16 +125,14 @@ export async function POST() {
       }
 
       // =========================
-      // ✅ UPDATE PAGE
+      // ✅ UPDATE PAGE (FIXED)
       // =========================
       if (updated) {
         await shopifyFetch(`/pages/${p.id}.json`, {
           method: "PUT",
           body: JSON.stringify({
-            page: {
-              id: p.id,
-              body_html: body,
-            },
+            id: p.id,
+            body_html: body,
           }),
         });
 

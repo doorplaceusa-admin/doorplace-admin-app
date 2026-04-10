@@ -6,7 +6,8 @@ import { shopifyLimiter } from "@/lib/shopify/shopifyLimiter";
 
 const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
 const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN!;
-const API_VERSION = "2023-10";
+const API_VERSION = "2024-01";
+
 const SHOPIFY_DELAY_MS = 4000;
 const MAX_RETRIES = 10;
 const BATCH_SIZE = 100;

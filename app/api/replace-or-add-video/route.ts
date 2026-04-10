@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { shopifyLimiter } from "@/lib/shopify/shopifyLimiter";
+import * as cheerio from "cheerio";
 
 const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
 const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN!;
@@ -13,9 +14,8 @@ const MAX_RETRIES = 10;
 const TARGET_VIDEO =
   "https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov";
 
-// ✅ FIXED: NO dp-media-box wrapper
 const YOUTUBE_VIDEO_BLOCK = `
-<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;">
+<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;margin-bottom:20px;">
   <iframe src="https://www.youtube.com/embed/RGSK62chHlY?rel=0&modestbranding=1&playsinline=1"
   frameborder="0"
   allow="encrypted-media"
@@ -77,72 +77,77 @@ export async function POST() {
     for (const p of pages) {
       let body = p.body_html || "";
 
+      // Only target specific pages
       if (
         !body.includes("Automatic Barn Door Opener") &&
         !body.includes("SlideDrive™")
       ) continue;
 
-      let updated = false;
+      // Load HTML into Cheerio (null, false ensures it doesn't wrap it in <html><body> tags)
+      const $ = cheerio.load(body, null, false);
 
       // =========================
-      // 🔥 STEP 1: REMOVE ALL VIDEO + IFRAME + JUNK
+      // 🔥 STEP 1: DOM CLEANUP (No Regex)
       // =========================
-      let cleaned = body
-        .replace(/<video[\s\S]*?>[\s\S]*?<\/video>/gi, "")
-        .replace(/<video[\s\S]*?>/gi, "")
-        .replace(/<\/video>/gi, "")
-        .replace(/<source[\s\S]*?>/gi, "")
-        .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
-        .replace(/type="video\/mp4"/gi, "")
-        .replace(/"\s*&gt;/gi, "")
-        .replace(/&gt;/gi, "")
-        .replace(new RegExp(TARGET_VIDEO, "g"), "");
+      
+      // Remove all native video tags
+      $('video').remove();
+      
+      // Remove loose source tags referencing video
+      $('source[type="video/mp4"]').remove();
+      
+      // Remove elements that specifically contain the old TARGET_VIDEO
+      $(`[src*="${TARGET_VIDEO}"]`).remove();
+
+      // Remove ALL iframes EXCEPT our new YouTube video
+      $('iframe').each((_, el) => {
+        const src = $(el).attr('src') || '';
+        if (!src.includes('RGSK62chHlY')) {
+          $(el).remove();
+        }
+      });
 
       // =========================
-      // 🔥 STEP 2: REMOVE NESTED MEDIA BOXES
+      // 🔥 STEP 2: FIX NESTED MEDIA BOXES
       // =========================
-      cleaned = cleaned.replace(
-        /<div class="dp-media-box">\s*<div class="dp-media-box">/g,
-        '<div class="dp-media-box">'
-      );
-
-      if (cleaned !== body) {
-        body = cleaned;
-        updated = true;
-      }
+      // Target any .dp-media-box that is a direct child of another .dp-media-box.
+      // Swap its class so it doesn't double-apply styles, keeping HTML layout intact.
+      $('.dp-media-box > .dp-media-box').each((_, el) => {
+        $(el).removeClass('dp-media-box').addClass('dp-media-box-inner');
+      });
 
       // =========================
       // 🎯 STEP 3: INSERT VIDEO PROPERLY
       // =========================
-      if (!body.includes("youtube.com/embed/RGSK62chHlY")) {
+      const currentHtml = $.html();
+      
+      if (!currentHtml.includes("youtube.com/embed/RGSK62chHlY")) {
+        const firstMediaBox = $('.dp-media-box').first();
 
-        const mediaBoxRegex = /<div class="dp-media-box">/;
-
-        if (mediaBoxRegex.test(body)) {
-          body = body.replace(
-            mediaBoxRegex,
-            `<div class="dp-media-box">\n${YOUTUBE_VIDEO_BLOCK}`
-          );
-
+        if (firstMediaBox.length > 0) {
+          // Prepend inside the top of the media box
+          firstMediaBox.prepend(YOUTUBE_VIDEO_BLOCK);
           console.log("🎯 Inserted video:", p.handle);
-          updated = true;
         } else {
-          // fallback (top)
-          body = YOUTUBE_VIDEO_BLOCK + body;
+          // Fallback: prepend to the very top of the page body
+          $.root().prepend(YOUTUBE_VIDEO_BLOCK);
           console.log("⬆️ Inserted at top:", p.handle);
-          updated = true;
         }
       }
 
+      // Extract the finalized DOM back to an HTML string
+      const finalHtml = $.html();
+
       // =========================
-      // ✅ UPDATE PAGE
+      // ✅ UPDATE PAGE IF CHANGED
       // =========================
-      if (updated) {
+      if (finalHtml !== body) {
         await shopifyFetch(`/pages/${p.id}.json`, {
           method: "PUT",
           body: JSON.stringify({
             page: {
-              body_html: body,
+              id: p.id,
+              body_html: finalHtml,
             },
           }),
         });

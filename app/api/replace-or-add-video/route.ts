@@ -13,7 +13,7 @@ const MAX_RETRIES = 10;
 const TARGET_VIDEO =
   "https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov";
 
-// ✅ YouTube block (clean + reusable)
+// ✅ YouTube block
 const YOUTUBE_VIDEO_BLOCK = `
 <div style="margin-bottom:20px;">
   <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.1);">
@@ -64,19 +64,23 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
 export async function POST() {
   console.log("🎬 VIDEO REPLACE + INJECT STARTED");
 
-  let page = 1;
+  let pageInfo: string | null = null;
   let totalUpdated = 0;
 
   while (true) {
-    const res = await shopifyFetch(`/pages.json?limit=250&page=${page}`);
+    const res = await shopifyFetch(
+      `/pages.json?limit=250${pageInfo ? `&page_info=${pageInfo}` : ""}`
+    );
+
     const json = await res.json();
+    const pages = json.pages || [];
 
-    if (!json.pages || json.pages.length === 0) break;
+    if (!pages.length) break;
 
-    for (const p of json.pages) {
+    for (const p of pages) {
       let body = p.body_html || "";
 
-      // 🔒 ONLY target door pages
+      // 🔒 Only target your door pages
       if (
         !body.includes("Automatic Barn Door Opener") &&
         !body.includes("SlideDrive™")
@@ -86,7 +90,7 @@ export async function POST() {
 
       let updated = false;
 
-      // ✅ STEP 1: Replace raw video URL ONLY (safe)
+      // ✅ Replace raw Shopify video URL
       if (body.includes(TARGET_VIDEO)) {
         console.log("🔁 Replacing video:", p.handle);
 
@@ -98,7 +102,7 @@ export async function POST() {
         updated = true;
       }
 
-      // ✅ STEP 2: Add video if missing (safe append)
+      // ✅ Add video if missing (safe prepend)
       if (!body.includes("youtube.com/embed/RGSK62chHlY")) {
         console.log("➕ Adding video:", p.handle);
 
@@ -107,7 +111,7 @@ export async function POST() {
         updated = true;
       }
 
-      // ✅ UPDATE PAGE (safe format)
+      // ✅ Update page
       if (updated) {
         await shopifyFetch(`/pages/${p.id}.json`, {
           method: "PUT",
@@ -123,7 +127,12 @@ export async function POST() {
       }
     }
 
-    page++;
+    // ✅ Cursor pagination (THIS was your missing piece)
+    const link = res.headers.get("link");
+    const match = link?.match(/page_info=([^&>]+)>; rel="next"/);
+    pageInfo = match ? match[1] : null;
+
+    if (!pageInfo) break;
   }
 
   console.log("✅ DONE:", totalUpdated);

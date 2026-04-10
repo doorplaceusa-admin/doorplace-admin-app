@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { shopifyLimiter } from "@/lib/shopify/shopifyLimiter";
-// ✅ Correct modern Cheerio import
 import { load } from "cheerio";
 
 const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
@@ -43,20 +42,21 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
     });
 
     if (res.status === 429) {
+      console.warn(`⚠️ Rate limited by Shopify. Retrying in ${2 * attempt}s...`);
       await sleep(2000 * attempt);
       continue;
     }
 
     if (!res.ok) {
       const txt = await res.text();
-      console.log("❌ Shopify error", txt);
+      console.error("❌ Shopify error:", txt);
       throw new Error(txt);
     }
 
     return res;
   }
 
-  throw new Error("Shopify failed");
+  throw new Error("Shopify request failed after max retries.");
 }
 
 export async function POST() {
@@ -64,8 +64,11 @@ export async function POST() {
 
   let pageInfo: string | null = null;
   let totalUpdated = 0;
+  let pageCount = 0;
 
   while (true) {
+    console.log(`\n📦 Fetching batch of pages from Shopify... ${pageInfo ? "(Next Page)" : "(Page 1)"}`);
+    
     const res = await shopifyFetch(
       `/pages.json?limit=250${pageInfo ? `&page_info=${pageInfo}` : ""}`
     );
@@ -73,49 +76,72 @@ export async function POST() {
     const json = await res.json();
     const pages = json.pages || [];
 
-    if (!pages.length) break;
+    if (!pages.length) {
+      console.log("🏁 No more pages found in this batch.");
+      break;
+    }
 
     for (const p of pages) {
-      let body = p.body_html || "";
+      pageCount++;
+      const originalBody = p.body_html || "";
+      let body = originalBody;
 
       // Only target specific pages
       if (
         !body.includes("Automatic Barn Door Opener") &&
         !body.includes("SlideDrive™")
-      ) continue;
+      ) {
+        // Silently continue to prevent console spam for unrelated pages
+        continue;
+      }
 
-      // ✅ Load HTML into Cheerio correctly (null, false ensures it doesn't wrap it in <html><body> tags)
+      console.log(`\n🛠️ --- PROCESSING PAGE: ${p.handle} ---`);
+
+      // =========================
+      // 🔥 STEP 0: PRE-CLEAN MALFORMED TEXT
+      // =========================
+      body = body.replace(/["']?\s*type=["']?video\/mp4["']?[\s>]*>?/gi, "");
+      body = body.replace(/"\s*&gt;/gi, "");
+      
+      if (body !== originalBody) {
+        console.log("   🧹 Cleaned up floating garbage text/quotes");
+      }
+
       const $ = load(body, null, false);
+      const preCleanupHtmlLength = $.html().length;
 
       // =========================
-      // 🔥 STEP 1: DOM CLEANUP (No Regex)
+      // 🔥 STEP 1: DOM CLEANUP
       // =========================
-      
-      // Remove all native video tags
       $('video').remove();
-      
-      // Remove loose source tags referencing video
       $('source[type="video/mp4"]').remove();
-      
-      // Remove elements that specifically contain the old TARGET_VIDEO
       $(`[src*="${TARGET_VIDEO}"]`).remove();
 
-      // Remove ALL iframes EXCEPT our new YouTube video
+      let removedIframe = false;
       $('iframe').each((_, el) => {
         const src = $(el).attr('src') || '';
         if (!src.includes('RGSK62chHlY')) {
           $(el).remove();
+          removedIframe = true;
         }
       });
+
+      if ($.html().length !== preCleanupHtmlLength || removedIframe) {
+        console.log("   🗑️ Removed old native video tags / iframes");
+      }
 
       // =========================
       // 🔥 STEP 2: FIX NESTED MEDIA BOXES
       // =========================
-      // Target any .dp-media-box that is a direct child of another .dp-media-box.
-      // Swap its class so it doesn't double-apply styles, keeping HTML layout intact.
+      let fixedNestedBoxes = false;
       $('.dp-media-box > .dp-media-box').each((_, el) => {
         $(el).removeClass('dp-media-box').addClass('dp-media-box-inner');
+        fixedNestedBoxes = true;
       });
+
+      if (fixedNestedBoxes) {
+        console.log("   🔧 Fixed nested .dp-media-box classes");
+      }
 
       // =========================
       // 🎯 STEP 3: INSERT VIDEO PROPERLY
@@ -126,23 +152,24 @@ export async function POST() {
         const firstMediaBox = $('.dp-media-box').first();
 
         if (firstMediaBox.length > 0) {
-          // Prepend inside the top of the media box
           firstMediaBox.prepend(YOUTUBE_VIDEO_BLOCK);
-          console.log("🎯 Inserted video:", p.handle);
+          console.log("   🎯 Inserted YouTube video inside media box");
         } else {
-          // Fallback: prepend to the very top of the page body
           $.root().prepend(YOUTUBE_VIDEO_BLOCK);
-          console.log("⬆️ Inserted at top:", p.handle);
+          console.log("   ⬆️ Inserted YouTube video at top of page (No media box found)");
         }
+      } else {
+        console.log("   ✅ YouTube video already exists on this page");
       }
 
-      // Extract the finalized DOM back to an HTML string
       const finalHtml = $.html();
 
       // =========================
       // ✅ UPDATE PAGE IF CHANGED
       // =========================
-      if (finalHtml !== body) {
+      if (finalHtml !== originalBody) {
+        console.log("   🚀 Changes detected. Pushing update to Shopify...");
+        
         await shopifyFetch(`/pages/${p.id}.json`, {
           method: "PUT",
           body: JSON.stringify({
@@ -154,7 +181,10 @@ export async function POST() {
         });
 
         totalUpdated++;
+        console.log(`   ✅ Page update successful! (Total updated so far: ${totalUpdated})`);
         await sleep(SHOPIFY_DELAY_MS);
+      } else {
+        console.log("   🤷 No changes required. Skipping Shopify PUT request.");
       }
     }
 
@@ -165,10 +195,13 @@ export async function POST() {
     if (!pageInfo) break;
   }
 
-  console.log("✅ DONE:", totalUpdated);
+  console.log(`\n🎉 MASTER CLEANUP COMPLETE!`);
+  console.log(`📊 Scanned ${pageCount} total pages.`);
+  console.log(`✅ Successfully updated ${totalUpdated} pages.`);
 
   return NextResponse.json({
     success: true,
+    scanned: pageCount,
     updated: totalUpdated,
   });
 }

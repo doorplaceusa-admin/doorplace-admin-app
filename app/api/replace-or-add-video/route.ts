@@ -13,7 +13,7 @@ const MAX_RETRIES = 10;
 const TARGET_VIDEO =
   "https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov";
 
-// ✅ YouTube block
+// ✅ YouTube embed
 const YOUTUBE_VIDEO_BLOCK = `
 <div style="margin-bottom:20px;">
   <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,0.1);">
@@ -62,7 +62,7 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
 }
 
 export async function POST() {
-  console.log("🎬 VIDEO REPLACE + INJECT STARTED");
+  console.log("🎬 VIDEO CLEAN + REPLACE STARTED");
 
   let pageInfo: string | null = null;
   let totalUpdated = 0;
@@ -90,28 +90,36 @@ export async function POST() {
 
       let updated = false;
 
-      // ✅ Replace raw Shopify video URL
-      if (body.includes(TARGET_VIDEO)) {
-        console.log("🔁 Replacing video:", p.handle);
+      // =========================
+      // 🔥 STEP 1: HARD REMOVE ALL VIDEO GARBAGE
+      // =========================
+      const cleanedBody = body
+        .replace(/<video[\s\S]*?>[\s\S]*?<\/video>/gi, "")
+        .replace(/<video[\s\S]*?>/gi, "")
+        .replace(/<source[\s\S]*?>/gi, "")
+        .replace(/type="video\/mp4"/gi, "")
+        .replace(/<\/video>/gi, "")
+        .replace(new RegExp(TARGET_VIDEO, "g"), "");
 
-        body = body.replace(
-          new RegExp(TARGET_VIDEO, "g"),
-          YOUTUBE_VIDEO_BLOCK
-        );
-
+      if (cleanedBody !== body) {
+        console.log("🧹 Cleaned video junk:", p.handle);
+        body = cleanedBody;
         updated = true;
       }
 
-      // ✅ Add video if missing (safe prepend)
+      // =========================
+      // ✅ STEP 2: FORCE ADD YOUTUBE VIDEO
+      // =========================
       if (!body.includes("youtube.com/embed/RGSK62chHlY")) {
-        console.log("➕ Adding video:", p.handle);
+        console.log("➕ Injecting video:", p.handle);
 
         body = YOUTUBE_VIDEO_BLOCK + body;
-
         updated = true;
       }
 
-      // ✅ Update page
+      // =========================
+      // ✅ STEP 3: UPDATE PAGE
+      // =========================
       if (updated) {
         await shopifyFetch(`/pages/${p.id}.json`, {
           method: "PUT",
@@ -127,7 +135,7 @@ export async function POST() {
       }
     }
 
-    // ✅ Cursor pagination (THIS was your missing piece)
+    // ✅ Shopify cursor pagination
     const link = res.headers.get("link");
     const match = link?.match(/page_info=([^&>]+)>; rel="next"/);
     pageInfo = match ? match[1] : null;

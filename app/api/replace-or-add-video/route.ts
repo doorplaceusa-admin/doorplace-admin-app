@@ -2,7 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { shopifyLimiter } from "@/lib/shopify/shopifyLimiter";
-import * as cheerio from "cheerio";
+// ✅ Correct modern Cheerio import
+import { load } from "cheerio";
 
 const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
 const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN!;
@@ -83,8 +84,8 @@ export async function POST() {
         !body.includes("SlideDrive™")
       ) continue;
 
-      // Load HTML into Cheerio (null, false ensures it doesn't wrap it in <html><body> tags)
-      const $ = cheerio.load(body, null, false);
+      // ✅ Load HTML into Cheerio correctly (null, false ensures it doesn't wrap it in <html><body> tags)
+      const $ = load(body, null, false);
 
       // =========================
       // 🔥 STEP 1: DOM CLEANUP (No Regex)

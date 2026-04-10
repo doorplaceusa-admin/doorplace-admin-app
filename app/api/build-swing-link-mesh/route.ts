@@ -170,10 +170,9 @@ ${GUIDE_BLOCK}
       await shopifyFetch(`/pages/${pageId}.json`, {
         method: "PUT",
         body: JSON.stringify({
-          page: {
-            id: pageId,
-            body_html: updatedBody,
-          },
+         page: {
+  body_html: updatedBody,
+}
         }),
       });
 

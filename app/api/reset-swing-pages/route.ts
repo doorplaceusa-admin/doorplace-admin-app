@@ -58,9 +58,8 @@ export async function POST() {
         method: "PUT",
         body: JSON.stringify({
           page: {
-            id: page.id,
-            body_html: cleaned
-          }
+  body_html: cleaned
+}
         })
       });
 

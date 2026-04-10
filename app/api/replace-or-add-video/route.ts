@@ -9,7 +9,6 @@ const API_VERSION = "2023-10";
 
 const SHOPIFY_DELAY_MS = 4000;
 const MAX_RETRIES = 10;
-const BATCH_SIZE = 100;
 
 const TARGET_VIDEO =
   "https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov";
@@ -87,16 +86,9 @@ export async function POST() {
 
       let updated = false;
 
-      // =========================
-      // ✅ STEP 1: REPLACE VIDEO
-      // =========================
+      // ✅ STEP 1: Replace raw video URL ONLY (safe)
       if (body.includes(TARGET_VIDEO)) {
         console.log("🔁 Replacing video:", p.handle);
-
-        body = body.replace(
-          /<video[\s\S]*?<\/video>/g,
-          YOUTUBE_VIDEO_BLOCK
-        );
 
         body = body.replace(
           new RegExp(TARGET_VIDEO, "g"),
@@ -106,35 +98,24 @@ export async function POST() {
         updated = true;
       }
 
-      // =========================
-      // ✅ STEP 2: ADD VIDEO IF MISSING
-      // =========================
+      // ✅ STEP 2: Add video if missing (safe append)
       if (!body.includes("youtube.com/embed/RGSK62chHlY")) {
         console.log("➕ Adding video:", p.handle);
 
-        const heroRightRegex = /(<div class="dp-slide-hero">[\s\S]*?<div>[\s\S]*?<div>)/;
+        body = YOUTUBE_VIDEO_BLOCK + body;
 
-        if (heroRightRegex.test(body)) {
-          body = body.replace(
-            heroRightRegex,
-            `$1\n${YOUTUBE_VIDEO_BLOCK}`
-          );
-
-          updated = true;
-        }
+        updated = true;
       }
 
-      // =========================
-      // ✅ UPDATE PAGE (FIXED)
-      // =========================
+      // ✅ UPDATE PAGE (safe format)
       if (updated) {
         await shopifyFetch(`/pages/${p.id}.json`, {
           method: "PUT",
           body: JSON.stringify({
-  page: {
-    body_html: body,
-  },
-}),
+            page: {
+              body_html: body,
+            },
+          }),
         });
 
         totalUpdated++;

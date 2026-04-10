@@ -14,13 +14,15 @@ const TARGET_VIDEO =
   "https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov";
 
 const YOUTUBE_VIDEO_BLOCK = `
-<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;">
-  <iframe src="https://www.youtube.com/embed/RGSK62chHlY?rel=0&modestbranding=1&playsinline=1"
-  frameborder="0"
-  allow="encrypted-media"
-  allowfullscreen
-  style="position:absolute;top:0;left:0;width:100%;height:100%;">
-  </iframe>
+<div class="dp-media-box">
+  <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;">
+    <iframe src="https://www.youtube.com/embed/RGSK62chHlY?rel=0&modestbranding=1&playsinline=1"
+    frameborder="0"
+    allow="encrypted-media"
+    allowfullscreen
+    style="position:absolute;top:0;left:0;width:100%;height:100%;">
+    </iframe>
+  </div>
 </div>
 `;
 
@@ -58,7 +60,7 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
 }
 
 export async function POST() {
-  console.log("🎬 FULL VIDEO CLEAN + HERO FIX STARTED");
+  console.log("🔥 CLEAN + FIX VIDEO SYSTEM STARTED");
 
   let pageInfo: string | null = null;
   let totalUpdated = 0;
@@ -79,21 +81,31 @@ export async function POST() {
       if (
         !body.includes("Automatic Barn Door Opener") &&
         !body.includes("SlideDrive™")
-      ) {
-        continue;
-      }
+      ) continue;
 
       let updated = false;
 
       // =========================
-      // 🔥 STEP 1: HARD CLEAN ALL VIDEO + JUNK
+      // 🔥 STEP 1: AGGRESSIVE CLEAN
       // =========================
-      const cleaned = body
+      let cleaned = body
+        // remove ALL video tags
         .replace(/<video[\s\S]*?>[\s\S]*?<\/video>/gi, "")
         .replace(/<video[\s\S]*?>/gi, "")
-        .replace(/<source[\s\S]*?>/gi, "")
-        .replace(/type="video\/mp4"/gi, "")
         .replace(/<\/video>/gi, "")
+
+        // remove source tags
+        .replace(/<source[\s\S]*?>/gi, "")
+
+        // remove encoded broken html
+        .replace(/&lt;div[\s\S]*?&gt;/gi, "")
+        .replace(/&lt;iframe[\s\S]*?&gt;/gi, "")
+
+        // remove iframe blocks accidentally injected
+        .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
+
+        // remove leftover junk
+        .replace(/type="video\/mp4"/gi, "")
         .replace(/"\s*&gt;/gi, "")
         .replace(/&gt;/gi, "")
         .replace(new RegExp(TARGET_VIDEO, "g"), "");
@@ -104,27 +116,24 @@ export async function POST() {
       }
 
       // =========================
-      // 🎯 STEP 2: FIX HERO VIDEO PLACEMENT
+      // 🎯 STEP 2: SMART INSERT (HERO ONLY)
       // =========================
       if (!body.includes("youtube.com/embed/RGSK62chHlY")) {
 
-        // Try to inject into EMPTY media box
-        const mediaBoxRegex = /<div class="dp-media-box">\s*<\/div>/;
+        // target FIRST hero media box only
+        const heroMediaRegex = /(<div class="dp-slide-hero">[\s\S]*?<div class="dp-media-box">)/;
 
-        if (mediaBoxRegex.test(body)) {
+        if (heroMediaRegex.test(body)) {
           body = body.replace(
-            mediaBoxRegex,
-            `<div class="dp-media-box">${YOUTUBE_VIDEO_BLOCK}</div>`
+            heroMediaRegex,
+            `$1${YOUTUBE_VIDEO_BLOCK}`
           );
 
-          console.log("🎯 Inserted video in hero:", p.handle);
+          console.log("🎯 Inserted into hero:", p.handle);
+          updated = true;
         } else {
-          // fallback (top of page)
-          body = YOUTUBE_VIDEO_BLOCK + body;
-          console.log("⬆️ Inserted video at top:", p.handle);
+          console.log("⚠️ No hero found, skipping:", p.handle);
         }
-
-        updated = true;
       }
 
       // =========================

@@ -17,12 +17,12 @@ export async function OPTIONS() {
 }
 
 /* ======================================================
-   HARDENED BOT DETECTOR (FINAL)
+   HARDENED BOT DETECTOR
 ====================================================== */
 function detectCrawler(userAgent: string, ip: string | null) {
   const ua = (userAgent || "").toLowerCase();
 
-  // 🔥 Script detection (IMPORTANT)
+  // Script detection
   if (
     ua.includes("python") ||
     ua.includes("curl") ||
@@ -34,13 +34,13 @@ function detectCrawler(userAgent: string, ip: string | null) {
   }
 
   if (ip) {
-    // Standard Search Engines
+    // Search engines
     if (ip.startsWith("66.249.")) return "googlebot";
     if (ip.startsWith("157.55.") || ip.startsWith("40.77.")) return "bingbot";
     if (ip.startsWith("20.15.")) return "openai-bot";
     if (ip.startsWith("17.")) return "applebot";
 
-    // DOORPLACE MASTER BLACKLIST
+    // Data center blacklist
     const badPrefixes: Record<string, string> = {
       "192.144.": "tencent-bot",
       "104.253.": "zayo-bot",
@@ -67,7 +67,7 @@ function detectCrawler(userAgent: string, ip: string | null) {
     }
   }
 
-  // Fallback keyword detection
+  // Fallback detection
   if (
     ua.includes("bot") ||
     ua.includes("crawler") ||
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
   try {
     const supabase = supabaseAdmin;
 
-    // 1) Parse request
+    // 1) Parse body
     const body = await req.json();
     const { page_key, page_url, partner_id = null } = body;
 
@@ -108,7 +108,7 @@ export async function POST(req: Request) {
     const ip = rawIp.split(",")[0].trim() || null;
     const ua = req.headers.get("user-agent") || "";
 
-    // 3) Detect bots
+    // 3) Bot detection
     const crawler = detectCrawler(ua, ip);
 
     if (crawler) {
@@ -119,7 +119,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 🔥 4) DUPLICATE PROTECTION (10 sec window)
+    // 4) Duplicate protection (10 sec)
     const tenSecondsAgo = new Date(Date.now() - 10000).toISOString();
 
     const { data: existing } = await supabase
@@ -138,7 +138,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 5) Geo data
+    // 5) Geo data (Cloudflare)
     const city = req.headers.get("cf-ipcity") || null;
     const state = req.headers.get("cf-region") || null;
     const lat = req.headers.get("cf-iplatitude")
@@ -148,9 +148,9 @@ export async function POST(req: Request) {
       ? parseFloat(req.headers.get("cf-iplongitude")!)
       : null;
 
-    console.log(`🔥 UNKNOWN VISITOR: ${page_url} | ${city}, ${state} | IP: ${ip}`);
+    console.log(`🔥 HUMAN VISITOR: ${page_url} | ${city}, ${state} | IP: ${ip}`);
 
-    // 6) Insert (START AS UNKNOWN)
+    // 6) Insert into page_view_events
     const { error } = await supabase.from("page_view_events").insert({
       page_key,
       page_url,
@@ -161,7 +161,7 @@ export async function POST(req: Request) {
       longitude: lon,
       ip_address: ip,
       user_agent: ua,
-      source: "unknown",
+      source: "human",
     });
 
     if (error) {
@@ -171,6 +171,26 @@ export async function POST(req: Request) {
         headers: corsHeaders,
       });
     }
+
+    // 🔥 7) WRITE TO LIVE MAP (THIS FIXES YOUR DASHBOARD)
+    await supabase
+      .from("live_map_activity")
+      .upsert(
+        {
+          ip_address: ip,
+          page_key,
+          page_url,
+          city,
+          state,
+          latitude: lat,
+          longitude: lon,
+          is_human: true,
+          last_seen: new Date().toISOString(),
+        },
+        {
+          onConflict: "ip_address",
+        }
+      );
 
     return new Response("OK", {
       status: 200,

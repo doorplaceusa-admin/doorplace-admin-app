@@ -121,7 +121,7 @@ export async function POST(req: Request) {
       longitude: lon,
       ip_address: ip,
       user_agent: ua,
-      source: "human",
+      source: "unknown",
     });
 
     if (error) {

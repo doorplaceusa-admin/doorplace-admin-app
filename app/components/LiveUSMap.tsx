@@ -832,33 +832,41 @@ return (
         >
           {/* Clusters */}
           {clusters
-            .slice()
-            .sort((a, b) => b.total - a.total)
-            .map((c) => {
-              const safeCount = safeInt(c.total, 1);
-              const radius = clamp(10 + Math.sqrt(safeCount) * 6, 10, 52);
-              const dotColor = COLORS[c.category];
+  .filter((c) => Number.isFinite(c.x) && Number.isFinite(c.y))
+  .slice()
+  .sort((a, b) => b.total - a.total)
+  .map((c) => {
+    const safeCount = safeInt(c.total, 1);
 
-              return (
-                <g
-                  key={c.id}
-                  transform={`translate(${c.x}, ${c.y})`}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => zoomToCluster(c)}
-                >
-                  <circle r={radius} fill={dotColor} opacity={0.75} />
-                  <text
-                    textAnchor="middle"
-                    dy=".3em"
-                    fontSize={12}
-                    fontWeight={900}
-                    fill="white"
-                  >
-                    {safeCount}
-                  </text>
-                </g>
-              );
-            })}
+    const radius = clamp(8 + Math.sqrt(safeCount) * 4, 8, 40);
+
+    const x = clamp(c.x, 0, 1000);
+    const y = clamp(c.y, 0, 600);
+
+    const dotColor = COLORS[c.category] || "#ff4d4f";
+
+    return (
+      <g
+        key={c.id}
+        transform={`translate(${x}, ${y})`}
+        style={{ cursor: "pointer" }}
+        onClick={() => zoomToCluster(c)}
+        onMouseEnter={() => setHoverCluster(c)}
+        onMouseLeave={() => setHoverCluster(null)}
+      >
+        <circle r={radius} fill={dotColor} opacity={0.8} />
+        <text
+          textAnchor="middle"
+          dy=".3em"
+          fontSize={10}
+          fontWeight={700}
+          fill="white"
+        >
+          {safeCount}
+        </text>
+      </g>
+    );
+  })}
         </svg>
       </TransformComponent>
     </>

@@ -481,9 +481,6 @@ const id = setInterval(loadHumanCount, refreshMs);
 
   proj.fitSize([width, height], geo);
 
-  // 🔥 THIS IS THE FIX
-  proj.scale(proj.scale() * 1.8)
-
  proj.translate([width / 2, height / 2]);
 
   return proj;

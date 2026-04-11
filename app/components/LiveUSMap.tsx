@@ -475,16 +475,20 @@ const id = setInterval(loadHumanCount, refreshMs);
      GEO / PROJECTION
   ========================== */
 
-  const projection = useMemo(() => {
-    const proj = geoAlbersUsa();
-    const geo = feature(us as any, (us as any).objects.states) as any;
-    proj.fitSize([width, height], geo);
+ const projection = useMemo(() => {
+  const proj = geoAlbersUsa();
+  const geo = feature(us as any, (us as any).objects.states) as any;
 
-    // Keep your same “move” feel but slightly refined
-    const t = proj.translate();
-    proj.translate([t[0], t[1]]);
-    return proj;
-  }, [width, height]);
+  proj.fitSize([width, height], geo);
+
+  // 🔥 THIS IS THE FIX
+  proj.scale(proj.scale() * 1.5);
+
+  const t = proj.translate();
+  proj.translate([t[0], t[1]]);
+
+  return proj;
+}, [width, height]);
 
   const pathGenerator = useMemo(() => geoPath(projection), [projection]);
 

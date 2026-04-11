@@ -484,8 +484,7 @@ const id = setInterval(loadHumanCount, refreshMs);
   // 🔥 THIS IS THE FIX
   proj.scale(proj.scale() * 1.8)
 
-  const t = proj.translate();
-  proj.translate([t[0], t[1]]);
+ proj.translate([width / 2, height / 2]);
 
   return proj;
 }, [width, height]);

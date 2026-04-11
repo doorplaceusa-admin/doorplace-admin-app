@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { geoAlbersUsa, geoPath, geoCentroid } from "d3-geo";
 import { TransformWrapper, TransformComponent, ReactZoomPanPinchRef, ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import { feature } from "topojson-client";
+import crypto from "crypto";
 
 import us from "us-atlas/states-10m.json";
 import nationData from "us-atlas/nation-10m.json";
@@ -20,8 +21,9 @@ type LiveVisitor = {
   count: number;
 
   /* NEW unified feed fields */
-  source: "human";
+  source: "human" | "crawler";
 
+  crawler_name?: string | null;
 
   page_url?: string;
   page_key?: string;
@@ -30,7 +32,11 @@ type LiveVisitor = {
 
 type Category =
   | "swing"
-  | "door";
+  | "door"
+  | "partner"
+  | "partner_coverage" // 👥 COVERAGE DOTS (anonymous)
+  | "crawler"
+  | "other";
 
 type Dot = {
   id: string;
@@ -41,6 +47,7 @@ type Dot = {
   count: number;
   page_key?: string;
   page_url?: string;
+  crawler_name?: string | null;
   category: Category;
 };
 
@@ -64,7 +71,13 @@ const brandRed = "#ef4444";
 const COLORS: Record<Category, string> = {
   swing: brandRed,
   door: "#2563eb",
+  partner: "#16a34a",
 
+  partner_coverage: "#f59e0b",
+ // 👥 Coverage (soft outline)
+
+  crawler: "#0ea5e9",
+  other: "#7c3aed",
 };
 
 
@@ -148,6 +161,7 @@ const STATE_ABBR_BY_FIPS: Record<string, string> = {
   "45": "SC", "46": "SD", "47": "TN", "48": "TX", "49": "UT", "50": "VT", "51": "VA", "53": "WA",
   "54": "WV", "55": "WI", "56": "WY",
 };
+// ✅ US Center fallback (for "Other" category)
 const US_CENTER = { lat: 39.8283, lon: -98.5795 };
 
 const STATE_LABEL_OFFSETS: Record<string, { dx: number; dy: number }> = {
@@ -159,7 +173,18 @@ const STATE_LABEL_OFFSETS: Record<string, { dx: number; dy: number }> = {
 /* ======================================================
    PURE HELPERS
 ====================================================== */
+function extractStateFromUrl(pageUrl?: string): string | null {
+  if (!pageUrl) return null;
 
+  // Match "-tx" "-va" "-nc" at the very end of slug
+  const match = pageUrl.toLowerCase().match(/-([a-z]{2})$/);
+
+  if (!match) return null;
+
+  const abbr = match[1].toUpperCase();
+
+  return STATE_NAME_BY_ABBR[abbr] || null;
+}
 
 function normalizeStateName(input: string): string {
   const trimmed = (input || "").trim();
@@ -168,15 +193,31 @@ function normalizeStateName(input: string): string {
   return trimmed;
 }
 
-function getCategory(v: LiveVisitor): Category | null {
+function getCategory(v: LiveVisitor): Category {
+  if (v.source === "crawler") return "crawler";
+
   const key = (v.page_key || "").toLowerCase();
   const url = (v.page_url || "").toLowerCase();
 
+ // ✅ HARD LOCK
+if (url.includes("swing-partner-lead")) return "partner";
+
+// ✅ HARD LOCK homepage + login as OTHER
+if (url === "/" || url.includes("account/login")) return "other";
+
+
+  // ✅ Partner pages MUST win first
+  if (key.includes("partner") || url.includes("partner")) return "partner";
+
+  // ✅ Then swing
   if (key.includes("swing") || url.includes("swing")) return "swing";
+
+  // ✅ Then door
   if (key.includes("door") || url.includes("door")) return "door";
 
-  return null; // ❌ everything else is ignored
+  return "other";
 }
+
 
 
 
@@ -185,7 +226,11 @@ function safeInt(n: any, fallback = 1) {
   return Number.isFinite(x) && x > 0 ? Math.floor(x) : fallback;
 }
 
-
+function makeDotId(v: LiveVisitor) {
+  return v.source === "crawler"
+    ? `crawler|${crypto.randomUUID()}`
+    : `human|${v.city}|${v.state}|${v.page_url || ""}`;
+}
 
 
 
@@ -286,15 +331,26 @@ function clusterByPixels(
     const catTotals: Record<Category, number> = {
   swing: 0,
   door: 0,
+  partner: 0,
+
+  partner_coverage: 0, // 👥 NEW
+
+  other: 0,
+  crawler: 0,
 };
 
     for (const it of items) catTotals[it.category] += it.count;
 
-    const category = (Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || "swing") as Category;
+    const category = (Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || "other") as Category;
 
     // pick top label (most count item)
     const top = items.slice().sort((a, b) => b.count - a.count)[0];
-   const topLabel = `${top.city || top.page_key || "Unknown"}, ${top.state}`;
+    const topLabel =
+  top.category === "crawler"
+    ? `🕷 ${top.crawler_name || "Crawler"} • ${top.state}`
+    : top.category === "partner_coverage"
+    ? `👥 ${sumCount} Partners • ${top.city}, ${top.state}`
+    : `${top.city || top.page_key || "Unknown"}, ${top.state}`;
 
 
 
@@ -411,19 +467,53 @@ export default function LiveUSMap({
   const [show, setShow] = useState<Record<Category, boolean>>({
   swing: true,
   door: true,
+  partner: false,
+  partner_coverage: false, // 👥 NEW
+  crawler: true,
+  other: false,
 });
 
 
   // Search query for filtering dots
   const [query, setQuery] = useState<string>("");
+  // ✅ Live crawlers (ephemeral, no DB)
+const [liveCrawlers, setLiveCrawlers] = useState<LiveVisitor[]>([]);
 
   // ✅ Human window counter (adjustable)
 const [humanWindowMinutes, setHumanWindowMinutes] = useState<number>(30);
 const [humanCount, setHumanCount] = useState<number>(0);
 
+// 👥 Partner Coverage Points
+const [partnerCoverage, setPartnerCoverage] = useState<
+  {
+    city: string;
+    state: string;
+    partner_count: number;
+    latitude: number;
+    longitude: number;
+  }[]
+>([]);
 
 
 
+
+
+
+useEffect(() => {
+  async function loadPartnerCoverage() {
+    try {
+      const res = await fetch("/api/map/partners");
+      const data = await res.json();
+
+      setPartnerCoverage(data || []);
+
+    } catch (err) {
+      console.error("Partner coverage fetch failed", err);
+    }
+  }
+
+  loadPartnerCoverage();
+}, []);
 
 // ✅ Human views counter (last X minutes)
 useEffect(() => {
@@ -458,10 +548,14 @@ const id = setInterval(loadHumanCount, refreshMs);
   // Spike protection: buffer incoming visitors, update map at most every 250ms
   const bufferRef = useRef<LiveVisitor[]>(visitors);
   const [renderVisitors, setRenderVisitors] = useState<LiveVisitor[]>(visitors);
+// ✅ Merge DB humans + live crawlers
+const mergedVisitors = useMemo(() => {
+  return [...visitors, ...liveCrawlers];
+}, [visitors, liveCrawlers]);
 
   useEffect(() => {
-  bufferRef.current = visitors;
-}, [visitors]);
+  bufferRef.current = mergedVisitors;
+}, [mergedVisitors]);
 
 
   useEffect(() => {
@@ -532,155 +626,244 @@ const id = setInterval(loadHumanCount, refreshMs);
   ========================== */
 
   const dots = useMemo<Dot[]>(() => {
-  const q = query.trim().toLowerCase();
-  const out: Dot[] = [];
+    const q = query.trim().toLowerCase();
 
-  for (const v of renderVisitors) {
-    const count = safeInt(v.count, 1);
-    const category = getCategory(v);
+    const out: Dot[] = [];
+    for (const v of renderVisitors) {
+      const count = safeInt(v.count, 1);
+      const category = getCategory(v);
+// ❌ Skip login noise completely
+if ((v.page_url || "").includes("account/login")) continue;
 
-    if (!category || !show[category]) continue;
+      if (!show[category]) continue;
 
-    if ((v.page_url || "").includes("account/login")) continue;
+      // Search filter (city/state/page)
+      if (q) {
+        const hay = `${v.city || ""} ${v.state || ""} ${v.page_key || ""} ${v.page_url || ""}`.toLowerCase();
+        if (!hay.includes(q)) continue;
+      }
 
-    if (q) {
-      const hay = `${v.city || ""} ${v.state || ""} ${v.page_key || ""} ${v.page_url || ""}`.toLowerCase();
-      if (!hay.includes(q)) continue;
-    }
+      let lat = v.latitude;
+      let lon = v.longitude;
 
-    let lat = v.latitude;
-    let lon = v.longitude;
+      
+
+
 
     if (lat == null || lon == null) {
-      const stateName = normalizeStateName(v.state || "");
-      const fallback = stateName ? STATE_CENTROIDS[stateName] : null;
 
-      if (fallback) {
-        lat = fallback.lat;
-        lon = fallback.lon;
-      } else {
-        lat = US_CENTER.lat;
-        lon = US_CENTER.lon;
-      }
+  // ✅ Crawlers → State centroid from URL
+if (v.source === "crawler") {
+  const stateName = extractStateFromUrl(v.page_url);
+
+  if (stateName && STATE_CENTROIDS[stateName]) {
+    lat = STATE_CENTROIDS[stateName].lat;
+    lon = STATE_CENTROIDS[stateName].lon;
+
+    // Optional: tiny jitter so bots don't stack perfectly
+    lat += (Math.random() - 0.5) * 1.0;
+    lon += (Math.random() - 0.5) * 1.0;
+  } else {
+    // fallback if parsing fails
+    lat = US_CENTER.lat;
+    lon = US_CENTER.lon;
+  }
+}
+
+
+  // ✅ Other pages → US center
+  else if (category === "other") {
+    lat = US_CENTER.lat;
+    lon = US_CENTER.lon;
+  }
+
+  // ✅ Swing/Door/Partner → State centroid fallback
+  else {
+    const stateName = normalizeStateName(v.state || "");
+    const fallback = stateName ? STATE_CENTROIDS[stateName] : null;
+
+    if (fallback) {
+      lat = fallback.lat;
+      lon = fallback.lon;
+    } else {
+      lat = US_CENTER.lat;
+      lon = US_CENTER.lon;
     }
-
-    out.push({
-      id: `${v.city || "unknown"}-${v.state}-${Math.random()}`,
-      city: v.city || v.page_key || "Unknown Location",
-      state: v.state || "",
-      lat,
-      lon,
-      count,
-      page_key: v.page_key,
-      page_url: v.page_url,
-      category,
-    });
   }
+}
 
-  return out;
-}, [renderVisitors, query, show]);
 
-/* ==========================
-   CLUSTERING (PIXEL BASED)
-   - The higher zoom, the smaller cluster radius (more separation)
-========================== */
 
-const clusters = useMemo(() => {
-  // Bigger radius when zoomed out so you don’t get dot soup
-  const base =
-    zoomScale <= 1.2 ? 34 :
-    zoomScale <= 1.8 ? 26 :
-    zoomScale <= 2.6 ? 18 :
-    12;
 
-  return clusterByPixels(dots, projectLonLat, base);
-}, [dots, projectLonLat, zoomScale]);
 
-/* ==========================
-   KPI / SIDEBAR
-========================== */
+      out.push({
+  id: makeDotId(v),
 
-const totals = useMemo(() => {
-  let totalVisitors = 0;
+  city: v.city || v.page_key || "Unknown Location",
+  state:
+  v.source === "crawler"
+    ? extractStateFromUrl(v.page_url) || ""
+    : v.state || "",
 
-  const byCat = {
-    swing: 0,
-    door: 0,
-  };
+  lat,
+  lon,
+  count,
 
-  for (const d of dots) {
-    totalVisitors += d.count;
-    byCat[d.category] += d.count;
-  }
+  page_key: v.page_key,
+  page_url: v.page_url,
+  category,
 
-  return { totalVisitors, byCat };
-}, [dots]);
+  crawler_name: v.crawler_name || null, // ✅ ADD
+});
 
-const topClusters = useMemo(() => {
+    }
+// ======================================================
+// 👥 PARTNER COVERAGE DOTS (anonymous)
+// ======================================================
+for (const p of partnerCoverage) {
+  if (!show.partner_coverage) continue;
+
+  out.push({
+    id: `partnercov|${p.city}|${p.state}`,
+
+    city: p.city,
+    state: p.state,
+
+   lat: p.latitude
+  ? Number(p.latitude)
+  : (STATE_CENTROIDS[normalizeStateName(p.state)]?.lat ?? US_CENTER.lat) + (Math.random() - 0.5) * 1.2,
+
+lon: p.longitude
+  ? Number(p.longitude)
+  : (STATE_CENTROIDS[normalizeStateName(p.state)]?.lon ?? US_CENTER.lon) + (Math.random() - 0.5) * 1.2,
+
+
+    count: safeInt(p.partner_count, 1),
+
+    category: "partner_coverage",
+  });
+}
+
+
+
+    return out;
+  }, [renderVisitors, query, show, partnerCoverage]);
+
+  /* ==========================
+     CLUSTERING (PIXEL BASED)
+     - The higher zoom, the smaller cluster radius (more separation)
+  ========================== */
+
+  const clusters = useMemo(() => {
+    // Bigger radius when zoomed out so you don’t get dot soup
+    const base = zoomScale <= 1.2 ? 34 : zoomScale <= 1.8 ? 26 : zoomScale <= 2.6 ? 18 : 12;
+    const humanDots = dots.filter((d) => d.category !== "crawler");
+const crawlerDots = dots.filter((d) => d.category === "crawler");
+
+return [
+  ...clusterByPixels(humanDots, projectLonLat, base),
+  ...clusterByPixels(crawlerDots, projectLonLat, base * 1.4),
+];
+  }, [dots, projectLonLat, zoomScale]);
+
+  /* ==========================
+     KPI / SIDEBAR
+  ========================== */
+
+  const totals = useMemo(() => {
+      let totalVisitors = 0;
+  const byCat: Record<Category, number> = {
+  swing: 0,
+  door: 0,
+  partner: 0,
+
+  partner_coverage: 0, // 👥 NEW
+
+  other: 0,
+  crawler: 0,
+};
+
+    for (const d of dots) {
+      if (d.category !== "crawler") {
+  totalVisitors += d.count;
+}
+      byCat[d.category] += d.count;
+    }
+    return { totalVisitors, byCat };
+  }, [dots]);
+
+  const topClusters = useMemo(() => {
   return clusters
     .slice()
     .sort((a, b) => b.total - a.total)
     .slice(0, fullscreen ? 10 : 6);
 }, [clusters, fullscreen]);
 
-// Remove duplicate URLs inside the selected cluster (keeps first instance)
-const uniqueItems = useMemo(() => {
-  if (!selectedCluster) return [] as Dot[];
 
-  return Array.from(
-    new Map(
-      selectedCluster.items
-        .filter((it) => !(it.page_url || "").includes("account/login"))
-        .map((it) => [((it.page_url || "") as string).toLowerCase(), it])
-    ).values()
-  );
-}, [selectedCluster]);
+  // Remove duplicate URLs inside the selected cluster (keeps first instance)
+  const uniqueItems = useMemo(() => {
+    if (!selectedCluster) return [] as Dot[];
+    return Array.from(
+  new Map(
+    selectedCluster.items
+      .filter((it) => !(it.page_url || "").includes("account/login"))
+      .map((it) => [((it.page_url || "") as string).toLowerCase(), it])
+  ).values()
+);
 
-/* ==========================
-   ZOOM CONTROLS
-========================== */
+  }, [selectedCluster]);
 
-const zoomRef = useRef<ReactZoomPanPinchRef | ReactZoomPanPinchContentRef | null>(null);
+  /* ==========================
+     ZOOM CONTROLS
+  ========================== */
 
-const resetView = useCallback(() => {
-  zoomRef.current?.resetTransform();
-  setSelectedCluster(null);
-}, []);
+  const zoomRef = useRef<ReactZoomPanPinchRef | ReactZoomPanPinchContentRef | null>(null);
 
-const zoomToCluster = useCallback((c: Cluster) => {
+  const resetView = useCallback(() => {
+    zoomRef.current?.resetTransform();
+    setSelectedCluster(null);
+  }, []);
+
+  const zoomToCluster = useCallback((c: Cluster) => {
   const ref = zoomRef.current;
+
   if (!ref) return;
 
+  // ✅ Find the cluster DOM element
   const el = document.getElementById(`cluster-${c.id}`);
+
   if (!el) return;
 
+  // ✅ This zooms perfectly to the dot
   ref.zoomToElement(el, 1.8, 300);
+
   setSelectedCluster(c);
 }, []);
 
-/* ==========================
-   RENDER
-========================== */
 
-const mapHeightCss = fullscreen
-  ? "calc(100vh - 220px)"
-  : desktop
-  ? "520px"
-  : "260px";
+  /* ==========================
+     RENDER
+  ========================== */
 
-const panelWidth = fullscreen ? 420 : 360;
+  const mapHeightCss = fullscreen
+    ? "calc(100vh - 220px)"
+    : desktop
+    ? "520px"
+    : "260px";
 
-return (
-  <div
-    style={{
-      width: "100%",
-      borderRadius: 24,
-      overflow: "hidden",
-      background: "#f7f8fa",
-      border: "1px solid #e5e7eb",
-      boxShadow: "0 14px 44px rgba(0,0,0,0.10)",
-    }}
-  >
+  const panelWidth = fullscreen ? 420 : 360;
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        borderRadius: 24,
+        overflow: "hidden",
+        background: "#f7f8fa",
+        border: "1px solid #e5e7eb",
+        boxShadow: "0 14px 44px rgba(0,0,0,0.10)",
+      }}
+    >
       {/* ======================================================
           HEADER (KPI STRIP)
       ======================================================= */}
@@ -762,9 +945,36 @@ return (
             active={show.door}
             onClick={() => setShow((s) => ({ ...s, door: !s.door }))}
           />
-          
-          
-          
+          <Pill
+            label={`Partner (${totals.byCat.partner})`}
+            color={COLORS.partner}
+            active={show.partner}
+            onClick={() => setShow((s) => ({ ...s, partner: !s.partner }))}
+          />
+          <Pill
+  label={`Coverage (${totals.byCat.partner_coverage})`}
+  color={COLORS.partner_coverage}
+  active={show.partner_coverage}
+  onClick={() =>
+    setShow((s) => ({
+      ...s,
+      partner_coverage: !s.partner_coverage,
+    }))
+  }
+/>
+
+          <Pill
+            label={`Other (${totals.byCat.other})`}
+            color={COLORS.other}
+            active={show.other}
+            onClick={() => setShow((s) => ({ ...s, other: !s.other }))}
+          />
+          <Pill
+  label={`Crawlers (${totals.byCat.crawler})`}
+  color={COLORS.crawler}
+  active={show.crawler}
+  onClick={() => setShow((s) => ({ ...s, crawler: !s.crawler }))}
+/>
 
 
           <button
@@ -811,90 +1021,257 @@ return (
               boxShadow: "0 12px 34px rgba(0,0,0,0.10)",
             }}
           >
-           <TransformWrapper
-  minScale={1}
-  maxScale={8}
-  initialScale={1}
-  wheel={{ step: 0.2 }}
->
-  {({ zoomIn, zoomOut, resetTransform }) => (
-    <>
-      <div style={{ marginBottom: 10, display: "flex", gap: 10 }}>
-        <button onClick={() => zoomIn()}>+</button>
-        <button onClick={() => zoomOut()}>-</button>
-        <button onClick={() => resetTransform()}>Reset</button>
-      </div>
+            <TransformWrapper
+              ref={(ref) => {
+                // assign to ref without returning a value to satisfy Ref callback type
+                zoomRef.current = ref;
+              }}
+              initialScale={1.15}
+              minScale={1}
+              maxScale={6}
+              wheel={{ step: 0.25 }}
+              doubleClick={{ disabled: true }}
+              onTransformed={(ref) => setZoomScale(ref.state.scale)}
+            >
+              <TransformComponent
+                wrapperStyle={{ width: "100%", height: "100%" }}
+                contentStyle={{ width: "100%", height: "100%" }}
+              >
+                <svg
+                  width="100%"
+                  height="100%"
+                  viewBox={`0 0 ${width} ${height}`}
+                  preserveAspectRatio="xMidYMid meet"
+                  style={{ display: "block", background: "#f8fafc" }}
+                >
+                  <defs>
+                    <linearGradient id="oceanGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#e8f2ff" />
+                      <stop offset="100%" stopColor="#f8fafc" />
+                    </linearGradient>
 
-      <TransformComponent>
-       <svg
-  viewBox={`0 0 ${width} ${height}`}
-  style={{ width: "100%", height: "auto" }}
->
+                    <linearGradient id="landGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f7fafc" />
+                      <stop offset="100%" stopColor="#eef2f7" />
+                    </linearGradient>
 
-  {/* ================= MAP BACKGROUND ================= */}
+                    <filter id="mapSoftShadow" x="-30%" y="-30%" width="160%" height="160%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#0f172a" floodOpacity="0.12" />
+                    </filter>
 
-  {/* Nation */}
-  <path
-d={pathGenerator(nation) || ""}
-    stroke="#e5e7eb"
-    strokeWidth={1}
-  />
+                    <filter id="bubbleShadow" x="-30%" y="-30%" width="160%" height="160%">
+                      <feDropShadow dx="0" dy="2" stdDeviation="2.2" floodColor="#0f172a" floodOpacity="0.22" />
+                    </filter>
 
-  {/* States */}
-  {states.map((s: any) => (
-    <path
-      key={s.id}
-d={pathGenerator(s) || ""}
-      stroke="#d1d5db"
-      strokeWidth={0.6}
+                    <filter id="hoverGlow" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="2.2" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  {/* Ocean */}
+                  <rect x="-3000" y="-3000" width="6000" height="6000" fill="url(#oceanGrad)" />
+
+                  {/* Coastline */}
+                  <path
+                    d={pathGenerator(nation) || ""}
+                    fill="url(#landGrad)"
+                    stroke="#334155"
+                    strokeWidth={2}
+                    filter="url(#mapSoftShadow)"
+                  />
+
+                  {/* States */}
+                  <g filter="url(#mapSoftShadow)">
+                    {states.map((state: any, i: number) => {
+                      const fips = String(state.id).padStart(2, "0");
+                      const isHover = hoveredStateKey === fips;
+
+                      return (
+                        <path
+                          key={i}
+                          d={pathGenerator(state) || ""}
+                          fill={isHover ? "#ffe5e5" : "url(#landGrad)"}
+                          stroke={isHover ? "#334155" : "#475569"}
+                          strokeWidth={isHover ? 2.2 : 1.4}
+                          style={{ transition: "all 120ms ease", cursor: "default" }}
+                          filter={isHover ? "url(#hoverGlow)" : undefined}
+                          onMouseEnter={() => setHoveredStateKey(fips)}
+                          onMouseLeave={() => setHoveredStateKey(null)}
+                        />
+                      );
+                    })}
+                  </g>
+
+                  {/* State labels */}
+                  <g style={{ pointerEvents: "none" }}>
+                    {stateLabels.map((l) => {
+                      const labelOpacity = zoomScale > 3.2 ? 0.12 : zoomScale > 2.2 ? 0.18 : 0.28;
+                      return (
+                        <text
+                          key={l.key}
+                          x={l.x}
+                          y={l.y}
+                          textAnchor="middle"
+                          dominantBaseline="central"
+                          fontSize={zoomScale > 2.2 ? 9 : 10}
+                          fontWeight={900}
+                          fill="#0f172a"
+                          opacity={labelOpacity}
+                          style={{ letterSpacing: "0.6px", textShadow: "0 1px 0 rgba(255,255,255,0.65)" }}
+                        >
+                          {l.abbr}
+                        </text>
+                      );
+                    })}
+                  </g>
+
+                  {/* Clusters */}
+                  {clusters
+  .slice()
+  .sort((a, b) => {
+    // ✅ Crawlers always render underneath
+    if (a.category === "crawler" && b.category !== "crawler") return -1;
+    if (a.category !== "crawler" && b.category === "crawler") return 1;
+    return b.total - a.total;
+  })
+  .map((c) => {
+                    const safeCount = safeInt(c.total, 1);
+                    const radius =
+  c.category === "crawler"
+    ? clamp(6 + Math.log10(safeCount + 1) * 8, 6, 18)
+    : clamp(10 + Math.sqrt(safeCount) * 6, 10, 52);
+
+                    const dotColor = COLORS[c.category];
+
+                    return (
+                      <g
+                        id={`cluster-${c.id}`}
+                         key={c.id}
+                         style={{ cursor: "pointer" }}
+                        filter="url(#bubbleShadow)"
+                        onMouseEnter={() => setHoverCluster(c)}
+                        onMouseLeave={() => setHoverCluster((prev) => (prev?.id === c.id ? null : prev))}
+                        onClick={() => {
+                          setSelectedCluster(c);
+                        }}
+                      >
+                       {/* Pulse ring (humans only) */}
+{c.category !== "crawler" && c.category !== "partner_coverage" && (
+  <circle
+    cx={c.x}
+    cy={c.y}
+    r={radius + 6}
+    fill="none"
+    stroke={dotColor}
+    strokeWidth={2.6}
+    opacity={0.35}
+  >
+    <animate
+      attributeName="r"
+      values={`${radius};${radius + 18}`}
+      dur="1.6s"
+      repeatCount="indefinite"
     />
-  ))}
+      <animate
+        attributeName="opacity"
+        values="0.4;0"
+        dur="1.6s"
+        repeatCount="indefinite"
+      />
+  </circle>
+)}
+{/* ======================================================
+   COVERAGE CLUSTER (SUBTLE WATERMARK STYLE)
+====================================================== */}
 
-  {/* ================= CLUSTERS ================= */}
+{/* Soft halo glow */}
+{c.category === "partner_coverage" && (
+  <circle
+    cx={c.x}
+    cy={c.y}
+    r={radius + 10}
+    fill={dotColor}
+    opacity={0.05}
+  />
+)}
 
-  {clusters
-    .filter((c) => Number.isFinite(c.x) && Number.isFinite(c.y))
-    .slice()
-    .sort((a, b) => b.total - a.total)
-    .map((c) => {
-      const safeCount = safeInt(c.total, 1);
+{/* Main Coverage Outline Bubble */}
+<circle
+  cx={c.x}
+  cy={c.y}
+  r={radius}
+  fill={c.category === "partner_coverage" ? "transparent" : dotColor}
+  stroke={c.category === "partner_coverage" ? dotColor : "none"}
+  strokeWidth={c.category === "partner_coverage" ? 1.6 : 0}
+  opacity={
+    c.category === "crawler"
+      ? 0.50
+      : c.category === "partner_coverage"
+      ? 0.25
+      : 0.92
+  }
+/>
 
-      const radius = clamp(8 + Math.sqrt(safeCount) * 4, 8, 40);
+{/* Icon/Text */}
+<text
+  x={c.x}
+  y={c.y + 4}
+  textAnchor="middle"
+  fontWeight="900"
+  fontSize={
+    c.category === "partner_coverage"
+      ? 16   // ✅ bigger dot
+      : c.category === "crawler"
+      ? 14
+      : 14
+  }
+  fill={
+    c.category === "partner_coverage"
+      ? "#f59e0b" // ✅ strong amber
+      : c.category === "crawler"
+      ? "white"
+      : "white"
+  }
+  opacity={
+    c.category === "partner_coverage"
+      ? 0.85 // ✅ visible but subtle
+      : 1
+  }
+>
+  {c.category === "crawler"
+    ? "🕷"
+    : c.category === "partner_coverage"
+    ? "●"
+    : safeCount.toString()}
+</text>
 
-      const x = clamp(c.x, 0, width);
-      const y = clamp(c.y, 0, height);
 
-      const dotColor = COLORS[c.category] || "#ff4d4f";
 
-      return (
-        <g
-          key={c.id}
-          id={`cluster-${c.id}`}
-          transform={`translate(${x}, ${y})`}
-          style={{ cursor: "pointer" }}
-          onClick={() => zoomToCluster(c)}
-          onMouseEnter={() => setHoverCluster(c)}
-          onMouseLeave={() => setHoverCluster(null)}
-        >
-          <circle r={radius} fill={dotColor} opacity={0.85} />
 
-          <text
-            textAnchor="middle"
-            dy=".3em"
-            fontSize={10}
-            fontWeight={800}
-            fill="white"
-          >
-            {safeCount}
-          </text>
-        </g>
-      );
-    })}
-</svg>
-      </TransformComponent>
-    </>
-  )}
-</TransformWrapper>
+
+                        {/* Label (zoom in) */}
+                        {zoomScale > 2.2 && (
+                          <text
+                            x={c.x}
+                            y={c.y + radius + 18}
+                            textAnchor="middle"
+                            fontSize="12"
+                            fontWeight="900"
+                            fill="#111827"
+                          >
+                            {c.topLabel}
+                          </text>
+                        )}
+                      </g>
+                    );
+                  })}
+                </svg>
+              </TransformComponent>
+            </TransformWrapper>
           </div>
 
           {/* Hover tooltip */}
@@ -1001,7 +1378,11 @@ d={pathGenerator(s) || ""}
                       }}
                     >
                       <div style={{ minWidth: 0 }}>
-                       
+                        <div style={{ fontWeight: 900, color: "#0f172a", fontSize: 13 }}>
+  {it.category === "crawler"
+    ? `🕷 ${it.crawler_name || "Crawler"} • ${it.state}`
+    : `${it.city}, ${it.state}`}
+</div>
 
 
                         <div

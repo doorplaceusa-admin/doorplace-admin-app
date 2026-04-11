@@ -393,8 +393,8 @@ export default function LiveUSMap({
   visitors?: LiveVisitor[];
   fullscreen?: boolean;
 }) {
-  const width = 1200;
-  const height = fullscreen ? 900 : 550;
+  const width = 1000;
+const height = fullscreen ? 700 : 600;
 
   const desktop = typeof window !== "undefined" && window.innerWidth > 900;
 
@@ -812,11 +812,12 @@ return (
               boxShadow: "0 12px 34px rgba(0,0,0,0.10)",
             }}
           >
-           <TransformWrapper
+          <TransformWrapper
   ref={zoomRef}
   minScale={1}
   maxScale={8}
-  initialScale={1}
+  initialScale={1.4}
+  centerOnInit
   wheel={{ step: 0.2 }}
   onTransformed={(ref) => {
     setZoomScale(ref.state.scale);
@@ -839,7 +840,8 @@ return (
       </div>
 
       <TransformComponent>
-      <svg
+  <div style={{ width: "100%", height: "100%" }}>
+    <svg
   viewBox={`0 0 ${width} ${height}`}
   preserveAspectRatio="xMidYMid meet"
   style={{ width: "100%", height: "100%" }}
@@ -914,7 +916,8 @@ return (
         </g>
       );
     })}
-</svg>
+    </svg>
+  </div>
       </TransformComponent>
     </>
   )}

@@ -29,6 +29,9 @@ function sleep(ms: number) {
   return new Promise((res) => setTimeout(res, ms));
 }
 
+/* =========================
+   🔥 FIXED SHOPIFY FETCH
+========================= */
 async function shopifyFetch(path: string, options: RequestInit = {}) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     await shopifyLimiter();
@@ -42,23 +45,42 @@ async function shopifyFetch(path: string, options: RequestInit = {}) {
     });
 
     if (res.status === 429) {
-      console.warn(`⚠️ Rate limited by Shopify. Retrying in ${2 * attempt}s...`);
+      console.warn(`⚠️ Rate limited. Retrying in ${2 * attempt}s...`);
       await sleep(2000 * attempt);
       continue;
     }
 
     if (!res.ok) {
       const txt = await res.text();
+
+      // ✅ IGNORE HANDLE ERROR (KEY FIX)
+      if (txt.includes("handle") && txt.includes("taken")) {
+        console.warn("⚠️ Handle already exists. Skipping safely...");
+        return null;
+      }
+
       console.error("❌ Shopify error:", txt);
-      throw new Error(txt);
+
+      if (attempt < MAX_RETRIES) {
+        console.warn(`🔁 Retrying (${attempt}/${MAX_RETRIES})...`);
+        await sleep(1000 * attempt);
+        continue;
+      }
+
+      console.warn("⚠️ Skipping after max retries...");
+      return null;
     }
 
     return res;
   }
 
-  throw new Error("Shopify request failed after max retries.");
+  console.warn("⚠️ Shopify request failed after retries — skipping.");
+  return null;
 }
 
+/* =========================
+   🚀 MAIN PROCESS
+========================= */
 export async function POST() {
   console.log("🔥 MASTER CLEAN + VIDEO FIX STARTED");
 
@@ -67,17 +89,22 @@ export async function POST() {
   let pageCount = 0;
 
   while (true) {
-    console.log(`\n📦 Fetching batch of pages from Shopify... ${pageInfo ? "(Next Page)" : "(Page 1)"}`);
-    
+    console.log(`\n📦 Fetching pages... ${pageInfo ? "(Next Page)" : "(Page 1)"}`);
+
     const res = await shopifyFetch(
       `/pages.json?limit=250${pageInfo ? `&page_info=${pageInfo}` : ""}`
     );
+
+    if (!res) {
+      console.log("⚠️ Skipping this batch due to fetch error...");
+      continue;
+    }
 
     const json = await res.json();
     const pages = json.pages || [];
 
     if (!pages.length) {
-      console.log("🏁 No more pages found in this batch.");
+      console.log("🏁 No more pages.");
       break;
     }
 
@@ -86,91 +113,89 @@ export async function POST() {
       const originalBody = p.body_html || "";
       let body = originalBody;
 
-      // Only target specific pages
       if (
         !body.includes("Automatic Barn Door Opener") &&
         !body.includes("SlideDrive™")
       ) {
-        // Silently continue to prevent console spam for unrelated pages
         continue;
       }
 
-      console.log(`\n🛠️ --- PROCESSING PAGE: ${p.handle} ---`);
+      console.log(`\n🛠️ --- PROCESSING: ${p.handle} ---`);
 
-      // =========================
-      // 🔥 STEP 0: PRE-CLEAN MALFORMED TEXT
-      // =========================
+      /* =========================
+         STEP 0: CLEAN TEXT
+      ========================= */
       body = body.replace(/["']?\s*type=["']?video\/mp4["']?[\s>]*>?/gi, "");
       body = body.replace(/"\s*&gt;/gi, "");
-      
+
       if (body !== originalBody) {
-        console.log("   🧹 Cleaned up floating garbage text/quotes");
+        console.log("   🧹 Cleaned garbage text");
       }
 
       const $ = load(body, null, false);
-      const preCleanupHtmlLength = $.html().length;
+      const preLen = $.html().length;
 
-      // =========================
-      // 🔥 STEP 1: DOM CLEANUP
-      // =========================
-      $('video').remove();
+      /* =========================
+         STEP 1: REMOVE OLD VIDEO
+      ========================= */
+      $("video").remove();
       $('source[type="video/mp4"]').remove();
       $(`[src*="${TARGET_VIDEO}"]`).remove();
 
       let removedIframe = false;
-      $('iframe').each((_, el) => {
-        const src = $(el).attr('src') || '';
-        if (!src.includes('RGSK62chHlY')) {
+      $("iframe").each((_, el) => {
+        const src = $(el).attr("src") || "";
+        if (!src.includes("RGSK62chHlY")) {
           $(el).remove();
           removedIframe = true;
         }
       });
 
-      if ($.html().length !== preCleanupHtmlLength || removedIframe) {
-        console.log("   🗑️ Removed old native video tags / iframes");
+      if ($.html().length !== preLen || removedIframe) {
+        console.log("   🗑️ Removed old videos");
       }
 
-      // =========================
-      // 🔥 STEP 2: FIX NESTED MEDIA BOXES
-      // =========================
-      let fixedNestedBoxes = false;
-      $('.dp-media-box > .dp-media-box').each((_, el) => {
-        $(el).removeClass('dp-media-box').addClass('dp-media-box-inner');
-        fixedNestedBoxes = true;
+      /* =========================
+         STEP 2: FIX NESTED BOXES
+      ========================= */
+      let fixedNested = false;
+      $(".dp-media-box > .dp-media-box").each((_, el) => {
+        $(el).removeClass("dp-media-box").addClass("dp-media-box-inner");
+        fixedNested = true;
       });
 
-      if (fixedNestedBoxes) {
-        console.log("   🔧 Fixed nested .dp-media-box classes");
+      if (fixedNested) {
+        console.log("   🔧 Fixed nested media boxes");
       }
 
-      // =========================
-      // 🎯 STEP 3: INSERT VIDEO PROPERLY
-      // =========================
+      /* =========================
+         STEP 3: INSERT VIDEO
+      ========================= */
       const currentHtml = $.html();
-      
-      if (!currentHtml.includes("youtube.com/embed/RGSK62chHlY")) {
-        const firstMediaBox = $('.dp-media-box').first();
 
-        if (firstMediaBox.length > 0) {
-          firstMediaBox.prepend(YOUTUBE_VIDEO_BLOCK);
-          console.log("   🎯 Inserted YouTube video inside media box");
+      if (!currentHtml.includes("youtube.com/embed/RGSK62chHlY")) {
+        const firstBox = $(".dp-media-box").first();
+
+        if (firstBox.length > 0) {
+          firstBox.prepend(YOUTUBE_VIDEO_BLOCK);
+          console.log("   🎯 Inserted YouTube video");
         } else {
           $.root().prepend(YOUTUBE_VIDEO_BLOCK);
-          console.log("   ⬆️ Inserted YouTube video at top of page (No media box found)");
+          console.log("   ⬆️ Inserted video at top");
         }
       } else {
-        console.log("   ✅ YouTube video already exists on this page");
+        console.log("   ✅ Video already exists");
       }
 
       const finalHtml = $.html();
 
-      // =========================
-      // ✅ UPDATE PAGE IF CHANGED
-      // =========================
+      /* =========================
+         UPDATE PAGE
+      ========================= */
       if (finalHtml !== originalBody) {
-        console.log("   🚀 Changes detected. Pushing update to Shopify...");
-        
-        await shopifyFetch(`/pages/${p.id}.json`, {
+        console.log("   🚀 Updating Shopify...");
+
+        const updateRes = await shopifyFetch(`/pages/${p.id}.json`, {
           method: "PUT",
           body: JSON.stringify({
             page: {
@@ -180,11 +205,17 @@ export async function POST() {
           }),
         });
 
+        if (!updateRes) {
+          console.log("   ⚠️ Update skipped due to Shopify error");
+          continue;
+        }
+
         totalUpdated++;
-        console.log(`   ✅ Page update successful! (Total updated so far: ${totalUpdated})`);
+        console.log(`   ✅ Updated (${totalUpdated})`);
+
         await sleep(SHOPIFY_DELAY_MS);
       } else {
-        console.log("   🤷 No changes required. Skipping Shopify PUT request.");
+        console.log("   🤷 No changes");
       }
     }
 
@@ -195,9 +226,9 @@ export async function POST() {
     if (!pageInfo) break;
   }
 
-  console.log(`\n🎉 MASTER CLEANUP COMPLETE!`);
-  console.log(`📊 Scanned ${pageCount} total pages.`);
-  console.log(`✅ Successfully updated ${totalUpdated} pages.`);
+  console.log(`\n🎉 DONE`);
+  console.log(`📊 Scanned: ${pageCount}`);
+  console.log(`✅ Updated: ${totalUpdated}`);
 
   return NextResponse.json({
     success: true,

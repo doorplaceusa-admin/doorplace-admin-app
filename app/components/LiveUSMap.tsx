@@ -864,7 +864,7 @@ return (
 
   return (
     <path
-      key={s.id}
+      key={s.key}
       d={pathGenerator(s) || ""}
       fill={isHover ? "#fee2e2" : "#f1f5f9"}
       stroke={isHover ? "#64748b" : "#d1d5db"}
@@ -873,6 +873,22 @@ return (
       onMouseEnter={() => setHoveredStateKey(fips)}
       onMouseLeave={() => setHoveredStateKey(null)}
     />
+  );
+})}
+
+{stateLabels.map((s) => {
+  return (
+    <text
+      key={s.key}
+      x={s.x}
+      y={s.y}
+      fontSize={10}
+      textAnchor="middle"
+      fill="#334155"
+      style={{ pointerEvents: "none", fontWeight: 700 }}
+    >
+      {s.abbr}
+    </text>
   );
 })}
 
@@ -916,6 +932,8 @@ return (
         </g>
       );
     })}
+
+    
     </svg>
   </div>
       </TransformComponent>

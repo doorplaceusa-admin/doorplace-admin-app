@@ -482,7 +482,7 @@ const id = setInterval(loadHumanCount, refreshMs);
   proj.fitSize([width, height], geo);
 
   // 🔥 THIS IS THE FIX
-  proj.scale(proj.scale() * 1.5);
+  proj.scale(proj.scale() * 2.0);
 
   const t = proj.translate();
   proj.translate([t[0], t[1]]);

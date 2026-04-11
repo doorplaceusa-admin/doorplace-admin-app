@@ -482,7 +482,7 @@ const id = setInterval(loadHumanCount, refreshMs);
 
     // Keep your same “move” feel but slightly refined
     const t = proj.translate();
-    proj.translate([t[0] - 55, t[1] - 60]);
+    proj.translate([t[0], t[1]]);
     return proj;
   }, [width, height]);
 
@@ -664,10 +664,10 @@ const zoomToCluster = useCallback((c: Cluster) => {
 ========================== */
 
 const mapHeightCss = fullscreen
-  ? "calc(100vh - 220px)"
+  ? "calc(100vh - 180px)"
   : desktop
-  ? "520px"
-  : "260px";
+  ? "600px"
+  : "320px";
 
 const panelWidth = fullscreen ? 420 : 360;
 
@@ -796,7 +796,7 @@ return (
           gridTemplateColumns: fullscreen ? `1fr ${panelWidth}px` : "1fr",
           gap: 0,
           borderTop: "1px solid #e5e7eb",
-          background: "#f8fafc",
+          background: "#eef2f7",
         }}
       >
         {/* MAP */}
@@ -839,9 +839,10 @@ return (
       </div>
 
       <TransformComponent>
-       <svg
+      <svg
   viewBox={`0 0 ${width} ${height}`}
-  style={{ width: "100%", height: "auto" }}
+  preserveAspectRatio="xMidYMid meet"
+  style={{ width: "100%", height: "100%" }}
 >
 
   {/* ================= MAP BACKGROUND ================= */}

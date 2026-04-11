@@ -826,48 +826,71 @@ return (
       </div>
 
       <TransformComponent>
-        <svg
-          viewBox="0 0 1000 600"
-          style={{ width: "100%", height: "auto" }}
+       <svg
+  viewBox={`0 0 ${width} ${height}`}
+  style={{ width: "100%", height: "auto" }}
+>
+
+  {/* ================= MAP BACKGROUND ================= */}
+
+  {/* Nation */}
+  <path
+d={pathGenerator(nation) || ""}
+    stroke="#e5e7eb"
+    strokeWidth={1}
+  />
+
+  {/* States */}
+  {states.map((s: any) => (
+    <path
+      key={s.id}
+d={pathGenerator(s) || ""}
+      stroke="#d1d5db"
+      strokeWidth={0.6}
+    />
+  ))}
+
+  {/* ================= CLUSTERS ================= */}
+
+  {clusters
+    .filter((c) => Number.isFinite(c.x) && Number.isFinite(c.y))
+    .slice()
+    .sort((a, b) => b.total - a.total)
+    .map((c) => {
+      const safeCount = safeInt(c.total, 1);
+
+      const radius = clamp(8 + Math.sqrt(safeCount) * 4, 8, 40);
+
+      const x = clamp(c.x, 0, width);
+      const y = clamp(c.y, 0, height);
+
+      const dotColor = COLORS[c.category] || "#ff4d4f";
+
+      return (
+        <g
+          key={c.id}
+          id={`cluster-${c.id}`}
+          transform={`translate(${x}, ${y})`}
+          style={{ cursor: "pointer" }}
+          onClick={() => zoomToCluster(c)}
+          onMouseEnter={() => setHoverCluster(c)}
+          onMouseLeave={() => setHoverCluster(null)}
         >
-          {/* Clusters */}
-          {clusters
-  .filter((c) => Number.isFinite(c.x) && Number.isFinite(c.y))
-  .slice()
-  .sort((a, b) => b.total - a.total)
-  .map((c) => {
-    const safeCount = safeInt(c.total, 1);
+          <circle r={radius} fill={dotColor} opacity={0.85} />
 
-    const radius = clamp(8 + Math.sqrt(safeCount) * 4, 8, 40);
-
-    const x = clamp(c.x, 0, 1000);
-    const y = clamp(c.y, 0, 600);
-
-    const dotColor = COLORS[c.category] || "#ff4d4f";
-
-    return (
-      <g
-        key={c.id}
-        transform={`translate(${x}, ${y})`}
-        style={{ cursor: "pointer" }}
-        onClick={() => zoomToCluster(c)}
-        onMouseEnter={() => setHoverCluster(c)}
-        onMouseLeave={() => setHoverCluster(null)}
-      >
-        <circle r={radius} fill={dotColor} opacity={0.8} />
-        <text
-          textAnchor="middle"
-          dy=".3em"
-          fontSize={10}
-          fontWeight={700}
-          fill="white"
-        >
-          {safeCount}
-        </text>
-      </g>
-    );
-  })}
-        </svg>
+          <text
+            textAnchor="middle"
+            dy=".3em"
+            fontSize={10}
+            fontWeight={800}
+            fill="white"
+          >
+            {safeCount}
+          </text>
+        </g>
+      );
+    })}
+</svg>
       </TransformComponent>
     </>
   )}

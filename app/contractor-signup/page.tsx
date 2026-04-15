@@ -145,6 +145,11 @@ textarea{
         <input type="text" name="website">
       </div>
 
+      <div class="form-group full">
+        <label>Street Address</label>
+        <input type="text" name="address" required>
+      </div>
+
       <div class="form-group">
         <label>City</label>
         <input type="text" name="city" required>
@@ -174,7 +179,6 @@ textarea{
 
     <div class="section-title">Services You Offer (Select all that apply)</div>
 
-    <!-- GENERAL -->
     <div class="section-title">General Handyman Services</div>
     <div class="checkbox-grid">
       <label><input type="checkbox" name="services" value="General home maintenance"> General home maintenance</label>
@@ -188,7 +192,6 @@ textarea{
       <label><input type="checkbox" name="services" value="Trim repair"> Interior trim repairs</label>
     </div>
 
-    <!-- INTERIOR -->
     <div class="section-title">Interior Home Repairs</div>
     <div class="checkbox-grid">
       <label><input type="checkbox" name="services" value="Drywall repair"> Drywall repair</label>
@@ -207,7 +210,6 @@ textarea{
       <label><input type="checkbox" name="services" value="Bathroom repairs"> Bathroom repairs</label>
     </div>
 
-    <!-- FLOORING -->
     <div class="section-title">Flooring Installation & Repair</div>
     <div class="checkbox-grid">
       <label><input type="checkbox" name="services" value="Hardwood"> Hardwood flooring</label>
@@ -219,7 +221,6 @@ textarea{
       <label><input type="checkbox" name="services" value="Floor trim"> Floor trim installation</label>
     </div>
 
-    <!-- DOORS & WINDOWS -->
     <div class="section-title">Window & Door Services</div>
     <div class="checkbox-grid">
       <label><input type="checkbox" name="services" value="Window install"> Window installation</label>
@@ -233,7 +234,6 @@ textarea{
       <label><input type="checkbox" name="services" value="Door hardware"> Door hardware replacement</label>
     </div>
 
-    <!-- EXTERIOR -->
     <div class="section-title">Exterior Home Repairs</div>
     <div class="checkbox-grid">
       <label><input type="checkbox" name="services" value="Deck repair"> Deck repair</label>
@@ -250,7 +250,6 @@ textarea{
       <label><input type="checkbox" name="services" value="Exterior painting"> Exterior painting</label>
     </div>
 
-    <!-- OUTDOOR -->
     <div class="section-title">Outdoor Improvements</div>
     <div class="checkbox-grid">
       <label><input type="checkbox" name="services" value="Pergola"> Pergola construction</label>
@@ -265,6 +264,18 @@ textarea{
     <div class="form-group full" style="margin-top:15px;">
       <label>Other Services</label>
       <textarea name="other_services"></textarea>
+    </div>
+
+    <div class="form-group full" style="margin-top:20px;">
+      <label>Digital Signature (Type your full name)</label>
+      <input type="text" name="signature" required>
+    </div>
+
+    <div class="form-group full" style="margin-top:10px;">
+      <label style="font-weight:normal;">
+        <input type="checkbox" name="agreement" required style="margin-right:8px;">
+        I agree to be contacted by Doorplace USA via text message and email regarding job opportunities and updates. Message and data rates may apply.
+      </label>
     </div>
 
     <button type="submit" class="submit-btn">Submit</button>

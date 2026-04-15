@@ -349,7 +349,7 @@ async function askAdminAI() {
 
   {/* PEOPLE */}
   <NavLink href="/dashboard/partners" icon={<Handshake size={18} />} label="Partners" />
-  <NavLink href="/dashboard/companies" icon={<Building2 size={18} />} label="Companies" />
+  <NavLink href="/dashboard/contractors" icon={<Building2 size={18} />} label="Contractors" />
 
   {/* MONEY */}
   <NavLink href="/dashboard/commissions" icon={<DollarSign size={18} />} label="Commissions" />
@@ -934,6 +934,12 @@ function MobileBottomNav() {
                 href="/dashboard/companies"
                 icon={<Building2 size={20} />}
                 label="Companies"
+                onClick={() => setShowMore(false)}
+              />
+              <MoreTile
+                href="/dashboard/contractors"
+                icon={<Building2 size={20} />}
+                label="Contractors"
                 onClick={() => setShowMore(false)}
               />
               <MoreTile

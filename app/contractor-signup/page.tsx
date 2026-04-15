@@ -99,6 +99,22 @@ textarea{
   text-align:center;
 }
 
+.success-message{
+  display:none;
+  text-align:center;
+  margin-top:20px;
+  color:green;
+  font-weight:bold;
+}
+
+.error-message{
+  display:none;
+  text-align:center;
+  margin-top:20px;
+  color:red;
+  font-weight:bold;
+}
+
 @media(max-width:768px){
   .form-grid{
     grid-template-columns:1fr;
@@ -280,6 +296,14 @@ textarea{
 
     <button type="submit" class="submit-btn">Submit</button>
 
+    <div class="success-message" id="successMsg">
+      ✅ Submitted successfully. We’ll contact you when opportunities are available.
+    </div>
+
+    <div class="error-message" id="errorMsg">
+      ❌ Something went wrong. Please try again.
+    </div>
+
     <div class="note">
       Opportunities are based on demand, location, and services offered.
     </div>
@@ -287,6 +311,62 @@ textarea{
   </form>
 
 </div>
+
+<script>
+document.getElementById("contractorForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const form = e.target;
+  const formData = new FormData(form);
+
+  // Collect services (checkboxes)
+  const services = [];
+  document.querySelectorAll('input[name="services"]:checked').forEach(el => {
+    services.push(el.value);
+  });
+
+  const data = {
+    name: formData.get("name"),
+    phone: formData.get("phone"),
+    email: formData.get("email"),
+    business: formData.get("business"),
+    website: formData.get("website"),
+    address: formData.get("address"),
+    city: formData.get("city"),
+    state: formData.get("state"),
+    zip: formData.get("zip"),
+    coverage: formData.get("coverage"),
+    experience: formData.get("experience"),
+    services: services,
+    other_services: formData.get("other_services"),
+    signature: formData.get("signature"),
+    agreement: formData.get("agreement") ? true : false
+  };
+
+  try {
+    const res = await fetch("/api/contractor-signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+
+    if (result.success) {
+      document.getElementById("successMsg").style.display = "block";
+      document.getElementById("errorMsg").style.display = "none";
+      form.reset();
+    } else {
+      document.getElementById("errorMsg").style.display = "block";
+    }
+
+  } catch (err) {
+    document.getElementById("errorMsg").style.display = "block";
+  }
+});
+</script>
 
         `,
       }}

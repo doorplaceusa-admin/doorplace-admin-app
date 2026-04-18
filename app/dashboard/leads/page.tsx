@@ -195,7 +195,7 @@ async function updateLeadStatus(
           General Inquiry & Swing / Door Quotes
         </p>
 
-        {/* 🔥 TOP ENTRY PAGES */}
+       {/* 🔥 TOP ENTRY PAGES */}
 <div className="bg-white border rounded p-4 shadow-sm mb-4">
   <h3 className="text-sm font-bold mb-2">Top Entry Pages</h3>
 
@@ -214,6 +214,38 @@ async function updateLeadStatus(
         <span className="font-semibold">{count}</span>
       </div>
     ))}
+
+  {/* 🔥 MOST RECENT LEAD PAGE */}
+  <div className="mt-4 border-t pt-3">
+    <h3 className="text-sm font-bold mb-2">Last Lead Page</h3>
+
+    {(() => {
+      const latest = leads[0];
+
+      if (!latest) return <div className="text-xs">—</div>;
+
+      const pathArray = (latest.page_path || "")
+        .split(" → ")
+        .filter(Boolean);
+
+      const lastPage =
+        pathArray[pathArray.length - 1] ||
+        latest.entry_page ||
+        "—";
+
+      return (
+        <div className="text-xs">
+          <a
+            href={`https://doorplaceusa.com${lastPage}`}
+            target="_blank"
+            className="text-blue-600 underline font-semibold"
+          >
+            {lastPage}
+          </a>
+        </div>
+      );
+    })()}
+  </div>
 </div>
 
 <div className="flex items-center gap-2 mb-3">

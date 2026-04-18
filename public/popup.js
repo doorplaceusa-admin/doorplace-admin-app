@@ -3,36 +3,10 @@
   const lastShown = localStorage.getItem("dp_popup_time");
   const seenThisSession = sessionStorage.getItem("dp_popup_seen");
 
-  // ❌ Already seen this session
   if (seenThisSession) return;
-
-  // ❌ Seen within last 24 hours
   if (lastShown && Date.now() - Number(lastShown) < 86400000) return;
 
   setTimeout(() => {
-
-    // 🔥 UPDATED VARIANTS (HIGH CONVERSION)
-    const variants = [
-      {
-        headline: "Get Your Exact Price (Not an Estimate)",
-        sub: "We’ll text you a real quote for your door, swing, or automatic system",
-        button: "Get My Exact Price"
-      },
-      {
-        headline: "See Your Real Price Today",
-        sub: "No guessing — we’ll send your exact cost based on your project",
-        button: "See My Price"
-      },
-      {
-        headline: "Custom Built = Custom Price",
-        sub: "Tell us what you need and we’ll text you your exact quote",
-        button: "Get My Quote"
-      }
-    ];
-
-    // 🎯 RANDOM PICK
-    const vIndex = Math.floor(Math.random() * variants.length);
-    const v = variants[vIndex];
 
     const popup = document.createElement("div");
 
@@ -51,42 +25,21 @@
       ">
         <div style="
           background:#ffffff;
-          padding:22px 18px;
-          border-radius:14px;
-          max-width:360px;
-          width:88%;
+          padding:24px 18px;
+          border-radius:12px;
+          max-width:340px;
+          width:90%;
           text-align:center;
           position:relative;
           font-family: Arial, sans-serif;
         ">
 
-          <!-- 🎥 VIDEO -->
-          <div style="
-            width:100%;
-            height:160px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            margin-bottom:15px;
-            border-radius:10px;
-            overflow:hidden;
-            background:#f5f5f5;
-          ">
-            <video autoplay muted loop playsinline style="
-              max-width:100%;
-              max-height:100%;
-              object-fit:contain;
-            ">
-              <source src="https://cdn.shopify.com/videos/c/o/v/cd3df8d6c9324b0ab1b66f84b35d7203.mov" type="video/quicktime">
-            </video>
+          <div style="font-size:24px;font-weight:700;margin-bottom:8px;">
+            Get Your Exact Price
           </div>
 
-          <div style="font-size:26px;font-weight:700;margin-bottom:8px;">
-            ${v.headline}
-          </div>
-
-          <div style="font-size:16px;margin-bottom:18px;color:#444;">
-            ${v.sub}
+          <div style="font-size:15px;margin-bottom:16px;color:#444;">
+            Tell us what you're looking for and we’ll text you your exact quote.
           </div>
 
           <input id="dp-name" placeholder="Full Name" style="
@@ -105,20 +58,15 @@
             border-radius:6px;
           ">
 
-          <input id="dp-email" placeholder="Email Address" style="
+          <input id="dp-email" placeholder="Email Address (optional)" style="
             width:100%;
-            margin-bottom:6px;
+            margin-bottom:10px;
             padding:12px;
             border:1px solid #ddd;
             border-radius:6px;
           ">
 
-          <!-- 🔥 TRUST LINE -->
-          <div style="font-size:12px;color:#777;margin-bottom:14px;">
-            We’ll text you — no spam, just your quote.
-          </div>
-
-          <button onclick="dpSubmit(${vIndex})" style="
+          <button onclick="dpSubmit()" style="
             width:100%;
             background:#b80d0d;
             color:#fff;
@@ -129,21 +77,17 @@
             cursor:pointer;
             font-size:16px;
           ">
-            ${v.button}
+            Get My Price
           </button>
 
-          <div style="
-            margin-top:12px;
-            font-size:13px;
-            color:#666;
-          ">
-            Limited build slots this week — lock in your price before spots fill up
+          <div style="font-size:12px;color:#777;margin-top:10px;">
+            We’ll text you — no spam.
           </div>
 
           <div onclick="closeDpPopup()" style="
             position:absolute;
-            top:12px;
-            right:16px;
+            top:10px;
+            right:14px;
             cursor:pointer;
             font-size:18px;
             color:#999;
@@ -155,11 +99,10 @@
 
     document.body.appendChild(popup);
 
-    // ✅ SAVE immediately
     localStorage.setItem("dp_popup_time", Date.now());
     sessionStorage.setItem("dp_popup_seen", "true");
 
-    // 📞 PHONE FORMATTER
+    // 📞 PHONE FORMAT
     setTimeout(() => {
       const phoneInput = document.getElementById("dp-phone");
       if (!phoneInput) return;
@@ -181,14 +124,12 @@
   }, 5000);
 })();
 
-// ❌ CLOSE HANDLER
 function closeDpPopup() {
   const overlay = document.getElementById("dp-overlay");
   if (overlay) overlay.remove();
 }
 
-// ✅ SUBMIT
-function dpSubmit(variantIndex) {
+function dpSubmit() {
   const name = document.getElementById("dp-name").value;
   const phone = document.getElementById("dp-phone").value;
   const email = document.getElementById("dp-email").value;
@@ -208,8 +149,18 @@ function dpSubmit(variantIndex) {
   formData.append("email", email || "");
   formData.append("submission_type", "general_inquiry");
 
-  // 🔥 TRACK VARIANT
-  formData.append("popup_variant", "variant_" + variantIndex);
+  // 🔥 TRACKING
+  const entry = localStorage.getItem("dp_entry_page") || "";
+
+  let pathArray = [];
+  try {
+    pathArray = JSON.parse(localStorage.getItem("dp_page_path") || "[]");
+  } catch (e) {}
+
+  const pathString = pathArray.join(" → ");
+
+  formData.append("entry_page", entry);
+  formData.append("page_path", pathString);
 
   fetch("https://tradepilot.doorplaceusa.com/api/leads/intake", {
     method: "POST",
@@ -217,18 +168,11 @@ function dpSubmit(variantIndex) {
   })
   .then((res) => {
     if (!res.ok) throw new Error("Failed");
-    console.log("Lead sent");
 
-    // ✅ SUCCESS MESSAGE ONLY AFTER SUCCESS
     document.getElementById("dp-overlay").innerHTML = `
-      <div style="
-        background:#fff;
-        padding:40px;
-        border-radius:12px;
-        text-align:center;
-      ">
-        <h2 style="margin-bottom:10px;">You're In ✅</h2>
-        <p>We’re reviewing your project now — expect a text shortly with your exact price.</p>
+      <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
+        <h2>You're In ✅</h2>
+        <p>We’ll text you shortly with your price.</p>
       </div>
     `;
   })

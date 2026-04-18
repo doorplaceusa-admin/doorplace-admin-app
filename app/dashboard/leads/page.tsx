@@ -568,7 +568,7 @@ if (v === "delete") deleteLead(l);
         </Section>
 
 {/* CUSTOMER JOURNEY */}
-{(viewLead.entry_page || viewLead.page_path) && (
+{viewLead.page_path && (
   <Section title="Customer Journey">
     <div>
   <b>Entry Page:</b>{" "}

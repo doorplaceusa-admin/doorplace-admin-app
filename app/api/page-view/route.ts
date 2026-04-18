@@ -173,7 +173,7 @@ export async function POST(req: Request) {
       ? parseFloat(req.headers.get("cf-iplongitude")!)
       : null;
 
-    console.log(`🔥 HUMAN VISITOR: ${page_url} | ${city}, ${state} | IP: ${ip}`);
+    console.log(`👀 PAGE VIEW (UNVERIFIED): ${page_url} | ${city}, ${state} | IP: ${ip}`);
 
     /* ==========================
        6) Insert into DB
@@ -188,7 +188,7 @@ export async function POST(req: Request) {
       longitude: lon,
       ip_address: ip,
       user_agent: ua,
-      source: "human",
+      source: "unverified",
     });
 
     if (error) {
@@ -213,7 +213,7 @@ export async function POST(req: Request) {
         state,
         latitude: lat,
         longitude: lon,
-        is_human: true,
+        is_human: false,
         last_seen: new Date().toISOString(),
       },
       {

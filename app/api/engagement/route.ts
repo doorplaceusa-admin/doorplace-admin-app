@@ -120,11 +120,11 @@ export async function POST(req: Request) {
        7) Update live map (optional but recommended)
     ========================== */
     await supabase
-      .from("live_map_activity")
-      .update({
-        is_human: true,
-        last_seen: new Date().toISOString(),
-      })
+  .from("live_map_activity")
+  .update({
+    is_human: true,
+    last_seen: new Date().toISOString(),
+  })
       .eq("ip_address", ip);
 
     /* ==========================

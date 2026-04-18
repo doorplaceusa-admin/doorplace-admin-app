@@ -183,7 +183,7 @@ async function updateLeadStatus(
   return (
 <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-375 w-full mx-auto">
       {/* HEADER */}
-      <div className="sticky top-0 bg-white z-30 border-b pb-4">
+      <div className="sticky top-0 bg-white z-30 border-b pb-2">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-red-700">Leads</h1>
           <span className="text-sm text-gray-600">
@@ -191,13 +191,13 @@ async function updateLeadStatus(
           </span>
         </div>
 
-        <p className="text-sm text-gray-500 mb-3">
+        <p className="text-xs text-gray-500 mb-1">
           General Inquiry & Swing / Door Quotes
         </p>
 
        {/* 🔥 TOP ENTRY PAGES */}
-<div className="bg-white border rounded p-4 shadow-sm mb-4">
-  <h3 className="text-sm font-bold mb-2">Top Entry Pages</h3>
+<div className="bg-white border rounded p-2 shadow-sm mb-2">
+  <h3 className="text-xs font-semibold mb-1">Top Entry Pages</h3>
 
   {Object.entries(
     leads.reduce((acc: any, l) => {
@@ -209,25 +209,25 @@ async function updateLeadStatus(
     .sort((a: any, b: any) => b[1] - a[1])
     .slice(0, 5)
     .map(([page, count]: any, i) => (
-      <div key={i} className="flex justify-between text-xs py-1">
+      <div key={i} className="flex justify-between text-[11px] py-0">
         <span className="text-gray-700">{page}</span>
         <span className="font-semibold">{count}</span>
       </div>
     ))}
 
   {/* 🔥 MOST RECENT LEAD PAGE */}
-  <div className="mt-4 border-t pt-3">
-   <h3 className="text-sm font-bold mb-2">Most Recent Entry Page</h3>
+  <div className="mt-2 border-t pt-1">
+   <h3 className="text-xs font-semibold mb-1">Most Recent Entry Page</h3>
 
 {(() => {
   const latest = leads[0];
 
   if (!latest || !latest.entry_page) {
-    return <div className="text-xs">—</div>;
+    return <div className="text-[11px]">—</div>;
   }
 
   return (
-    <div className="text-xs">
+    <div className="text-[11px] leading-tight">
       <a
         href={`https://doorplaceusa.com${latest.entry_page}`}
         target="_blank"
@@ -270,7 +270,7 @@ async function updateLeadStatus(
 
         <div className="flex gap-2 items-center">
           <input
-            className="border rounded px-3 py-2 w-full md:max-w-sm"
+            className="border rounded px-2 py-1 text-sm w-full md:max-w-sm"
             placeholder="Search name or Lead ID"
             value={search}
             onChange={(e) => setSearch(e.target.value)}

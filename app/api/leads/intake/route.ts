@@ -237,6 +237,9 @@ const { data: leadData, error: leadError } = await supabaseAdmin
       photos: photoUrls,
       lead_status: "new",
       source: "website",
+
+      entry_page: formData.get("entry_page"),
+      page_path: formData.get("page_path"),
     },
   ])
   .select()

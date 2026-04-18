@@ -12,7 +12,8 @@ import { useSearchParams } from "next/navigation";
 type Lead = {
   id: string;
   lead_id: string;
-
+entry_page?: string;
+page_path?: string;
   submission_type?: string;
   quote_type?: string;
 
@@ -194,6 +195,27 @@ async function updateLeadStatus(
           General Inquiry & Swing / Door Quotes
         </p>
 
+        {/* 🔥 TOP ENTRY PAGES */}
+<div className="bg-white border rounded p-4 shadow-sm mb-4">
+  <h3 className="text-sm font-bold mb-2">Top Entry Pages</h3>
+
+  {Object.entries(
+    leads.reduce((acc: any, l) => {
+      if (!l.entry_page) return acc;
+      acc[l.entry_page] = (acc[l.entry_page] || 0) + 1;
+      return acc;
+    }, {})
+  )
+    .sort((a: any, b: any) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([page, count]: any, i) => (
+      <div key={i} className="flex justify-between text-xs py-1">
+        <span className="text-gray-700">{page}</span>
+        <span className="font-semibold">{count}</span>
+      </div>
+    ))}
+</div>
+
 <div className="flex items-center gap-2 mb-3">
   <span className="text-xs text-gray-500">Layout</span>
 
@@ -284,27 +306,32 @@ async function updateLeadStatus(
         </div>
 
         <div className="text-xs text-gray-600 space-y-1">
-          <div>
-            <b>Lead Type:</b>{" "}
-            {l.submission_type === "general"
-              ? "General Inquiry"
-              : l.submission_type === "quote"
-              ? "Swing / Door Quote"
-              : l.submission_type === "partner_tracking"
-              ? "Partner Tracking Link"
-              : "—"}
-          </div>
+  <div>
+    <b>Lead Type:</b>{" "}
+    {l.submission_type === "general"
+      ? "General Inquiry"
+      : l.submission_type === "quote"
+      ? "Swing / Door Quote"
+      : l.submission_type === "partner_tracking"
+      ? "Partner Tracking Link"
+      : "—"}
+  </div>
 
-          <div>
-            <b>Lead ID:</b> {l.lead_id}
-          </div>
+  <div>
+    <b>Lead ID:</b> {l.lead_id}
+  </div>
 
-          <div>
-  <b>Created:</b>{" "}
-  {new Date(l.created_at).toLocaleDateString()}
+  <div>
+    <b>Created:</b>{" "}
+    {new Date(l.created_at).toLocaleDateString()}
+  </div>
+
+  {l.entry_page && (
+    <div>
+      <b>Entry:</b> {l.entry_page}
+    </div>
+  )}
 </div>
-
-        </div>
 
         <div className="flex gap-2 pt-2">
           <button
@@ -506,6 +533,41 @@ if (v === "delete") deleteLead(l);
           <Row label="Quote Type" value={viewLead.quote_type} />
           <Row label="Project Details" value={viewLead.project_details} />
         </Section>
+
+{/* CUSTOMER JOURNEY */}
+{(viewLead.entry_page || viewLead.page_path) && (
+  <Section title="Customer Journey">
+    <div>
+  <b>Entry Page:</b>{" "}
+  <a
+  href={`https://doorplaceusa.com${viewLead.entry_page}`}
+  target="_blank"
+  className="bg-yellow-100 px-2 py-1 rounded text-xs font-semibold text-blue-600 underline"
+>
+  {viewLead.entry_page}
+</a>
+</div>
+
+    {viewLead.page_path && (
+      <div className="mt-2">
+        <b>Page Path:</b>
+        <ul className="list-disc ml-5 mt-1 text-sm text-gray-600">
+          {viewLead.page_path.split(" → ").map((p, i) => (
+            <li key={i}>
+  <a
+    href={`https://doorplaceusa.com${p}`}
+    target="_blank"
+    className="text-blue-600 underline"
+  >
+    {p}
+  </a>
+</li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </Section>
+)}
 
         {/* PHOTOS */}
         <Section title="Photos">

@@ -38,13 +38,12 @@ for (const file of files) {
   const filePath = `leads/${lead_id}/${safeName}`;
 
 
-  const { error: uploadError } = await supabase.storage
+ const { error: uploadError } = await supabaseAdmin.storage
   .from("photos")
   .upload(filePath, file, {
     contentType: file.type,
     upsert: false,
   });
-
 
   if (uploadError) {
     console.error("Photo upload failed:", uploadError);

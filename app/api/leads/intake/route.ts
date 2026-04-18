@@ -20,8 +20,9 @@ export async function POST(req: Request) {
    1. HANDLE PHOTOS (FIXED)
 ================================ */
 const files = formData.getAll("photos[]") as File[];
-const photoUrls: string[] = [];
+console.log("FILES RECEIVED:", files); // 👈 ADD THIS LINE
 
+const photoUrls: string[] = [];
 
 for (const file of files) {
   if (!(file instanceof File) || file.size === 0) continue;
@@ -35,15 +36,14 @@ for (const file of files) {
 
   // ✅ single bucket: photos / leads / lead_id
   const filePath = `leads/${lead_id}/${safeName}`;
-  const buffer = await file.arrayBuffer();
 
 
   const { error: uploadError } = await supabase.storage
-    .from("photos") // ✅ correct bucket
-    .upload(filePath, buffer, {
-      contentType: file.type,
-      upsert: false,
-    });
+  .from("photos")
+  .upload(filePath, file, {
+    contentType: file.type,
+    upsert: false,
+  });
 
 
   if (uploadError) {

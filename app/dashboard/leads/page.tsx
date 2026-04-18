@@ -326,11 +326,44 @@ async function updateLeadStatus(
     {new Date(l.created_at).toLocaleDateString()}
   </div>
 
-  {l.entry_page && (
-    <div>
-      <b>Entry:</b> {l.entry_page}
-    </div>
-  )}
+  {(() => {
+  const pathArray = (l.page_path || "")
+    .split(" → ")
+    .filter(Boolean);
+
+  const lastPage =
+    pathArray[pathArray.length - 1] || "—";
+
+  return (
+    <>
+      {l.entry_page && (
+        <div>
+          <b>Entry:</b>{" "}
+          <a
+            href={`https://doorplaceusa.com${l.entry_page}`}
+            target="_blank"
+            className="text-blue-600 underline"
+          >
+            {l.entry_page}
+          </a>
+        </div>
+      )}
+
+      {lastPage !== "—" && (
+        <div className="text-[11px] text-gray-500">
+          <b>Last:</b>{" "}
+          <a
+            href={`https://doorplaceusa.com${lastPage}`}
+            target="_blank"
+            className="text-blue-600 underline"
+          >
+            {lastPage}
+          </a>
+        </div>
+      )}
+    </>
+  );
+})()}
 </div>
 
         <div className="flex gap-2 pt-2">
@@ -547,6 +580,31 @@ if (v === "delete") deleteLead(l);
   {viewLead.entry_page}
 </a>
 </div>
+
+{viewLead.page_path && (
+  <div className="mt-2 text-xs text-gray-600">
+    <b>Last Page:</b>{" "}
+    {(() => {
+      const pages = viewLead.page_path
+        .split(" → ")
+        .filter(Boolean);
+
+      const last = pages[pages.length - 1];
+
+      return last ? (
+        <a
+          href={`https://doorplaceusa.com${last}`}
+          target="_blank"
+          className="text-blue-600 underline"
+        >
+          {last}
+        </a>
+      ) : (
+        "—"
+      );
+    })()}
+  </div>
+)}
 
     {viewLead.page_path && (
       <div className="mt-2">

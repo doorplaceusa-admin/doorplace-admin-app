@@ -217,34 +217,27 @@ async function updateLeadStatus(
 
   {/* 🔥 MOST RECENT LEAD PAGE */}
   <div className="mt-4 border-t pt-3">
-    <h3 className="text-sm font-bold mb-2">Last Lead Page</h3>
+   <h3 className="text-sm font-bold mb-2">Most Recent Entry Page</h3>
 
-    {(() => {
-      const latest = leads[0];
+{(() => {
+  const latest = leads[0];
 
-      if (!latest) return <div className="text-xs">—</div>;
+  if (!latest || !latest.entry_page) {
+    return <div className="text-xs">—</div>;
+  }
 
-      const pathArray = (latest.page_path || "")
-        .split(" → ")
-        .filter(Boolean);
-
-      const lastPage =
-        pathArray[pathArray.length - 1] ||
-        latest.entry_page ||
-        "—";
-
-      return (
-        <div className="text-xs">
-          <a
-            href={`https://doorplaceusa.com${lastPage}`}
-            target="_blank"
-            className="text-blue-600 underline font-semibold"
-          >
-            {lastPage}
-          </a>
-        </div>
-      );
-    })()}
+  return (
+    <div className="text-xs">
+      <a
+        href={`https://doorplaceusa.com${latest.entry_page}`}
+        target="_blank"
+        className="text-blue-600 underline font-semibold"
+      >
+        {latest.entry_page}
+      </a>
+    </div>
+  );
+})()}
   </div>
 </div>
 
@@ -359,12 +352,7 @@ async function updateLeadStatus(
   </div>
 
   {(() => {
-  const pathArray = (l.page_path || "")
-    .split(" → ")
-    .filter(Boolean);
-
-  const lastPage =
-    pathArray[pathArray.length - 1] || "—";
+  
 
   return (
     <>
@@ -381,18 +369,6 @@ async function updateLeadStatus(
         </div>
       )}
 
-      {lastPage !== "—" && (
-        <div className="text-[11px] text-gray-500">
-          <b>Last:</b>{" "}
-          <a
-            href={`https://doorplaceusa.com${lastPage}`}
-            target="_blank"
-            className="text-blue-600 underline"
-          >
-            {lastPage}
-          </a>
-        </div>
-      )}
     </>
   );
 })()}

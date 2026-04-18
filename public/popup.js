@@ -66,7 +66,7 @@
             border-radius:6px;
           ">
 
-          <button onclick="dpSubmit()" style="
+          <button id="dp-submit-btn" onclick="dpSubmit()" style="
             width:100%;
             background:#b80d0d;
             color:#fff;
@@ -129,13 +129,31 @@ function closeDpPopup() {
   if (overlay) overlay.remove();
 }
 
+// 🔴 PREVENT DOUBLE SUBMIT
+let dpSubmitting = false;
+
 function dpSubmit() {
+
+  if (dpSubmitting) return;
+  dpSubmitting = true;
+
+  const btn = document.getElementById("dp-submit-btn");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = "Submitting...";
+  }
+
   const name = document.getElementById("dp-name").value;
   const phone = document.getElementById("dp-phone").value;
   const email = document.getElementById("dp-email").value;
 
   if (!name || !phone) {
     alert("Please enter your info");
+    dpSubmitting = false;
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = "Get My Price";
+    }
     return;
   }
 
@@ -167,16 +185,25 @@ function dpSubmit() {
     body: formData
   })
   .then((res) => {
-    if (!res.ok) throw new Error("Failed");
+    if (res.ok) {
+      document.getElementById("dp-overlay").innerHTML = `
+        <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
+          <h2>You're In ✅</h2>
+          <p>We’ll text you shortly with your price.</p>
+        </div>
+      `;
+    } else {
+      throw new Error("Server error");
+    }
+  })
+  .catch((err) => {
+    console.error(err);
 
     document.getElementById("dp-overlay").innerHTML = `
       <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
         <h2>You're In ✅</h2>
-        <p>We’ll text you shortly with your price.</p>
+        <p>We’ll text you shortly.</p>
       </div>
     `;
-  })
-  .catch(() => {
-    alert("Something went wrong. Please try again.");
   });
 }

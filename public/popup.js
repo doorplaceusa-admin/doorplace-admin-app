@@ -270,31 +270,27 @@ formData.append("entry_page", entryPage);
 // OPTIONAL BUT SMART
 formData.append("source", "popup");
 
-          fetch("https://tradepilot.doorplaceusa.com/api/leads/intake", {
-            method: "POST",
-            body: formData
-          })
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error("Network response was not ok");
-            }
-            document.getElementById("dp-overlay").innerHTML = `
-              <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
-                <h2>Request Received ✅</h2>
-                <p>We’ll review your request and follow up.</p>
-              </div>
-            `;
-          })
-          .catch(() => {
-            // Updated error handling UX
-            document.getElementById("dp-overlay").innerHTML = `
-              <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
-                <h2>Something went wrong ❌</h2>
-                <p>We couldn't submit your request at this time. Please check your connection and try again.</p>
-                <button onclick="document.getElementById('dp-popup-container').remove()" style="margin-top:15px;padding:10px 20px;border:none;background:#ccc;border-radius:6px;cursor:pointer;">Close</button>
-              </div>
-            `;
-          });
+         fetch("https://tradepilot.doorplaceusa.com/api/leads/intake", {
+  method: "POST",
+  body: formData
+})
+.then(() => {
+  document.getElementById("dp-overlay").innerHTML = `
+    <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
+      <h2>Request Received ✅</h2>
+      <p>We’ll review your request and follow up.</p>
+    </div>
+  `;
+})
+.catch(() => {
+  document.getElementById("dp-overlay").innerHTML = `
+    <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
+      <h2>Something went wrong ❌</h2>
+      <p>We couldn't submit your request at this time. Please check your connection and try again.</p>
+      <button onclick="document.getElementById('dp-popup-container').remove()" style="margin-top:15px;padding:10px 20px;border:none;background:#ccc;border-radius:6px;cursor:pointer;">Close</button>
+    </div>
+  `;
+});
         });
       }
 

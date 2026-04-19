@@ -43,13 +43,15 @@ export async function POST(req: Request) {
     }
 
     const ua = req.headers.get("user-agent") || "";
+    const secChUa = req.headers.get("sec-ch-ua");
 
     /* ==========================
-       2) REAL BROWSER CHECK
+       2) STRONG BROWSER CHECK
     ========================== */
     const isRealBrowser =
       ua.toLowerCase().includes("mozilla") &&
-      ua.toLowerCase().includes("applewebkit");
+      ua.toLowerCase().includes("applewebkit") &&
+      !!secChUa;
 
     if (!isRealBrowser) {
       return new Response("Not real browser", {
@@ -101,7 +103,7 @@ export async function POST(req: Request) {
     }
 
     /* ==========================
-       6) Mark as verified human
+       6) Mark as verified human (page_view_events)
     ========================== */
     const { error: updateError } = await supabase
       .from("page_view_events")
@@ -117,15 +119,20 @@ export async function POST(req: Request) {
     }
 
     /* ==========================
-       7) Update live map (optional but recommended)
+       7) Update live map (IMPORTANT)
     ========================== */
-    await supabase
-  .from("live_map_activity")
-  .update({
-    is_human: true,
-    last_seen: new Date().toISOString(),
-  })
+    const { error: liveMapError } = await supabase
+      .from("live_map_activity")
+      .update({
+        is_human: true,
+        source: "human", // ✅ critical for filtering
+        last_seen: new Date().toISOString(),
+      })
       .eq("ip_address", ip);
+
+    if (liveMapError) {
+      console.error("❌ Live map update error:", liveMapError);
+    }
 
     /* ==========================
        8) Logging (dev only)

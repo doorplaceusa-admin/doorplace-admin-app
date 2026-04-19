@@ -17,12 +17,11 @@ export async function OPTIONS() {
 }
 
 /* ======================================================
-   STRONG BOT DETECTION (BEST VERSION)
+   STRONG BOT DETECTION
 ====================================================== */
 function detectCrawler(userAgent: string, ip: string | null) {
   const ua = (userAgent || "").toLowerCase();
 
-  // Script / tool detection
   if (
     ua.includes("python") ||
     ua.includes("curl") ||
@@ -34,31 +33,29 @@ function detectCrawler(userAgent: string, ip: string | null) {
   }
 
   if (ip) {
-    // Major crawlers
     if (ip.startsWith("66.249.")) return "googlebot";
     if (ip.startsWith("157.55.") || ip.startsWith("40.77.")) return "bingbot";
     if (ip.startsWith("17.")) return "applebot";
 
-    // Data center / scraper IPs
     const badPrefixes: Record<string, string> = {
       "192.144.": "tencent-bot",
       "104.253.": "zayo-bot",
-      "103.75.":  "digitalocean-bot",
+      "103.75.": "digitalocean-bot",
       "104.222.": "zayo-infrastructure",
       "192.227.": "colocrossing-bot",
-      "45.38.":   "constant-choopa-bot",
+      "45.38.": "constant-choopa-bot",
       "104.243.": "leaseweb-bot",
       "178.171.": "azerconnect-bot",
-      "209.20.":  "hivelocity-bot",
-      "106.49.":  "china-unicom-bot",
+      "209.20.": "hivelocity-bot",
+      "106.49.": "china-unicom-bot",
       "190.106.": "columbus-bot",
-      "198.13.":  "vultr-bot",
+      "198.13.": "vultr-bot",
       "161.123.": "m247-bot",
-      "92.255.":  "gcore-bot",
-      "198.85.":  "tierpoint-bot",
+      "92.255.": "gcore-bot",
+      "198.85.": "tierpoint-bot",
       "206.204.": "netease-bot",
       "185.152.": "datacamp-bot",
-      "209.139.": "cogent-bot"
+      "209.139.": "cogent-bot",
     };
 
     for (const [prefix, name] of Object.entries(badPrefixes)) {
@@ -66,7 +63,6 @@ function detectCrawler(userAgent: string, ip: string | null) {
     }
   }
 
-  // Fallback UA detection
   if (
     ua.includes("bot") ||
     ua.includes("crawler") ||
@@ -85,8 +81,6 @@ function detectCrawler(userAgent: string, ip: string | null) {
    POST /api/page-view
 ====================================================== */
 export async function POST(req: Request) {
-  console.log("🔥 HIT API");
-
   try {
     const supabase = supabaseAdmin;
 
@@ -97,7 +91,6 @@ export async function POST(req: Request) {
     const { page_key, page_url, partner_id = null } = body;
 
     if (!page_key || !page_url) {
-      console.log("❌ Missing page_key/page_url");
       return new Response("Missing page_key/page_url", {
         status: 400,
         headers: corsHeaders,
@@ -114,11 +107,9 @@ export async function POST(req: Request) {
 
     const ip = rawIp.split(",")[0]?.trim() || null;
     const ua = req.headers.get("user-agent") || "";
-
-    console.log("🌐 REQUEST:", { ip, ua, page_url });
+    const secChUa = req.headers.get("sec-ch-ua");
 
     if (!ip) {
-      console.log("⚠️ No IP detected");
       return new Response("No IP", {
         status: 200,
         headers: corsHeaders,
@@ -126,12 +117,26 @@ export async function POST(req: Request) {
     }
 
     /* ==========================
-       3) Bot detection
+       3) HARD BROWSER FILTER
+    ========================== */
+    const isRealBrowser =
+      ua.toLowerCase().includes("mozilla") &&
+      ua.toLowerCase().includes("applewebkit") &&
+      !!secChUa;
+
+    if (!isRealBrowser) {
+      return new Response("Not real browser", {
+        status: 200,
+        headers: corsHeaders,
+      });
+    }
+
+    /* ==========================
+       4) Bot detection
     ========================== */
     const crawler = detectCrawler(ua, ip);
 
     if (crawler) {
-      console.log(`🤖 BOT BLOCKED: [${crawler}] | ${page_url} | IP: ${ip}`);
       return new Response("Bot detected", {
         status: 200,
         headers: corsHeaders,
@@ -139,7 +144,7 @@ export async function POST(req: Request) {
     }
 
     /* ==========================
-       4) Duplicate protection (10 sec)
+       5) Duplicate protection
     ========================== */
     const tenSecondsAgo = new Date(Date.now() - 10000).toISOString();
 
@@ -152,7 +157,6 @@ export async function POST(req: Request) {
       .limit(1);
 
     if (existing && existing.length > 0) {
-      console.log(`⚠️ DUPLICATE BLOCKED: ${ip}`);
       return new Response("Duplicate", {
         status: 200,
         headers: corsHeaders,
@@ -160,7 +164,7 @@ export async function POST(req: Request) {
     }
 
     /* ==========================
-       5) Geo data
+       6) Geo data
     ========================== */
     const city = req.headers.get("cf-ipcity") || null;
     const state = req.headers.get("cf-region") || null;
@@ -173,10 +177,8 @@ export async function POST(req: Request) {
       ? parseFloat(req.headers.get("cf-iplongitude")!)
       : null;
 
-    console.log(`👀 PAGE VIEW (UNVERIFIED): ${page_url} | ${city}, ${state} | IP: ${ip}`);
-
     /* ==========================
-       6) Insert into DB
+       7) Insert DB (pending)
     ========================== */
     const { error } = await supabase.from("page_view_events").insert({
       page_key,
@@ -188,40 +190,41 @@ export async function POST(req: Request) {
       longitude: lon,
       ip_address: ip,
       user_agent: ua,
-      source: "unverified",
+      source: "pending",
     });
 
     if (error) {
-      console.error("❌ DB ERROR:", error);
+      console.error("DB ERROR:", error);
       return new Response("DB Error", {
         status: 500,
         headers: corsHeaders,
       });
     }
 
-    console.log("✅ DB INSERT SUCCESS");
-
     /* ==========================
-       7) Live map update
+       8) Live map update
     ========================== */
-    await supabase.from("live_map_activity").upsert(
-      {
-        ip_address: ip,
-        page_key,
-        page_url,
-        city,
-        state,
-        latitude: lat,
-        longitude: lon,
-        is_human: false,
-        last_seen: new Date().toISOString(),
-      },
-      {
-        onConflict: "ip_address",
-      }
-    );
+    const { error: liveError } = await supabase
+      .from("live_map_activity")
+      .upsert(
+        {
+          ip_address: ip,
+          page_key,
+          page_url,
+          city,
+          state,
+          latitude: lat,
+          longitude: lon,
+          is_human: false,
+          source: "pending",
+          last_seen: new Date().toISOString(),
+        },
+        { onConflict: "ip_address" }
+      );
 
-    console.log("🗺️ LIVE MAP UPDATED");
+    if (liveError) {
+      console.error("Live map error:", liveError);
+    }
 
     return new Response("OK", {
       status: 200,
@@ -229,7 +232,7 @@ export async function POST(req: Request) {
     });
 
   } catch (err) {
-    console.error("❌ CRASH:", err);
+    console.error("CRASH:", err);
 
     return new Response("Server Error", {
       status: 500,

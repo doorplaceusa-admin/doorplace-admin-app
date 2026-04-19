@@ -332,15 +332,19 @@ async function updateLeadStatus(
 
         <div className="text-xs text-gray-600 space-y-1">
   <div>
-    <b>Lead Type:</b>{" "}
-    {l.submission_type === "general"
-      ? "General Inquiry"
+  <b>Source:</b>{" "}
+  <span className="font-semibold text-gray-800">
+    {l.submission_type === "popup"
+      ? "Popup Lead"
+      : l.submission_type === "general" || l.submission_type === "general_inquiry"
+      ? "Website Form"
       : l.submission_type === "quote"
       ? "Swing / Door Quote"
       : l.submission_type === "partner_tracking"
-      ? "Partner Tracking Link"
-      : "—"}
-  </div>
+      ? "Partner Lead"
+      : l.submission_type || "—"}
+  </span>
+</div>
 
   <div>
     <b>Lead ID:</b> {l.lead_id}
@@ -356,18 +360,20 @@ async function updateLeadStatus(
 
   return (
     <>
-      {l.entry_page && (
-        <div>
-          <b>Entry:</b>{" "}
-          <a
-            href={`https://doorplaceusa.com${l.entry_page}`}
-            target="_blank"
-            className="text-blue-600 underline"
-          >
-            {l.entry_page}
-          </a>
-        </div>
-      )}
+      <div>
+  <b>Entry:</b>{" "}
+  {l.entry_page ? (
+    <a
+      href={`https://doorplaceusa.com${l.entry_page}`}
+      target="_blank"
+      className="text-blue-600 underline"
+    >
+      {l.entry_page}
+    </a>
+  ) : (
+    "—"
+  )}
+</div>
 
     </>
   );
@@ -477,18 +483,20 @@ async function updateLeadStatus(
   );
 
 
-      case "type":
-        return (
-          <span className="text-xs font-medium">
-            {l.submission_type === "general"
-              ? "General Inquiry"
-              : l.submission_type === "quote"
-              ? "Swing / Door Quote"
-              : l.submission_type === "partner_tracking"
-              ? "Partner Tracking Link"
-              : "—"}
-          </span>
-        );
+     case "type":
+  return (
+    <span className="text-xs font-medium">
+      {l.submission_type === "popup"
+        ? "Popup Lead"
+        : l.submission_type === "general_inquiry"
+        ? "Website Form"
+        : l.submission_type === "quote"
+        ? "Swing / Door Quote"
+        : l.submission_type === "partner_tracking"
+        ? "Partner Lead"
+        : l.submission_type || "—"}
+    </span>
+  );
 
       case "actions":
         return (
@@ -576,7 +584,7 @@ if (v === "delete") deleteLead(l);
         </Section>
 
 {/* CUSTOMER JOURNEY */}
-{viewLead.page_path && (
+{(viewLead.entry_page || viewLead.page_path) && (
   <Section title="Customer Journey">
     <div>
   <b>Entry Page:</b>{" "}
@@ -763,10 +771,9 @@ function Section({ title, children }: any) {
 }
 
 function Row({ label, value }: any) {
-  if (!value) return null;
   return (
     <p>
-      <b>{label}:</b> {value}
+      <b>{label}:</b> {value || "—"}
     </p>
   );
 }

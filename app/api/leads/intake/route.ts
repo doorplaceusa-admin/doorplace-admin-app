@@ -10,6 +10,18 @@ import { notifyAdmin } from "@/lib/notifyAdmin";
 
 
 
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "https://doorplaceusa.com",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
+    }
+  });
+}
+
+
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
@@ -318,9 +330,17 @@ if (submissionType === "partner_order") {
 /* ===============================
    FINAL RESPONSE (NO REDIRECTS)
 =============================== */
-return NextResponse.redirect(
-  "https://doorplaceusa.com/pages/thank-you",
-  { status: 302 }
+return new NextResponse(
+  JSON.stringify({ success: true }),
+  {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "https://doorplaceusa.com",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
+    }
+  }
 );
 
 

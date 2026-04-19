@@ -1,17 +1,15 @@
 (function () {
-
-  // ✅ ADD THIS RIGHT HERE
+  // --- Tracking & Test Mode Logic ---
   if (!localStorage.getItem("dp_entry_page")) {
-  localStorage.setItem("dp_entry_page", window.location.href);
-}
+    localStorage.setItem("dp_entry_page", window.location.href);
+  }
 
   const TEST_MODE = true;
 
-if (TEST_MODE) {
-  localStorage.removeItem("dp_popup_time");
-  sessionStorage.removeItem("dp_popup_seen");
-}
-
+  if (TEST_MODE) {
+    localStorage.removeItem("dp_popup_time");
+    sessionStorage.removeItem("dp_popup_seen");
+  }
 
   const lastShown = localStorage.getItem("dp_popup_time");
   const seenThisSession = sessionStorage.getItem("dp_popup_seen");
@@ -21,7 +19,7 @@ if (TEST_MODE) {
 
   setTimeout(() => {
     const popup = document.createElement("div");
-    popup.id = "dp-popup-container"; // Added an ID for easy removal
+    popup.id = "dp-popup-container"; 
 
     popup.innerHTML = `
       <div id="dp-overlay" style="
@@ -162,8 +160,10 @@ if (TEST_MODE) {
 
     document.body.appendChild(popup);
 
-    localStorage.setItem("dp_popup_time", Date.now());
-    sessionStorage.setItem("dp_popup_seen", "true");
+    if (!TEST_MODE) {
+      localStorage.setItem("dp_popup_time", Date.now());
+      sessionStorage.setItem("dp_popup_seen", "true");
+    }
 
     // Initialize all event listeners after DOM injection
     setTimeout(() => {
@@ -211,7 +211,7 @@ if (TEST_MODE) {
 
       // 4. Form Submission functionality
       const submitBtn = document.getElementById("dp-submit-btn");
-      let dpSubmitting = false; // State safely encapsulated inside the IIFE
+      let dpSubmitting = false; 
 
       if (submitBtn) {
         submitBtn.addEventListener("click", function() {
@@ -236,7 +236,6 @@ if (TEST_MODE) {
             submitBtn.innerText = "Submit Request";
           };
 
-          // Added email to required checks
           if (!name || !phone || !email || !street || !city || !state || !zip) {
             alert("Please complete all required fields");
             return resetBtn();
@@ -254,7 +253,7 @@ if (TEST_MODE) {
           formData.append("last_name", nameParts.slice(1).join(" ") || "");
 
           formData.append("phone", phone);
-          formData.append("email", email); // Email will always be present now
+          formData.append("email", email); 
 
           formData.append("street", street);
           formData.append("city", city);
@@ -262,43 +261,42 @@ if (TEST_MODE) {
           formData.append("zip", zip);
 
           const routingType = state === "TX" ? "direct" : "contractor";
-const entryPage = localStorage.getItem("dp_entry_page") || window.location.href;
+          const entryPage = localStorage.getItem("dp_entry_page") || window.location.href;
 
-formData.append("routing_type", routingType);
+          formData.append("routing_type", routingType);
+          formData.append("submission_type", "popup");
+          formData.append("lead_type", "popup");
+          formData.append("entry_page", entryPage);
+          formData.append("source", "popup");
 
-// KEEP backend happy
-formData.append("submission_type", "popup");
-
-// FOR YOUR SYSTEM DISPLAY
-formData.append("lead_type", "popup");
-
-// TRACKING (THIS FIXES YOUR BLANK PAGE ISSUE)
-formData.append("entry_page", entryPage);
-
-// OPTIONAL BUT SMART
-formData.append("source", "popup");
-
-         fetch("https://tradepilot.doorplaceusa.com/api/leads/intake", {
-  method: "POST",
-  body: formData
-})
-.then(() => {
-  document.getElementById("dp-overlay").innerHTML = `
-    <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
-      <h2>Request Received ✅</h2>
-      <p>We’ll review your request and follow up.</p>
-    </div>
-  `;
-})
-.catch(() => {
-  document.getElementById("dp-overlay").innerHTML = `
-    <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
-      <h2>Something went wrong ❌</h2>
-      <p>We couldn't submit your request at this time. Please check your connection and try again.</p>
-      <button onclick="document.getElementById('dp-popup-container').remove()" style="margin-top:15px;padding:10px 20px;border:none;background:#ccc;border-radius:6px;cursor:pointer;">Close</button>
-    </div>
-  `;
-});
+          fetch("https://tradepilot.doorplaceusa.com/api/leads/intake", {
+            method: "POST",
+            body: formData
+          })
+          .then(async (response) => {
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(`Server responded with ${response.status}: ${errorText}`);
+            }
+            document.getElementById("dp-overlay").innerHTML = `
+              <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
+                <h2>Request Received ✅</h2>
+                <p>We’ll review your request and follow up.</p>
+              </div>
+            `;
+          })
+          .catch((err) => {
+            // Check your F12 Developer Console for this error message!
+            console.error("Submission Error:", err); 
+            
+            document.getElementById("dp-overlay").innerHTML = `
+              <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
+                <h2>Something went wrong ❌</h2>
+                <p>We couldn't submit your request at this time. Please check your connection and try again.</p>
+                <button onclick="document.getElementById('dp-popup-container').remove()" style="margin-top:15px;padding:10px 20px;border:none;background:#ccc;border-radius:6px;cursor:pointer;">Close</button>
+              </div>
+            `;
+          });
         });
       }
 

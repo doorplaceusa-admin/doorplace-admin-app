@@ -291,134 +291,136 @@ async function updateLeadStatus(
       {/* CARDS LAYOUT */}
 {layout === "cards" && (
   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-    {filteredLeads.map((l) => (
-      <div
-        key={l.id}
-        className="border rounded-lg p-4 shadow-sm bg-white space-y-2"
-      >
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="font-semibold text-lg">
-              {l.first_name} {l.last_name}
+    {filteredLeads.map((l) => {
+      
+      // ✅ MOVE LOGIC HERE (outside JSX)
+      const sourceLabel =
+        l.submission_type === "popup"
+          ? "Popup Lead"
+          : l.submission_type === "partner_tracking"
+          ? "Partner Lead"
+          : "Website Form";
+
+      const typeLabel =
+        l.quote_type === "door"
+          ? "Door Quote"
+          : l.quote_type === "swing"
+          ? "Swing Quote"
+          : "General Inquiry";
+
+      return (
+        <div
+          key={l.id}
+          className="border rounded-lg p-4 shadow-sm bg-white space-y-2"
+        >
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="font-semibold text-lg">
+                {l.first_name} {l.last_name}
+              </div>
+              <div className="text-xs text-gray-500">{l.email}</div>
             </div>
-            <div className="text-xs text-gray-500">{l.email}</div>
+
+            {/* STATUS */}
+            <select
+              className={`text-xs font-semibold border rounded px-2 py-1 ${
+                (l.lead_status || "new") === "converted_to_order"
+                  ? "text-green-700"
+                  : (l.lead_status || "new") === "lost"
+                  ? "text-red-700"
+                  : (l.lead_status || "new") === "contacted"
+                  ? "text-blue-700"
+                  : "text-orange-700"
+              }`}
+              value={l.lead_status || "new"}
+              onChange={(e) =>
+                updateLeadStatus(l.id, e.target.value)
+              }
+            >
+              <option value="new">● New</option>
+              <option value="contacted">● Contacted</option>
+              <option value="in_progress">● In Progress</option>
+              <option value="converted_to_order">● Converted</option>
+              <option value="closed">● Closed</option>
+              <option value="lost">● Lost</option>
+            </select>
           </div>
 
-          {/* STATUS DROPDOWN */}
-          <select
-            className={`text-xs font-semibold border rounded px-2 py-1 ${
-  (l.lead_status || "new") === "converted_to_order"
-    ? "text-green-700"
-    : (l.lead_status || "new") === "lost"
-    ? "text-red-700"
-    : (l.lead_status || "new") === "contacted"
-    ? "text-blue-700"
-    : "text-orange-700"
-}`}
+          {/* INFO */}
+          <div className="text-xs text-gray-600 space-y-1">
 
-            value={l.lead_status || "new"}
-            onChange={(e) =>
-              updateLeadStatus(l.id, e.target.value)
-            }
-          >
-            <option value="new">● New</option>
-            <option value="contacted">● Contacted</option>
-            <option value="in_progress">● In Progress</option>
-            <option value="converted_to_order">● Converted</option>
-            <option value="closed">● Closed</option>
-            <option value="lost">● Lost</option>
-          </select>
+            <div>
+              <b>Source:</b> {sourceLabel}
+            </div>
+
+            <div>
+              <b>Type:</b> {typeLabel}
+            </div>
+
+            <div>
+              <b>Lead ID:</b> {l.lead_id}
+            </div>
+
+            <div>
+              <b>Created:</b>{" "}
+              {new Date(l.created_at).toLocaleDateString()}
+            </div>
+
+            <div>
+              <b>Entry:</b>{" "}
+              {l.entry_page ? (
+                <a
+                  href={`https://doorplaceusa.com${l.entry_page}`}
+                  target="_blank"
+                  className="text-blue-600 underline"
+                >
+                  {l.entry_page}
+                </a>
+              ) : (
+                "—"
+              )}
+            </div>
+
+          </div>
+
+          {/* ACTIONS */}
+          <div className="flex gap-2 pt-2">
+            <button
+              className="text-xs border px-2 py-1 rounded"
+              onClick={() => setViewLead(l)}
+            >
+              View
+            </button>
+
+            <button
+              className="text-xs border px-2 py-1 rounded"
+              onClick={() => setEditLead(l)}
+            >
+              Edit
+            </button>
+
+            <select
+              className="text-xs border px-2 py-1 rounded flex-1"
+              onChange={(e) => {
+                const v = e.target.value;
+                e.target.value = "";
+
+                if (v === "contacted") updateLeadStatus(l.id, "contacted");
+                if (v === "converted") updateLeadStatus(l.id, "converted_to_order");
+                if (v === "delete") deleteLead(l);
+              }}
+            >
+              <option value="">Actions</option>
+              <option value="contacted">Mark Contacted</option>
+              <option value="converted">Mark Converted</option>
+              <option value="delete">Delete</option>
+            </select>
+          </div>
         </div>
-
-        <div className="text-xs text-gray-600 space-y-1">
-  <div>
-  const sourceLabel =
-  l.submission_type === "popup"
-    ? "Popup Lead"
-    : l.submission_type === "partner_tracking"
-    ? "Partner Lead"
-    : "Website Form";
-
-const typeLabel =
-  l.quote_type === "door"
-    ? "Door Quote"
-    : l.quote_type === "swing"
-    ? "Swing Quote"
-    : "General Inquiry";
-</div>
-
-  <div>
-    <b>Lead ID:</b> {l.lead_id}
-  </div>
-
-  <div>
-    <b>Created:</b>{" "}
-    {new Date(l.created_at).toLocaleDateString()}
-  </div>
-
-  {(() => {
-  
-
-  return (
-    <>
-      <div>
-  <b>Entry:</b>{" "}
-  {l.entry_page ? (
-    <a
-      href={`https://doorplaceusa.com${l.entry_page}`}
-      target="_blank"
-      className="text-blue-600 underline"
-    >
-      {l.entry_page}
-    </a>
-  ) : (
-    "—"
-  )}
-</div>
-
-    </>
-  );
-})()}
-</div>
-
-        <div className="flex gap-2 pt-2">
-          <button
-            className="text-xs border px-2 py-1 rounded"
-            onClick={() => setViewLead(l)}
-          >
-            View
-          </button>
-
-          <button
-            className="text-xs border px-2 py-1 rounded"
-            onClick={() => setEditLead(l)}
-          >
-            Edit
-          </button>
-
-          <select
-  className="text-xs border px-2 py-1 rounded flex-1"
-  onChange={(e) => {
-    const v = e.target.value;
-    e.target.value = "";
-
-    if (v === "contacted") updateLeadStatus(l.id, "contacted");
-    if (v === "converted") updateLeadStatus(l.id, "converted_to_order");
-    if (v === "delete") deleteLead(l);
-  }}
->
-  <option value="">Actions</option>
-  <option value="contacted">Mark Contacted</option>
-  <option value="converted">Mark Converted</option>
-  <option value="delete">Delete</option>
-</select>
-
-        </div>
-      </div>
-    ))}
+      );
+    })}
   </div>
 )}
-
 {/* TABLE LAYOUT */}
 {layout === "table" && (
   <AdminTable<Lead>

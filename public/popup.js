@@ -1,4 +1,10 @@
 (function () {
+
+  // ✅ ADD THIS RIGHT HERE
+  if (!localStorage.getItem("dp_entry_page")) {
+    localStorage.setItem("dp_entry_page", window.location.href);
+  }
+
   const lastShown = localStorage.getItem("dp_popup_time");
   const seenThisSession = sessionStorage.getItem("dp_popup_seen");
 
@@ -248,8 +254,21 @@
           formData.append("zip", zip);
 
           const routingType = state === "TX" ? "direct" : "contractor";
-          formData.append("routing_type", routingType);
-          formData.append("submission_type", "general_inquiry");
+const entryPage = localStorage.getItem("dp_entry_page") || window.location.href;
+
+formData.append("routing_type", routingType);
+
+// KEEP backend happy
+formData.append("submission_type", "popup");
+
+// FOR YOUR SYSTEM DISPLAY
+formData.append("lead_type", "popup");
+
+// TRACKING (THIS FIXES YOUR BLANK PAGE ISSUE)
+formData.append("entry_page", entryPage);
+
+// OPTIONAL BUT SMART
+formData.append("source", "popup");
 
           fetch("https://tradepilot.doorplaceusa.com/api/leads/intake", {
             method: "POST",

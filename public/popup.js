@@ -1,5 +1,4 @@
 (function () {
-
   const lastShown = localStorage.getItem("dp_popup_time");
   const seenThisSession = sessionStorage.getItem("dp_popup_seen");
 
@@ -7,8 +6,8 @@
   if (lastShown && Date.now() - Number(lastShown) < 86400000) return;
 
   setTimeout(() => {
-
     const popup = document.createElement("div");
+    popup.id = "dp-popup-container"; // Added an ID for easy removal
 
     popup.innerHTML = `
       <div id="dp-overlay" style="
@@ -42,25 +41,68 @@
             Tell us what you're looking for and our team will review your request and follow up.
           </div>
 
-          <input id="dp-name" placeholder="Full Name" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
-          <input id="dp-phone" placeholder="Phone Number" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
-          <input id="dp-email" placeholder="Email Address (optional)" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
+          <input id="dp-name" placeholder="Full Name" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+          <input id="dp-phone" placeholder="Phone Number" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+          <input id="dp-email" type="email" placeholder="Email Address" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
 
-          <input id="dp-street" placeholder="Street Address" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
-          <input id="dp-city" placeholder="City" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
+          <input id="dp-street" placeholder="Street Address" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+          <input id="dp-city" placeholder="City" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
 
-          <select id="dp-state" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
+          <select id="dp-state" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
             <option value="">Select State</option>
-            <option value="TX">Texas</option>
+            <option value="AL">Alabama</option>
+            <option value="AK">Alaska</option>
+            <option value="AZ">Arizona</option>
+            <option value="AR">Arkansas</option>
             <option value="CA">California</option>
+            <option value="CO">Colorado</option>
+            <option value="CT">Connecticut</option>
+            <option value="DE">Delaware</option>
             <option value="FL">Florida</option>
-            <option value="NY">New York</option>
-            <option value="IL">Illinois</option>
             <option value="GA">Georgia</option>
+            <option value="HI">Hawaii</option>
+            <option value="ID">Idaho</option>
+            <option value="IL">Illinois</option>
+            <option value="IN">Indiana</option>
+            <option value="IA">Iowa</option>
+            <option value="KS">Kansas</option>
+            <option value="KY">Kentucky</option>
+            <option value="LA">Louisiana</option>
+            <option value="ME">Maine</option>
+            <option value="MD">Maryland</option>
+            <option value="MA">Massachusetts</option>
+            <option value="MI">Michigan</option>
+            <option value="MN">Minnesota</option>
+            <option value="MS">Mississippi</option>
+            <option value="MO">Missouri</option>
+            <option value="MT">Montana</option>
+            <option value="NE">Nebraska</option>
+            <option value="NV">Nevada</option>
+            <option value="NH">New Hampshire</option>
+            <option value="NJ">New Jersey</option>
+            <option value="NM">New Mexico</option>
+            <option value="NY">New York</option>
+            <option value="NC">North Carolina</option>
+            <option value="ND">North Dakota</option>
             <option value="OH">Ohio</option>
+            <option value="OK">Oklahoma</option>
+            <option value="OR">Oregon</option>
+            <option value="PA">Pennsylvania</option>
+            <option value="RI">Rhode Island</option>
+            <option value="SC">South Carolina</option>
+            <option value="SD">South Dakota</option>
+            <option value="TN">Tennessee</option>
+            <option value="TX">Texas</option>
+            <option value="UT">Utah</option>
+            <option value="VT">Vermont</option>
+            <option value="VA">Virginia</option>
+            <option value="WA">Washington</option>
+            <option value="WV">West Virginia</option>
+            <option value="WI">Wisconsin</option>
+            <option value="WY">Wyoming</option>
           </select>
 
-          <input id="dp-zip" placeholder="Zip Code" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
+          <input id="dp-zip" placeholder="Zip Code" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
 
           <div id="dp-contractor-box" style="display:none;margin-bottom:10px;text-align:left;font-size:13px;color:#444;">
             <div style="margin-bottom:6px;">
@@ -72,7 +114,7 @@
             </label>
           </div>
 
-          <button id="dp-submit-btn" onclick="dpSubmit()" style="
+          <button id="dp-submit-btn" style="
             width:100%;
             background:#b80d0d;
             color:#fff;
@@ -82,6 +124,7 @@
             border-radius:8px;
             cursor:pointer;
             font-size:16px;
+            box-sizing:border-box;
           ">
             Submit Request
           </button>
@@ -90,7 +133,7 @@
             No spam. Just a follow-up based on your request.
           </div>
 
-          <div onclick="closeDpPopup()" style="
+          <div id="dp-close-btn" style="
             position:absolute;
             top:10px;
             right:14px;
@@ -108,122 +151,135 @@
     localStorage.setItem("dp_popup_time", Date.now());
     sessionStorage.setItem("dp_popup_seen", "true");
 
+    // Initialize all event listeners after DOM injection
     setTimeout(() => {
+      
+      // 1. Phone Formatting
       const phoneInput = document.getElementById("dp-phone");
-      if (!phoneInput) return;
+      if (phoneInput) {
+        phoneInput.addEventListener("input", function(e) {
+          let x = e.target.value.replace(/\D/g, "").slice(0,10);
+          let formatted = x;
 
-      phoneInput.addEventListener("input", function(e) {
-        let x = e.target.value.replace(/\D/g, "").slice(0,10);
-        let formatted = x;
+          if (x.length > 6) {
+            formatted = "(" + x.slice(0,3) + ") " + x.slice(3,6) + "-" + x.slice(6);
+          } else if (x.length > 3) {
+            formatted = "(" + x.slice(0,3) + ") " + x.slice(3);
+          }
 
-        if (x.length > 6) {
-          formatted = "(" + x.slice(0,3) + ") " + x.slice(3,6) + "-" + x.slice(6);
-        } else if (x.length > 3) {
-          formatted = "(" + x.slice(0,3) + ") " + x.slice(3);
-        }
-
-        e.target.value = formatted;
-      });
-    }, 100);
-
-    document.getElementById("dp-state").addEventListener("change", function() {
-      const contractorBox = document.getElementById("dp-contractor-box");
-
-      if (this.value && this.value !== "TX") {
-        contractorBox.style.display = "block";
-      } else {
-        contractorBox.style.display = "none";
-        document.getElementById("dp-contractor-check").checked = false;
+          e.target.value = formatted;
+        });
       }
-    });
+
+      // 2. State selection disclaimer logic
+      const stateSelect = document.getElementById("dp-state");
+      if (stateSelect) {
+        stateSelect.addEventListener("change", function() {
+          const contractorBox = document.getElementById("dp-contractor-box");
+
+          if (this.value && this.value !== "TX") {
+            contractorBox.style.display = "block";
+          } else {
+            contractorBox.style.display = "none";
+            document.getElementById("dp-contractor-check").checked = false;
+          }
+        });
+      }
+
+      // 3. Close Popup functionality
+      const closeBtn = document.getElementById("dp-close-btn");
+      if (closeBtn) {
+        closeBtn.addEventListener("click", function() {
+          const overlay = document.getElementById("dp-popup-container");
+          if (overlay) overlay.remove();
+        });
+      }
+
+      // 4. Form Submission functionality
+      const submitBtn = document.getElementById("dp-submit-btn");
+      let dpSubmitting = false; // State safely encapsulated inside the IIFE
+
+      if (submitBtn) {
+        submitBtn.addEventListener("click", function() {
+          if (dpSubmitting) return;
+          dpSubmitting = true;
+
+          submitBtn.disabled = true;
+          submitBtn.innerText = "Submitting...";
+
+          const name = document.getElementById("dp-name").value.trim();
+          const phone = document.getElementById("dp-phone").value.trim();
+          const email = document.getElementById("dp-email").value.trim();
+          const street = document.getElementById("dp-street").value.trim();
+          const city = document.getElementById("dp-city").value.trim();
+          const state = document.getElementById("dp-state").value;
+          const zip = document.getElementById("dp-zip").value.trim();
+          const contractorCheck = document.getElementById("dp-contractor-check");
+
+          const resetBtn = () => {
+            dpSubmitting = false;
+            submitBtn.disabled = false;
+            submitBtn.innerText = "Submit Request";
+          };
+
+          // Added email to required checks
+          if (!name || !phone || !email || !street || !city || !state || !zip) {
+            alert("Please complete all required fields");
+            return resetBtn();
+          }
+
+          if (state !== "TX" && !contractorCheck.checked) {
+            alert("Please confirm before continuing");
+            return resetBtn();
+          }
+
+          const formData = new FormData();
+
+          const nameParts = name.split(" ");
+          formData.append("first_name", nameParts[0] || "");
+          formData.append("last_name", nameParts.slice(1).join(" ") || "");
+
+          formData.append("phone", phone);
+          formData.append("email", email); // Email will always be present now
+
+          formData.append("street", street);
+          formData.append("city", city);
+          formData.append("state", state);
+          formData.append("zip", zip);
+
+          const routingType = state === "TX" ? "direct" : "contractor";
+          formData.append("routing_type", routingType);
+          formData.append("submission_type", "general_inquiry");
+
+          fetch("https://tradepilot.doorplaceusa.com/api/leads/intake", {
+            method: "POST",
+            body: formData
+          })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+            document.getElementById("dp-overlay").innerHTML = `
+              <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
+                <h2>Request Received ✅</h2>
+                <p>We’ll review your request and follow up.</p>
+              </div>
+            `;
+          })
+          .catch(() => {
+            // Updated error handling UX
+            document.getElementById("dp-overlay").innerHTML = `
+              <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
+                <h2>Something went wrong ❌</h2>
+                <p>We couldn't submit your request at this time. Please check your connection and try again.</p>
+                <button onclick="document.getElementById('dp-popup-container').remove()" style="margin-top:15px;padding:10px 20px;border:none;background:#ccc;border-radius:6px;cursor:pointer;">Close</button>
+              </div>
+            `;
+          });
+        });
+      }
+
+    }, 100);
 
   }, 5000);
 })();
-
-function closeDpPopup() {
-  const overlay = document.getElementById("dp-overlay");
-  if (overlay) overlay.remove();
-}
-
-let dpSubmitting = false;
-
-function dpSubmit() {
-
-  if (dpSubmitting) return;
-  dpSubmitting = true;
-
-  const btn = document.getElementById("dp-submit-btn");
-  if (btn) {
-    btn.disabled = true;
-    btn.innerText = "Submitting...";
-  }
-
-  const name = document.getElementById("dp-name").value;
-  const phone = document.getElementById("dp-phone").value;
-  const email = document.getElementById("dp-email").value;
-
-  const street = document.getElementById("dp-street").value;
-  const city = document.getElementById("dp-city").value;
-  const state = document.getElementById("dp-state").value;
-  const zip = document.getElementById("dp-zip").value;
-
-  const contractorCheck = document.getElementById("dp-contractor-check");
-
-  if (!name || !phone || !street || !city || !state || !zip) {
-    alert("Please complete all required fields");
-    return resetBtn();
-  }
-
-  if (state !== "TX" && !contractorCheck.checked) {
-    alert("Please confirm before continuing");
-    return resetBtn();
-  }
-
-  const formData = new FormData();
-
-  const nameParts = name.split(" ");
-  formData.append("first_name", nameParts[0] || "");
-  formData.append("last_name", nameParts.slice(1).join(" ") || "");
-
-  formData.append("phone", phone);
-  formData.append("email", email || "");
-
-  formData.append("street", street);
-  formData.append("city", city);
-  formData.append("state", state);
-  formData.append("zip", zip);
-
-  const routingType = state === "TX" ? "direct" : "contractor";
-  formData.append("routing_type", routingType);
-
-  formData.append("submission_type", "general_inquiry");
-
-  fetch("https://tradepilot.doorplaceusa.com/api/leads/intake", {
-    method: "POST",
-    body: formData
-  })
-  .then(() => {
-    document.getElementById("dp-overlay").innerHTML = `
-      <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
-        <h2>Request Received ✅</h2>
-        <p>We’ll review your request and follow up.</p>
-      </div>
-    `;
-  })
-  .catch(() => {
-    document.getElementById("dp-overlay").innerHTML = `
-      <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
-        <h2>Request Received ✅</h2>
-        <p>We’ll review your request and follow up.</p>
-      </div>
-    `;
-  });
-
-  function resetBtn() {
-    dpSubmitting = false;
-    if (btn) {
-      btn.disabled = false;
-      btn.innerText = "Submit Request";
-    }
-  }
-}

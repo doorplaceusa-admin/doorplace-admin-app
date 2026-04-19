@@ -332,18 +332,19 @@ async function updateLeadStatus(
 
         <div className="text-xs text-gray-600 space-y-1">
   <div>
-  <b>Source:</b>{" "}
-  <span className="font-semibold text-gray-800">
-    {l.submission_type === "popup"
-      ? "Popup Lead"
-      : l.submission_type === "general" || l.submission_type === "general_inquiry"
-      ? "Website Form"
-      : l.submission_type === "quote"
-      ? "Swing / Door Quote"
-      : l.submission_type === "partner_tracking"
-      ? "Partner Lead"
-      : l.submission_type || "—"}
-  </span>
+  const sourceLabel =
+  l.submission_type === "popup"
+    ? "Popup Lead"
+    : l.submission_type === "partner_tracking"
+    ? "Partner Lead"
+    : "Website Form";
+
+const typeLabel =
+  l.quote_type === "door"
+    ? "Door Quote"
+    : l.quote_type === "swing"
+    ? "Swing Quote"
+    : "General Inquiry";
 </div>
 
   <div>
@@ -484,17 +485,16 @@ async function updateLeadStatus(
 
 
      case "type":
+  const typeLabel =
+    l.quote_type === "door"
+      ? "Door Quote"
+      : l.quote_type === "swing"
+      ? "Swing Quote"
+      : "General Inquiry";
+
   return (
     <span className="text-xs font-medium">
-      {l.submission_type === "popup"
-        ? "Popup Lead"
-        : l.submission_type === "general_inquiry"
-        ? "Website Form"
-        : l.submission_type === "quote"
-        ? "Swing / Door Quote"
-        : l.submission_type === "partner_tracking"
-        ? "Partner Lead"
-        : l.submission_type || "—"}
+      {typeLabel}
     </span>
   );
 

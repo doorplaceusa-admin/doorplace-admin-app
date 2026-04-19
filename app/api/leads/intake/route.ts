@@ -266,13 +266,23 @@ if (leadError || !leadData) {
 // ADMIN UI NOTIFICATION (LEADS)
 // ===============================
 try {
-  await supabaseAdmin.from("notifications").insert({
-    type: "lead",
+  const adminIds = [
+    "152c41c6-6996-4232-828a-0ddbe211fc40", // admin@doorplaceusa.com
+    "77de525c-4972-4f7f-890b-37e6c5bbf542", // thomas@doorplaceusa.com
+  ];
+
+  const notifications = adminIds.map((id) => ({
+    type: "LEAD",
     title: "New Lead / Order Received",
-    message: `New lead from ${leadData.first_name ?? ""} ${leadData.last_name ?? ""}`,
+    body: `New lead from ${leadData.first_name ?? ""} ${leadData.last_name ?? ""}`,
     entity_type: "lead",
     entity_id: leadData.id,
-  });
+    user_id: id,
+    is_read: false,
+  }));
+
+  await supabaseAdmin.from("notifications").insert(notifications);
+
 } catch (err) {
   console.error("Lead admin notification failed (non-fatal):", err);
 }

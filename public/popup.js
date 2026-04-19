@@ -27,7 +27,7 @@
           background:#ffffff;
           padding:24px 18px;
           border-radius:12px;
-          max-width:340px;
+          max-width:360px;
           width:90%;
           text-align:center;
           position:relative;
@@ -42,29 +42,37 @@
             Tell us what you're looking for and we’ll text you your exact quote.
           </div>
 
-          <input id="dp-name" placeholder="Full Name" style="
-            width:100%;
-            margin-bottom:10px;
-            padding:12px;
-            border:1px solid #ddd;
-            border-radius:6px;
-          ">
+          <input id="dp-name" placeholder="Full Name" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
+          <input id="dp-phone" placeholder="Phone Number" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
+          <input id="dp-email" placeholder="Email Address (optional)" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
 
-          <input id="dp-phone" placeholder="Phone Number" style="
-            width:100%;
-            margin-bottom:10px;
-            padding:12px;
-            border:1px solid #ddd;
-            border-radius:6px;
-          ">
+          <!-- ADDRESS -->
+          <input id="dp-street" placeholder="Street Address" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
+          <input id="dp-city" placeholder="City" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
 
-          <input id="dp-email" placeholder="Email Address (optional)" style="
-            width:100%;
-            margin-bottom:10px;
-            padding:12px;
-            border:1px solid #ddd;
-            border-radius:6px;
-          ">
+          <select id="dp-state" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
+            <option value="">Select State</option>
+            <option value="TX">Texas</option>
+            <option value="CA">California</option>
+            <option value="FL">Florida</option>
+            <option value="NY">New York</option>
+            <option value="IL">Illinois</option>
+            <option value="GA">Georgia</option>
+            <option value="OH">Ohio</option>
+          </select>
+
+          <input id="dp-zip" placeholder="Zip Code" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
+
+          <!-- CONTRACTOR MESSAGE -->
+          <div id="dp-contractor-box" style="display:none;margin-bottom:10px;text-align:left;font-size:13px;color:#444;">
+            <div style="margin-bottom:6px;">
+              Based on your location, this request may be handled by a local independent contractor rather than directly by Doorplace USA.
+            </div>
+            <label>
+              <input type="checkbox" id="dp-contractor-check">
+              I understand and agree
+            </label>
+          </div>
 
           <button id="dp-submit-btn" onclick="dpSubmit()" style="
             width:100%;
@@ -102,7 +110,7 @@
     localStorage.setItem("dp_popup_time", Date.now());
     sessionStorage.setItem("dp_popup_seen", "true");
 
-    // 📞 PHONE FORMAT
+    // PHONE FORMAT
     setTimeout(() => {
       const phoneInput = document.getElementById("dp-phone");
       if (!phoneInput) return;
@@ -121,6 +129,18 @@
       });
     }, 100);
 
+    // STATE LOGIC
+    document.getElementById("dp-state").addEventListener("change", function() {
+      const contractorBox = document.getElementById("dp-contractor-box");
+
+      if (this.value && this.value !== "TX") {
+        contractorBox.style.display = "block";
+      } else {
+        contractorBox.style.display = "none";
+        document.getElementById("dp-contractor-check").checked = false;
+      }
+    });
+
   }, 5000);
 })();
 
@@ -129,7 +149,6 @@ function closeDpPopup() {
   if (overlay) overlay.remove();
 }
 
-// 🔴 PREVENT DOUBLE SUBMIT
 let dpSubmitting = false;
 
 function dpSubmit() {
@@ -147,14 +166,21 @@ function dpSubmit() {
   const phone = document.getElementById("dp-phone").value;
   const email = document.getElementById("dp-email").value;
 
-  if (!name || !phone) {
-    alert("Please enter your info");
-    dpSubmitting = false;
-    if (btn) {
-      btn.disabled = false;
-      btn.innerText = "Get My Price";
-    }
-    return;
+  const street = document.getElementById("dp-street").value;
+  const city = document.getElementById("dp-city").value;
+  const state = document.getElementById("dp-state").value;
+  const zip = document.getElementById("dp-zip").value;
+
+  const contractorCheck = document.getElementById("dp-contractor-check");
+
+  if (!name || !phone || !street || !city || !state || !zip) {
+    alert("Please complete all required fields");
+    return resetBtn();
+  }
+
+  if (state !== "TX" && !contractorCheck.checked) {
+    alert("Please confirm before continuing");
+    return resetBtn();
   }
 
   const formData = new FormData();
@@ -165,40 +191,30 @@ function dpSubmit() {
 
   formData.append("phone", phone);
   formData.append("email", email || "");
+
+  formData.append("street", street);
+  formData.append("city", city);
+  formData.append("state", state);
+  formData.append("zip", zip);
+
+  const routingType = state === "TX" ? "direct" : "contractor";
+  formData.append("routing_type", routingType);
+
   formData.append("submission_type", "general_inquiry");
-
-  // 🔥 TRACKING
-  const entry = localStorage.getItem("dp_entry_page") || "";
-
-  let pathArray = [];
-  try {
-    pathArray = JSON.parse(localStorage.getItem("dp_page_path") || "[]");
-  } catch (e) {}
-
-  const pathString = pathArray.join(" → ");
-
-  formData.append("entry_page", entry);
-  formData.append("page_path", pathString);
 
   fetch("https://tradepilot.doorplaceusa.com/api/leads/intake", {
     method: "POST",
     body: formData
   })
-  .then((res) => {
-    if (res.ok) {
-      document.getElementById("dp-overlay").innerHTML = `
-        <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
-          <h2>You're In ✅</h2>
-          <p>We’ll text you shortly with your price.</p>
-        </div>
-      `;
-    } else {
-      throw new Error("Server error");
-    }
+  .then(() => {
+    document.getElementById("dp-overlay").innerHTML = `
+      <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
+        <h2>You're In ✅</h2>
+        <p>We’ll text you shortly.</p>
+      </div>
+    `;
   })
-  .catch((err) => {
-    console.error(err);
-
+  .catch(() => {
     document.getElementById("dp-overlay").innerHTML = `
       <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
         <h2>You're In ✅</h2>
@@ -206,4 +222,12 @@ function dpSubmit() {
       </div>
     `;
   });
+
+  function resetBtn() {
+    dpSubmitting = false;
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = "Get My Price";
+    }
+  }
 }

@@ -134,9 +134,27 @@ export default function ContractorsPage() {
           <span className="text-sm text-gray-600">Total: {filteredRows.length}</span>
         </div>
 
-        <p className="text-sm text-gray-500 mb-3">
-          Doorplace USA — Contractor Network
-        </p>
+        <div className="flex items-center gap-2 mb-3">
+  <a
+    href="https://doorplaceusa.com/pages/join-our-independent-contractor-network-doorplace-usa"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-sm text-blue-600 underline"
+  >
+    Open Contractor Signup Page
+  </a>
+
+  <button
+    onClick={() =>
+      navigator.clipboard.writeText(
+        "https://doorplaceusa.com/pages/join-our-independent-contractor-network-doorplace-usa"
+      )
+    }
+    className="text-xs border px-2 py-1 rounded hover:bg-gray-100"
+  >
+    Copy Link
+  </button>
+</div>
 
         {/* LAYOUT TOGGLE */}
         <div className="flex items-center gap-2 mb-3">

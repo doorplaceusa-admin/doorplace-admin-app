@@ -584,63 +584,19 @@ if (v === "delete") deleteLead(l);
         </Section>
 
 {/* CUSTOMER JOURNEY */}
-{(viewLead.entry_page || viewLead.page_path) && (
+{viewLead.entry_page && (
   <Section title="Customer Journey">
-    <div>
-  <b>Entry Page:</b>{" "}
-  <a
-  href={`https://doorplaceusa.com${viewLead.entry_page}`}
-  target="_blank"
-  className="bg-yellow-100 px-2 py-1 rounded text-xs font-semibold text-blue-600 underline"
->
-  {viewLead.entry_page}
-</a>
-</div>
-
-{viewLead.page_path && (
-  <div className="mt-2 text-xs text-gray-600">
-    <b>Last Page:</b>{" "}
-    {(() => {
-      const pages = viewLead.page_path
-        .split(" → ")
-        .filter(Boolean);
-
-      const last = pages[pages.length - 1];
-
-      return last ? (
-        <a
-          href={`https://doorplaceusa.com${last}`}
-          target="_blank"
-          className="text-blue-600 underline"
-        >
-          {last}
-        </a>
-      ) : (
-        "—"
-      );
-    })()}
+  <div className="flex items-center gap-2">
+    <span className="text-gray-600 text-sm">Entry:</span>
+    <a
+      href={`https://doorplaceusa.com${viewLead.entry_page}`}
+      target="_blank"
+      className="bg-yellow-100 px-2 py-1 rounded text-xs font-semibold text-blue-600 underline"
+    >
+      {viewLead.entry_page}
+    </a>
   </div>
-)}
-
-    {viewLead.page_path && (
-      <div className="mt-2">
-        <b>Page Path:</b>
-        <ul className="list-disc ml-5 mt-1 text-sm text-gray-600">
-          {viewLead.page_path.split(" → ").map((p, i) => (
-            <li key={i}>
-  <a
-    href={`https://doorplaceusa.com${p}`}
-    target="_blank"
-    className="text-blue-600 underline"
-  >
-    {p}
-  </a>
-</li>
-          ))}
-        </ul>
-      </div>
-    )}
-  </Section>
+</Section>
 )}
 
         {/* PHOTOS */}

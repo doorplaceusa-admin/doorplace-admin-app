@@ -2,8 +2,16 @@
 
   // ✅ ADD THIS RIGHT HERE
   if (!localStorage.getItem("dp_entry_page")) {
-    localStorage.setItem("dp_entry_page", window.location.href);
-  }
+  localStorage.setItem("dp_entry_page", window.location.href);
+}
+
+  const TEST_MODE = true;
+
+if (TEST_MODE) {
+  localStorage.removeItem("dp_popup_time");
+  sessionStorage.removeItem("dp_popup_seen");
+}
+
 
   const lastShown = localStorage.getItem("dp_popup_time");
   const seenThisSession = sessionStorage.getItem("dp_popup_seen");

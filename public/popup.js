@@ -35,18 +35,17 @@
         ">
 
           <div style="font-size:24px;font-weight:700;margin-bottom:8px;">
-            Get Your Exact Price
+            Request Your Quote Now
           </div>
 
           <div style="font-size:15px;margin-bottom:16px;color:#444;">
-            Tell us what you're looking for and we’ll text you your exact quote.
+            Tell us what you're looking for and our team will review your request and follow up.
           </div>
 
           <input id="dp-name" placeholder="Full Name" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
           <input id="dp-phone" placeholder="Phone Number" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
           <input id="dp-email" placeholder="Email Address (optional)" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
 
-          <!-- ADDRESS -->
           <input id="dp-street" placeholder="Street Address" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
           <input id="dp-city" placeholder="City" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
 
@@ -63,7 +62,6 @@
 
           <input id="dp-zip" placeholder="Zip Code" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;">
 
-          <!-- CONTRACTOR MESSAGE -->
           <div id="dp-contractor-box" style="display:none;margin-bottom:10px;text-align:left;font-size:13px;color:#444;">
             <div style="margin-bottom:6px;">
               Based on your location, this request may be handled by a local independent contractor rather than directly by Doorplace USA.
@@ -85,11 +83,11 @@
             cursor:pointer;
             font-size:16px;
           ">
-            Get My Price
+            Submit Request
           </button>
 
           <div style="font-size:12px;color:#777;margin-top:10px;">
-            We’ll text you — no spam.
+            No spam. Just a follow-up based on your request.
           </div>
 
           <div onclick="closeDpPopup()" style="
@@ -110,7 +108,6 @@
     localStorage.setItem("dp_popup_time", Date.now());
     sessionStorage.setItem("dp_popup_seen", "true");
 
-    // PHONE FORMAT
     setTimeout(() => {
       const phoneInput = document.getElementById("dp-phone");
       if (!phoneInput) return;
@@ -129,7 +126,6 @@
       });
     }, 100);
 
-    // STATE LOGIC
     document.getElementById("dp-state").addEventListener("change", function() {
       const contractorBox = document.getElementById("dp-contractor-box");
 
@@ -209,16 +205,16 @@ function dpSubmit() {
   .then(() => {
     document.getElementById("dp-overlay").innerHTML = `
       <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
-        <h2>You're In ✅</h2>
-        <p>We’ll text you shortly.</p>
+        <h2>Request Received ✅</h2>
+        <p>We’ll review your request and follow up.</p>
       </div>
     `;
   })
   .catch(() => {
     document.getElementById("dp-overlay").innerHTML = `
       <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
-        <h2>You're In ✅</h2>
-        <p>We’ll text you shortly.</p>
+        <h2>Request Received ✅</h2>
+        <p>We’ll review your request and follow up.</p>
       </div>
     `;
   });
@@ -227,7 +223,7 @@ function dpSubmit() {
     dpSubmitting = false;
     if (btn) {
       btn.disabled = false;
-      btn.innerText = "Get My Price";
+      btn.innerText = "Submit Request";
     }
   }
 }

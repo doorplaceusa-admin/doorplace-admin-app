@@ -64,7 +64,7 @@ export async function POST(req: Request) {
        3) Get body
     ========================== */
     const body = await req.json();
-    const { page_key } = body;
+    const { page_key, partner_id } = body;
 
     if (!page_key) {
       return new Response("Missing data", {
@@ -107,7 +107,10 @@ export async function POST(req: Request) {
     ========================== */
     const { error: updateError } = await supabase
       .from("page_view_events")
-      .update({ source: "verified_human" })
+      .update({
+  source: "verified_human",
+  partner_id: partner_id || null, // 🔥 THIS IS THE FIX
+})
       .eq("id", latest.id);
 
     if (updateError) {

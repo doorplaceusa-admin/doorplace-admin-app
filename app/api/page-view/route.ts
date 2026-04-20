@@ -190,8 +190,7 @@ export async function POST(req: Request) {
       longitude: lon,
       ip_address: ip,
       user_agent: ua,
-      source: "pending",
-    });
+      source: "human",    });
 
     if (error) {
       console.error("DB ERROR:", error);

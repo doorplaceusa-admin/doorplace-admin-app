@@ -393,8 +393,8 @@ export default function LiveUSMap({
   visitors?: LiveVisitor[];
   fullscreen?: boolean;
 }) {
-  const width = 1000;
-const height = fullscreen ? 900 : 800;
+  const width = 1400;
+const height = fullscreen ? 700 : 500;
 
   const desktop = typeof window !== "undefined" && window.innerWidth > 900;
 
@@ -664,10 +664,10 @@ const zoomToCluster = useCallback((c: Cluster) => {
 ========================== */
 
 const mapHeightCss = fullscreen
-  ? "calc(100vh - 180px)"
+  ? "calc(100vh - 140px)"
   : desktop
-  ? "600px"
-  : "320px";
+  ? "400px"
+  : "250px";
 
 const panelWidth = fullscreen ? 420 : 360;
 
@@ -756,12 +756,12 @@ return (
         }}
       >
         {/* MAP */}
-        <div style={{ position: "relative", padding: 14 }}>
+        <div style={{ position: "relative", padding: 6 }}>
           <div
             style={{
               width: "100%",
               height: mapHeightCss,
-              borderRadius: 22,
+              borderRadius: 14,
               overflow: "hidden",
               border: "1px solid #e5e7eb",
               background: "white",

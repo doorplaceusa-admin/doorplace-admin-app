@@ -393,7 +393,7 @@ export default function LiveUSMap({
   visitors?: LiveVisitor[];
   fullscreen?: boolean;
 }) {
-  const width = 1400;
+  const width = 800;
 const height = fullscreen ? 700 : 500;
 
   const desktop = typeof window !== "undefined" && window.innerWidth > 900;
@@ -479,11 +479,10 @@ const id = setInterval(loadHumanCount, refreshMs);
   const proj = geoAlbersUsa();
   const geo = feature(us as any, (us as any).objects.states) as any;
 
-  proj.fitSize([width, height], geo);
+  proj.fitSize([width * 0.75, height * 0.75], geo);
+proj.translate([width / 2, height / 2]);
 
- proj.translate([width / 2, height / 2]);
-
-  return proj;
+return proj;
 }, [width, height]);
 
   const pathGenerator = useMemo(() => geoPath(projection), [projection]);
@@ -792,6 +791,7 @@ return (
   preserveAspectRatio="xMidYMid meet"
   style={{ width: "100%", height: "100%" }}
 >
+
 
   {/* ================= MAP BACKGROUND ================= */}
 

@@ -221,41 +221,30 @@ async function updateLeadStatus(
 
 {(() => {
  const latest = leads[0];
-const entry = latest?.entry_page;
+  const entry = latest?.entry_page;
 
-if (!entry) {
-  return <div className="text-[11px]">—</div>;
-}
+  if (!entry) {
+    return <div className="text-[11px]">—</div>;
+  }
 
-const url = entry.startsWith("http")
-  ? entry
-  : `https://doorplaceusa.com${entry}`;
+  const url = entry.startsWith("http")
+    ? entry
+    : `https://doorplaceusa.com${entry}`;
 
   return (
-   <div className="text-[11px] leading-tight">
-  {(() => {
-    const entry = latest?.entry_page;
-
-    if (!entry) return <span>—</span>;
-
-    const url = entry.startsWith("http")
-      ? entry
-      : `https://doorplaceusa.com${entry}`;
-
-    return (
+    <div className="text-[11px] leading-tight">
       <a
-  href={url}
-  target="_blank"
-  rel="noopener noreferrer"
-  className="text-blue-600 underline font-semibold"
->
-  {entry}
-</a>
-    );
-  })()}
-</div>
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 underline font-semibold"
+      >
+        {entry}
+      </a>
+    </div>
   );
-})()}
+  })()}
+
   </div>
 </div>
 
@@ -614,17 +603,32 @@ if (v === "delete") deleteLead(l);
 {/* CUSTOMER JOURNEY */}
 {viewLead.entry_page && (
   <Section title="Customer Journey">
-  <div className="flex items-center gap-2">
-    <span className="text-gray-600 text-sm">Entry:</span>
-    <a
-      href={`https://doorplaceusa.com${viewLead.entry_page}`}
-      target="_blank"
-      className="bg-yellow-100 px-2 py-1 rounded text-xs font-semibold text-blue-600 underline"
-    >
-      {viewLead.entry_page}
-    </a>
-  </div>
-</Section>
+    <div className="flex items-center gap-2">
+      <span className="text-gray-600 text-sm">Entry:</span>
+
+      {(() => {
+        const entry = viewLead.entry_page;
+
+        if (!entry) return <span>—</span>;
+
+        const url = entry.startsWith("http")
+          ? entry
+          : `https://doorplaceusa.com${entry}`;
+
+        return (
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-yellow-100 px-2 py-1 rounded text-xs font-semibold text-blue-600 underline"
+          >
+            {entry}
+          </a>
+        );
+      })()}
+
+    </div>
+  </Section>
 )}
 
         {/* PHOTOS */}

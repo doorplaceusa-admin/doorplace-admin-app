@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { sendEmail } from "@/lib/mailer";
 import crypto from "crypto";
 
+const COMPANY_ID = "88c22910-7bd1-42fc-bc81-8144a50d7b41"; // ✅ ADD HERE
 export const runtime = "nodejs";
 
 
@@ -134,10 +135,11 @@ export async function POST(req: Request) {
     const { data: partner, error } = await supabaseAdmin
       .from("partners")
       .insert({
+  company_id: COMPANY_ID, // ✅ ADD THIS LINE FIRST
 
-        auth_user_id,
-        partner_id,
-        tracking_link,
+  auth_user_id,
+  partner_id,
+  tracking_link,
 
         first_name,
         last_name,

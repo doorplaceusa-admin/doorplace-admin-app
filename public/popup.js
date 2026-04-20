@@ -4,7 +4,7 @@
     localStorage.setItem("dp_entry_page", window.location.href);
   }
 
-  const TEST_MODE = true;
+  const TEST_MODE = false;
 
   if (TEST_MODE) {
     localStorage.removeItem("dp_popup_time");

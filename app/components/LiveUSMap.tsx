@@ -337,21 +337,21 @@ function Pill({
         border: `1px solid ${active ? color : "#e5e7eb"}`,
         background: active ? `${color}15` : "white",
         color: active ? "#111827" : "#374151",
-        padding: "7px 10px",
+        padding: "5px 8px",
         borderRadius: "999px",
-        fontSize: "12px",
+        fontSize: "11px",
         fontWeight: 700,
         cursor: "pointer",
         display: "inline-flex",
         alignItems: "center",
-        gap: "8px",
+        gap: "6px",
         transition: "all 120ms ease",
       }}
     >
       <span
   style={{
-    width: 10,
-    height: 10,
+    width: 8,
+    height: 8,
     borderRadius: 999,
     background: "transparent",
     border: `2px solid ${color}`,
@@ -685,10 +685,10 @@ return (
       {/* ======================================================
           HEADER (KPI STRIP)
       ======================================================= */}
-      <div style={{ padding: 18 }}>
+      <div style={{ padding: 12 }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div>
-            <div style={{ fontSize: fullscreen ? 28 : 20, fontWeight: 950, letterSpacing: -0.4, color: "#0f172a" }}>
+            <div style={{ fontSize: fullscreen ? 22 : 16, fontWeight: 800, letterSpacing: -0.4, color: "#0f172a" }}>
               Live Visitors
             </div>
             
@@ -701,16 +701,16 @@ return (
         </div>
 
         {/* Filters row */}
-        <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ marginTop: 8, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
           
 <select
   value={humanWindowMinutes}
   onChange={(e) => setHumanWindowMinutes(Number(e.target.value))}
   style={{
-    padding: "10px 12px",
+    padding: "6px 10px",
     borderRadius: 14,
     border: "1px solid #e5e7eb",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 800,
     background: "white",
     cursor: "pointer",

@@ -3,8 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://tradepilot.doorplaceusa.com";
+const SITE_URL = "https://tradepilot.doorplaceusa.com";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);

@@ -116,6 +116,18 @@
 
           <input id="dp-zip" placeholder="Zip Code" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
 
+          <!-- 🔥 NEW FIELD -->
+          <select id="dp-interest" style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;">
+            <option value="">What are you interested in?</option>
+            <option value="door">Custom Door</option>
+            <option value="swing">Porch Swing</option>
+            <option value="motor">Automatic Barn Door Motor</option>
+            <option value="other">Other</option>
+          </select>
+
+          <input id="dp-interest-other" placeholder="Please describe what you're looking for"
+          style="width:100%;margin-bottom:10px;padding:12px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;display:none;">
+
           <div id="dp-contractor-box" style="display:none;margin-bottom:10px;text-align:left;font-size:13px;color:#444;">
             <div style="margin-bottom:6px;">
               Based on your location, this request may be handled by a local independent contractor rather than directly by Doorplace USA.
@@ -165,140 +177,134 @@
       sessionStorage.setItem("dp_popup_seen", "true");
     }
 
-    // Initialize all event listeners after DOM injection
     setTimeout(() => {
-      
-      // 1. Phone Formatting
+
       const phoneInput = document.getElementById("dp-phone");
-      if (phoneInput) {
-        phoneInput.addEventListener("input", function(e) {
-          let x = e.target.value.replace(/\D/g, "").slice(0,10);
-          let formatted = x;
+      phoneInput?.addEventListener("input", function(e) {
+        let x = e.target.value.replace(/\D/g, "").slice(0,10);
+        let formatted = x;
+        if (x.length > 6) formatted = "(" + x.slice(0,3) + ") " + x.slice(3,6) + "-" + x.slice(6);
+        else if (x.length > 3) formatted = "(" + x.slice(0,3) + ") " + x.slice(3);
+        e.target.value = formatted;
+      });
 
-          if (x.length > 6) {
-            formatted = "(" + x.slice(0,3) + ") " + x.slice(3,6) + "-" + x.slice(6);
-          } else if (x.length > 3) {
-            formatted = "(" + x.slice(0,3) + ") " + x.slice(3);
-          }
-
-          e.target.value = formatted;
-        });
-      }
-
-      // 2. State selection disclaimer logic
       const stateSelect = document.getElementById("dp-state");
-      if (stateSelect) {
-        stateSelect.addEventListener("change", function() {
-          const contractorBox = document.getElementById("dp-contractor-box");
+      stateSelect?.addEventListener("change", function() {
+        const contractorBox = document.getElementById("dp-contractor-box");
+        if (this.value && this.value !== "TX") contractorBox.style.display = "block";
+        else {
+          contractorBox.style.display = "none";
+          document.getElementById("dp-contractor-check").checked = false;
+        }
+      });
 
-          if (this.value && this.value !== "TX") {
-            contractorBox.style.display = "block";
-          } else {
-            contractorBox.style.display = "none";
-            document.getElementById("dp-contractor-check").checked = false;
-          }
-        });
-      }
+      // 🔥 NEW LOGIC
+      const interestSelect = document.getElementById("dp-interest");
+      const interestOther = document.getElementById("dp-interest-other");
 
-      // 3. Close Popup functionality
-      const closeBtn = document.getElementById("dp-close-btn");
-      if (closeBtn) {
-        closeBtn.addEventListener("click", function() {
-          const overlay = document.getElementById("dp-popup-container");
-          if (overlay) overlay.remove();
-        });
-      }
+      interestSelect?.addEventListener("change", function() {
+        if (this.value === "other") interestOther.style.display = "block";
+        else {
+          interestOther.style.display = "none";
+          interestOther.value = "";
+        }
+      });
 
-      // 4. Form Submission functionality
+      document.getElementById("dp-close-btn")?.addEventListener("click", function() {
+        document.getElementById("dp-popup-container")?.remove();
+      });
+
       const submitBtn = document.getElementById("dp-submit-btn");
-      let dpSubmitting = false; 
+      let dpSubmitting = false;
 
-      if (submitBtn) {
-        submitBtn.addEventListener("click", function() {
-          if (dpSubmitting) return;
-          dpSubmitting = true;
+      submitBtn?.addEventListener("click", function() {
+        if (dpSubmitting) return;
+        dpSubmitting = true;
 
-          submitBtn.disabled = true;
-          submitBtn.innerText = "Submitting...";
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Submitting...";
 
-          const name = document.getElementById("dp-name").value.trim();
-          const phone = document.getElementById("dp-phone").value.trim();
-          const email = document.getElementById("dp-email").value.trim();
-          const street = document.getElementById("dp-street").value.trim();
-          const city = document.getElementById("dp-city").value.trim();
-          const state = document.getElementById("dp-state").value;
-          const zip = document.getElementById("dp-zip").value.trim();
-          const contractorCheck = document.getElementById("dp-contractor-check");
+        const name = document.getElementById("dp-name").value.trim();
+        const phone = document.getElementById("dp-phone").value.trim();
+        const email = document.getElementById("dp-email").value.trim();
+        const street = document.getElementById("dp-street").value.trim();
+        const city = document.getElementById("dp-city").value.trim();
+        const state = document.getElementById("dp-state").value;
+        const zip = document.getElementById("dp-zip").value.trim();
+        const interest = document.getElementById("dp-interest").value;
+        const interestOtherVal = document.getElementById("dp-interest-other").value.trim();
+        const contractorCheck = document.getElementById("dp-contractor-check");
 
-          const resetBtn = () => {
-            dpSubmitting = false;
-            submitBtn.disabled = false;
-            submitBtn.innerText = "Submit Request";
-          };
+        const resetBtn = () => {
+          dpSubmitting = false;
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Submit Request";
+        };
 
-          if (!name || !phone || !email || !street || !city || !state || !zip) {
-            alert("Please complete all required fields");
-            return resetBtn();
+        if (!name || !phone || !email || !street || !city || !state || !zip || !interest) {
+          alert("Please complete all required fields");
+          return resetBtn();
+        }
+
+        if (state !== "TX" && !contractorCheck.checked) {
+          alert("Please confirm before continuing");
+          return resetBtn();
+        }
+
+        const formData = new FormData();
+        const nameParts = name.split(" ");
+
+        formData.append("first_name", nameParts[0] || "");
+        formData.append("last_name", nameParts.slice(1).join(" ") || "");
+
+        formData.append("phone", phone);
+        formData.append("email", email);
+        formData.append("street", street);
+        formData.append("city", city);
+        formData.append("state", state);
+        formData.append("zip", zip);
+
+        const finalInterest = interest === "other" ? interestOtherVal : interest;
+        formData.append("interest", finalInterest);
+
+        const routingType = state === "TX" ? "direct" : "contractor";
+        const entryPage = localStorage.getItem("dp_entry_page") || window.location.href;
+
+        formData.append("routing_type", routingType);
+        formData.append("submission_type", "popup");
+        formData.append("lead_type", "popup");
+        formData.append("entry_page", entryPage);
+        formData.append("source", "popup");
+
+        fetch("https://tradepilot.doorplaceusa.com/api/leads/intake", {
+          method: "POST",
+          body: formData
+        })
+        .then(async (response) => {
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText);
           }
 
-          if (state !== "TX" && !contractorCheck.checked) {
-            alert("Please confirm before continuing");
-            return resetBtn();
-          }
+          document.getElementById("dp-overlay").innerHTML = `
+            <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
+              <h2>Request Received ✅</h2>
+              <p>We’ll review your request and follow up.</p>
+            </div>
+          `;
+        })
+        .catch((err) => {
+          console.error("Submission Error:", err);
 
-          const formData = new FormData();
-
-          const nameParts = name.split(" ");
-          formData.append("first_name", nameParts[0] || "");
-          formData.append("last_name", nameParts.slice(1).join(" ") || "");
-
-          formData.append("phone", phone);
-          formData.append("email", email); 
-
-          formData.append("street", street);
-          formData.append("city", city);
-          formData.append("state", state);
-          formData.append("zip", zip);
-
-          const routingType = state === "TX" ? "direct" : "contractor";
-          const entryPage = localStorage.getItem("dp_entry_page") || window.location.href;
-
-          formData.append("routing_type", routingType);
-          formData.append("submission_type", "popup");
-          formData.append("lead_type", "popup");
-          formData.append("entry_page", entryPage);
-          formData.append("source", "popup");
-
-          fetch("https://tradepilot.doorplaceusa.com/api/leads/intake", {
-            method: "POST",
-            body: formData
-          })
-          .then(async (response) => {
-            if (!response.ok) {
-              const errorText = await response.text();
-              throw new Error(`Server responded with ${response.status}: ${errorText}`);
-            }
-            document.getElementById("dp-overlay").innerHTML = `
-              <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
-                <h2>Request Received ✅</h2>
-                <p>We’ll review your request and follow up.</p>
-              </div>
-            `;
-          })
-          .catch((err) => {
-            // Check your F12 Developer Console for this error message!
-            console.error("Submission Error:", err); 
-            
-            document.getElementById("dp-overlay").innerHTML = `
-              <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
-                <h2>Something went wrong ❌</h2>
-                <p>We couldn't submit your request at this time. Please check your connection and try again.</p>
-                <button onclick="document.getElementById('dp-popup-container').remove()" style="margin-top:15px;padding:10px 20px;border:none;background:#ccc;border-radius:6px;cursor:pointer;">Close</button>
-              </div>
-            `;
-          });
+          document.getElementById("dp-overlay").innerHTML = `
+            <div style="background:#fff;padding:40px;border-radius:12px;text-align:center;">
+              <h2>Something went wrong ❌</h2>
+              <p>Please try again.</p>
+            </div>
+          `;
         });
-      }
+
+      });
 
     }, 100);
 

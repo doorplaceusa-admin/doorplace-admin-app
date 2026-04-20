@@ -220,22 +220,40 @@ async function updateLeadStatus(
    <h3 className="text-xs font-semibold mb-1">Most Recent Entry Page</h3>
 
 {(() => {
-  const latest = leads[0];
+ const latest = leads[0];
+const entry = latest?.entry_page;
 
-  if (!latest || !latest.entry_page) {
-    return <div className="text-[11px]">—</div>;
-  }
+if (!entry) {
+  return <div className="text-[11px]">—</div>;
+}
+
+const url = entry.startsWith("http")
+  ? entry
+  : `https://doorplaceusa.com${entry}`;
 
   return (
-    <div className="text-[11px] leading-tight">
+   <div className="text-[11px] leading-tight">
+  {(() => {
+    const entry = latest?.entry_page;
+
+    if (!entry) return <span>—</span>;
+
+    const url = entry.startsWith("http")
+      ? entry
+      : `https://doorplaceusa.com${entry}`;
+
+    return (
       <a
-        href={`https://doorplaceusa.com${latest.entry_page}`}
-        target="_blank"
-        className="text-blue-600 underline font-semibold"
-      >
-        {latest.entry_page}
-      </a>
-    </div>
+  href={url}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="text-blue-600 underline font-semibold"
+>
+  {entry}
+</a>
+    );
+  })()}
+</div>
   );
 })()}
   </div>
@@ -302,11 +320,13 @@ async function updateLeadStatus(
           : "Website Form";
 
       const typeLabel =
-        l.quote_type === "door"
-          ? "Door Quote"
-          : l.quote_type === "swing"
-          ? "Swing Quote"
-          : "General Inquiry";
+  l.quote_type === "door"
+    ? "Door Quote"
+    : l.quote_type === "swing"
+    ? "Swing Quote"
+    : l.quote_type === "motor"
+    ? "Automatic Motor"
+    : "General Inquiry";
 
       return (
         <div
@@ -370,7 +390,11 @@ async function updateLeadStatus(
               <b>Entry:</b>{" "}
               {l.entry_page ? (
                 <a
-                  href={`https://doorplaceusa.com${l.entry_page}`}
+                  href={
+  l.entry_page?.startsWith("http")
+    ? l.entry_page
+    : `https://doorplaceusa.com${l.entry_page}`
+}
                   target="_blank"
                   className="text-blue-600 underline"
                 >
@@ -488,11 +512,13 @@ async function updateLeadStatus(
 
      case "type":
   const typeLabel =
-    l.quote_type === "door"
-      ? "Door Quote"
-      : l.quote_type === "swing"
-      ? "Swing Quote"
-      : "General Inquiry";
+  l.quote_type === "door"
+    ? "Door Quote"
+    : l.quote_type === "swing"
+    ? "Swing Quote"
+    : l.quote_type === "motor"
+    ? "Automatic Motor"
+    : "General Inquiry";
 
   return (
     <span className="text-xs font-medium">

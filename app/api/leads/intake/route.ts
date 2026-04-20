@@ -192,7 +192,7 @@ const { data: leadData, error: leadError } = await supabaseAdmin
 
 
       submission_type: submissionType,
-      quote_type: formData.get("quote_type"),
+      quote_type: formData.get("quote_type") || formData.get("interest"),
       is_partner_order: formData.get("is_partner_order") === "true",
       shopify_account_email,
 
@@ -207,7 +207,7 @@ const { data: leadData, error: leadError } = await supabaseAdmin
       zip,
 
 
-      project_details: formData.get("project_details"),
+      project_details: formData.get("project_details") || formData.get("interest"),
 
 
       swing_size: formData.get("swing_size"),

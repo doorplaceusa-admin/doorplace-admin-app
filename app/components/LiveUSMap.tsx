@@ -691,44 +691,18 @@ return (
             <div style={{ fontSize: fullscreen ? 28 : 20, fontWeight: 950, letterSpacing: -0.4, color: "#0f172a" }}>
               Live Visitors
             </div>
-            <div style={{ marginTop: 4, fontSize: 13, color: "#64748b", fontWeight: 700 }}>
-              Real-time activity map • built for bot spikes
-            </div>
+            
           </div>
 
          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
-  <StatCard label="TOTAL RIGHT NOW" value={totals.totalVisitors.toLocaleString()} />
-  <StatCard label="ACTIVE LOCATIONS" value={clusters.length.toLocaleString()} />
-
-  {/* ✅ Humans in selected window */}
-  <StatCard
-    label={`HUMANS (LAST ${humanWindowMinutes} MIN)`}
-    value={humanCount.toLocaleString()}
-  />
+  
 </div>
 
         </div>
 
         {/* Filters row */}
         <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-          <div style={{ flex: "1 1 260px", minWidth: 220 }}>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search city, state, page key, or URL…"
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                borderRadius: 14,
-                border: "1px solid #e5e7eb",
-                outline: "none",
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#111827",
-                background: "white",
-              }}
-            />
-          </div>
+          
 <select
   value={humanWindowMinutes}
   onChange={(e) => setHumanWindowMinutes(Number(e.target.value))}
@@ -766,24 +740,6 @@ return (
           
           
           
-
-
-          <button
-            onClick={resetView}
-            style={{
-              marginLeft: "auto",
-              border: "1px solid #e5e7eb",
-              background: "white",
-              padding: "10px 12px",
-              borderRadius: 14,
-              fontSize: 13,
-              fontWeight: 900,
-              cursor: "pointer",
-              color: "#0f172a",
-            }}
-          >
-            Reset View
-          </button>
         </div>
       </div>
 
@@ -826,17 +782,7 @@ return (
   {({ zoomIn, zoomOut, resetTransform }) => (
     <>
       <div style={{ marginBottom: 10, display: "flex", gap: 10 }}>
-        <button onClick={() => zoomIn()}>+</button>
-        <button onClick={() => zoomOut()}>-</button>
-        <button
-  onClick={() => {
-    resetTransform();
-    setZoomScale(1);
-    setSelectedCluster(null);
-  }}
->
-  Reset
-</button>
+        
       </div>
 
       <TransformComponent>
@@ -942,33 +888,7 @@ return (
 </TransformWrapper>
           </div>
 
-          {/* Hover tooltip */}
-          {hoverCluster && !selectedCluster && (
-            <div
-              style={{
-                position: "absolute",
-                right: 22,
-                top: 22,
-                width: 280,
-                background: "rgba(255,255,255,0.96)",
-                border: "1px solid #e5e7eb",
-                borderRadius: 16,
-                boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
-                padding: 12,
-                pointerEvents: "none",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
-                <div style={{ fontWeight: 950, color: "#0f172a" }}>{hoverCluster.topLabel}</div>
-                <div style={{ fontWeight: 950, color: COLORS[hoverCluster.category] }}>
-                  {hoverCluster.total.toLocaleString()}
-                </div>
-              </div>
-              <div style={{ marginTop: 6, fontSize: 12, color: "#475569", fontWeight: 700 }}>
-                {hoverCluster.items.length} event{hoverCluster.items.length === 1 ? "" : "s"} in this cluster
-              </div>
-            </div>
-          )}
+         
 
          {/* Selected drawer */}
 {selectedCluster && (
@@ -1021,8 +941,7 @@ return (
               padding: "0 6px",
             }}
           >
-            <span>Scroll / pinch to zoom • spikes throttled (250ms)</span>
-            <span>{clusters.length.toLocaleString()} clustered locations</span>
+            
           </div>
         </div>
 

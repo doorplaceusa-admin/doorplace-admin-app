@@ -394,7 +394,7 @@ export default function LiveUSMap({
   fullscreen?: boolean;
 }) {
   const width = 1000;
-const height = fullscreen ? 700 : 600;
+const height = fullscreen ? 900 : 800;
 
   const desktop = typeof window !== "undefined" && window.innerWidth > 900;
 

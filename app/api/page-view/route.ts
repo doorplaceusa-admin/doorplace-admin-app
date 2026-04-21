@@ -88,7 +88,11 @@ export async function POST(req: Request) {
        1) Parse body
     ========================== */
     const body = await req.json();
-    const { page_key, page_url, partner_id = null } = body;
+    const { page_key, page_url, partner_id } = body;
+
+if (!partner_id) {
+  console.error("❌ Missing partner_id on tracking event");
+}
 
     if (!page_key || !page_url) {
       return new Response("Missing page_key/page_url", {

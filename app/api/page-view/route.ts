@@ -151,13 +151,12 @@ if (!partner_id) {
     ========================== */
     const tenSecondsAgo = new Date(Date.now() - 10000).toISOString();
 
-    const { data: existing } = await supabase
-      .from("page_view_events")
-      .select("id")
-      .eq("ip_address", ip)
-      .eq("page_key", page_key)
-      .gte("created_at", tenSecondsAgo)
-      .limit(1);
+const { data: existing } = await supabase
+  .from("page_view_events")
+  .select("id")
+  .eq("ip_address", ip)
+  .gte("created_at", tenSecondsAgo)
+  .limit(1);
 
     if (existing && existing.length > 0) {
       return new Response("Duplicate", {

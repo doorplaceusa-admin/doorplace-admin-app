@@ -124,9 +124,8 @@ if (!partner_id) {
        3) HARD BROWSER FILTER
     ========================== */
     const isRealBrowser =
-      ua.toLowerCase().includes("mozilla") &&
-      ua.toLowerCase().includes("applewebkit") &&
-      !!secChUa;
+  ua.toLowerCase().includes("mozilla") &&
+  ua.toLowerCase().includes("applewebkit");
 
     if (!isRealBrowser) {
       return new Response("Not real browser", {

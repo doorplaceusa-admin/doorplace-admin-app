@@ -49,9 +49,8 @@ export async function POST(req: Request) {
        2) STRONG BROWSER CHECK
     ========================== */
     const isRealBrowser =
-      ua.toLowerCase().includes("mozilla") &&
-      ua.toLowerCase().includes("applewebkit") &&
-      !!secChUa;
+  ua.toLowerCase().includes("mozilla") &&
+  ua.toLowerCase().includes("applewebkit");
 
     if (!isRealBrowser) {
       return new Response("Not real browser", {

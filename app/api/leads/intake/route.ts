@@ -13,25 +13,27 @@ import { notifyAdmin } from "@/lib/notifyAdmin";
 // ===============================
 async function sendIplumSMS(message: string) {
   try {
-    const res = await fetch("https://api.iplum.com/v1/sms/send", {
+    const res = await fetch("https://api.iplum.com/v1/send_sms", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer AQcnce-cdEabbjxmhm4v4w",
       },
       body: JSON.stringify({
-        from: "+18443775872",
-        to: "+17134162714",
-        text: message,
+        api_key: "AQcnce-cdEabbjxmhm4v4w",
+        from: "8443775872",
+        to: "7134162714",
+        message: message,
       }),
     });
 
-    const data = await res.json();
+    const text = await res.text(); // 🔥 important
+
+    console.log("📩 iPlum response:", text);
 
     if (!res.ok) {
-      console.error("❌ iPlum SMS error:", data);
+      console.error("❌ iPlum SMS error:", text);
     } else {
-      console.log("📩 iPlum SMS sent:", data);
+      console.log("✅ SMS sent");
     }
 
   } catch (err) {

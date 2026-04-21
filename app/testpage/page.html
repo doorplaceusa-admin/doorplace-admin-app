@@ -1,640 +1,531 @@
+
 <style>
+/* Modernizing the base font for a tech-product feel */
+.dp-slide-page {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #222;
+    line-height: 1.6;
+}
 
 .dp-slide-page * {box-sizing:border-box;}
 
 .dp-slide-hero{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:30px;
-align-items:center;
-margin-bottom:40px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:40px;
+    align-items:center;
+    margin-bottom:60px;
 }
 
 .dp-slide-title{
-font-size:46px;
-color:#111;
-margin-bottom:10px;
+    font-size:42px;
+    line-height: 1.1;
+    font-weight: 800;
+    color:#111;
+    margin-bottom:15px;
 }
 
 .dp-slide-sub{
-font-size:22px;
-color:#b80d0d;
-margin-bottom:18px;
+    font-size:20px;
+    font-weight: 600;
+    color:#b80d0d;
+    margin-bottom:20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .dp-slide-lead{
-font-size:19px;
-max-width:640px;
+    font-size:18px;
+    max-width:640px;
+    margin-bottom: 15px;
+    color: #444;
+}
+
+.dp-media-box {
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    background: #fdfdfd;
+    padding: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .dp-media-box img{
-width:100%;
-border-radius:8px;
-}
-
-.dp-media-box{
-border:1px solid #ddd;
-border-radius:8px;
-background:#fafafa;
-padding:10px;
+    width:100%;
+    border-radius:8px;
+    display: block;
 }
 
 .dp-section{
-margin-top:40px;
+    margin-top:60px;
 }
 
 .dp-section h2{
-font-size:34px;
-margin-bottom:14px;
-color:#111;
+    font-size:32px;
+    margin-bottom:20px;
+    color:#111;
+    font-weight: 700;
 }
 
 .dp-section h3{
-font-size:24px;
-color:#b80d0d;
-margin-top:20px;
+    font-size:22px;
+    color:#b80d0d;
+    margin-top:0;
+    margin-bottom: 12px;
 }
 
 .dp-grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:22px;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:24px;
 }
 
 .dp-card{
-border:1px solid #ddd;
-border-radius:8px;
-padding:18px;
-background:#fff;
+    border:1px solid #eee;
+    border-radius:12px;
+    padding:24px;
+    background:#fff;
+    transition: transform 0.2s ease;
+}
+
+.dp-card:hover {
+    border-color: #ddd;
 }
 
 .dp-bullets{
-padding-left:22px;
-font-size:18px;
+    padding-left:22px;
+    font-size:17px;
 }
 
 .dp-bullets li{
-margin-bottom:10px;
+    margin-bottom:12px;
 }
 
 .dp-spec{
-width:100%;
-border-collapse:collapse;
+    width:100%;
+    border-collapse:collapse;
+    margin-top: 20px;
 }
 
 .dp-spec td{
-border:1px solid #ddd;
-padding:12px;
-font-size:17px;
+    border:1px solid #eee;
+    padding:16px;
+    font-size:16px;
 }
 
 .dp-spec td:first-child{
-background:#f7f7f7;
-width:30%;
+    background:#f9f9f9;
+    font-weight: 600;
+    width:35%;
 }
 
 .dp-gallery{
-display:grid;
-grid-template-columns:1fr 1fr 1fr;
-gap:20px;
-margin-top:20px;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:15px;
+    margin-top:25px;
 }
 
 .dp-gallery img{
-width:100%;
-border-radius:8px;
+    width:100%;
+    border-radius:10px;
+    height: 250px;
+    object-fit: cover;
+}
+
+.pro-highlight{
+    border:2px solid #b80d0d;
+    background: #fffafa;
+    position: relative;
+}
+
+.btn-main {
+    display:inline-block;
+    padding:16px 32px;
+    background:#b80d0d;
+    color:#fff;
+    border-radius:8px;
+    font-size:18px;
+    font-weight: bold;
+    text-decoration:none;
+    transition: background 0.3s ease;
+}
+
+.btn-main:hover {
+    background: #960a0a;
 }
 
 @media(max-width:900px){
-.dp-slide-hero,
-.dp-grid,
-.dp-gallery{
-grid-template-columns:1fr;
+    .dp-slide-hero,
+    .dp-grid,
+    .dp-gallery{
+        grid-template-columns:1fr;
+    }
+    .dp-slide-title { font-size: 32px; }
+    .dp-gallery img { height: auto; }
 }
-}
-  .pro-highlight{
-border:2px solid #b80d0d;
-box-shadow:0 4px 12px rgba(0,0,0,0.08);
-}
-
 </style>
 
-<div style="max-width:1200px;margin:0 auto;padding:24px;font-family:'Times New Roman',serif;color:#222;line-height:1.75;background:#fff;">
+<div style="max-width:1200px; margin:0 auto; padding:40px 20px; background:#fff;">
 
 <div class="dp-slide-page">
 
-<div class="dp-slide-hero">
+    <div class="dp-slide-hero">
+        <div>
+            <div class="dp-slide-title">Turn Your Barn Door Into an Automatic Sliding Door — No Track Replacement Needed</div>
+            <div class="dp-slide-sub">No pushing. No pulling. Just press a button and your door moves.</div>
+            
+            <p class="dp-slide-lead">
+                Tired of sliding your barn door open and closed every time you use it?
+            </p>
+            <p class="dp-slide-lead">
+                The SlideDrive™ Automatic Barn Door System upgrades your existing door into a fully automatic system — without replacing your track or hardware. It installs at the floor guide and uses a precision drive wheel to move your door smoothly, quietly, and consistently.
+            </p>
+            <p class="dp-slide-lead">
+                We build each unit based on your exact door size and setup, so you get a clean, custom solution that works right out of the box.
+            </p>
+            <p class="dp-slide-lead" style="margin-top:14px; font-weight:bold; color:#b80d0d;">
+                👉 Currently building and shipping units — limited build slots available.
+            </p>
 
-<div>
+            <div style="margin-top:30px;">
+                <a href="/pages/contact" class="btn-main">Request a Custom Setup</a>
+                <p style="margin-top:15px; font-size:15px; color:#666;">
+                    ✔ Works with your existing track    
+                    ✔ Built for your exact door    
+                    ✔ Fast response within 24 hours
+                </p>
+            </div>
+        </div>
 
-<div class="dp-slide-title">Turn Your Barn Door Into an Automatic Sliding Door — No Track Replacement Needed</div>
+        <div>
+            <div class="dp-media-box">
+                <div style="font-size:18px; font-weight:bold; margin-bottom:12px; text-align:center;">
+                    Watch SlideDrive™ Turn a Standard Barn Door Into a Fully Automatic System
+                </div>
+                <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:8px;">
+                    <iframe src="https://www.youtube.com/embed/RGSK62chHlY?rel=0&amp;modestbranding=1&amp;playsinline=1" title="SlideDrive Automatic Barn Door Demo" frameborder="0" allow="encrypted-media" allowfullscreen style="position:absolute; top:0; left:0; width:100%; height:100%;">
+                    </iframe>
+                </div>
+            </div>
+            <div class="dp-media-box"><img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/7E4EC077-322F-41CA-8E84-F1D8C0D987E3.png?v=1773622412" alt="SlideDrive System"></div>
+            <div class="dp-media-box"><img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/3DC88EAA-266E-44FD-B550-58764F07A01F.png?v=1773622605" alt="SlideDrive Close-up"></div>
+        </div>
+    </div>
 
-<div class="dp-slide-sub">No pushing. No pulling. Just press a button and your door moves.</div>
+    <div class="dp-section" style="background:#fffafa; padding:40px; border-radius:12px; border:1px solid #f1d0d0;">
+        <h2 style="margin-top:0;">Get a SlideDrive™ System Built for Your Door</h2>
+        <p style="font-size:19px;">
+            We’re currently building and shipping automatic barn door systems based on each customer’s exact door size and setup.
+        </p>
+        <ul class="dp-bullets">
+            <li>Custom-built for your door</li>
+            <li>Works with your existing track</li>
+            <li>Smooth, quiet automatic operation</li>
+            <li>Fast turnaround on current builds</li>
+        </ul>
+        <p style="font-size:18px; font-weight:bold; margin-top:20px;">
+            👉 Send us a quick message and we’ll recommend the right setup for your door.
+        </p>
+        <a href="/pages/contact" class="btn-main" style="margin-top:15px;">Request Your Custom Setup</a>
+    </div>
 
-<p class="dp-slide-lead">
-Tired of sliding your barn door open and closed every time you use it?
-</p>
+    <div class="dp-section">
+        <h2>What Is an Automatic Barn Door System?</h2>
+        <p>An automatic barn door system, also known as a motorized barn door opener or electric sliding barn door system, allows your door to open and close automatically using a compact drive system. Instead of manually sliding your door, the system uses a powered motor to move the door smoothly along its existing track.</p>
+        <p>SlideDrive™ is designed to upgrade traditional sliding barn doors into fully automated systems without changing the original hardware, making it one of the most efficient retrofit solutions available.</p>
+    </div>
 
-<p class="dp-slide-lead">
-The SlideDrive™ Automatic Barn Door System upgrades your existing door into a fully automatic system — without replacing your track or hardware. It installs at the floor guide and uses a precision drive wheel to move your door smoothly, quietly, and consistently.
-</p>
+    <div class="dp-section">
+        <h2>Product Overview</h2>
+        <p>SlideDrive™ is a floor-mounted automatic barn door opener designed to work directly at the existing floor guide location. Instead of replacing your track system or installing bulky overhead motors, the unit uses a powered friction drive wheel to move the door smoothly along its current rail.</p>
+        <p>Because the drive system stays stationary while the door moves past it, SlideDrive™ maintains a compact footprint, clean installation, and consistent performance across a wide range of door sizes and weights.</p>
+        <p>For new installs, SlideDrive™ can be paired with a compatible floor guide system. For existing setups, it integrates with many standard barn door guides — allowing you to upgrade your door to a fully automated system without major modifications.</p>
+        <div style="margin-top:20px; padding:18px; border-left:4px solid #b80d0d; background:#fffafa; border-radius:6px;">
+  <p style="margin:0 0 10px 0; font-weight:bold;">
+    Interior vs Exterior Systems
+  </p>
 
-<p class="dp-slide-lead">
-We build each unit based on your exact door size and setup, so you get a clean, custom solution that works right out of the box.
-</p>
+  <p style="margin:0 0 10px 0;">
+    The system shown on this page represents a standard interior configuration. For exterior applications such as shutters or outdoor sliding systems, each SlideDrive™ unit is custom-built with a modified design to handle weather exposure, heavier door construction, and environmental conditions.
+  </p>
 
-<p class="dp-slide-lead" style="margin-top:14px;font-weight:bold;">
-👉 Currently building and shipping units — limited build slots available.
-</p>
+  <p style="margin:0 0 10px 0;">
+    A standard interior unit (with control panel inside the enclosure) is approximately:
+    <strong>7.5” (W) × 5.5” (H) × 5.5” (D)</strong>
+  </p>
 
-<div style="margin-top:18px;">
-<a href="/pages/contact" style="display:inline-block;padding:14px 26px;background:#b80d0d;color:#fff;border-radius:6px;font-size:18px;text-decoration:none;">
-Request a Custom Setup
-</a>
-
-<p style="margin-top:10px;font-size:15px;color:#555;">
-✔ Works with your existing track  
-✔ Built for your exact door  
-✔ Fast response within 24 hours
-</p>
+  <p style="margin:0;">
+    Depending on the setup, the control panel can either be mounted within the unit enclosure or installed separately (such as inside the home), which can reduce the size of the exterior drive unit and allow for a cleaner installation.
+  </p>
 </div>
-
-</div>
-
-<div>
-
-    <div class="dp-media-box">
-
-  <div style="font-size:20px;font-weight:bold;margin-bottom:10px;text-align:center;">
-    Watch SlideDrive™ Turn a Standard Barn Door Into a Fully Automatic System
-  </div>
-
-  <div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;">
-    <iframe 
-      src="https://www.youtube.com/embed/RGSK62chHlY?rel=0&modestbranding=1&playsinline=1"
-      title="SlideDrive Automatic Barn Door Demo"
-      frameborder="0"
-      allow="encrypted-media"
-      allowfullscreen
-      style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:8px;">
-    </iframe>
-  </div>
-
-</div>
-
-<div class="dp-media-box">
-<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/7E4EC077-322F-41CA-8E84-F1D8C0D987E3.png?v=1773622412">
-</div>
-
-<br>
-
-<div class="dp-media-box">
-<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/3DC88EAA-266E-44FD-B550-58764F07A01F.png?v=1773622605">
-</div>
-
-</div>
-
-</div>
-
-<div class="dp-section" style="background:#fff5f5;padding:20px;border-radius:8px;border:1px solid #f1d0d0;">
-
-<h2 style="margin-top:0;">Get a SlideDrive™ System Built for Your Door</h2>
-
-<p style="font-size:18px;">
-We’re currently building and shipping automatic barn door systems based on each customer’s exact door size and setup.
-</p>
-
-<ul class="dp-bullets">
-<li>Custom-built for your door</li>
-<li>Works with your existing track</li>
-<li>Smooth, quiet automatic operation</li>
-<li>Fast turnaround on current builds</li>
-</ul>
-
-<p style="font-size:18px;font-weight:bold;margin-top:14px;">
-👉 Send us a quick message and we’ll recommend the right setup for your door.
-</p>
-
-<a href="/pages/contact" style="display:inline-block;margin-top:10px;padding:14px 28px;background:#b80d0d;color:#fff;border-radius:6px;font-size:18px;text-decoration:none;">
-Request Your Custom Setup
-</a>
-
-</div>
-
-<div class="dp-section">
-
-
-<h2>What Is an Automatic Barn Door System?</h2>
-
-<p>
-An automatic barn door system, also known as a motorized barn door opener or electric sliding barn door system, allows your door to open and close automatically using a compact drive system. Instead of manually sliding your door, the system uses a powered motor to move the door smoothly along its existing track.
-</p>
-
-<p>
-SlideDrive™ is designed to upgrade traditional sliding barn doors into fully automated systems without changing the original hardware, making it one of the most efficient retrofit solutions available.
-</p>
-
-</div>
-
-<div class="dp-section">
-
-<h2>Product Overview</h2>
-
-<p>
-SlideDrive™ is a floor-mounted automatic barn door opener designed to work directly at the existing floor guide location. Instead of replacing your track system or installing bulky overhead motors, the unit uses a powered friction drive wheel to move the door smoothly along its current rail.
-</p>
-
-<p>
-Because the drive system stays stationary while the door moves past it, SlideDrive™ maintains a compact footprint, clean installation, and consistent performance across a wide range of door sizes and weights.
-</p>
-
-<p>
-For new installs, SlideDrive™ can be paired with a compatible floor guide system. For existing setups, it integrates with many standard barn door guides — allowing you to upgrade your door to a fully automated system without major modifications.
-</p>
-
-<div class="dp-gallery">
-
-<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/B446062D-A83A-41ED-A372-4F18B97A848C.png?v=1773622604">
-
-<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/54409CA0-875C-4F48-BC4A-EBE57E863213.png?v=1773622416">
-
-<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/55B86FBC-0D1B-431F-BFD6-73E21C117D1F.png?v=1773622602">
-
-</div>
-
-</div>
-
-
-<div class="dp-section">
-
-<h2>How SlideDrive™ Works</h2>
-
-<div class="dp-grid">
-
-<div class="dp-card">
-<h3>Guide Mounted Drive System</h3>
-<p>SlideDrive™ connects directly to the barn door floor guide assembly at the base of the doorway, keeping the system compact and aligned with the door’s natural movement path.</p>
-</div>
-
-<div class="dp-card">
-<h3>Dual Drive System</h3>
-<p>Depending on the application, SlideDrive™ uses either a precision drive wheel or a rack and pinion system. The wheel system is ideal for standard residential doors, while the rack and pinion setup provides stronger, more controlled movement for larger or heavier doors.</p>
-</div>
-
-<div class="dp-card">
-<h3>Adjustable Drive Control</h3>
-<p>The system allows installers to fine-tune pressure and movement based on door weight, size, and resistance — ensuring smooth, consistent operation across different setups.</p>
-</div>
-
-<div class="dp-card">
-<h3>Stop &amp; Position Control</h3>
-<p>Adjustable stop triggers ensure the door opens and closes to the correct position every time, preventing over-travel and maintaining alignment.</p>
-</div>
-
-</div>
-
-</div>
-<div class="dp-section">
-
-<h2>Select Your SlideDrive™ System</h2>
-
-<p style="font-size:18px;max-width:800px;">
-SlideDrive™ is available in three system levels depending on your door size, weight, and application.
-</p>
-
-<p style="font-size:16px;color:#555;max-width:800px;margin-top:8px;">
-Most residential doors use the Home Series. For heavier doors or long-term performance, the Pro Series is the most common upgrade.
-</p>
-
-<div class="dp-grid">
-
-<div class="dp-card">
-<h3>SlideDrive™ Home Series</h3>
-<p>
-Designed for standard residential barn doors. Smooth, quiet operation ideal for bedrooms, closets, and everyday interior spaces.
-</p>
-
-<ul class="dp-bullets">
-<li>Best for standard interior doors</li>
-<li>Wheel-based drive system</li>
-<li>Quiet and compact performance</li>
-<li>Ideal for light to mid-weight doors</li>
-</ul>
-
-</div>
-
-<div class="dp-card pro-highlight">
-<div style="font-size:13px;color:#b80d0d;font-weight:bold;margin-bottom:6px;">
-MOST COMMON UPGRADE
-</div>
-
-<h3>SlideDrive™ Pro Series</h3>
-
-<p>
-Built for heavier residential doors and larger openings. Increased torque delivers stronger, more consistent movement and control.
-</p>
-
-<ul class="dp-bullets">
-<li>Best for larger or heavier doors</li>
-<li>Rack and pinion drive system</li>
-<li>Higher torque and improved control</li>
-<li>Built for frequent use and long-term reliability</li>
-</ul>
-
-</div>
-
-<div class="dp-card" style="grid-column: span 2;">
-<h3>SlideDrive™ Max Series</h3>
-<p>
-High-torque system engineered for oversized, heavy, or custom doors. Built for maximum strength, precision, and long-term performance.
-</p>
-
-<ul class="dp-bullets">
-<li>Best for oversized or custom doors</li>
-<li>Heavy-duty rack and pinion system</li>
-<li>Maximum power and control</li>
-<li>Ideal for large residential or commercial applications</li>
-</ul>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="dp-section">
-
-<h2>Where Automatic Barn Doors Are Used</h2>
-
-<ul class="dp-bullets">
-<li>Bedroom sliding doors</li>
-<li>Closet and storage doors</li>
-<li>Office and workspace doors</li>
-<li>Pantry and kitchen access doors</li>
-<li>Laundry room entrances</li>
-<li>Accessibility solutions for elderly or limited mobility</li>
-</ul>
-
-</div>
-
-<div class="dp-section">
-
-<h2>Core Features</h2>
-
-<ul class="dp-bullets">
-
-<li>Automatic open and close door operation</li>
-<li>Guide-mounted system that installs at the floor guide location</li>
-<li>Compatible with most existing barn door rail systems</li>
-<li>Dual drive options: wheel system or rack and pinion system</li>
-<li>Adjustable drive control for different door weights and sizes</li>
-<li>Compact, low-profile drive system design</li>
-<li>Travel stop triggers to prevent over-travel</li>
-<li>12V–20V power system depending on configuration</li>
-<li>Optional rechargeable battery configuration</li>
-
-</ul>
-
-<div class="dp-gallery">
-
-<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/526F0721-017D-4644-8458-8EF4C555A16B.png?v=1773622600">
-
-<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/851317B9-D5E1-43C4-971F-5B416494747F.png?v=1773622413">
-
-<img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/DCAB43EF-B031-4E4F-88F8-CC5D4AE067B0_6ea51a15-208c-4a1b-86f4-029c1483757c.png?v=1773622415">
-
-</div>
-
-
-
-</div> <!-- CLOSE Core Features section -->
-<div class="dp-section">
-
-<h2>How Much Does an Automatic Barn Door System Cost?</h2>
-
-<p>
-The cost of an automatic barn door system depends on several factors including door size, weight, and the type of drive system required. Standard residential doors typically use a compact wheel-driven system, while heavier or oversized doors may require a rack and pinion configuration for added strength and control.
-</p>
-
-<p>
-Additional features such as smart controls, motion activation, and battery operation can also affect the final setup. Each SlideDrive™ system is configured based on your exact door and application to ensure the best performance.
-</p>
-
-</div>
-
-<div class="dp-section">
-<h2>Optional Upgrades</h2>
-
-<div class="dp-grid">
-
-<div class="dp-card">
-<h3>Smart Control Integration</h3>
-<p>
-Connect SlideDrive™ to a compatible smart switch for app-based and voice control through platforms like Alexa or Google Home. This allows you to open or close your door using your phone or voice commands.
-</p>
-</div>
-
-<div class="dp-card">
-<h3>Key Fob Remote</h3>
-<p>Compact wireless remote allows you to operate the door from anywhere in the room with quick, responsive control.</p>
-</div>
-
-<div class="dp-card">
-<h3>Motion Activation</h3>
-<p>Automatically opens the door when motion is detected near the entryway, ideal for hands-free access and convenience.</p>
-</div>
-
-<div class="dp-card">
-<h3>Wall-Mounted Control</h3>
-<p>Install a clean, low-profile push button on either side of the doorway for simple open and close operation.</p>
-</div>
-
-<div class="dp-card">
-<h3>Smart Home Integration</h3>
-<p>Connect SlideDrive™ to Alexa or Google Home for voice-controlled operation and smart home automation.</p>
-</div>
-
-<div class="dp-card">
-<h3>Rechargeable Battery System</h3>
-<p>Operate the system without a nearby outlet using a rechargeable battery setup, ideal for flexible installations.</p>
-</div>
-
-</div> <!-- CLOSE dp-grid -->
-
-</div> <!-- CLOSE Optional Upgrades -->
-
-<div class="dp-section">
-<h2>Can You Install This on an Existing Barn Door?</h2>
-
-<p>
-Yes. SlideDrive™ is specifically designed as a retrofit system, meaning it works with most existing barn door setups without replacing the track. The system mounts at the floor guide location and integrates with your current door, making installation faster and less invasive than traditional automatic door systems.
-</p>
-
-</div>
-
-<div class="dp-section">
-<h2>Ideal Applications</h2>
-
-<ul class="dp-bullets">
-
-<li>Interior sliding barn doors</li>
-<li>Pantry and kitchen access doors</li>
-<li>Laundry room entrances</li>
-<li>Office and workspace sliding doors</li>
-<li>Closet and storage doors</li>
-<li>Accessibility and hands-free entry solutions</li>
-
-</ul>
-
-</div> <!-- CLOSE Ideal Applications -->
-
-<div class="dp-section">
-<h2>Specifications</h2>
-
-<table class="dp-spec">
-
-<tbody>
-
-<tr>
+        <div class="dp-gallery">
+            <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/B446062D-A83A-41ED-A372-4F18B97A848C.png?v=1773622604">
+            <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/54409CA0-875C-4F48-BC4A-EBE57E863213.png?v=1773622416">
+            <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/55B86FBC-0D1B-431F-BFD6-73E21C117D1F.png?v=1773622602">
+        </div>
+    </div>
+
+    <div class="dp-section">
+        <h2>How SlideDrive™ Works</h2>
+        <div class="dp-grid">
+            <div class="dp-card">
+                <h3>Guide Mounted Drive System</h3>
+                <p>SlideDrive™ connects directly to the barn door floor guide assembly at the base of the doorway, keeping the system compact and aligned with the door’s natural movement path.</p>
+            </div>
+            <div class="dp-card">
+                <h3>Dual Drive System</h3>
+                <p>Depending on the application, SlideDrive™ uses either a precision drive wheel or a rack and pinion system. The wheel system is ideal for standard residential doors, while the rack and pinion setup provides stronger, more controlled movement for larger or heavier doors.</p>
+            </div>
+            <div class="dp-card">
+                <h3>Adjustable Drive Control</h3>
+                <p>The system allows installers to fine-tune pressure and movement based on door weight, size, and resistance — ensuring smooth, consistent operation across different setups.</p>
+            </div>
+            <div class="dp-card">
+                <h3>Stop &amp; Position Control</h3>
+                <p>Adjustable stop triggers ensure the door opens and closes to the correct position every time, preventing over-travel and maintaining alignment.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dp-section">
+        <h2>Select Your SlideDrive™ System</h2>
+        <p style="font-size:18px; max-width:800px; margin-bottom: 25px;">
+            SlideDrive™ is available in three system levels depending on your door size, weight, and application.
+            <span style="display:block; font-size:16px; color:#666; margin-top:10px;">
+                Most residential doors use the Home Series. For heavier doors or long-term performance, the Pro Series is the most common upgrade.
+            </span>
+        </p>
+
+        <div class="dp-grid">
+            <div class="dp-card">
+                <h3>SlideDrive™ Home Series</h3>
+                <p>Designed for standard residential barn doors. Smooth, quiet operation ideal for bedrooms, closets, and everyday interior spaces.</p>
+                <ul class="dp-bullets">
+                    <li>Best for standard interior doors</li>
+                    <li>Wheel-based drive system</li>
+                    <li>Quiet and compact performance</li>
+                    <li>Ideal for light to mid-weight doors</li>
+                </ul>
+            </div>
+
+            <div class="dp-card pro-highlight">
+                <div style="font-size:12px; color:#b80d0d; font-weight:bold; margin-bottom:8px; text-transform:uppercase;">Most Common Upgrade</div>
+                <h3>SlideDrive™ Pro Series</h3>
+                <p>Built for heavier residential doors and larger openings. Increased torque delivers stronger, more consistent movement and control.</p>
+                <ul class="dp-bullets">
+                    <li>Best for larger or heavier doors</li>
+                    <li>Rack and pinion drive system</li>
+                    <li>Higher torque and improved control</li>
+                    <li>Built for frequent use and long-term reliability</li>
+                </ul>
+            </div>
+
+            <div class="dp-card" style="grid-column: span 2;">
+                <h3>SlideDrive™ Max Series</h3>
+                <p>High-torque system engineered for oversized, heavy, or custom doors. Built for maximum strength, precision, and long-term performance.</p>
+                <ul class="dp-bullets">
+                    <li>Best for oversized or custom doors</li>
+                    <li>Heavy-duty rack and pinion system</li>
+                    <li>Maximum power and control</li>
+                    <li>Ideal for large residential or commercial applications</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="dp-section">
+        <h2>Where Automatic Barn Doors Are Used</h2>
+        <ul class="dp-bullets">
+            <li>Bedroom sliding doors</li>
+            <li>Closet and storage doors</li>
+            <li>Office and workspace doors</li>
+            <li>Pantry and kitchen access doors</li>
+            <li>Laundry room entrances</li>
+            <li>Accessibility solutions for elderly or limited mobility</li>
+        </ul>
+    </div>
+
+    <div class="dp-section">
+        <h2>Core Features</h2>
+        <ul class="dp-bullets">
+            <li>Automatic open and close door operation</li>
+            <li>Guide-mounted system that installs at the floor guide location</li>
+            <li>Compatible with most existing barn door rail systems</li>
+            <li>Dual drive options: wheel system or rack and pinion system</li>
+            <li>Adjustable drive control for different door weights and sizes</li>
+            <li>Compact, low-profile drive system design</li>
+            <li>Travel stop triggers to prevent over-travel</li>
+            <li>12V–24V power system depending on configuration</li>
+            <li>Optional rechargeable battery configuration</li>
+        </ul>
+        <div class="dp-gallery">
+            <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/526F0721-017D-4644-8458-8EF4C555A16B.png?v=1773622600">
+            <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/851317B9-D5E1-43C4-971F-5B416494747F.png?v=1773622413">
+            <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/DCAB43EF-B031-4E4F-88F8-CC5D4AE067B0_6ea51a15-208c-4a1b-86f4-029c1483757c.png?v=1773622415">
+        </div>
+    </div>
+
+    <div class="dp-section">
+        <h2>How Much Does an Automatic Barn Door System Cost?</h2>
+        <p>The cost of an automatic barn door system depends on several factors including door size, weight, and the type of drive system required. Standard residential doors typically use a compact wheel-driven system, while heavier or oversized doors may require a rack and pinion configuration for added strength and control.</p>
+        <p>Additional features such as smart controls, motion activation, and battery operation can also affect the final setup. Each SlideDrive™ system is configured based on your exact door and application to ensure the best performance.</p>
+    </div>
+
+    <div class="dp-section">
+        <h2>Optional Upgrades</h2>
+        <div class="dp-grid">
+            <div class="dp-card">
+                <h3>Smart Control Integration</h3>
+                <p>Connect SlideDrive™ to a compatible smart switch for app-based and voice control through platforms like Alexa or Google Home. This allows you to open or close your door using your phone or voice commands.</p>
+            </div>
+            <div class="dp-card">
+                <h3>Key Fob Remote</h3>
+                <p>Compact wireless remote allows you to operate the door from anywhere in the room with quick, responsive control.</p>
+            </div>
+            <div class="dp-card">
+                <h3>Motion Activation</h3>
+                <p>Automatically opens the door when motion is detected near the entryway, ideal for hands-free access and convenience.</p>
+            </div>
+            <div class="dp-card">
+                <h3>Wall-Mounted Control</h3>
+                <p>Install a clean, low-profile push button on either side of the doorway for simple open and close operation.</p>
+            </div>
+            <div class="dp-card">
+                <h3>Smart Home Integration</h3>
+                <p>Connect SlideDrive™ to Alexa or Google Home for voice-controlled operation and smart home automation.</p>
+            </div>
+            <div class="dp-card">
+                <h3>Rechargeable Battery System</h3>
+                <p>Operate the system without a nearby outlet using a rechargeable battery setup, ideal for flexible installations.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dp-section">
+        <h2>Can You Install This on an Existing Barn Door?</h2>
+        <p>Yes. SlideDrive™ is specifically designed as a retrofit system, meaning it works with most existing barn door setups without replacing the track. The system mounts at the floor guide location and integrates with your current door, making installation faster and less invasive than traditional automatic door systems.</p>
+    </div>
+
+    <div class="dp-section">
+        <h2>Ideal Applications</h2>
+        <ul class="dp-bullets">
+            <li>Interior sliding barn doors</li>
+            <li>Pantry and kitchen access doors</li>
+            <li>Laundry room entrances</li>
+            <li>Office and workspace sliding doors</li>
+            <li>Closet and storage doors</li>
+            <li>Accessibility and hands-free entry solutions</li>
+        </ul>
+    </div>
+
+    <div class="dp-section">
+        <h2>Specifications</h2>
+        <table class="dp-spec">
+            <tbody>
+                <tr>
 <td>Product Name</td>
 <td>SlideDrive™ Automatic Barn Door System</td>
 </tr>
-
-<tr>
+                <tr>
 <td>Brand</td>
 <td>Doorplace USA</td>
 </tr>
-
-<tr>
+                <tr>
 <td>Mounting Type</td>
 <td>Floor Guide Mounted Drive System</td>
 </tr>
-
-<tr>
+                <tr>
 <td>Drive System</td>
 <td>Wheel Drive or Rack &amp; Pinion (based on configuration)</td>
 </tr>
-
-<tr>
+                <tr>
 <td>Power</td>
-<td>12V–20V system depending on configuration</td>
+<td>12V–24V system depending on configuration</td>
 </tr>
-
-<tr>
+                <tr>
 <td>Optional Power</td>
 <td>Rechargeable Battery System</td>
 </tr>
-
-<tr>
+                <tr>
 <td>Controls</td>
 <td>Remote, Wall Control, Motion Activation, Smart Control Integration (optional)</td>
 </tr>
-
-<tr>
+                <tr>
 <td>Compatibility</td>
 <td>Works with most standard sliding barn door rail systems</td>
 </tr>
+            </tbody>
+        </table>
+    </div>
 
-</tbody>
+    <div class="dp-section">
+        <h2>What’s Included</h2>
+        <ul class="dp-bullets">
+            <li>SlideDrive™ drive unit</li>
+            <li>Adjustable mounting system</li>
+            <li>Drive mechanism (wheel or rack &amp; pinion depending on configuration)</li>
+            <li>Power adapter</li>
+            <li>Travel stop triggers</li>
+            <li>Installation hardware</li>
+            <li>Floor guide integration setup</li>
+        </ul>
+    </div>
 
-</table>
+    <div class="dp-section">
+        <h2>Frequently Asked Questions</h2>
+        <h3>Does SlideDrive™ replace the top rail?</h3>
+        <p>No. SlideDrive™ is designed to work with your existing barn door rail system, so there’s no need to replace your track or hardware.</p>
 
-</div>
+        <h3>Does it mount directly to the floor?</h3>
+        <p>The system integrates with the floor guide assembly at the base of the doorway, keeping the installation clean without requiring full floor mounting.</p>
 
+        <h3>Can it work with my current floor guide?</h3>
+        <p>In most cases, yes. SlideDrive™ is compatible with a wide range of standard floor guide configurations, and we can help confirm compatibility if needed.</p>
 
-<div class="dp-section">
+        <h3>Can heavier or oversized doors be supported?</h3>
+        <p>Yes. SlideDrive™ offers multiple configurations, including rack and pinion drive systems and higher power setups designed for larger and heavier doors.</p>
 
-<h2>What’s Included</h2>
+        <h3>Do I need to modify my existing door or track?</h3>
+        <p>No major modifications are required. The system is designed to integrate with most existing door setups, making upgrades simple and efficient.</p>
 
-<ul class="dp-bullets">
+        <h3>How do I know which system I need?</h3>
+        <p>We’ll help you choose the right configuration based on your door size, weight, and setup. Just send us a few details or photos, and we’ll guide you.</p>
 
-<li>SlideDrive™ drive unit</li>
-<li>Adjustable mounting system</li>
-<li>Drive mechanism (wheel or rack &amp; pinion depending on configuration)</li>
-<li>Power adapter</li>
-<li>Travel stop triggers</li>
-<li>Installation hardware</li>
-<li>Floor guide integration setup</li>
+        <h3>Is this something I can install myself?</h3>
+        <p>Many customers can install SlideDrive™ with basic tools. We also provide guidance and can recommend installation options if needed.</p>
+    </div>
 
-</ul>
+    <div class="dp-section" style="text-align:center; background: #f9f9f9; padding: 40px; border-radius: 12px;">
+        <h2>Explore Automatic Barn Door Systems Near You</h2>
+        <p>We provide SlideDrive™ automatic barn door systems across the United States. Explore installations and options available in your area:</p>
+        <ul class="dp-bullets" style="display: inline-block; text-align: left; columns: 2; -webkit-columns: 2; -moz-columns: 2; gap: 40px;">
+            <li><a href="/pages/automatic-barn-door-atlanta-ga-1304000-ga">Atlanta, GA</a></li>
+            <li><a href="/pages/automatic-barn-door-los-angeles-ca-644000-ca">Los Angeles, CA</a></li>
+            <li><a href="/pages/automatic-barn-door-chicago-il-1714000-il">Chicago, IL</a></li>
+            <li><a href="/pages/automatic-barn-door-miami-fl-1245000-fl">Miami, FL</a></li>
+            <li><a href="/pages/automatic-barn-door-new-york-ny-3651000-ny">New York, NY</a></li>
+            <li><a href="/pages/automatic-barn-door-phoenix-az-455000-az">Phoenix, AZ</a></li>
+            <li><a href="/pages/automatic-barn-door-san-diego-ca-666000-ca">San Diego, CA</a></li>
+            <li><a href="/pages/automatic-barn-door-san-jose-ca-668000-ca">San Jose, CA</a></li>
+            <li><a href="/pages/automatic-barn-door-philadelphia-pa-4260000-pa">Philadelphia, PA</a></li>
+            <li><a href="/pages/automatic-barn-door-las-vegas-nv-3240000-nv">Las Vegas, NV</a></li>
+            <li><a href="/pages/automatic-barn-door-boston-ma-2507000-ma">Boston, MA</a></li>
+            <li><a href="/pages/automatic-barn-door-charlotte-nc-3712000-nc">Charlotte, NC</a></li>
+            <li><a href="/pages/automatic-barn-door-orlando-fl-1253000-fl">Orlando, FL</a></li>
+            <li><a href="/pages/automatic-barn-door-san-francisco-ca-667000-ca">San Francisco, CA</a></li>
+            <li><a href="/pages/automatic-barn-door-seattle-wa-5363000-wa">Seattle, WA</a></li>
+            <li><a href="/pages/automatic-barn-door-denver-co-820000-co">Denver, CO</a></li>
+        </ul>
+    </div>
 
-</div>
-
-
-<div class="dp-section">
-
-<h2>Frequently Asked Questions</h2>
-
-<h3>Does SlideDrive™ replace the top rail?</h3>
-<p>No. SlideDrive™ is designed to work with your existing barn door rail system, so there’s no need to replace your track or hardware.</p>
-
-<h3>Does it mount directly to the floor?</h3>
-<p>The system integrates with the floor guide assembly at the base of the doorway, keeping the installation clean without requiring full floor mounting.</p>
-
-<h3>Can it work with my current floor guide?</h3>
-<p>In most cases, yes. SlideDrive™ is compatible with a wide range of standard floor guide configurations, and we can help confirm compatibility if needed.</p>
-
-<h3>Can heavier or oversized doors be supported?</h3>
-<p>Yes. SlideDrive™ offers multiple configurations, including rack and pinion drive systems and higher power setups designed for larger and heavier doors.</p>
-
-<h3>Do I need to modify my existing door or track?</h3>
-<p>No major modifications are required. The system is designed to integrate with most existing door setups, making upgrades simple and efficient.</p>
-
-<h3>How do I know which system I need?</h3>
-<p>We’ll help you choose the right configuration based on your door size, weight, and setup. Just send us a few details or photos, and we’ll guide you.</p>
-
-<h3>Is this something I can install myself?</h3>
-<p>Many customers can install SlideDrive™ with basic tools. We also provide guidance and can recommend installation options if needed.</p>
-</div> <!-- CLOSE FAQ section -->
-<div class="dp-section" style="text-align:center;margin-top:40px;">
-
-<h2>Explore Automatic Barn Door Systems Near You</h2>
-
-<p>
-We provide SlideDrive™ automatic barn door systems across the United States. Explore installations and options available in your area:
-</p>
-
-<ul class="dp-bullets">
-<li><a href="/pages/automatic-barn-door-atlanta-ga-1304000-ga">Automatic Barn Door System in Atlanta, GA</a></li>
-<li><a href="/pages/automatic-barn-door-los-angeles-ca-644000-ca">Automatic Barn Door System in Los Angeles, CA</a></li>
-<li><a href="/pages/automatic-barn-door-chicago-il-1714000-il">Automatic Barn Door System in Chicago, IL</a></li>
-<li><a href="/pages/automatic-barn-door-miami-fl-1245000-fl">Automatic Barn Door System in Miami, FL</a></li>
-<li><a href="/pages/automatic-barn-door-new-york-ny-3651000-ny">Automatic Barn Door System in New York, NY</a></li>
-<li><a href="/pages/automatic-barn-door-phoenix-az-455000-az">Automatic Barn Door System in Phoenix, AZ</a></li>
-<li><a href="/pages/automatic-barn-door-san-diego-ca-666000-ca">Automatic Barn Door System in San Diego, CA</a></li>
-<li><a href="/pages/automatic-barn-door-san-jose-ca-668000-ca">Automatic Barn Door System in San Jose, CA</a></li>
-<li><a href="/pages/automatic-barn-door-philadelphia-pa-4260000-pa">Automatic Barn Door System in Philadelphia, PA</a></li>
-<li><a href="/pages/automatic-barn-door-las-vegas-nv-3240000-nv">Automatic Barn Door System in Las Vegas, NV</a></li>
-<li><a href="/pages/automatic-barn-door-boston-ma-2507000-ma">Automatic Barn Door System in Boston, MA</a></li>
-<li><a href="/pages/automatic-barn-door-charlotte-nc-3712000-nc">Automatic Barn Door System in Charlotte, NC</a></li>
-<li><a href="/pages/automatic-barn-door-orlando-fl-1253000-fl">Automatic Barn Door System in Orlando, FL</a></li>
-<li><a href="/pages/automatic-barn-door-san-francisco-ca-667000-ca">Automatic Barn Door System in San Francisco, CA</a></li>
-<li><a href="/pages/automatic-barn-door-seattle-wa-5363000-wa">Automatic Barn Door System in Seattle, WA</a></li>
-<li><a href="/pages/automatic-barn-door-denver-co-820000-co">Automatic Barn Door System in Denver, CO</a></li>
-</ul>
-
-</div>
-
-<div class="dp-section" style="text-align:center;">
-<h2>Get a Custom SlideDrive™ Setup</h2>
-
-<p style="font-size:18px;">
-Tell us about your door and we’ll recommend the exact SlideDrive™ configuration that fits your space.
-</p>
-
-<a href="/pages/contact" style="display:inline-block;padding:14px 28px;background:#b80d0d;color:#fff;border-radius:6px;font-size:18px;text-decoration:none;">
-Request a Quote
-</a>
-
-<p style="margin-top:12px;font-size:15px;color:#555;">
-Fast response. No obligation. Built around your exact setup.
-</p>
-
-</div>
+    <div class="dp-section" style="text-align:center; padding-bottom: 60px;">
+        <h2>Get a Custom SlideDrive™ Setup</h2>
+        <p style="font-size:20px; margin-bottom: 25px;">Tell us about your door and we’ll recommend the exact SlideDrive™ configuration that fits your space.</p>
+        <a href="/pages/contact" class="btn-main">Request a Quote</a>
+        <p style="margin-top:20px; font-size:15px; color:#666;">Fast response. No obligation. Built around your exact setup.</p>
+    </div>
   
 </div>
-
-
+</div>
 

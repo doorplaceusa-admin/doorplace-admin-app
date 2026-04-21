@@ -64,7 +64,8 @@ export async function POST(req: Request) {
     ========================== */
     const body = await req.json();
     const { page_key, partner_id } = body;
-
+// Allow tracking even without partner_id
+const safePartnerId = partner_id || null;
     if (!page_key) {
       return new Response("Missing data", {
         status: 400,
@@ -108,7 +109,7 @@ export async function POST(req: Request) {
       .from("page_view_events")
       .update({
   source: "verified_human",
-  partner_id: partner_id || null, // 🔥 THIS IS THE FIX
+  partner_id: safePartnerId, // 🔥 THIS IS THE FIX
 })
       .eq("id", latest.id);
 

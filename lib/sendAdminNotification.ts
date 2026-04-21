@@ -26,9 +26,11 @@ export async function sendAdminNotification(payload: {
 
     // ✅ SEND TO EMAIL + YOUR PHONE (TEXT)
     to: [
-      requireEnv("ADMIN_ALERT_EMAIL"),
-      "7134162714@sms.myboostmobile.com"
-    ],
+  requireEnv("ADMIN_ALERT_EMAIL"),
+  "7134162714@sms.myboostmobile.com",
+  "7134162714@myboostmobile.com",
+  "7134162714@boostmobile.com"
+],
 
     subject: `🚨 TradePilot — ${payload.title}`,
 

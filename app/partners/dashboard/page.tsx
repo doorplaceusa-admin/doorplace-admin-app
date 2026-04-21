@@ -285,11 +285,8 @@ useEffect(() => {
       // ✅ Only this partner
       .eq("partner_id", partnerId)
 
-      // ✅ Only real humans
-      .eq("source", "human")
 
-      // ✅ Only tracking page clicks
-      .ilike("page_url", "%swing-partner-lead%")
+      
 
       // ✅ Only last 30 days
       .gte("created_at", since.toISOString());

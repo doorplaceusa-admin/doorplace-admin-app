@@ -124,14 +124,35 @@ const safePartnerId = partner_id || null;
     /* ==========================
        7) Update live map (IMPORTANT)
     ========================== */
-    const { error: liveMapError } = await supabase
-      .from("live_map_activity")
-      .update({
-        is_human: true,
-        source: "human", // ✅ critical for filtering
-        last_seen: new Date().toISOString(),
-      })
-      .eq("ip_address", ip);
+    // 🔥 Get geo from the SAME row that was just verified
+const { data: geoRow } = await supabase
+  .from("page_view_events")
+  .select("city, state, latitude, longitude, page_key, page_url")
+  .eq("id", latest.id)
+  .single();
+
+const { error: liveMapError } = await supabase
+  .from("live_map_activity")
+  .update({
+    is_human: true,
+    source: "human",
+    last_seen: new Date().toISOString(),
+
+    // ✅ REQUIRED FOR MAP
+    city: geoRow?.city || null,
+    state: geoRow?.state || "",
+    latitude: geoRow?.latitude || null,
+    longitude: geoRow?.longitude || null,
+
+    // ✅ REQUIRED FOR FILTERING (THIS WAS ALSO BREAKING IT)
+    page_key: geoRow?.page_key || "",
+    page_url: geoRow?.page_url || "",
+  })
+  .eq("ip_address", ip);
+
+if (liveMapError) {
+  console.error("❌ Live map update error:", liveMapError);
+}
 
     if (liveMapError) {
       console.error("❌ Live map update error:", liveMapError);

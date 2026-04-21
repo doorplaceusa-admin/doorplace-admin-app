@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { useAdminPresence } from "@/app/components/presence/AdminPresenceContext";
 import LiveUSMap from "@/app/components/LiveUSMap";
 
@@ -78,38 +77,33 @@ export default function DashboardPage() {
   // ==========================================
   // ✅ LIVE MAP (FAST)
   // ==========================================
-  async function loadLiveMap() {
-    if (inflightMap.current) return;
-    inflightMap.current = true;
+ async function loadLiveMap() {
+  if (inflightMap.current) return;
+  inflightMap.current = true;
 
-    try {
-      const { data, error } = await supabase
-        .from("live_map_activity")
- // ✅ same view as Analytics
-        .select("*"); // ✅ IMPORTANT: let LiveUSMap get whatever fields it needs
+  try {
+    const res = await fetch("/api/live-map");
+    const data = await res.json();
 
-      if (error) {
-        console.error("LIVE MAP ERROR:", error);
-        return;
-      }
+    if (!data) return;
 
-      // Optional: normalize lat/lon if needed
-      const normalized =
-        (data || []).map((r: any) => ({
-          ...r,
-          latitude:
-            typeof r.latitude === "string" ? parseFloat(r.latitude) : r.latitude,
-          longitude:
-            typeof r.longitude === "string"
-              ? parseFloat(r.longitude)
-              : r.longitude,
-        })) ?? [];
+    const normalized = data.map((r: any) => ({
+      ...r,
+      latitude:
+        typeof r.latitude === "string" ? parseFloat(r.latitude) : r.latitude,
+      longitude:
+        typeof r.longitude === "string"
+          ? parseFloat(r.longitude)
+          : r.longitude,
+    }));
 
-      setLiveVisitors(normalized);
-    } finally {
-      inflightMap.current = false;
-    }
+    setLiveVisitors(normalized);
+  } catch (err) {
+    console.error("LIVE MAP ERROR:", err);
+  } finally {
+    inflightMap.current = false;
   }
+}
 
   // ==========================================
   // ✅ DASHBOARD STATS (SLOW)

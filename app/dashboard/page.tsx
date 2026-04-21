@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { useAdminPresence } from "@/app/components/presence/AdminPresenceContext";
 import LiveUSMap from "@/app/components/LiveUSMap";
 

@@ -8,6 +8,36 @@ import { sendAdminNotification } from "@/lib/sendAdminNotification";
 import nodemailer from "nodemailer";
 import { notifyAdmin } from "@/lib/notifyAdmin";
 
+// ===============================
+// iPlum SMS FUNCTION
+// ===============================
+async function sendIplumSMS(message: string) {
+  try {
+    const res = await fetch("https://api.iplum.com/v1/sms/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer AQcnce-cdEabbjxmhm4v4w",
+      },
+      body: JSON.stringify({
+        from: "+18443775872",
+        to: "+17134162714",
+        text: message,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error("❌ iPlum SMS error:", data);
+    } else {
+      console.log("📩 iPlum SMS sent:", data);
+    }
+
+  } catch (err) {
+    console.error("❌ iPlum SMS failed:", err);
+  }
+}
 
 
 export async function OPTIONS() {
@@ -307,6 +337,19 @@ await sendAdminNotification({
   },
 });
 
+// ===============================
+// SMS ALERT (NEW LEAD)
+// ===============================
+await sendIplumSMS(
+  `🚨 New Lead
+
+${leadData.first_name ?? ""} ${leadData.last_name ?? ""}
+📞 ${leadData.phone ?? "N/A"}
+📍 ${leadData.city ?? ""}, ${leadData.state ?? ""}
+
+Type: ${leadData.submission_type ?? "N/A"}
+Entry: ${leadData.entry_page ?? "N/A"}`
+);
 
 /* ===============================
    4. CREATE ORDER IF PARTNER ORDER

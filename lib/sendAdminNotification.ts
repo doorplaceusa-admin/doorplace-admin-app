@@ -24,24 +24,20 @@ export async function sendAdminNotification(payload: {
   await transporter.sendMail({
     from: requireEnv("SMTP_FROM"),
 
-    // ✅ SEND TO EMAIL + YOUR PHONE (TEXT)
+    // ✅ SEND TO YOU + WILL
     to: [
-  requireEnv("ADMIN_ALERT_EMAIL"),
-  "7134162714@sms.myboostmobile.com",
-  "7134162714@myboostmobile.com",
-  "7134162714@boostmobile.com"
-],
+      requireEnv("ADMIN_ALERT_EMAIL"),
+      "willgarner@doorplaceusa.com"
+    ],
 
     subject: `🚨 TradePilot — ${payload.title}`,
 
-    // ✅ THIS IS WHAT YOUR PHONE WILL READ
     text: `🚨 ${payload.title}
 
 ${payload.details?.name ?? ""}
 ${payload.details?.phone ?? ""}
 ${payload.details?.city ?? ""}, ${payload.details?.state ?? ""}`,
 
-    // ✅ EMAIL VERSION (for inbox)
     html: `
       <h2>${payload.title}</h2>
       <pre>${JSON.stringify(payload.details, null, 2)}</pre>

@@ -90,8 +90,9 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { page_key, page_url, partner_id } = body;
 
+// ✅ Do nothing if no partner_id (normal traffic)
 if (!partner_id) {
-  console.error("❌ Missing partner_id on tracking event");
+  // silent — this is expected for most users
 }
 
     if (!page_key || !page_url) {

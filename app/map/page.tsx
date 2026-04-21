@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { supabase } from "@/lib/supabaseClient";
 
 import LiveUSMap from "@/app/components/LiveUSMap";
 
@@ -12,21 +11,20 @@ export default function MapWallPage() {
   const inflight = useRef(false);
 
   async function loadLiveMap() {
-    if (inflight.current) return;
-    inflight.current = true;
+  if (inflight.current) return;
+  inflight.current = true;
 
-    try {
-      const { data } = await supabase
-        .from("live_map_activity")
+  try {
+    const res = await fetch("/api/live-map");
+    const data = await res.json();
 
-        .select("*");
-
-      if (data) setLiveVisitors(data);
-    } finally {
-      inflight.current = false;
-    }
+    if (data) setLiveVisitors(data);
+  } catch (err) {
+    console.error("Map fetch failed", err);
+  } finally {
+    inflight.current = false;
   }
-
+}
   useEffect(() => {
     loadLiveMap();
 

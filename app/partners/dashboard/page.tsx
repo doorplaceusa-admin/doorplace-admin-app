@@ -278,18 +278,21 @@ useEffect(() => {
     const since = new Date();
     since.setDate(since.getDate() - 15);
 
-    const { count, error } = await supabase
-      .from("page_view_events")
-      .select("*", { count: "exact", head: true })
+   const { count, error } = await supabase
+  .from("page_view_events")
+  .select("*", { count: "exact", head: true })
 
-      // ✅ Only this partner
-      .eq("partner_id", partnerId)
+  // ✅ MUST match the actual page
+  .eq("page_key", "/pages/swing-partner-lead")
 
+  // ✅ Partner tracking
+  .eq("partner_id", partnerId)
 
-      
+  // ✅ Include real traffic
+  .in("source", ["human", "verified_human"])
 
-      // ✅ Only last 30 days
-      .gte("created_at", since.toISOString());
+  // ✅ Time filter
+  .gte("created_at", since.toISOString());
 
     if (!error && typeof count === "number") {
       setLinkViews(count);

@@ -23,10 +23,8 @@ export async function OPTIONS() {
 ====================================================== */
 export async function POST(req: Request) {
   try {
-    const supabase = supabaseAdmin;
-
     /* ==========================
-       1) Get IP + UA
+       GLOBAL LOGGING (ALWAYS)
     ========================== */
     const rawIp =
       req.headers.get("cf-connecting-ip") ||
@@ -34,6 +32,13 @@ export async function POST(req: Request) {
       "";
 
     const ip = rawIp.split(",")[0]?.trim() || null;
+    const ua = req.headers.get("user-agent") || "";
+
+    console.log("🔥 ENGAGEMENT HIT");
+    console.log("IP:", ip);
+    console.log("UA:", ua);
+
+    const supabase = supabaseAdmin;
 
     if (!ip) {
       return new Response("No IP", {
@@ -42,30 +47,25 @@ export async function POST(req: Request) {
       });
     }
 
-    const ua = req.headers.get("user-agent") || "";
-    const secChUa = req.headers.get("sec-ch-ua");
-
     /* ==========================
-       2) STRONG BROWSER CHECK
+       Browser check (LOG ONLY)
     ========================== */
     const isRealBrowser =
-  ua.toLowerCase().includes("mozilla") &&
-  ua.toLowerCase().includes("applewebkit");
+      ua.toLowerCase().includes("mozilla") &&
+      ua.toLowerCase().includes("applewebkit");
 
     if (!isRealBrowser) {
-      return new Response("Not real browser", {
-        status: 200,
-        headers: corsHeaders,
-      });
+      console.log("⚠️ Not real browser");
     }
 
     /* ==========================
-       3) Get body
+       Get body
     ========================== */
     const body = await req.json();
     const { page_key, partner_id } = body;
-// Allow tracking even without partner_id
-const safePartnerId = partner_id || null;
+
+    const safePartnerId = partner_id || null;
+
     if (!page_key) {
       return new Response("Missing data", {
         status: 400,
@@ -74,12 +74,12 @@ const safePartnerId = partner_id || null;
     }
 
     /* ==========================
-       4) Time window (20 sec)
+       Time window (20 sec)
     ========================== */
     const windowTime = new Date(Date.now() - 20000).toISOString();
 
     /* ==========================
-       5) Find latest matching view
+       Find latest matching view
     ========================== */
     const { data: latest, error: fetchError } = await supabase
       .from("page_view_events")
@@ -92,9 +92,7 @@ const safePartnerId = partner_id || null;
       .maybeSingle();
 
     if (fetchError || !latest) {
-      if (process.env.NODE_ENV !== "production") {
-        console.log("⚠️ No matching view:", ip);
-      }
+      console.log("⚠️ No matching view — skipping update");
 
       return new Response("No match", {
         status: 200,
@@ -103,14 +101,14 @@ const safePartnerId = partner_id || null;
     }
 
     /* ==========================
-       6) Mark as verified human (page_view_events)
+       Mark as verified human
     ========================== */
     const { error: updateError } = await supabase
       .from("page_view_events")
       .update({
-  source: "verified_human",
-  partner_id: safePartnerId, // 🔥 THIS IS THE FIX
-})
+        source: "verified_human",
+        partner_id: safePartnerId,
+      })
       .eq("id", latest.id);
 
     if (updateError) {
@@ -122,48 +120,37 @@ const safePartnerId = partner_id || null;
     }
 
     /* ==========================
-       7) Update live map (IMPORTANT)
+       Update live map
     ========================== */
-    // 🔥 Get geo from the SAME row that was just verified
-const { data: geoRow } = await supabase
-  .from("page_view_events")
-  .select("city, state, latitude, longitude, page_key, page_url")
-  .eq("id", latest.id)
-  .single();
+    const { data: geoRow } = await supabase
+      .from("page_view_events")
+      .select("city, state, latitude, longitude, page_key, page_url")
+      .eq("id", latest.id)
+      .single();
 
-const { error: liveMapError } = await supabase
-  .from("live_map_activity")
-  .update({
-    is_human: true,
-    source: "human",
-    last_seen: new Date().toISOString(),
-
-    // ✅ REQUIRED FOR MAP
-    city: geoRow?.city || null,
-    state: geoRow?.state || "",
-    latitude: geoRow?.latitude || null,
-    longitude: geoRow?.longitude || null,
-
-    // ✅ REQUIRED FOR FILTERING (THIS WAS ALSO BREAKING IT)
-    page_key: geoRow?.page_key || "",
-    page_url: geoRow?.page_url || "",
-  })
-  .eq("ip_address", ip);
-
-if (liveMapError) {
-  console.error("❌ Live map update error:", liveMapError);
-}
+    const { error: liveMapError } = await supabase
+      .from("live_map_activity")
+      .update({
+        is_human: true,
+        source: "human",
+        last_seen: new Date().toISOString(),
+        city: geoRow?.city || null,
+        state: geoRow?.state || "",
+        latitude: geoRow?.latitude || null,
+        longitude: geoRow?.longitude || null,
+        page_key: geoRow?.page_key || "",
+        page_url: geoRow?.page_url || "",
+      })
+      .eq("ip_address", ip);
 
     if (liveMapError) {
       console.error("❌ Live map update error:", liveMapError);
     }
 
     /* ==========================
-       8) Logging (dev only)
+       Final log
     ========================== */
-    if (process.env.NODE_ENV !== "production") {
-      console.log(`🔥 VERIFIED HUMAN: ${page_key} | IP: ${ip}`);
-    }
+    console.log(`👤 VERIFIED HUMAN: ${page_key} | IP: ${ip}`);
 
     return new Response("OK", {
       status: 200,

@@ -85,25 +85,7 @@ export async function POST(req: Request) {
     const supabase = supabaseAdmin;
 
     /* ==========================
-       1) Parse body
-    ========================== */
-    const body = await req.json();
-    const { page_key, page_url, partner_id } = body;
-
-// ✅ Do nothing if no partner_id (normal traffic)
-if (!partner_id) {
-  // silent — this is expected for most users
-}
-
-    if (!page_key || !page_url) {
-      return new Response("Missing page_key/page_url", {
-        status: 400,
-        headers: corsHeaders,
-      });
-    }
-
-    /* ==========================
-       2) Get IP + UA
+       GLOBAL LOGGING (ALWAYS)
     ========================== */
     const rawIp =
       req.headers.get("cf-connecting-ip") ||
@@ -112,7 +94,34 @@ if (!partner_id) {
 
     const ip = rawIp.split(",")[0]?.trim() || null;
     const ua = req.headers.get("user-agent") || "";
-    const secChUa = req.headers.get("sec-ch-ua");
+
+    console.log("🔥 PAGE VIEW HIT");
+    console.log("IP:", ip);
+    console.log("UA:", ua);
+
+    /* ==========================
+       Detect crawler (LOG ONLY)
+    ========================== */
+    const crawler = detectCrawler(ua, ip);
+
+    if (crawler) {
+      console.log(`🤖 CRAWLER DETECTED: ${crawler}`);
+    } else {
+      console.log("👤 HUMAN DETECTED");
+    }
+
+    /* ==========================
+       Parse body
+    ========================== */
+    const body = await req.json();
+    const { page_key, page_url, partner_id } = body;
+
+    if (!page_key || !page_url) {
+      return new Response("Missing page_key/page_url", {
+        status: 400,
+        headers: corsHeaders,
+      });
+    }
 
     if (!ip) {
       return new Response("No IP", {
@@ -122,44 +131,29 @@ if (!partner_id) {
     }
 
     /* ==========================
-       3) HARD BROWSER FILTER
+       🚫 BLOCK DB INSERT FOR BOTS
     ========================== */
-    const isRealBrowser =
-  ua.toLowerCase().includes("mozilla") &&
-  ua.toLowerCase().includes("applewebkit");
-
-    if (!isRealBrowser) {
-      return new Response("Not real browser", {
-        status: 200,
-        headers: corsHeaders,
-      });
-    }
-
-    /* ==========================
-       4) Bot detection
-    ========================== */
-    const crawler = detectCrawler(ua, ip);
-
     if (crawler) {
-      return new Response("Bot detected", {
+      return new Response("Bot logged only", {
         status: 200,
         headers: corsHeaders,
       });
     }
 
     /* ==========================
-       5) Duplicate protection
+       Duplicate protection
     ========================== */
     const tenSecondsAgo = new Date(Date.now() - 10000).toISOString();
 
-const { data: existing } = await supabase
-  .from("page_view_events")
-  .select("id")
-  .eq("ip_address", ip)
-  .gte("created_at", tenSecondsAgo)
-  .limit(1);
+    const { data: existing } = await supabase
+      .from("page_view_events")
+      .select("id")
+      .eq("ip_address", ip)
+      .gte("created_at", tenSecondsAgo)
+      .limit(1);
 
     if (existing && existing.length > 0) {
+      console.log("⚠️ Duplicate human hit");
       return new Response("Duplicate", {
         status: 200,
         headers: corsHeaders,
@@ -167,7 +161,7 @@ const { data: existing } = await supabase
     }
 
     /* ==========================
-       6) Geo data
+       Geo data
     ========================== */
     const city = req.headers.get("cf-ipcity") || null;
     const state = req.headers.get("cf-region") || null;
@@ -181,7 +175,7 @@ const { data: existing } = await supabase
       : null;
 
     /* ==========================
-       7) Insert DB (pending)
+       Insert DB (HUMANS ONLY)
     ========================== */
     const { error } = await supabase.from("page_view_events").insert({
       page_key,
@@ -193,7 +187,8 @@ const { data: existing } = await supabase
       longitude: lon,
       ip_address: ip,
       user_agent: ua,
-      source: "human",    });
+      source: "human",
+    });
 
     if (error) {
       console.error("DB ERROR:", error);
@@ -203,8 +198,10 @@ const { data: existing } = await supabase
       });
     }
 
+    console.log("✅ HUMAN INSERTED INTO DB");
+
     /* ==========================
-       8) Live map update
+       Live map update
     ========================== */
     const { error: liveError } = await supabase
       .from("live_map_activity")

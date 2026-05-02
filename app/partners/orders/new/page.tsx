@@ -85,7 +85,7 @@ export default function PartnerSwingOrderPage() {
 
         {open && (
           <div className="p-4">
-            <div className="mx-auto max-w-[220px]">
+            <div className="mx-auto max-w-55">
               <video
                 controls
                 playsInline
@@ -153,6 +153,24 @@ export default function PartnerSwingOrderPage() {
         </Section>
 
         <Section title="Swing Details">
+          <Section title="Pricing">
+  <Grid>
+    <Field label="Swing Price ($) *">
+      <input
+        type="number"
+        name="swing_price"
+        required
+      />
+    </Field>
+
+    <Field label="Accessory Price ($)">
+      <input
+        type="number"
+        name="accessory_price"
+      />
+    </Field>
+  </Grid>
+</Section>
           <Grid>
             <Field label="Swing Size *">
               <select name="swing_size" required>

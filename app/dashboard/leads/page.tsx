@@ -217,7 +217,7 @@ async function updateLeadStatus(
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 underline font-semibold break-words block w-full"
+          className="text-blue-600 underline font-semibold wrap-break-word block w-full"
         >
           {(() => {
   try {
@@ -312,7 +312,7 @@ async function updateLeadStatus(
              <div className="font-semibold text-sm">
   {l.first_name} {l.last_name}
 </div>
-<div className="text-[11px] text-gray-500 truncate max-w-[180px]">
+<div className="text-[11px] text-gray-500 truncate max-w-45">
   {l.email}
 </div>
             </div>
@@ -343,7 +343,7 @@ async function updateLeadStatus(
           </div>
 
           {/* INFO */}
-          <div className="text-[11px] text-gray-600 space-y-[2px]">
+          <div className="text-[11px] text-gray-600 space-y-0.5">
 
             <div>
               <b>Source:</b> {sourceLabel}
@@ -362,7 +362,7 @@ async function updateLeadStatus(
               {new Date(l.created_at).toLocaleDateString()}
             </div>
 
-            <div className="flex flex-col gap-[2px] pt-1 min-w-0">
+            <div className="flex flex-col gap-0.5 pt-1 min-w-0">
   <span className="text-gray-400">Entry</span>
               {l.entry_page ? (
         <a
@@ -373,7 +373,7 @@ async function updateLeadStatus(
   }
   target="_blank"
   rel="noopener noreferrer"
-  className="bg-gray-100 px-2 py-[3px] rounded text-[10px] text-blue-600 break-words block max-w-full"
+  className="bg-gray-100 px-2 py-0.75 rounded text-[10px] text-blue-600 wrap-break-word block max-w-full"
 >
   {(() => {
   try {
@@ -621,7 +621,7 @@ if (v === "delete") deleteLead(l);
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="bg-yellow-100 px-2 py-1 rounded text-[10px] text-blue-600 break-words block w-full"
+        className="bg-yellow-100 px-2 py-1 rounded text-[10px] text-blue-600 wrap-break-word block w-full"
       >
         {(() => {
   try {

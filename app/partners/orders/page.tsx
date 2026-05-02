@@ -90,7 +90,6 @@ export default function PartnerOrdersPage() {
         .from("leads")
         .select("*")
         .eq("partner_id", partnerId)
-        .eq("submission_type", "partner_order")
         .order("created_at", { ascending: false });
 
       setRows(data || []);

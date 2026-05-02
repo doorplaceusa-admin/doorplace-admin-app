@@ -85,7 +85,7 @@ export default function PartnerOrdersPage() {
 
     async function loadOrders() {
       setLoading(true);
-
+console.log("PARTNER ID (FRONTEND):", partnerId);
       const { data } = await supabase
         .from("leads")
         .select("*")

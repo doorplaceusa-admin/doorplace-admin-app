@@ -219,7 +219,14 @@ async function updateLeadStatus(
           rel="noopener noreferrer"
           className="text-blue-600 underline font-semibold break-words block w-full"
         >
-          {entry}
+          {(() => {
+  try {
+    const clean = new URL(url);
+    return clean.pathname === "/" ? "/" : clean.pathname;
+  } catch {
+    return entry;
+  }
+})()}
         </a>
       </div>
     );
@@ -368,7 +375,18 @@ async function updateLeadStatus(
   rel="noopener noreferrer"
   className="bg-gray-100 px-2 py-[3px] rounded text-[10px] text-blue-600 break-words block max-w-full"
 >
-  {l.entry_page}
+  {(() => {
+  try {
+    const full = l.entry_page?.startsWith("http")
+      ? l.entry_page
+      : `https://doorplaceusa.com${l.entry_page}`;
+
+    const clean = new URL(full);
+    return clean.pathname === "/" ? "/" : clean.pathname;
+  } catch {
+    return l.entry_page;
+  }
+})()}
 </a>
               ) : (
                 "—"
@@ -605,7 +623,14 @@ if (v === "delete") deleteLead(l);
         rel="noopener noreferrer"
         className="bg-yellow-100 px-2 py-1 rounded text-[10px] text-blue-600 break-words block w-full"
       >
-        {entry}
+        {(() => {
+  try {
+    const clean = new URL(url);
+    return clean.pathname === "/" ? "/" : clean.pathname;
+  } catch {
+    return entry;
+  }
+})()}
       </a>
     );
   })()}

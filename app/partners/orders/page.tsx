@@ -88,10 +88,10 @@ export default function PartnerOrdersPage() {
 console.log("PARTNER ID (FRONTEND):", partnerId);
       const { data } = await supabase
         .from("leads")
-        .select("*")
-        .eq("partner_id", partnerId)
-        .order("created_at", { ascending: false });
-
+.select("*")
+.eq("partner_id", partnerId)
+.eq("submission_type", "partner_order")
+.order("created_at", { ascending: false });
       setRows(data || []);
       setLoading(false);
     }

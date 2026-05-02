@@ -183,7 +183,7 @@ async function updateLeadStatus(
   return (
 <div className="h-[calc(100vh-64px)] overflow-y-auto pb-6 space-y-4 max-w-375 w-full mx-auto">
       {/* HEADER */}
-      <div className="sticky top-0 bg-white z-30 border-b pb-2">
+      <div className="sticky top-0 bg-white z-30 border-b px-2 pt-2 pb-3">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-red-700">Leads</h1>
           <span className="text-sm text-gray-600">
@@ -195,57 +195,35 @@ async function updateLeadStatus(
           General Inquiry & Swing / Door Quotes
         </p>
 
-       {/* 🔥 TOP ENTRY PAGES */}
+      {/* 🔥 MOST RECENT ENTRY PAGE ONLY */}
 <div className="bg-white border rounded p-2 shadow-sm mb-2">
-  <h3 className="text-xs font-semibold mb-1">Top Entry Pages</h3>
+  <h3 className="text-xs font-semibold mb-1">Most Recent Entry Page</h3>
 
-  {Object.entries(
-    leads.reduce((acc: any, l) => {
-      if (!l.entry_page) return acc;
-      acc[l.entry_page] = (acc[l.entry_page] || 0) + 1;
-      return acc;
-    }, {})
-  )
-    .sort((a: any, b: any) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([page, count]: any, i) => (
-      <div key={i} className="flex justify-between text-[11px] py-0">
-        <span className="text-gray-700">{page}</span>
-        <span className="font-semibold">{count}</span>
+  {(() => {
+    const latest = leads?.[0];
+    const entry = latest?.entry_page || "";
+
+    if (!entry) {
+      return <div className="text-[11px]">—</div>;
+    }
+
+    const url = entry.startsWith("http")
+      ? entry
+      : `https://doorplaceusa.com${entry}`;
+
+    return (
+      <div className="text-[11px] leading-tight min-w-0">
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 underline font-semibold break-words block w-full"
+        >
+          {entry}
+        </a>
       </div>
-    ))}
-
-  {/* 🔥 MOST RECENT LEAD PAGE */}
-  <div className="mt-2 border-t pt-1">
-   <h3 className="text-xs font-semibold mb-1">Most Recent Entry Page</h3>
-
-{(() => {
- const latest = leads[0];
-  const entry = latest?.entry_page;
-
-  if (!entry) {
-    return <div className="text-[11px]">—</div>;
-  }
-
-  const url = entry.startsWith("http")
-    ? entry
-    : `https://doorplaceusa.com${entry}`;
-
-  return (
-    <div className="text-[11px] leading-tight">
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-600 underline font-semibold"
-      >
-        {entry}
-      </a>
-    </div>
-  );
+    );
   })()}
-
-  </div>
 </div>
 
 <div className="flex items-center gap-2 mb-3">
@@ -273,11 +251,9 @@ async function updateLeadStatus(
     Table
   </button>
 </div>
-
-
-        <div className="flex gap-2 items-center">
+ <div className="flex gap-2 items-center">
           <input
-            className="border rounded px-2 py-1 text-sm w-full md:max-w-sm"
+            className="border rounded-md px-3 py-2 text-sm w-full md:max-w-sm focus:outline-none focus:ring-2 focus:ring-black/20"
             placeholder="Search name or Lead ID"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -292,12 +268,14 @@ async function updateLeadStatus(
             </button>
           )}
         </div>
+
+       
       </div>
 
       {/* TABLE */}
       {/* CARDS LAYOUT */}
 {layout === "cards" && (
-  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
     {filteredLeads.map((l) => {
       
       // ✅ MOVE LOGIC HERE (outside JSX)
@@ -320,14 +298,16 @@ async function updateLeadStatus(
       return (
         <div
           key={l.id}
-          className="border rounded-lg p-4 shadow-sm bg-white space-y-2"
+          className="border rounded-xl p-3 bg-white space-y-2 hover:shadow-md transition"
         >
           <div className="flex justify-between items-start">
             <div>
-              <div className="font-semibold text-lg">
-                {l.first_name} {l.last_name}
-              </div>
-              <div className="text-xs text-gray-500">{l.email}</div>
+             <div className="font-semibold text-sm">
+  {l.first_name} {l.last_name}
+</div>
+<div className="text-[11px] text-gray-500 truncate max-w-[180px]">
+  {l.email}
+</div>
             </div>
 
             {/* STATUS */}
@@ -356,7 +336,7 @@ async function updateLeadStatus(
           </div>
 
           {/* INFO */}
-          <div className="text-xs text-gray-600 space-y-1">
+          <div className="text-[11px] text-gray-600 space-y-[2px]">
 
             <div>
               <b>Source:</b> {sourceLabel}
@@ -375,20 +355,21 @@ async function updateLeadStatus(
               {new Date(l.created_at).toLocaleDateString()}
             </div>
 
-            <div>
-              <b>Entry:</b>{" "}
+            <div className="flex flex-col gap-[2px] pt-1 min-w-0">
+  <span className="text-gray-400">Entry</span>
               {l.entry_page ? (
-                <a
-                  href={
-  l.entry_page?.startsWith("http")
-    ? l.entry_page
-    : `https://doorplaceusa.com${l.entry_page}`
-}
-                  target="_blank"
-                  className="text-blue-600 underline"
-                >
-                  {l.entry_page}
-                </a>
+        <a
+  href={
+    l.entry_page?.startsWith("http")
+      ? l.entry_page
+      : `https://doorplaceusa.com${l.entry_page}`
+  }
+  target="_blank"
+  rel="noopener noreferrer"
+  className="bg-gray-100 px-2 py-[3px] rounded text-[10px] text-blue-600 break-words block max-w-full"
+>
+  {l.entry_page}
+</a>
               ) : (
                 "—"
               )}
@@ -561,7 +542,7 @@ if (v === "delete") deleteLead(l);
       {/* HEADER */}
       <div className="p-6 border-b">
         <h2 className="text-xl font-bold">
-          Lead Details — {viewLead.lead_id}
+          Lead Details — {viewLead?.lead_id}
         </h2>
       </div>
 
@@ -570,84 +551,88 @@ if (v === "delete") deleteLead(l);
 
         {/* CONTACT */}
         <Section title="Contact">
-          <Row label="Name" value={`${viewLead.first_name} ${viewLead.last_name}`} />
-          <Row label="Email" value={viewLead.email} />
-          <Row label="Phone" value={viewLead.phone} />
+          <Row label="Name" value={`${viewLead?.first_name} ${viewLead?.last_name}`} />
+          <Row label="Email" value={viewLead?.email} />
+          <Row label="Phone" value={viewLead?.phone} />
           <Row
             label="Address"
-            value={`${viewLead.street_address || ""} ${viewLead.city || ""}, ${viewLead.state || ""} ${viewLead.zip || ""}`}
+            value={`${viewLead?.street_address || ""} ${viewLead?.city || ""}, ${viewLead?.state || ""} ${viewLead?.zip || ""}`}
           />
         </Section>
 
         {/* STATUS */}
         <Section title="Lead Status">
           <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">
-            {viewLead.lead_status || "new"}
+            {viewLead?.lead_status || "new"}
           </span>
         </Section>
 
         {/* PARTNER */}
-        {viewLead.partner_id && (
+        {viewLead?.partner_id && (
           <Section title="Partner Tracking">
-            <Row label="Partner ID" value={viewLead.partner_id} />
+            <Row label="Partner ID" value={viewLead?.partner_id} />
           </Section>
         )}
 
         {/* SUBMISSION */}
         <Section title="Submission">
-          <Row label="Submission Type" value={viewLead.submission_type} />
-          <Row label="Quote Type" value={viewLead.quote_type} />
-          <Row label="Project Details" value={viewLead.project_details} />
+          <Row label="Submission Type" value={viewLead?.submission_type} />
+          <Row label="Quote Type" value={viewLead?.quote_type} />
+          <Row label="Project Details" value={viewLead?.project_details} />
         </Section>
 
 {/* CUSTOMER JOURNEY */}
-{viewLead.entry_page && (
+{viewLead?.entry_page && (
+
   <Section title="Customer Journey">
-    <div className="flex items-center gap-2">
-      <span className="text-gray-600 text-sm">Entry:</span>
+    <div className="flex flex-col gap-1 min-w-0">
+      <span className="text-gray-600 text-sm">Entry</span>
 
-      {(() => {
-        const entry = viewLead.entry_page;
+```
+  {(() => {
+    const entry = viewLead?.entry_page;
 
-        if (!entry) return <span>—</span>;
+    if (!entry) return <span>—</span>;
 
-        const url = entry.startsWith("http")
-          ? entry
-          : `https://doorplaceusa.com${entry}`;
+    const url = entry.startsWith("http")
+      ? entry
+      : `https://doorplaceusa.com${entry}`;
 
-        return (
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-yellow-100 px-2 py-1 rounded text-xs font-semibold text-blue-600 underline"
-          >
-            {entry}
-          </a>
-        );
-      })()}
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="bg-yellow-100 px-2 py-1 rounded text-[10px] text-blue-600 break-words block w-full"
+      >
+        {entry}
+      </a>
+    );
+  })()}
+</div>
+```
 
-    </div>
   </Section>
 )}
 
+
         {/* PHOTOS */}
-        <Section title="Photos">
-          <div className="flex gap-2 flex-wrap">
-            {viewLead.photos?.length ? (
-              viewLead.photos.map((p, i) => (
-                <img
-                  key={i}
-                  src={p}
-                  className="w-28 h-28 object-cover border rounded"
-                  alt={`lead-photo-${i}`}
-                />
-              ))
-            ) : (
-              <span className="text-gray-500 text-sm">No photos uploaded</span>
-            )}
-          </div>
-        </Section>
+<Section title="Photos">
+  <div className="flex gap-2 flex-wrap">
+    {(viewLead?.photos ?? []).length ? (
+      (viewLead?.photos ?? []).map((p, i) => (
+        <img
+          key={i}
+          src={p}
+          className="w-28 h-28 object-cover border rounded"
+          alt={`lead-photo-${i}`}
+        />
+      ))
+    ) : (
+      <span className="text-gray-500 text-sm">No photos uploaded</span>
+    )}
+  </div>
+</Section>
 
       </div>
 

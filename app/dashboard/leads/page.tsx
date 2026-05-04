@@ -570,18 +570,22 @@ if (v === "delete") deleteLead(l);
   <div className="space-y-1 text-sm">
 
     {Object.entries(viewLead || {})
-     .filter(([key]) => key !== "id")
+      .filter(([key, value]) => {
+  return (
+    value !== null &&
+    value !== "" &&
+    value !== undefined
+  );
+})
       .map(([key, value]) => (
         <div key={key} className="border-b pb-1">
           <span className="font-semibold text-gray-700">
             {key.replaceAll("_", " ")}:
           </span>{" "}
           <span className="text-black wrap-break-word">
-            {value === null || value === "" || value === undefined
-  ? "—"
-  : typeof value === "object"
-  ? JSON.stringify(value)
-  : String(value)}
+            {typeof value === "object"
+              ? JSON.stringify(value)
+              : String(value)}
           </span>
         </div>
       ))}

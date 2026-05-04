@@ -566,7 +566,32 @@ if (v === "delete") deleteLead(l);
 
       {/* SCROLLABLE CONTENT */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
+<Section title="All Lead Data">
+  <div className="space-y-1 text-sm">
 
+    {Object.entries(viewLead || {})
+      .filter(([key, value]) => {
+  return (
+    value !== null &&
+    value !== "" &&
+    value !== undefined
+  );
+})
+      .map(([key, value]) => (
+        <div key={key} className="border-b pb-1">
+          <span className="font-semibold text-gray-700">
+            {key.replaceAll("_", " ")}:
+          </span>{" "}
+          <span className="text-black wrap-break-word">
+            {typeof value === "object"
+              ? JSON.stringify(value)
+              : String(value)}
+          </span>
+        </div>
+      ))}
+
+  </div>
+</Section>
         {/* CONTACT */}
         <Section title="Contact">
           <Row label="Name" value={`${viewLead?.first_name} ${viewLead?.last_name}`} />

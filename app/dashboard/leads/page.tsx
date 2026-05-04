@@ -354,10 +354,6 @@ async function updateLeadStatus(
             </div>
 
             <div>
-              <b>Lead ID:</b> {l.lead_id}
-            </div>
-
-            <div>
               <b>Created:</b>{" "}
               {new Date(l.created_at).toLocaleDateString()}
             </div>
@@ -566,48 +562,98 @@ if (v === "delete") deleteLead(l);
 
       {/* SCROLLABLE CONTENT */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
-<Section title="All Lead Data">
-  <div className="space-y-1 text-sm">
 
-    {Object.entries(viewLead || {})
-      .filter(([key, value]) => {
-  return (
-    value !== null &&
-    value !== "" &&
-    value !== undefined
-  );
-})
-      .map(([key, value]) => (
-        <div key={key} className="border-b pb-1">
-          <span className="font-semibold text-gray-700">
-            {key.replaceAll("_", " ")}:
-          </span>{" "}
-          <span className="text-black wrap-break-word">
-            {typeof value === "object"
-              ? JSON.stringify(value)
-              : String(value)}
-          </span>
-        </div>
-      ))}
-
-  </div>
-</Section>
-        {/* CONTACT */}
-        <Section title="Contact">
-          <Row label="Name" value={`${viewLead?.first_name} ${viewLead?.last_name}`} />
-          <Row label="Email" value={viewLead?.email} />
-          <Row label="Phone" value={viewLead?.phone} />
-          <Row
-            label="Address"
-            value={`${viewLead?.street_address || ""} ${viewLead?.city || ""}, ${viewLead?.state || ""} ${viewLead?.zip || ""}`}
-          />
+        {/* CUSTOMER INFO */}
+        <Section title="Customer Info">
+          {Object.entries(viewLead || {})
+            .filter(([key, value]) =>
+              [
+                "first_name",
+                "last_name",
+                "email",
+                "phone",
+                "street_address",
+                "city",
+                "state",
+                "zip"
+              ].includes(key) &&
+              value !== null &&
+              value !== "" &&
+              value !== undefined
+            )
+            .map(([key, value]) => (
+              <Row
+                key={key}
+                label={key.replaceAll("_", " ")}
+                value={String(value)}
+              />
+            ))}
         </Section>
 
-        {/* STATUS */}
-        <Section title="Lead Status">
-          <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">
-            {viewLead?.lead_status || "new"}
-          </span>
+        {/* PROJECT INFO */}
+        <Section title="Project Info">
+          {Object.entries(viewLead || {})
+            .filter(([key, value]) =>
+              [
+                "project_details",
+                "door_width",
+                "door_height",
+                "number_of_doors",
+                "door_type",
+                "door_type_other",
+                "door_material",
+                "door_material_other",
+                "finish_preference",
+                "door_installation_needed",
+                "installation_location",
+                "swing_size",
+                "porch_ceiling_height",
+                "installation_needed",
+                "hanging_method",
+                "wood_type",
+                "finish"
+              ].includes(key) &&
+              value !== null &&
+              value !== "" &&
+              value !== undefined
+            )
+            .map(([key, value]) => (
+              <Row
+                key={key}
+                label={key.replaceAll("_", " ")}
+                value={String(value)}
+              />
+            ))}
+        </Section>
+
+        {/* TRACKING / META */}
+        <Section title="Tracking / Meta">
+          {Object.entries(viewLead || {})
+            .filter(([key, value]) =>
+              [
+                "lead_id",
+                "submission_type",
+                "quote_type",
+                "source",
+                "entry_page",
+                "page_path",
+                "created_at"
+              ].includes(key) &&
+              value !== null &&
+              value !== "" &&
+              value !== undefined
+            )
+            .map(([key, value]) => (
+              <Row
+                key={key}
+                label={key.replaceAll("_", " ")}
+                value={
+                  key === "created_at"
+                    ? new Date(String(value)).toLocaleString()
+                    : String(value)
+                }
+              />
+            ))}
         </Section>
 
         {/* PARTNER */}
@@ -617,72 +663,49 @@ if (v === "delete") deleteLead(l);
           </Section>
         )}
 
-        {/* SUBMISSION */}
-        <Section title="Submission">
-          <Row label="Submission Type" value={viewLead?.submission_type} />
-          <Row label="Quote Type" value={viewLead?.quote_type} />
-          <Row label="Project Details" value={viewLead?.project_details} />
+        {/* PHOTOS */}
+        <Section title="Photos">
+          <div className="flex gap-2 flex-wrap">
+            {(viewLead?.photos ?? []).length ? (
+              (viewLead?.photos ?? []).map((p, i) => (
+                <img
+                  key={i}
+                  src={p}
+                  className="w-28 h-28 object-cover border rounded"
+                  alt={`lead-photo-${i}`}
+                />
+              ))
+            ) : (
+              <span className="text-gray-500 text-sm">
+                No photos uploaded
+              </span>
+            )}
+          </div>
         </Section>
 
-{/* CUSTOMER JOURNEY */}
-{viewLead?.entry_page && (
-
-  <Section title="Customer Journey">
-    <div className="flex flex-col gap-1 min-w-0">
-      <span className="text-gray-600 text-sm">Entry</span>
-
-```
-  {(() => {
-    const entry = viewLead?.entry_page;
-
-    if (!entry) return <span>—</span>;
-
-    const url = entry.startsWith("http")
-      ? entry
-      : `https://doorplaceusa.com${entry}`;
-
-    return (
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="bg-yellow-100 px-2 py-1 rounded text-[10px] text-blue-600 wrap-break-word block w-full"
-      >
-        {(() => {
-  try {
-    const clean = new URL(url);
-    return clean.pathname === "/" ? "/" : clean.pathname;
-  } catch {
-    return entry;
-  }
-})()}
-      </a>
-    );
-  })()}
-</div>
-```
-
-  </Section>
-)}
-
-
-        {/* PHOTOS */}
-<Section title="Photos">
-  <div className="flex gap-2 flex-wrap">
-    {(viewLead?.photos ?? []).length ? (
-      (viewLead?.photos ?? []).map((p, i) => (
-        <img
-          key={i}
-          src={p}
-          className="w-28 h-28 object-cover border rounded"
-          alt={`lead-photo-${i}`}
-        />
-      ))
-    ) : (
-      <span className="text-gray-500 text-sm">No photos uploaded</span>
-    )}
-  </div>
-</Section>
+        {/* RAW DATA (DO NOT REMOVE) */}
+        <Section title="All Lead Data (Raw)">
+          <div className="space-y-1 text-sm">
+            {Object.entries(viewLead || {})
+              .filter(([key, value]) =>
+                value !== null &&
+                value !== "" &&
+                value !== undefined
+              )
+              .map(([key, value]) => (
+                <div key={key} className="border-b pb-1">
+                  <span className="font-semibold text-gray-700">
+                    {key.replaceAll("_", " ")}:
+                  </span>{" "}
+                  <span className="text-black wrap-break-word">
+                    {typeof value === "object"
+                      ? JSON.stringify(value)
+                      : String(value)}
+                  </span>
+                </div>
+              ))}
+          </div>
+        </Section>
 
       </div>
 
@@ -693,7 +716,6 @@ if (v === "delete") deleteLead(l);
           onClick={() => setViewLead(null)}
         >
           Close
-
         </button>
       </div>
     </div>
@@ -701,41 +723,97 @@ if (v === "delete") deleteLead(l);
 )}
 
 
+     {/* EDIT MODAL */}
+{editLead && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div className="bg-white p-6 rounded max-w-3xl w-full max-h-[75vh] overflow-y-auto">
 
-      {/* EDIT MODAL */}
-      {editLead && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-    <div className="bg-white p-6 rounded max-w-3xl w-full max-h-[60vh] overflow-y-auto">
-      <h2 className="text-xl font-bold mb-3">Edit Lead</h2>
+      <h2 className="text-xl font-bold mb-4">Edit Lead</h2>
 
-      {/* BASIC INFO */}
-      {[
-        "first_name",
-        "last_name",
-        "email",
-        "phone",
-        "street_address",
-        "city",
-        "state",
-        "zip",
-        "partner_id",
-      ].map((f) => (
-        <input
-          key={f}
-          className="border w-full mb-2 px-3 py-2"
-          placeholder={f.replace("_", " ")}
-          value={(editLead as any)[f] || ""}
-          onChange={(e) =>
-            setEditLead({ ...editLead, [f]: e.target.value })
-          }
-        />
-      ))}
+      {/* CUSTOMER INFO */}
+      <div className="mb-4">
+        <div className="text-xs font-semibold text-gray-600 mb-2">
+          Customer Info
+        </div>
+
+        {[
+          "first_name",
+          "last_name",
+          "email",
+          "phone",
+          "street_address",
+          "city",
+          "state",
+          "zip",
+        ].map((f) => (
+          <input
+            key={f}
+            className="border w-full mb-2 px-3 py-2"
+            placeholder={f.replaceAll("_", " ")}
+            value={(editLead as any)[f] || ""}
+            onChange={(e) =>
+              setEditLead({ ...editLead, [f]: e.target.value })
+            }
+          />
+        ))}
+      </div>
+
+      {/* PROJECT INFO */}
+      <div className="mb-4">
+        <div className="text-xs font-semibold text-gray-600 mb-2">
+          Project Info
+        </div>
+
+        {[
+          "project_details",
+          "door_width",
+          "door_height",
+          "number_of_doors",
+          "door_type",
+          "door_type_other",
+          "door_material",
+          "door_material_other",
+          "finish_preference",
+          "door_installation_needed",
+          "installation_location",
+        ].map((f) => (
+          <input
+            key={f}
+            className="border w-full mb-2 px-3 py-2"
+            placeholder={f.replaceAll("_", " ")}
+            value={(editLead as any)[f] || ""}
+            onChange={(e) =>
+              setEditLead({ ...editLead, [f]: e.target.value })
+            }
+          />
+        ))}
+      </div>
+
+      {/* PARTNER / TRACKING */}
+      <div className="mb-4">
+        <div className="text-xs font-semibold text-gray-600 mb-2">
+          Partner / Tracking
+        </div>
+
+        {["partner_id"].map((f) => (
+          <input
+            key={f}
+            className="border w-full mb-2 px-3 py-2"
+            placeholder={f.replaceAll("_", " ")}
+            value={(editLead as any)[f] || ""}
+            onChange={(e) =>
+              setEditLead({ ...editLead, [f]: e.target.value })
+            }
+          />
+        ))}
+      </div>
 
       {/* LEAD STATUS */}
-      <div className="mb-3">
+      <div className="mb-4">
         <div className="text-xs font-semibold text-gray-600 mb-1">
           Lead Status
         </div>
+
         <select
           className="border w-full px-3 py-2 rounded"
           value={editLead.lead_status || "new"}
@@ -766,17 +844,18 @@ if (v === "delete") deleteLead(l);
         >
           Save
         </button>
+
         <button
           className="bg-gray-300 px-4 py-2 rounded flex-1"
           onClick={() => setEditLead(null)}
         >
           Cancel
+        </button>
+      </div>
 
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+    </div>
+  </div>
+)}
     </div>
   );
 }

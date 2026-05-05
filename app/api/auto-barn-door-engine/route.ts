@@ -2,7 +2,6 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { shopifyLimiter } from "@/lib/shopify/shopifyLimiter";
 
 const SHOP = process.env.SHOPIFY_STORE_DOMAIN!;
@@ -10,8 +9,6 @@ const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN!;
 const API_VERSION = "2024-01";
 
 const MAX_RETRIES = 5;
-const BATCH_SIZE = 25;
-
 const SHOPIFY_DELAY_MS = 4000;
 const JITTER_MS = 1200;
 
@@ -74,17 +71,19 @@ function shuffleArray<T>(array: T[]) {
   return [...array].sort(() => Math.random() - 0.5);
 }
 
-function extractHandle(urlString: string) {
-  return urlString?.split("/").pop()?.trim() || "";
-}
-
-function formatCity(slug: string) {
-  return slug
-    .replace("automatic-barn-door-", "")
-    .replace(/-\d.+$/, "")
+function titleCase(input: string) {
+  return input
     .split("-")
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function extractCity(handle: string) {
+  return titleCase(
+    handle
+      .replace("automatic-barn-door-", "")
+      .replace(/-\d.*$/, "")
+  );
 }
 
 const introPool = [
@@ -185,10 +184,6 @@ const internalLinks = [
   {
     title: "Automatic Barn Door System in Denver, CO",
     url: "/pages/automatic-barn-door-denver-co-820000-co"
-  },
-  {
-    title: "Automatic Barn Door System in Phoenix, AZ",
-    url: "/pages/automatic-barn-door-phoenix-az-455000-az"
   }
 ];
 
@@ -198,16 +193,14 @@ function buildPage(city: string) {
   const selectedApps = shuffleArray(applicationPool).slice(0, 6);
   const selectedLinks = shuffleArray(internalLinks).slice(0, 5);
 
-  const intro1 = randomItem(introPool);
-  const intro2 = randomItem(introPool);
-  const intro3 = randomItem(introPool);
-
   const semantic1 = randomItem(semanticPool);
   const semantic2 = randomItem(semanticPool);
 
   const cta = randomItem(ctaPool);
 
   return `
+<!-- TP_AUTO_BARN_ENGINE -->
+
 <div style="max-width:1200px;margin:0 auto;padding:40px 20px;background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.6;color:#222;">
 
 <h1 style="font-size:42px;font-weight:800;margin-bottom:15px;">
@@ -218,9 +211,9 @@ Automatic Barn Door Opener in ${city}
 Upgrade Existing Sliding Barn Doors Into Fully Automatic Systems
 </h2>
 
-<p>${intro1}</p>
-<p>${intro2}</p>
-<p>${intro3}</p>
+<p>${randomItem(introPool)}</p>
+<p>${randomItem(introPool)}</p>
+<p>${randomItem(introPool)}</p>
 
 <p>
 SlideDrive™ systems are designed for homeowners and businesses looking for a ${semantic1} without replacing the existing rail system.
@@ -329,62 +322,57 @@ ${cta}
 }
 
 export async function POST() {
-  console.log("🚀 STARTING AUTO BARN DOOR PAGE ENGINE");
+  console.log("🚀 STARTING AUTO BARN DOOR ENGINE");
 
-  let offset = 0;
   let updated = 0;
   let skipped = 0;
   let errors = 0;
-
-  const { data: inventory, error } = await supabaseAdmin
-    .from("shopify_url_inventory")
-    .select("url")
-    .or(
-      "url.ilike.%automatic-barn-door%,url.ilike.%motorized-barn-door%,url.ilike.%sliding-door%"
-    );
-
-  if (error || !inventory) {
-    return NextResponse.json({
-      success: false,
-      error: error?.message || "No inventory found"
-    });
-  }
+  let sinceId = 0;
 
   while (true) {
-    const batch = inventory.slice(offset, offset + BATCH_SIZE);
+    const pageRes = await safeShopifyFetch(
+      `/pages.json?limit=250&since_id=${sinceId}`
+    );
 
-    if (batch.length === 0) break;
+    if (!pageRes) {
+      errors++;
+      break;
+    }
 
-    for (const row of batch) {
+    const pageJson = await pageRes.json();
+
+    const pages = pageJson.pages || [];
+
+    if (pages.length === 0) {
+      break;
+    }
+
+    for (const page of pages) {
       try {
-        const handle = extractHandle(row.url);
+        const handle = String(page.handle || "").toLowerCase();
 
-        if (!handle) {
+        sinceId = page.id;
+
+        if (
+          !handle.includes("automatic") &&
+          !handle.includes("barn") &&
+          !handle.includes("sliding")
+        ) {
           skipped++;
           continue;
         }
 
         console.log("🔍 Processing:", handle);
 
-        const city = formatCity(handle);
+        const existingBody = page.body_html || "";
 
-        const findRes = await safeShopifyFetch(
-          `/pages.json?handle=${handle}`
-        );
-
-        if (!findRes) {
-          errors++;
-          continue;
-        }
-
-        const findJson = await findRes.json();
-
-        if (!findJson.pages?.length) {
+        if (existingBody.includes("TP_AUTO_BARN_ENGINE")) {
+          console.log("⏭️ Already upgraded:", handle);
           skipped++;
           continue;
         }
 
-        const page = findJson.pages[0];
+        const city = extractCity(handle);
 
         const newHtml = buildPage(city);
 
@@ -415,8 +403,6 @@ export async function POST() {
         errors++;
       }
     }
-
-    offset += BATCH_SIZE;
   }
 
   console.log("🎯 AUTO BARN DOOR ENGINE COMPLETE");

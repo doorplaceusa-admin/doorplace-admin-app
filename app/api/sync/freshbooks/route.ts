@@ -6,6 +6,54 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+/* ===============================
+   🔄 REFRESH TOKEN (SAME AS MAIN ROUTE)
+================================ */
+async function refreshFreshBooksToken() {
+  const { data: tokenRow } = await supabase
+    .from("freshbooks_tokens")
+    .select("refresh_token")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (!tokenRow?.refresh_token) {
+    throw new Error("No refresh token found");
+  }
+
+  const res = await fetch("https://api.freshbooks.com/auth/oauth/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      grant_type: "refresh_token",
+      refresh_token: tokenRow.refresh_token,
+      client_id: process.env.FRESHBOOKS_CLIENT_ID,
+      client_secret: process.env.FRESHBOOKS_CLIENT_SECRET,
+    }),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok) {
+    console.error("❌ Token refresh failed:", json);
+    throw new Error("Token refresh failed");
+  }
+
+  const expiresAt = new Date(
+    Date.now() + json.expires_in * 1000
+  ).toISOString();
+
+  await supabase.from("freshbooks_tokens").delete().neq("id", "");
+  await supabase.from("freshbooks_tokens").insert({
+    access_token: json.access_token,
+    refresh_token: json.refresh_token,
+    token_type: json.token_type || "Bearer",
+    expires_at: expiresAt,
+  });
+
+  return json.access_token;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -14,31 +62,54 @@ export async function POST(req: Request) {
     console.log("🚀 SYNC START:", invoiceId);
 
     if (!invoiceId) {
-      console.log("❌ Missing invoiceId");
-      return NextResponse.json({ error: "Missing invoiceId" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing invoiceId" },
+        { status: 400 }
+      );
     }
 
-    // ===============================
-    // 🔥 FETCH FROM FRESHBOOKS
-    // ===============================
-    console.log("📡 Fetching from FreshBooks...");
+    /* ===============================
+       🔐 GET VALID ACCESS TOKEN
+    =============================== */
+    const { data: tokenRow } = await supabase
+      .from("freshbooks_tokens")
+      .select("access_token")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000); // 10 sec timeout
+    if (!tokenRow?.access_token) {
+      return NextResponse.json({ error: "No token" }, { status: 401 });
+    }
 
-    const response = await fetch(
-      `https://api.freshbooks.com/accounting/account/${process.env.FRESHBOOKS_ACCOUNT_ID}/invoices/invoices/${invoiceId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${process.env.FRESHBOOKS_ACCESS_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        signal: controller.signal,
-      }
-    );
+    let accessToken = tokenRow.access_token;
 
-    clearTimeout(timeout);
+    const ACCOUNT_ID = process.env.FRESHBOOKS_ACCOUNT_ID!;
+
+    /* ===============================
+       🔥 FETCH FROM FRESHBOOKS
+    =============================== */
+    async function fetchInvoice(token: string) {
+      return fetch(
+        `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/invoices/invoices/${invoiceId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    let response = await fetchInvoice(accessToken);
+
+    // 🔁 Handle expired token
+    if (response.status === 401) {
+      console.log("🔁 Token expired, refreshing...");
+      accessToken = await refreshFreshBooksToken();
+      response = await fetchInvoice(accessToken);
+    }
 
     const json = await response.json();
 
@@ -53,28 +124,31 @@ export async function POST(req: Request) {
     const invoice = json?.response?.result?.invoice;
 
     if (!invoice) {
-      console.log("❌ No invoice found");
-      return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Invoice not found" },
+        { status: 404 }
+      );
     }
 
     console.log("✅ Invoice pulled:", invoice.invoiceid);
 
-    // ===============================
-    // 🔥 SAFE CONTACT EXTRACTION
-    // ===============================
+    /* ===============================
+       🔥 CONTACT EXTRACTION
+    =============================== */
     const contact = invoice?.contacts?.[0] || {};
 
     const email = contact?.email || "";
-    const phone = contact?.phone || "";
+    const phone = (contact?.phone || "").replace(/\D/g, "").slice(-10);
 
-    console.log("📞 Contact:", { email, phone });
-
-    // ===============================
-    // 🔥 UPSERT INVOICE
-    // ===============================
+    /* ===============================
+       🔥 UPSERT INVOICE
+    =============================== */
     const invoicePayload = {
       invoice_id: String(invoice.invoiceid),
-      customer_name: invoice?.organization || "",
+      customer_name:
+        invoice?.organization ||
+        [invoice?.fname, invoice?.lname].filter(Boolean).join(" ") ||
+        "",
       email,
       phone,
       amount: invoice?.amount?.amount || 0,
@@ -92,9 +166,9 @@ export async function POST(req: Request) {
       console.log("✅ Invoice upserted");
     }
 
-    // ===============================
-    // 🔥 LINE ITEMS BUILD
-    // ===============================
+    /* ===============================
+       🔥 LINE ITEMS BUILD
+    =============================== */
     const lineItems =
       invoice?.lines?.map((line: any) => ({
         invoice_id: String(invoice.invoiceid),
@@ -105,22 +179,16 @@ export async function POST(req: Request) {
         total: line?.amount?.amount || 0,
       })) || [];
 
-    console.log("📦 Line items found:", lineItems.length);
+    console.log("📦 Line items:", lineItems.length);
 
-    // ===============================
-    // 🔥 SAFE DELETE + INSERT
-    // ===============================
+    /* ===============================
+       🔥 DELETE + INSERT
+    =============================== */
     if (lineItems.length > 0) {
-      const { error: deleteError } = await supabase
+      await supabase
         .from("invoice_line_items")
         .delete()
         .eq("invoice_id", String(invoice.invoiceid));
-
-      if (deleteError) {
-        console.error("❌ Delete error:", deleteError);
-      } else {
-        console.log("🧹 Old line items cleared");
-      }
 
       const { error: insertError } = await supabase
         .from("invoice_line_items")
@@ -129,10 +197,8 @@ export async function POST(req: Request) {
       if (insertError) {
         console.error("❌ Insert error:", insertError);
       } else {
-        console.log("✅ Line items inserted:", lineItems.length);
+        console.log("✅ Line items inserted");
       }
-    } else {
-      console.log("⚠️ No line items to insert");
     }
 
     console.log("🎯 SYNC COMPLETE");

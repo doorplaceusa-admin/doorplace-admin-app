@@ -328,7 +328,7 @@ export async function POST() {
   let skipped = 0;
   let errors = 0;
   let sinceId = 0;
-
+const MAX_UPDATES = 25;
   while (true) {
     const pageRes = await safeShopifyFetch(
       `/pages.json?limit=250&since_id=${sinceId}`
@@ -354,13 +354,13 @@ export async function POST() {
         sinceId = page.id;
 
         if (
-          !handle.includes("automatic") &&
-          !handle.includes("barn") &&
-          !handle.includes("sliding")
-        ) {
-          skipped++;
-          continue;
-        }
+  !handle.startsWith("automatic-barn-door-")
+) {
+  skipped++;
+  continue;
+}
+
+console.log("✅ SAFE MATCH:", handle);
 
         console.log("🔍 Processing:", handle);
 
@@ -390,11 +390,25 @@ export async function POST() {
         );
 
         if (updateRes) {
-          updated++;
-          console.log("✅ Updated:", handle);
-        } else {
-          errors++;
-        }
+  updated++;
+
+  console.log("✅ Updated:", handle);
+
+  if (updated >= MAX_UPDATES) {
+    console.log("🛑 SAFETY STOP REACHED");
+    
+    return NextResponse.json({
+      success: true,
+      updated,
+      skipped,
+      errors,
+      stopped: "MAX_UPDATES_REACHED"
+    });
+  }
+
+} else {
+  errors++;
+}
 
         await sleep(randomDelay());
 

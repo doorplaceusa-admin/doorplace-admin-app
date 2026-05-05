@@ -171,7 +171,7 @@ let clientTotalPages = 1;
       allClients.push(...clients);
 
       clientTotalPages = meta?.pages || 1;
-      console.log(`[${rid}] 📄 client page ${page}/${totalPages}`);
+      console.log(`[${rid}] 📄 client page ${clientPage}/${clientTotalPages}`);
 
       clientPage++;
     }

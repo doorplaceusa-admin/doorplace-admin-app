@@ -305,14 +305,14 @@ async function updateLeadStatus(
       return (
         <div
           key={l.id}
-          className="border rounded-xl p-3 bg-white space-y-2 hover:shadow-md transition"
+          className="border rounded-xl p-3 bg-white space-y-2 hover:shadow-md transition overflow-hidden"
         >
           <div className="flex justify-between items-start">
             <div>
              <div className="font-semibold text-sm">
   {l.first_name} {l.last_name}
 </div>
-<div className="text-[11px] text-gray-500 truncate max-w-45">
+<div className="text-[11px] text-gray-500 wrap-break-word w-full">
   {l.email}
 </div>
             </div>
@@ -365,7 +365,7 @@ async function updateLeadStatus(
   }
   target="_blank"
   rel="noopener noreferrer"
-  className="bg-gray-100 px-2 py-0.75 rounded text-[10px] text-blue-600 wrap-break-word block max-w-full"
+  className="bg-gray-100 px-2 py-1 rounded text-[10px] text-blue-600 wrap-break-word whitespace-normal block w-full overflow-hidden"
 >
   {(() => {
   try {
@@ -694,7 +694,7 @@ if (v === "delete") deleteLead(l);
                   <span className="font-semibold text-gray-700">
                     {key.replaceAll("_", " ")}:
                   </span>{" "}
-                  <span className="text-black wrap-break-word">
+                  <span className="text-black wrap-break-word whitespace-pre-wrap">
                     {typeof value === "object"
                       ? JSON.stringify(value)
                       : String(value)}

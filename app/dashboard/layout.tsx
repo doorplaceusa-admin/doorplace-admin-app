@@ -73,8 +73,114 @@ const [aiAnswer, setAiAnswer] = useState("");
 const [aiLoading, setAiLoading] = useState(false);
 const aiTextareaRef = useRef<HTMLTextAreaElement>(null);
 const [customerPanel, setCustomerPanel] = useState<any>(null);
+const [globalSearch, setGlobalSearch] = useState("");
 
+async function runSearch() {
+  const raw = globalSearch.trim();
 
+  if (!raw) {
+    setCustomerPanel(null);
+    return;
+  }
+
+  const q = raw.toLowerCase();
+  const clean = raw.replace(/\D/g, "");
+
+  // 🔥 detect phone search earlier (more flexible)
+  const isPhoneSearch = clean.length >= 3;
+
+  let leadFilters: string[] = [];
+  let partnerFilters: string[] = [];
+  let invoiceFilters: string[] = [];
+
+  // =========================
+  // 🔍 PHONE SEARCH (PRIORITY)
+  // =========================
+  if (isPhoneSearch) {
+    leadFilters = [
+      `phone_clean.ilike.%${clean}%`
+    ];
+
+    partnerFilters = [
+      `phone_clean.ilike.%${clean}%`
+    ];
+
+    invoiceFilters = [
+      `phone_clean.ilike.%${clean}%`
+    ];
+  }
+
+  // =========================
+  // 🔍 TEXT SEARCH
+  // =========================
+  else {
+    leadFilters = [
+      `email.ilike.%${q}%`,
+      `first_name.ilike.%${q}%`,
+      `last_name.ilike.%${q}%`,
+      `lead_id.ilike.%${q}%`,
+    ];
+
+    partnerFilters = [
+      `email.ilike.%${q}%`,
+      `email_address.ilike.%${q}%`,
+      `first_name.ilike.%${q}%`,
+      `last_name.ilike.%${q}%`,
+      `partner_id.ilike.%${q}%`,
+    ];
+
+    invoiceFilters = [
+      `email.ilike.%${q}%`,
+      `customer_name.ilike.%${q}%`,
+      `invoice_number.ilike.%${q}%`,
+    ];
+  }
+
+  // =========================
+  // 🔍 QUERIES
+  // =========================
+
+  const { data: leads, error: leadsError } = await supabase
+    .from("leads")
+    .select("*")
+    .or(leadFilters.join(","))
+    .limit(10);
+
+  const { data: partners, error: partnersError } = await supabase
+    .from("partners")
+    .select("*")
+    .or(partnerFilters.join(","))
+    .limit(10);
+
+  const { data: invoices, error: invoicesError } = await supabase
+    .from("invoices")
+    .select("*")
+    .or(invoiceFilters.join(","))
+    .limit(10);
+
+  console.log("SEARCH RESULTS:", {
+    raw,
+    clean,
+    isPhoneSearch,
+    leads,
+    partners,
+    invoices,
+    leadsError,
+    partnersError,
+    invoicesError,
+  });
+
+  // =========================
+  // 🔥 PANEL (clean phone display)
+  // =========================
+
+  setCustomerPanel({
+    phone: clean || raw,
+    leads: leads || [],
+    partners: partners || [],
+    invoices: invoices || [],
+  });
+}
 
 const [aiTone, setAiTone] = useState<
   "neutral" | "direct" | "technical" | "sales"
@@ -278,6 +384,7 @@ useEffect(() => {
 
 
 
+
 useEffect(() => {
   if (open) {
     loadNotifications();
@@ -440,7 +547,27 @@ async function askAdminAI() {
             )}
           </div>
 
-          <span className="font-semibold">Admin Dashboard</span>
+          <div className="flex items-center gap-2 w-full max-w-md mx-4">
+  <input
+    placeholder="Search phone, name, email, ID..."
+    className="border px-3 py-1.5 text-sm rounded w-full"
+    value={globalSearch}
+    onChange={(e) => setGlobalSearch(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        runSearch();
+      }
+    }}
+  />
+
+  <button
+    onClick={runSearch}
+    className="p-2 bg-black text-white rounded flex items-center justify-center"
+  >
+    🔍
+  </button>
+</div>
 
 <button
   onClick={() => setAiOpen(true)}

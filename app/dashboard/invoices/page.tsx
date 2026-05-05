@@ -90,24 +90,48 @@ const highlightId = searchParams.get("id");
   }, [sort]);
 
 useEffect(() => {
-  if (!highlightId || !rows.length) return;
+  if (!highlightId) return;
 
-  const found = rows.find(
-    (i) => String(i.invoiceid) === String(highlightId)
-  );
+  async function openInvoice() {
+    // 🔥 try local first
+    const local = rows.find(
+      (i) => String(i.invoiceid) === String(highlightId)
+    );
 
-  if (found) {
-    setViewItem(found); // 🔥 AUTO OPENS INVOICE
+    if (local) {
+      setViewItem(local);
 
-    // 🔥 ALSO LOAD LINE ITEMS (IMPORTANT)
-    supabase
-      .from("invoice_line_items")
+      const { data } = await supabase
+        .from("invoice_line_items")
+        .select("*")
+        .eq("invoice_id", local.invoiceid);
+
+      setLineItems(data || []);
+      return;
+    }
+
+    // 🔥 fallback if not loaded yet
+    const { data } = await supabase
+      .from("invoices")
       .select("*")
-      .eq("invoice_id", found.invoiceid)
-      .then(({ data }) => {
-        setLineItems(data || []);
-      });
+      .eq("invoiceid", highlightId)
+      .single();
+
+    if (data) {
+      setViewItem(data);
+
+      const { data: items } = await supabase
+        .from("invoice_line_items")
+        .select("*")
+        .eq("invoice_id", data.invoiceid);
+
+      setLineItems(items || []);
+    } else {
+      console.log("❌ Invoice not found:", highlightId);
+    }
   }
+
+  openInvoice();
 }, [highlightId, rows]);
 
 

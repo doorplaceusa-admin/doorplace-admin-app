@@ -86,15 +86,16 @@ async function runSearch() {
   const q = raw.toLowerCase();
   const clean = raw.replace(/\D/g, "");
 
-  // 🔥 detect phone search earlier (more flexible)
+  // 🔥 detect types
   const isPhoneSearch = clean.length >= 3;
+  const isEmailSearch = raw.includes("@");
 
   let leadFilters: string[] = [];
   let partnerFilters: string[] = [];
   let invoiceFilters: string[] = [];
 
   // =========================
-  // 🔍 PHONE SEARCH (PRIORITY)
+  // 🔍 PHONE SEARCH
   // =========================
   if (isPhoneSearch) {
     leadFilters = [
@@ -111,26 +112,39 @@ async function runSearch() {
   }
 
   // =========================
+  // 🔍 EMAIL SEARCH
+  // =========================
+  else if (isEmailSearch) {
+    leadFilters = [
+      `email.ilike.%${q}%`
+    ];
+
+    partnerFilters = [
+      `email_address.ilike.%${q}%`
+    ];
+
+    invoiceFilters = [
+      `email.ilike.%${q}%`
+    ];
+  }
+
+  // =========================
   // 🔍 TEXT SEARCH
   // =========================
   else {
     leadFilters = [
-      `email.ilike.%${q}%`,
       `first_name.ilike.%${q}%`,
       `last_name.ilike.%${q}%`,
       `lead_id.ilike.%${q}%`,
     ];
 
     partnerFilters = [
-      `email.ilike.%${q}%`,
-      `email_address.ilike.%${q}%`,
       `first_name.ilike.%${q}%`,
       `last_name.ilike.%${q}%`,
       `partner_id.ilike.%${q}%`,
     ];
 
     invoiceFilters = [
-      `email.ilike.%${q}%`,
       `customer_name.ilike.%${q}%`,
       `invoice_number.ilike.%${q}%`,
     ];
@@ -162,6 +176,7 @@ async function runSearch() {
     raw,
     clean,
     isPhoneSearch,
+    isEmailSearch,
     leads,
     partners,
     invoices,
@@ -171,11 +186,13 @@ async function runSearch() {
   });
 
   // =========================
-  // 🔥 PANEL (clean phone display)
+  // 🔥 PANEL (FIXED DISPLAY)
   // =========================
 
   setCustomerPanel({
-    phone: clean || raw,
+    phone: isPhoneSearch ? clean : null,
+    email: isEmailSearch ? raw : null,
+    query: !isPhoneSearch && !isEmailSearch ? raw : null,
     leads: leads || [],
     partners: partners || [],
     invoices: invoices || [],
@@ -870,11 +887,26 @@ if (n.entity_type === "partner" && n.entity_id) {
 
       <div className="p-4 space-y-6">
 
-        {/* PHONE */}
-        <div>
-          <h3 className="font-bold text-sm text-gray-500">Phone</h3>
-          <p className="text-base">{customerPanel.phone}</p>
-        </div>
+       {customerPanel.phone && (
+  <div>
+    <h3 className="font-bold text-sm text-gray-500">Phone</h3>
+    <p className="text-base">{customerPanel.phone}</p>
+  </div>
+)}
+
+{customerPanel.email && (
+  <div>
+    <h3 className="font-bold text-sm text-gray-500">Email</h3>
+    <p className="text-base">{customerPanel.email}</p>
+  </div>
+)}
+
+{customerPanel.query && (
+  <div>
+    <h3 className="font-bold text-sm text-gray-500">Search</h3>
+    <p className="text-base">{customerPanel.query}</p>
+  </div>
+)}
 
         {/* LEADS */}
         <div>
@@ -883,7 +915,14 @@ if (n.entity_type === "partner" && n.entity_id) {
             <p className="text-sm text-gray-500">No leads found</p>
           )}
           {customerPanel.leads?.map((l: any) => (
-            <div key={l.id} className="border p-3 rounded mb-2">
+  <div
+    key={l.id}
+    onClick={() => {
+      router.push(`/dashboard/leads?id=${l.id}`);
+      setCustomerPanel(null);
+    }}
+    className="border p-3 rounded mb-2 cursor-pointer hover:bg-gray-50"
+  >
               <p className="font-medium">
                 {l.name || `${l.first_name || ""} ${l.last_name || ""}`}
               </p>
@@ -899,7 +938,14 @@ if (n.entity_type === "partner" && n.entity_id) {
             <p className="text-sm text-gray-500">No partners found</p>
           )}
           {customerPanel.partners?.map((p: any) => (
-            <div key={p.id} className="border p-3 rounded mb-2">
+  <div
+    key={p.id}
+    onClick={() => {
+      router.push(`/dashboard/partners?id=${p.id}`);
+      setCustomerPanel(null);
+    }}
+    className="border p-3 rounded mb-2 cursor-pointer hover:bg-gray-50"
+  >
               <p className="font-medium">
                 {p.first_name} {p.last_name}
               </p>
@@ -917,7 +963,14 @@ if (n.entity_type === "partner" && n.entity_id) {
             <p className="text-sm text-gray-500">No invoices found</p>
           )}
           {customerPanel.invoices?.map((i: any) => (
-            <div key={i.id} className="border p-3 rounded mb-2">
+  <div
+    key={i.invoiceid}
+    onClick={() => {
+      router.push(`/dashboard/invoices?id=${i.invoiceid}`);
+      setCustomerPanel(null);
+    }}
+    className="border p-3 rounded mb-2 cursor-pointer hover:bg-gray-50"
+  >
               <p className="font-medium">
                 Invoice #{i.invoice_number}
               </p>

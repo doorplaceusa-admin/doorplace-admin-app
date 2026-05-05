@@ -97,16 +97,39 @@ const highlightId = searchParams.get("id");
 
 // 🔥 ADD THIS RIGHT HERE
 useEffect(() => {
-  if (!highlightId || !leads.length) return;
+  if (!highlightId) return;
 
-  const found = leads.find(
-    (l) => String(l.id) === String(highlightId)
-  );
+  async function openLead() {
+    // 🔍 Try finding in already loaded leads
+    if (leads && leads.length > 0) {
+      const found = leads.find(
+        (l) => String(l.id) === String(highlightId)
+      );
 
-  if (found) {
-    setViewLead(found); // 🔥 THIS OPENS THE PERSON
+      if (found) {
+        setViewLead(found);
+        return;
+      }
+    }
+
+    // 🔥 Fallback: fetch directly from DB
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("id", highlightId)
+      .single();
+
+    if (data) {
+      setViewLead(data);
+    } else {
+      console.log("❌ Lead not found:", highlightId, error);
+    }
   }
+
+  openLead();
 }, [highlightId, leads]);
+
+
   /* ===============================
      FILTER
   ================================ */

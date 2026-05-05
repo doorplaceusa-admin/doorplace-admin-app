@@ -94,7 +94,7 @@ export async function GET() {
 
     const ACCOUNT_ID = process.env.FRESHBOOKS_ACCOUNT_ID!;
     const invoiceUrl =
-      `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/invoices/invoices?per_page=500`;
+      `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/invoices/invoices?per_page=100`;
 
     async function fetchInvoices(token: string) {
       return fetch(invoiceUrl, {
@@ -114,21 +114,48 @@ export async function GET() {
       fbRes = await fetchInvoices(accessToken);
     }
 
-    const json = await fbRes.json();
-    const invoicesArr = json?.response?.result?.invoices || [];
+    let allInvoices: any[] = [];
+let page = 1;
+let totalPages = 1;
 
-    console.log(`[${rid}] 📦 invoices fetched:`, invoicesArr.length);
+while (page <= totalPages) {
+  console.log(`[${rid}] 📄 invoice page ${page}/${totalPages}`);
+
+  const res = await fetch(
+    `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/invoices/invoices?page=${page}&per_page=100`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    }
+  );
+
+  const data = await res.json();
+
+  const invoicesPage = data?.response?.result?.invoices || [];
+  const meta = data?.response?.meta;
+
+  allInvoices.push(...invoicesPage);
+
+  totalPages = meta?.pages || 1;
+
+  page++;
+}
+
+console.log(`[${rid}] 📦 TOTAL invoices fetched:`, allInvoices.length);
+
 
     // ============================
     // 🔥 FETCH ALL CLIENTS (PAGINATED)
     // ============================
     let allClients: any[] = [];
-    let page = 1;
-    let totalPages = 1;
-
-    while (page <= totalPages) {
+let clientPage = 1;
+let clientTotalPages = 1;
+    while (clientPage <= clientTotalPages) {
       const res = await fetch(
-        `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/users/clients?page=${page}&per_page=100`,
+        `https://api.freshbooks.com/accounting/account/${ACCOUNT_ID}/users/clients?page=${clientPage}&per_page=100`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -143,10 +170,10 @@ export async function GET() {
 
       allClients.push(...clients);
 
-      totalPages = meta?.pages || 1;
+      clientTotalPages = meta?.pages || 1;
       console.log(`[${rid}] 📄 client page ${page}/${totalPages}`);
 
-      page++;
+      clientPage++;
     }
 
     console.log(`[${rid}] 👥 TOTAL CLIENTS:`, allClients.length);
@@ -160,7 +187,7 @@ export async function GET() {
     // ============================
     const invoices = [];
 
-    for (const inv of invoicesArr) {
+    for (const inv of allInvoices) {
       let client: any = clientMap.get(String(inv.customerid));
 
       // 🔥 fallback fetch for missing clients

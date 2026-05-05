@@ -1,531 +1,745 @@
+{% comment %}
+TRADEPILOT — UNIVERSAL CONTACT / QUOTE / PARTNER SWING ORDER FORM
+Doorplace USA
+• Single advanced form
+• Conditional logic (frontend)
+• Partner-only gated section (Shopify customer tags)
+• Auto-pulls partner ID + name
+• Multiple submission paths
+• Separate thank-you routing handled by backend
+{% endcomment %}
+
 
 <style>
-/* Modernizing the base font for a tech-product feel */
-.dp-slide-page {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #222;
-    line-height: 1.6;
+
+.contractor-box {
+  margin-top: 20px;
+  padding: 16px;
+  border-left: 4px solid #b80d0d;
+  background: #f8f8f8;
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.dp-slide-page * {box-sizing:border-box;}
-
-.dp-slide-hero{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:40px;
-    align-items:center;
-    margin-bottom:60px;
+.contractor-box p {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-.dp-slide-title{
-    font-size:42px;
-    line-height: 1.1;
-    font-weight: 800;
-    color:#111;
-    margin-bottom:15px;
+.contractor-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  width: 100%;
 }
 
-.dp-slide-sub{
-    font-size:20px;
-    font-weight: 600;
-    color:#b80d0d;
-    margin-bottom:20px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.contractor-check input {
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
-.dp-slide-lead{
-    font-size:18px;
-    max-width:640px;
-    margin-bottom: 15px;
-    color: #444;
+.contractor-check span {
+  flex: 1;
+  line-height: 1.5;
 }
 
-.dp-media-box {
-    border: 1px solid #e5e5e5;
-    border-radius: 12px;
-    background: #fdfdfd;
-    padding: 12px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+.confirm-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 15px;
 }
 
-.dp-media-box img{
-    width:100%;
-    border-radius:8px;
-    display: block;
+.confirm-check input {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
 }
 
-.dp-section{
-    margin-top:60px;
+.tradepilot-form-wrapper {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 32px 28px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
 }
 
-.dp-section h2{
-    font-size:32px;
-    margin-bottom:20px;
-    color:#111;
-    font-weight: 700;
+.tradepilot-form-wrapper h2 {
+  color: #b80d0d;
+  text-align: center;
+  margin-bottom: 10px;
 }
 
-.dp-section h3{
-    font-size:22px;
-    color:#b80d0d;
-    margin-top:0;
-    margin-bottom: 12px;
+.tradepilot-form-wrapper p {
+  text-align: center;
+  margin-bottom: 28px;
 }
 
-.dp-grid{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap:24px;
+.tradepilot-form label {
+  font-weight: 600;
+  display: block;
+  margin: 18px 0 6px;
 }
 
-.dp-card{
-    border:1px solid #eee;
-    border-radius:12px;
-    padding:24px;
-    background:#fff;
-    transition: transform 0.2s ease;
+.tradepilot-form input,
+.tradepilot-form select,
+.tradepilot-form textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 15px;
 }
 
-.dp-card:hover {
-    border-color: #ddd;
+.tradepilot-form textarea {
+  min-height: 120px;
 }
 
-.dp-bullets{
-    padding-left:22px;
-    font-size:17px;
+.tradepilot-submit {
+  margin-top: 34px;
+  background: #b80d0d;
+  color: #fff;
+  border: none;
+  width: 100%;
+  padding: 16px;
+  font-size: 17px;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
-.dp-bullets li{
-    margin-bottom:12px;
+.tradepilot-submit:hover {
+  background: #991010;
 }
 
-.dp-spec{
-    width:100%;
-    border-collapse:collapse;
-    margin-top: 20px;
+.hidden {
+  display: none;
 }
 
-.dp-spec td{
-    border:1px solid #eee;
-    padding:16px;
-    font-size:16px;
+.section-divider {
+  margin: 40px 0 20px;
+  border-top: 1px solid #eee;
 }
 
-.dp-spec td:first-child{
-    background:#f9f9f9;
-    font-weight: 600;
-    width:35%;
+.notice {
+  background: #f8f8f8;
+  padding: 12px;
+  border-left: 4px solid #b80d0d;
+  font-size: 14px;
 }
 
-.dp-gallery{
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    gap:15px;
-    margin-top:25px;
+.readonly {
+  background: #f3f3f3;
 }
 
-.dp-gallery img{
-    width:100%;
-    border-radius:10px;
-    height: 250px;
-    object-fit: cover;
-}
-
-.pro-highlight{
-    border:2px solid #b80d0d;
-    background: #fffafa;
-    position: relative;
-}
-
-.btn-main {
-    display:inline-block;
-    padding:16px 32px;
-    background:#b80d0d;
-    color:#fff;
-    border-radius:8px;
-    font-size:18px;
-    font-weight: bold;
-    text-decoration:none;
-    transition: background 0.3s ease;
-}
-
-.btn-main:hover {
-    background: #960a0a;
-}
-
-@media(max-width:900px){
-    .dp-slide-hero,
-    .dp-grid,
-    .dp-gallery{
-        grid-template-columns:1fr;
-    }
-    .dp-slide-title { font-size: 32px; }
-    .dp-gallery img { height: auto; }
-}
 </style>
 
-<div style="max-width:1200px; margin:0 auto; padding:40px 20px; background:#fff;">
 
-<div class="dp-slide-page">
+<div class="tradepilot-form-wrapper">
 
-    <div class="dp-slide-hero">
-        <div>
-            <div class="dp-slide-title">Turn Your Barn Door Into an Automatic Sliding Door — No Track Replacement Needed</div>
-            <div class="dp-slide-sub">No pushing. No pulling. Just press a button and your door moves.</div>
-            
-            <p class="dp-slide-lead">
-                Tired of sliding your barn door open and closed every time you use it?
-            </p>
-            <p class="dp-slide-lead">
-                The SlideDrive™ Automatic Barn Door System upgrades your existing door into a fully automatic system — without replacing your track or hardware. It installs at the floor guide and uses a precision drive wheel to move your door smoothly, quietly, and consistently.
-            </p>
-            <p class="dp-slide-lead">
-                We build each unit based on your exact door size and setup, so you get a clean, custom solution that works right out of the box.
-            </p>
-            <p class="dp-slide-lead" style="margin-top:14px; font-weight:bold; color:#b80d0d;">
-                👉 Currently building and shipping units — limited build slots available.
-            </p>
+  <h2>Request a Quote</h2>
 
-            <div style="margin-top:30px;">
-                <a href="/pages/contact" class="btn-main">Request a Custom Setup</a>
-                <p style="margin-top:15px; font-size:15px; color:#666;">
-                    ✔ Works with your existing track    
-                    ✔ Built for your exact door    
-                    ✔ Fast response within 24 hours
-                </p>
-            </div>
-        </div>
+  <p style="font-size:14px; color:#555; margin-top:5px;">
+  Tell us what you're looking for and we’ll review your request and reach out with the best next steps.
+</p>
+  <form
+  class="tradepilot-form"
+  method="POST"
+  enctype="multipart/form-data"
+>
 
-        <div>
-            <div class="dp-media-box">
-                <div style="font-size:18px; font-weight:bold; margin-bottom:12px; text-align:center;">
-                    Watch SlideDrive™ Turn a Standard Barn Door Into a Fully Automatic System
-                </div>
-                <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:8px;">
-                    <iframe src="https://www.youtube.com/embed/RGSK62chHlY?rel=0&amp;modestbranding=1&amp;playsinline=1" title="SlideDrive Automatic Barn Door Demo" frameborder="0" allow="encrypted-media" allowfullscreen style="position:absolute; top:0; left:0; width:100%; height:100%;">
-                    </iframe>
-                </div>
-            </div>
-            <div class="dp-media-box"><img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/7E4EC077-322F-41CA-8E84-F1D8C0D987E3.png?v=1773622412" alt="SlideDrive System"></div>
-            <div class="dp-media-box"><img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/3DC88EAA-266E-44FD-B550-58764F07A01F.png?v=1773622605" alt="SlideDrive Close-up"></div>
-        </div>
-    </div>
 
-    <div class="dp-section" style="background:#fffafa; padding:40px; border-radius:12px; border:1px solid #f1d0d0;">
-        <h2 style="margin-top:0;">Get a SlideDrive™ System Built for Your Door</h2>
-        <p style="font-size:19px;">
-            We’re currently building and shipping automatic barn door systems based on each customer’s exact door size and setup.
-        </p>
-        <ul class="dp-bullets">
-            <li>Custom-built for your door</li>
-            <li>Works with your existing track</li>
-            <li>Smooth, quiet automatic operation</li>
-            <li>Fast turnaround on current builds</li>
-        </ul>
-        <p style="font-size:18px; font-weight:bold; margin-top:20px;">
-            👉 Send us a quick message and we’ll recommend the right setup for your door.
-        </p>
-        <a href="/pages/contact" class="btn-main" style="margin-top:15px;">Request Your Custom Setup</a>
-    </div>
+    <!-- ============================
+         PARTNER DATA (AUTO)
+    ============================ -->
+    <input type="hidden" name="partner_id" id="partner_id">
+    <input type="hidden" name="submission_type" id="submission_type">
+    <input type="hidden" name="quote_type" id="quote_type">
+    <input type="hidden" name="is_partner_order" id="is_partner_order">
+    <input type="hidden" name="entry_page" id="entry_page">
+    <input type="hidden" name="page_path" id="page_path">
+    <input type="hidden" name="routing_type" id="routing_type">
 
-    <div class="dp-section">
-        <h2>What Is an Automatic Barn Door System?</h2>
-        <p>An automatic barn door system, also known as a motorized barn door opener or electric sliding barn door system, allows your door to open and close automatically using a compact drive system. Instead of manually sliding your door, the system uses a powered motor to move the door smoothly along its existing track.</p>
-        <p>SlideDrive™ is designed to upgrade traditional sliding barn doors into fully automated systems without changing the original hardware, making it one of the most efficient retrofit solutions available.</p>
-    </div>
-
-    <div class="dp-section">
-        <h2>Product Overview</h2>
-        <p>SlideDrive™ is a floor-mounted automatic barn door opener designed to work directly at the existing floor guide location. Instead of replacing your track system or installing bulky overhead motors, the unit uses a powered friction drive wheel to move the door smoothly along its current rail.</p>
-        <p>Because the drive system stays stationary while the door moves past it, SlideDrive™ maintains a compact footprint, clean installation, and consistent performance across a wide range of door sizes and weights.</p>
-        <p>For new installs, SlideDrive™ can be paired with a compatible floor guide system. For existing setups, it integrates with many standard barn door guides — allowing you to upgrade your door to a fully automated system without major modifications.</p>
-        <div style="margin-top:20px; padding:18px; border-left:4px solid #b80d0d; background:#fffafa; border-radius:6px;">
-  <p style="margin:0 0 10px 0; font-weight:bold;">
-    Interior vs Exterior Systems
-  </p>
-
-  <p style="margin:0 0 10px 0;">
-    The system shown on this page represents a standard interior configuration. For exterior applications such as shutters or outdoor sliding systems, each SlideDrive™ unit is custom-built with a modified design to handle weather exposure, heavier door construction, and environmental conditions.
-  </p>
-
-  <p style="margin:0 0 10px 0;">
-    A standard interior unit (with control panel inside the enclosure) is approximately:
-    <strong>7.5” (W) × 5.5” (H) × 5.5” (D)</strong>
-  </p>
-
-  <p style="margin:0;">
-    Depending on the setup, the control panel can either be mounted within the unit enclosure or installed separately (such as inside the home), which can reduce the size of the exterior drive unit and allow for a cleaner installation.
-  </p>
-</div>
-        <div class="dp-gallery">
-            <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/B446062D-A83A-41ED-A372-4F18B97A848C.png?v=1773622604">
-            <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/54409CA0-875C-4F48-BC4A-EBE57E863213.png?v=1773622416">
-            <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/55B86FBC-0D1B-431F-BFD6-73E21C117D1F.png?v=1773622602">
-        </div>
-    </div>
-
-    <div class="dp-section">
-        <h2>How SlideDrive™ Works</h2>
-        <div class="dp-grid">
-            <div class="dp-card">
-                <h3>Guide Mounted Drive System</h3>
-                <p>SlideDrive™ connects directly to the barn door floor guide assembly at the base of the doorway, keeping the system compact and aligned with the door’s natural movement path.</p>
-            </div>
-            <div class="dp-card">
-                <h3>Dual Drive System</h3>
-                <p>Depending on the application, SlideDrive™ uses either a precision drive wheel or a rack and pinion system. The wheel system is ideal for standard residential doors, while the rack and pinion setup provides stronger, more controlled movement for larger or heavier doors.</p>
-            </div>
-            <div class="dp-card">
-                <h3>Adjustable Drive Control</h3>
-                <p>The system allows installers to fine-tune pressure and movement based on door weight, size, and resistance — ensuring smooth, consistent operation across different setups.</p>
-            </div>
-            <div class="dp-card">
-                <h3>Stop &amp; Position Control</h3>
-                <p>Adjustable stop triggers ensure the door opens and closes to the correct position every time, preventing over-travel and maintaining alignment.</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="dp-section">
-        <h2>Select Your SlideDrive™ System</h2>
-        <p style="font-size:18px; max-width:800px; margin-bottom: 25px;">
-            SlideDrive™ is available in three system levels depending on your door size, weight, and application.
-            <span style="display:block; font-size:16px; color:#666; margin-top:10px;">
-                Most residential doors use the Home Series. For heavier doors or long-term performance, the Pro Series is the most common upgrade.
-            </span>
-        </p>
-
-        <div class="dp-grid">
-            <div class="dp-card">
-                <h3>SlideDrive™ Home Series</h3>
-                <p>Designed for standard residential barn doors. Smooth, quiet operation ideal for bedrooms, closets, and everyday interior spaces.</p>
-                <ul class="dp-bullets">
-                    <li>Best for standard interior doors</li>
-                    <li>Wheel-based drive system</li>
-                    <li>Quiet and compact performance</li>
-                    <li>Ideal for light to mid-weight doors</li>
-                </ul>
-            </div>
-
-            <div class="dp-card pro-highlight">
-                <div style="font-size:12px; color:#b80d0d; font-weight:bold; margin-bottom:8px; text-transform:uppercase;">Most Common Upgrade</div>
-                <h3>SlideDrive™ Pro Series</h3>
-                <p>Built for heavier residential doors and larger openings. Increased torque delivers stronger, more consistent movement and control.</p>
-                <ul class="dp-bullets">
-                    <li>Best for larger or heavier doors</li>
-                    <li>Rack and pinion drive system</li>
-                    <li>Higher torque and improved control</li>
-                    <li>Built for frequent use and long-term reliability</li>
-                </ul>
-            </div>
-
-            <div class="dp-card" style="grid-column: span 2;">
-                <h3>SlideDrive™ Max Series</h3>
-                <p>High-torque system engineered for oversized, heavy, or custom doors. Built for maximum strength, precision, and long-term performance.</p>
-                <ul class="dp-bullets">
-                    <li>Best for oversized or custom doors</li>
-                    <li>Heavy-duty rack and pinion system</li>
-                    <li>Maximum power and control</li>
-                    <li>Ideal for large residential or commercial applications</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <div class="dp-section">
-        <h2>Where Automatic Barn Doors Are Used</h2>
-        <ul class="dp-bullets">
-            <li>Bedroom sliding doors</li>
-            <li>Closet and storage doors</li>
-            <li>Office and workspace doors</li>
-            <li>Pantry and kitchen access doors</li>
-            <li>Laundry room entrances</li>
-            <li>Accessibility solutions for elderly or limited mobility</li>
-        </ul>
-    </div>
-
-    <div class="dp-section">
-        <h2>Core Features</h2>
-        <ul class="dp-bullets">
-            <li>Automatic open and close door operation</li>
-            <li>Guide-mounted system that installs at the floor guide location</li>
-            <li>Compatible with most existing barn door rail systems</li>
-            <li>Dual drive options: wheel system or rack and pinion system</li>
-            <li>Adjustable drive control for different door weights and sizes</li>
-            <li>Compact, low-profile drive system design</li>
-            <li>Travel stop triggers to prevent over-travel</li>
-            <li>12V–24V power system depending on configuration</li>
-            <li>Optional rechargeable battery configuration</li>
-        </ul>
-        <div class="dp-gallery">
-            <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/526F0721-017D-4644-8458-8EF4C555A16B.png?v=1773622600">
-            <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/851317B9-D5E1-43C4-971F-5B416494747F.png?v=1773622413">
-            <img src="https://cdn.shopify.com/s/files/1/0549/2896/5713/files/DCAB43EF-B031-4E4F-88F8-CC5D4AE067B0_6ea51a15-208c-4a1b-86f4-029c1483757c.png?v=1773622415">
-        </div>
-    </div>
-
-    <div class="dp-section">
-        <h2>How Much Does an Automatic Barn Door System Cost?</h2>
-        <p>The cost of an automatic barn door system depends on several factors including door size, weight, and the type of drive system required. Standard residential doors typically use a compact wheel-driven system, while heavier or oversized doors may require a rack and pinion configuration for added strength and control.</p>
-        <p>Additional features such as smart controls, motion activation, and battery operation can also affect the final setup. Each SlideDrive™ system is configured based on your exact door and application to ensure the best performance.</p>
-    </div>
-
-    <div class="dp-section">
-        <h2>Optional Upgrades</h2>
-        <div class="dp-grid">
-            <div class="dp-card">
-                <h3>Smart Control Integration</h3>
-                <p>Connect SlideDrive™ to a compatible smart switch for app-based and voice control through platforms like Alexa or Google Home. This allows you to open or close your door using your phone or voice commands.</p>
-            </div>
-            <div class="dp-card">
-                <h3>Key Fob Remote</h3>
-                <p>Compact wireless remote allows you to operate the door from anywhere in the room with quick, responsive control.</p>
-            </div>
-            <div class="dp-card">
-                <h3>Motion Activation</h3>
-                <p>Automatically opens the door when motion is detected near the entryway, ideal for hands-free access and convenience.</p>
-            </div>
-            <div class="dp-card">
-                <h3>Wall-Mounted Control</h3>
-                <p>Install a clean, low-profile push button on either side of the doorway for simple open and close operation.</p>
-            </div>
-            <div class="dp-card">
-                <h3>Smart Home Integration</h3>
-                <p>Connect SlideDrive™ to Alexa or Google Home for voice-controlled operation and smart home automation.</p>
-            </div>
-            <div class="dp-card">
-                <h3>Rechargeable Battery System</h3>
-                <p>Operate the system without a nearby outlet using a rechargeable battery setup, ideal for flexible installations.</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="dp-section">
-        <h2>Can You Install This on an Existing Barn Door?</h2>
-        <p>Yes. SlideDrive™ is specifically designed as a retrofit system, meaning it works with most existing barn door setups without replacing the track. The system mounts at the floor guide location and integrates with your current door, making installation faster and less invasive than traditional automatic door systems.</p>
-    </div>
-
-    <div class="dp-section">
-        <h2>Ideal Applications</h2>
-        <ul class="dp-bullets">
-            <li>Interior sliding barn doors</li>
-            <li>Pantry and kitchen access doors</li>
-            <li>Laundry room entrances</li>
-            <li>Office and workspace sliding doors</li>
-            <li>Closet and storage doors</li>
-            <li>Accessibility and hands-free entry solutions</li>
-        </ul>
-    </div>
-
-    <div class="dp-section">
-        <h2>Specifications</h2>
-        <table class="dp-spec">
-            <tbody>
-                <tr>
-<td>Product Name</td>
-<td>SlideDrive™ Automatic Barn Door System</td>
-</tr>
-                <tr>
-<td>Brand</td>
-<td>Doorplace USA</td>
-</tr>
-                <tr>
-<td>Mounting Type</td>
-<td>Floor Guide Mounted Drive System</td>
-</tr>
-                <tr>
-<td>Drive System</td>
-<td>Wheel Drive or Rack &amp; Pinion (based on configuration)</td>
-</tr>
-                <tr>
-<td>Power</td>
-<td>12V–24V system depending on configuration</td>
-</tr>
-                <tr>
-<td>Optional Power</td>
-<td>Rechargeable Battery System</td>
-</tr>
-                <tr>
-<td>Controls</td>
-<td>Remote, Wall Control, Motion Activation, Smart Control Integration (optional)</td>
-</tr>
-                <tr>
-<td>Compatibility</td>
-<td>Works with most standard sliding barn door rail systems</td>
-</tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="dp-section">
-        <h2>What’s Included</h2>
-        <ul class="dp-bullets">
-            <li>SlideDrive™ drive unit</li>
-            <li>Adjustable mounting system</li>
-            <li>Drive mechanism (wheel or rack &amp; pinion depending on configuration)</li>
-            <li>Power adapter</li>
-            <li>Travel stop triggers</li>
-            <li>Installation hardware</li>
-            <li>Floor guide integration setup</li>
-        </ul>
-    </div>
-
-    <div class="dp-section">
-        <h2>Frequently Asked Questions</h2>
-        <h3>Does SlideDrive™ replace the top rail?</h3>
-        <p>No. SlideDrive™ is designed to work with your existing barn door rail system, so there’s no need to replace your track or hardware.</p>
-
-        <h3>Does it mount directly to the floor?</h3>
-        <p>The system integrates with the floor guide assembly at the base of the doorway, keeping the installation clean without requiring full floor mounting.</p>
-
-        <h3>Can it work with my current floor guide?</h3>
-        <p>In most cases, yes. SlideDrive™ is compatible with a wide range of standard floor guide configurations, and we can help confirm compatibility if needed.</p>
-
-        <h3>Can heavier or oversized doors be supported?</h3>
-        <p>Yes. SlideDrive™ offers multiple configurations, including rack and pinion drive systems and higher power setups designed for larger and heavier doors.</p>
-
-        <h3>Do I need to modify my existing door or track?</h3>
-        <p>No major modifications are required. The system is designed to integrate with most existing door setups, making upgrades simple and efficient.</p>
-
-        <h3>How do I know which system I need?</h3>
-        <p>We’ll help you choose the right configuration based on your door size, weight, and setup. Just send us a few details or photos, and we’ll guide you.</p>
-
-        <h3>Is this something I can install myself?</h3>
-        <p>Many customers can install SlideDrive™ with basic tools. We also provide guidance and can recommend installation options if needed.</p>
-    </div>
-
-    <div class="dp-section" style="text-align:center; background: #f9f9f9; padding: 40px; border-radius: 12px;">
-        <h2>Explore Automatic Barn Door Systems Near You</h2>
-        <p>We provide SlideDrive™ automatic barn door systems across the United States. Explore installations and options available in your area:</p>
-        <ul class="dp-bullets" style="display: inline-block; text-align: left; columns: 2; -webkit-columns: 2; -moz-columns: 2; gap: 40px;">
-            <li><a href="/pages/automatic-barn-door-atlanta-ga-1304000-ga">Atlanta, GA</a></li>
-            <li><a href="/pages/automatic-barn-door-los-angeles-ca-644000-ca">Los Angeles, CA</a></li>
-            <li><a href="/pages/automatic-barn-door-chicago-il-1714000-il">Chicago, IL</a></li>
-            <li><a href="/pages/automatic-barn-door-miami-fl-1245000-fl">Miami, FL</a></li>
-            <li><a href="/pages/automatic-barn-door-new-york-ny-3651000-ny">New York, NY</a></li>
-            <li><a href="/pages/automatic-barn-door-phoenix-az-455000-az">Phoenix, AZ</a></li>
-            <li><a href="/pages/automatic-barn-door-san-diego-ca-666000-ca">San Diego, CA</a></li>
-            <li><a href="/pages/automatic-barn-door-san-jose-ca-668000-ca">San Jose, CA</a></li>
-            <li><a href="/pages/automatic-barn-door-philadelphia-pa-4260000-pa">Philadelphia, PA</a></li>
-            <li><a href="/pages/automatic-barn-door-las-vegas-nv-3240000-nv">Las Vegas, NV</a></li>
-            <li><a href="/pages/automatic-barn-door-boston-ma-2507000-ma">Boston, MA</a></li>
-            <li><a href="/pages/automatic-barn-door-charlotte-nc-3712000-nc">Charlotte, NC</a></li>
-            <li><a href="/pages/automatic-barn-door-orlando-fl-1253000-fl">Orlando, FL</a></li>
-            <li><a href="/pages/automatic-barn-door-san-francisco-ca-667000-ca">San Francisco, CA</a></li>
-            <li><a href="/pages/automatic-barn-door-seattle-wa-5363000-wa">Seattle, WA</a></li>
-            <li><a href="/pages/automatic-barn-door-denver-co-820000-co">Denver, CO</a></li>
-        </ul>
-    </div>
-
-    <div class="dp-section" style="text-align:center; padding-bottom: 60px;">
-        <h2>Get a Custom SlideDrive™ Setup</h2>
-        <p style="font-size:20px; margin-bottom: 25px;">Tell us about your door and we’ll recommend the exact SlideDrive™ configuration that fits your space.</p>
-        <a href="/pages/contact" class="btn-main">Request a Quote</a>
-        <p style="margin-top:20px; font-size:15px; color:#666;">Fast response. No obligation. Built around your exact setup.</p>
-    </div>
+    <!-- ============================
+         ENTRY GATE
+    ============================ -->
   
+<label>What do you need help with? *</label>
+<select id="request_type">
+  <option value="">Select</option>
+  <option value="general">General Inquiry</option>
+  <option value="swing">Porch Swing</option>
+  <option value="door">Door</option>
+  <option value="auto_door">Automatic Sliding / Barn Door System</option>  <option value="other">Other</option>
+</select>
+
+<!-- ============================
+     SHARED CUSTOMER INFO (ONE TIME ONLY)
+     Used for: General, Quote, Partner Order
+============================ -->
+<div id="shared_customer_info" class="hidden">
+
+  <div class="section-divider"></div>
+
+  <label>First Name *</label>
+  <input name="first_name" id="shared_first_name">
+
+  <label>Last Name *</label>
+  <input name="last_name" id="shared_last_name">
+
+  <label>Email *</label>
+  <input type="email" name="email" id="shared_email">
+
+  <label>Phone *</label>
+  <input name="phone" id="shared_phone">
+
+  <label>Street Address *</label>
+  <input name="street_address" id="shared_street_address">
+
+  <label>City *</label>
+  <input name="city" id="shared_city">
+
+  <label>State *</label>
+  <select name="state" id="shared_state">
+  <option value="">Select State</option>
+  <option value="TX">Texas</option>
+  <option value="CA">California</option>
+  <option value="FL">Florida</option>
+  <option value="NY">New York</option>
+  <option value="IL">Illinois</option>
+  <option value="GA">Georgia</option>
+  <option value="NC">North Carolina</option>
+  <option value="OH">Ohio</option>
+  <option value="MI">Michigan</option>
+  <option value="PA">Pennsylvania</option>
+  <option value="AZ">Arizona</option>
+  <option value="TN">Tennessee</option>
+  <option value="IN">Indiana</option>
+  <option value="MO">Missouri</option>
+  <option value="MD">Maryland</option>
+  <option value="WI">Wisconsin</option>
+  <option value="CO">Colorado</option>
+  <option value="MN">Minnesota</option>
+  <option value="SC">South Carolina</option>
+  <option value="AL">Alabama</option>
+  <option value="LA">Louisiana</option>
+  <option value="KY">Kentucky</option>
+  <option value="OR">Oregon</option>
+  <option value="OK">Oklahoma</option>
+  <option value="CT">Connecticut</option>
+  <option value="UT">Utah</option>
+  <option value="IA">Iowa</option>
+  <option value="NV">Nevada</option>
+  <option value="AR">Arkansas</option>
+  <option value="MS">Mississippi</option>
+  <option value="KS">Kansas</option>
+  <option value="NM">New Mexico</option>
+  <option value="NE">Nebraska</option>
+  <option value="WV">West Virginia</option>
+  <option value="ID">Idaho</option>
+  <option value="HI">Hawaii</option>
+  <option value="NH">New Hampshire</option>
+  <option value="ME">Maine</option>
+  <option value="MT">Montana</option>
+  <option value="RI">Rhode Island</option>
+  <option value="DE">Delaware</option>
+  <option value="SD">South Dakota</option>
+  <option value="ND">North Dakota</option>
+  <option value="AK">Alaska</option>
+  <option value="VT">Vermont</option>
+  <option value="WY">Wyoming</option>
+</select>
+
+  <label>Zip Code *</label>
+  <input name="zip" id="shared_zip">
+
 </div>
+
+   <!-- ============================
+     GENERAL INQUIRY
+============================ -->
+<div id="general_section" class="hidden">
+
+
+  <label>Project Details</label>
+  <textarea name="project_details"></textarea>
+
+  <label>Upload Photos (optional)</label>
+  <input type="file" name="photos[]" multiple>
+
 </div>
+
+
+
+<!-- ============================
+     SWING / DOOR QUOTE (FIXED)
+============================ -->
+<div id="quote_section" class="hidden">
+
+  <div class="section-divider"></div>
+
+
+  <!-- SWING QUOTE -->
+  <div id="swing_quote_fields" class="hidden">
+    <label>Swing Size *</label>
+    <select name="swing_size">
+      <option value="">Select</option>
+      <option>Crib</option>
+      <option>Twin</option>
+      <option>Full</option>
+      <option>Custom</option>
+    </select>
+
+    <label>Porch Ceiling Height *</label>
+    <input name="porch_ceiling_height">
+
+    <label>Do you need installation? *</label>
+    <select name="installation_needed">
+      <option value="">Select</option>
+      <option>Yes</option>
+      <option>No</option>
+    </select>
+
+    <label>Hanging Method *</label>
+    <select name="hanging_method">
+      <option value="">Select</option>
+      <option>Rope</option>
+      <option>Chain</option>
+      <option>Not Sure</option>
+    </select>
+
+    <label>Upload Porch / Location Photos *</label>
+    <input type="file" name="photos[]" multiple>
+  </div>
+
+<div id="auto_door_fields" class="hidden">
+
+  <label>Door Width *</label>
+  <input name="auto_door_width">
+  <label>Door Height *</label>
+  <input name="auto_door_height">
+
+  <label>Interior or Exterior *</label>
+  <select name="auto_door_location">
+    <option value="">Select</option>
+    <option>Interior</option>
+    <option>Exterior</option>
+  </select>
+
+  <label>How many doors do you want to automate? (optional)</label>
+  <input name="auto_door_quantity">
+
+  <label>Upload Door Photos *</label>
+  <input type="file" name="auto_door_photos[]">
+
+</div>
+
+  <!-- DOOR QUOTE -->
+  <div id="door_quote_fields" class="hidden">
+    <label>Door Opening Width *</label>
+    <input name="door_width">
+
+    <label>Door Opening Height *</label>
+    <input name="door_height">
+
+    <label>Number of Doors *</label>
+    <select name="number_of_doors">
+      <option value="">Select</option>
+      <option>Single</option>
+      <option>Double</option>
+      <option>Other</option>
+    </select>
+
+    <label>Door Type *</label>
+    <select name="door_type">
+      <option value="">Select</option>
+      <option>Barn Door</option>
+      <option>Glass Door</option>
+      <option>French Door</option>
+      <option>Not Sure</option>
+      <option>Other</option>
+    </select>
+
+    <label>If Other, please specify</label>
+    <input name="door_type_other">
+
+    <label>Door Material *</label>
+    <select name="door_material">
+      <option value="">Select</option>
+      <option>Pine</option>
+      <option>Cedar</option>
+      <option>Oak</option>
+      <option>Other / Not Sure</option>
+    </select>
+
+    <label>If Other, please specify</label>
+    <input name="door_material_other">
+
+    <label>Finish Preference *</label>
+    <select name="finish_preference">
+      <option value="">Select</option>
+      <option>Stained</option>
+      <option>Unfinished</option>
+      <option>Paint-Grade Wood</option>
+      <option>Not Sure</option>
+    </select>
+
+    <label>Do you need installation? *</label>
+    <select name="door_installation_needed">
+      <option value="">Select</option>
+      <option>Yes</option>
+      <option>No</option>
+    </select>
+
+    <label>Installation Location *</label>
+    <select name="installation_location">
+      <option value="">Select</option>
+      <option>Interior</option>
+    </select>
+
+    <label>Upload Opening / Door Photos *</label>
+    <input type="file" name="photos[]" multiple>
+  </div>
+
+</div>
+
+
+
+ <!-- ============================
+     PARTNER SWING ORDER
+============================ -->
+<div id="partner_section" class="hidden">
+
+
+  <div class="section-divider"></div>
+
+  <!-- SWING DETAILS -->
+  <label>Swing Size *</label>
+  <select name="swing_size">
+    <option value="">Select</option>
+    <option>Crib</option>
+    <option>Twin</option>
+    <option>Full</option>
+    <option>Custom</option>
+  </select>
+
+  <label>Wood Type *</label>
+  <select name="wood_type">
+    <option value="">Select</option>
+    <option>Pine</option>
+    <option>Cedar</option>
+    <option>Other</option>
+  </select>
+
+  <label>Finish / Stain *</label>
+  <input name="finish">
+
+  <label>Hanging Method *</label>
+  <select name="hanging_method">
+    <option value="">Select</option>
+    <option>Rope</option>
+    <option>Chain</option>
+    <option>Stand</option>
+  </select>
+
+  <!-- PRICING -->
+  <label>Swing Price ($) *</label>
+  <input type="number" step="0.01" name="swing_price">
+
+  <label>Accessories Total ($)</label>
+  <input type="number" step="0.01" name="accessory_price">
+
+  <label>Installation Fee ($)</label>
+  <input type="number" step="0.01" name="installation_fee">
+
+  <label>Delivery Fee ($)</label>
+  <input type="number" step="0.01" name="shipping_fee">
+
+  <!-- PHOTOS -->
+  <label>Upload Installation / Location Photos *</label>
+  <input type="file" name="photos[]" multiple>
+
+  <label>Upload Swing Reference Photos *</label>
+  <input type="file" name="photos[]" multiple>
+
+</div>
+
+
+<div id="contractor_notice" class="hidden contractor-box">
+  
+ <p>
+  Based on your location, some local services may be handled by independent contractors, while most products are built and shipped directly by Doorplace USA.
+</p>
+
+  <label class="contractor-check">
+  <input type="checkbox" id="contractor_confirm" name="contractor_confirm">
+  <span>I understand and agree</span>
+</label>
+</div>
+
+   <!-- ============================
+         FINAL CONFIRMATION
+============================ -->
+<div id="final_section" class="hidden">
+
+  <div class="section-divider"></div>
+
+  <label class="confirm-check">
+  <input type="checkbox" name="confirmation" required>
+  <span>
+    I confirm the information provided is accurate and agree to be contacted by Doorplace USA via text message and phone regarding my request.
+  </span>
+</label>
+
+  <label>Digital Signature *</label>
+  <input name="signature">
+
+  <button type="submit" class="tradepilot-submit">
+    Submit
+  </button>
+
+</div>
+
+  </form>
+
+  {% if customer %}
+  <input type="hidden" name="shopify_account_email" value="{{ customer.email }}">
+{% endif %}
+
+</div>
+
+{% if customer and customer.tags contains 'partner' %}
+  {% assign pid = '' %}
+  {% for tag in customer.tags %}
+    {% if tag contains 'DP-' %}
+      {% assign pid = tag %}
+    {% endif %}
+  {% endfor %}
+
+  <script>
+    // ✅ SINGLE SOURCE OF TRUTH
+    window.DP_PARTNER_ID = "{{ pid }}";
+
+  </script>
+{% endif %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  // =============================
+  // GLOBAL LOCK
+  // =============================
+  if (window.tradepilotFormLoaded) return;
+  window.tradepilotFormLoaded = true;
+
+  // =============================
+  // ELEMENTS
+  // =============================
+  const form = document.querySelector(".tradepilot-form");
+  if (!form) return;
+
+  const requestType = document.getElementById("request_type");
+  const sharedCustomerInfo = document.getElementById("shared_customer_info");
+  const stateField = document.getElementById("shared_state");
+
+  const general = document.getElementById("general_section");
+  const quote = document.getElementById("quote_section");
+  const partner = document.getElementById("partner_section");
+  const finalSection = document.getElementById("final_section");
+
+  const swingQuote = document.getElementById("swing_quote_fields");
+  const doorQuote = document.getElementById("door_quote_fields");
+  const autoDoor = document.getElementById("auto_door_fields");
+  const contractorNotice = document.getElementById("contractor_notice");
+  const contractorConfirm = document.getElementById("contractor_confirm");
+
+  const submissionType = document.getElementById("submission_type");
+  const quoteTypeHidden = document.getElementById("quote_type");
+  const routingType = document.getElementById("routing_type");
+  const partnerIdInput = document.getElementById("partner_id");
+
+  // =============================
+  // ENTRY TRACKING
+  // =============================
+  const entryPageInput = document.getElementById("entry_page");
+  const pagePathInput = document.getElementById("page_path");
+
+  if (entryPageInput) entryPageInput.value = window.location.href;
+  if (pagePathInput) pagePathInput.value = window.location.pathname;
+
+  // =============================
+  // PARTNER AUTO-FILL
+  // =============================
+  if (window.DP_PARTNER_ID && partnerIdInput) {
+    partnerIdInput.value = window.DP_PARTNER_ID;
+  }
+
+  // =============================
+  // RESET FUNCTION
+  // =============================
+  function resetSections() {
+    general?.classList.add("hidden");
+    quote?.classList.add("hidden");
+    partner?.classList.add("hidden");
+    finalSection?.classList.add("hidden");
+    sharedCustomerInfo?.classList.add("hidden");
+    swingQuote?.classList.add("hidden");
+    doorQuote?.classList.add("hidden");
+    autoDoor?.classList.add("hidden");
+  }
+
+  // =============================
+  // MAIN DROPDOWN LOGIC
+  // =============================
+  if (requestType) {
+    requestType.addEventListener("change", function () {
+
+      resetSections();
+
+      sharedCustomerInfo?.classList.remove("hidden");
+      finalSection?.classList.remove("hidden");
+
+      submissionType.value = "general";
+      routingType.value = "direct";
+
+      const value = this.value;
+
+      // GENERAL / OTHER
+      if (value === "general" || value === "other") {
+        general?.classList.remove("hidden");
+        submissionType.value = "general";
+      }
+
+      // SWING
+      if (value === "swing") {
+        quote?.classList.remove("hidden");
+        swingQuote?.classList.remove("hidden");
+        doorQuote?.classList.add("hidden");
+
+        submissionType.value = "quote";
+        quoteTypeHidden.value = "swing";
+      }
+
+      // DOOR
+      if (value === "door") {
+        quote?.classList.remove("hidden");
+        doorQuote?.classList.remove("hidden");
+        swingQuote?.classList.add("hidden");
+
+        submissionType.value = "quote";
+        quoteTypeHidden.value = "door";
+      }
+
+      // AUTOMATIC BARN DOOR
+if (value === "auto_door") {
+  quote?.classList.remove("hidden");
+
+  autoDoor?.classList.remove("hidden");
+  doorQuote?.classList.add("hidden");
+  swingQuote?.classList.add("hidden");
+
+  submissionType.value = "quote";
+  quoteTypeHidden.value = "automatic_barn_door";
+}
+
+      checkRouting();
+    });
+  }
+
+  // =============================
+  // STATE LOGIC (CONTRACTOR ROUTING)
+  // =============================
+  function checkRouting() {
+    const state = stateField?.value;
+    const request = requestType?.value;
+
+    if (!state) return;
+
+    const isTexas = state === "TX";
+    const isSwing = request === "swing";
+
+    if (!isTexas && !isSwing) {
+      contractorNotice?.classList.remove("hidden");
+      routingType.value = "contractor";
+    } else {
+      contractorNotice?.classList.add("hidden");
+      if (contractorConfirm) contractorConfirm.checked = false;
+      routingType.value = "direct";
+    }
+  }
+
+  if (stateField) {
+    stateField.addEventListener("change", checkRouting);
+  }
+
+  const params = new URLSearchParams(window.location.search);
+const urlPartnerId = params.get("partner_id");
+
+if (urlPartnerId) {
+  if (partnerIdInput) partnerIdInput.value = urlPartnerId;
+  if (submissionType) submissionType.value = "partner_tracking";
+}
+
+  // =============================
+  // SUBMIT HANDLER
+  // =============================
+  if (!window.tpSubmitting) window.tpSubmitting = false;
+
+  if (!form.dataset.listenerAttached) {
+    form.dataset.listenerAttached = "true";
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      if (window.tpSubmitting) return;
+      window.tpSubmitting = true;
+
+      const btn = form.querySelector(".tradepilot-submit");
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = "Submitting...";
+      }
+
+      const formData = new FormData(form);
+
+      try {
+        const res = await fetch("https://tradepilot.doorplaceusa.com/api/leads/intake", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          window.location.href = "/pages/thank-you";
+        } else {
+          alert("Something went wrong. Please try again.");
+          window.tpSubmitting = false;
+        }
+
+      } catch (err) {
+        alert("Network error. Please try again.");
+        window.tpSubmitting = false;
+      }
+    });
+  }
+
+});
+</script>
+
+
+
+{% schema %}
+{
+  "name": "TradePilot Universal Form",
+  "settings": []
+}
+{% endschema %}
+
+
 

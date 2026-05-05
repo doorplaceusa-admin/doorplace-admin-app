@@ -298,8 +298,8 @@ async function updateLeadStatus(
     ? "Door Quote"
     : l.quote_type === "swing"
     ? "Swing Quote"
-    : l.quote_type === "motor"
-    ? "Automatic Motor"
+    : l.quote_type === "automatic_barn_door"
+  ? "Automatic Motor"
     : "General Inquiry";
 
       return (
@@ -322,8 +322,6 @@ async function updateLeadStatus(
               className={`text-xs font-semibold border rounded px-2 py-1 ${
                 (l.lead_status || "new") === "converted_to_order"
                   ? "text-green-700"
-                  : (l.lead_status || "new") === "lost"
-                  ? "text-red-700"
                   : (l.lead_status || "new") === "contacted"
                   ? "text-blue-700"
                   : "text-orange-700"
@@ -335,10 +333,8 @@ async function updateLeadStatus(
             >
               <option value="new">● New</option>
               <option value="contacted">● Contacted</option>
-              <option value="in_progress">● In Progress</option>
-              <option value="converted_to_order">● Converted</option>
+<option value="in_progress">● Text/Emailed No Response</option>              <option value="converted_to_order">● Converted</option>
               <option value="closed">● Closed</option>
-              <option value="lost">● Lost</option>
             </select>
           </div>
 
@@ -472,8 +468,7 @@ async function updateLeadStatus(
       className={`text-xs font-semibold border rounded px-2 py-1 ${
   (l.lead_status || "new") === "converted_to_order"
     ? "text-green-700"
-    : (l.lead_status || "new") === "lost"
-    ? "text-red-700"
+    
     : (l.lead_status || "new") === "contacted"
     ? "text-blue-700"
     : "text-orange-700"
@@ -486,10 +481,8 @@ async function updateLeadStatus(
     >
       <option value="new">● New</option>
       <option value="contacted">● Contacted</option>
-      <option value="in_progress">● In Progress</option>
-      <option value="converted_to_order">● Converted</option>
+<option value="in_progress">● Text/Emailed No Response</option>      <option value="converted_to_order">● Converted</option>
       <option value="closed">● Closed</option>
-      <option value="lost">● Lost</option>
     </select>
   );
 
@@ -500,8 +493,8 @@ async function updateLeadStatus(
     ? "Door Quote"
     : l.quote_type === "swing"
     ? "Swing Quote"
-    : l.quote_type === "motor"
-    ? "Automatic Motor"
+    : l.quote_type === "automatic_barn_door"
+  ? "Automatic Motor"
     : "General Inquiry";
 
   return (
@@ -594,10 +587,14 @@ if (v === "delete") deleteLead(l);
         <Section title="Project Info">
           {Object.entries(viewLead || {})
             .filter(([key, value]) =>
-              [
-                "project_details",
-                "door_width",
-                "door_height",
+              
+               [
+                  "project_details",
+                  "door_width",
+                  "door_height",
+                  "auto_door_width",
+                  "auto_door_height",
+                 "auto_door_location",
                 "number_of_doors",
                 "door_type",
                 "door_type_other",
@@ -827,11 +824,13 @@ if (v === "delete") deleteLead(l);
             "in_progress",
             "converted_to_order",
             "closed",
-            "lost",
+            
           ].map((s) => (
             <option key={s} value={s}>
-              {s.replaceAll("_", " ")}
-            </option>
+  {s === "in_progress"
+    ? "Text/Emailed No Response"
+    : s.replaceAll("_", " ")}
+</option>
           ))}
         </select>
       </div>

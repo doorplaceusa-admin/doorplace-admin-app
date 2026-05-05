@@ -133,7 +133,10 @@ while (page <= totalPages) {
   );
 
   const data = await res.json();
-
+if (!res.ok) {
+  console.log("❌ FRESHBOOKS RAW ERROR:", JSON.stringify(data, null, 2));
+  throw new Error("FreshBooks invoice fetch failed");
+}
   const invoicesPage = data?.response?.result?.invoices || [];
   const meta = data?.response?.meta;
 

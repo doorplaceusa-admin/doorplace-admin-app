@@ -331,8 +331,10 @@ export async function POST() {
 const MAX_UPDATES = 25;
   while (true) {
     const pageRes = await safeShopifyFetch(
-      `/pages.json?limit=250&since_id=${sinceId}`
-    );
+  sinceId > 0
+    ? `/pages.json?limit=250&since_id=${sinceId}`
+    : `/pages.json?limit=250`
+);
 
     if (!pageRes) {
       errors++;
@@ -342,11 +344,11 @@ const MAX_UPDATES = 25;
     const pageJson = await pageRes.json();
 
     const pages = pageJson.pages || [];
-
+console.log("📦 Pages returned:", pages.length);
     if (pages.length === 0) {
       break;
     }
-
+console.log("🚪 Starting page loop");
     for (const page of pages) {
       try {
         const handle = String(page.handle || "").toLowerCase();

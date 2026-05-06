@@ -350,17 +350,14 @@ console.log("📦 Pages returned:", pages.length);
 console.log("🚪 Starting page loop");
     for (const page of pages) {
       try {
-        const handle = String(page.handle || "").toLowerCase();
-        sinceId = page.id;
- {
+       const handle = String(page.handle || "").toLowerCase();
+sinceId = page.id;
+
+if (!handle.startsWith("automatic-barn-door-")) {
   skipped++;
   continue;
 }
-if (!handle.includes("automatic-barn-door-")) {
-  console.log("⛔ BLOCKED PAGE:", handle);
-  skipped++;
-  continue;
-}
+
 console.log("✅ SAFE MATCH:", handle);
 
         console.log("🔍 Processing:", handle);

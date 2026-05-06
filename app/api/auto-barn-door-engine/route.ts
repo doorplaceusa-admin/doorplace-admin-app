@@ -331,7 +331,9 @@ export async function POST() {
 const MAX_UPDATES = 25;
   while (true) {
     const pageRes = await safeShopifyFetch(
-  `/pages.json?limit=250&title=Automatic`
+  sinceId > 0
+    ? `/pages.json?limit=250&since_id=${sinceId}`
+    : `/pages.json?limit=250`
 );
 
     if (!pageRes) {
@@ -352,13 +354,25 @@ console.log("🚪 Starting page loop");
         const handle = String(page.handle || "").toLowerCase();
         sinceId = page.id;
 
-        if (
-  !handle.includes("automatic-barn-door")
+       if (
+  !handle.includes("automatic-barn-door") &&
+  !handle.includes("automatic-door") &&
+  !handle.includes("barn-door-opener")
 ) {
   skipped++;
   continue;
 }
-
+if (
+  handle.includes("porch-swing") ||
+  handle.includes("mirror") ||
+  handle.includes("measure") ||
+  handle.includes("garage") ||
+  handle.includes("photo-gallery")
+) {
+  console.log("⛔ BLOCKED PAGE:", handle);
+  skipped++;
+  continue;
+}
 console.log("✅ SAFE MATCH:", handle);
 
         console.log("🔍 Processing:", handle);

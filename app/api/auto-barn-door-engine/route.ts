@@ -352,11 +352,11 @@ console.log("🚪 Starting page loop");
     for (const page of pages) {
       try {
         const handle = String(page.handle || "").toLowerCase();
-
+console.log("HANDLE:", handle);
         sinceId = page.id;
 
         if (
-  !handle.startsWith("automatic-barn-door-")
+  !handle.includes("automatic-barn-door")
 ) {
   skipped++;
   continue;

@@ -329,11 +329,10 @@ export async function POST() {
   let errors = 0;
   let sinceId = 0;
   while (true) {
-    const pageRes = await safeShopifyFetch(
+   const pageRes = await safeShopifyFetch(
   sinceId > 0
-  ? `/pages.json?limit=250&since_id=${sinceId}&title=Automatic`
-  : `/pages.json?limit=250&title=Automatic`
-  
+    ? `/pages.json?limit=250&since_id=${sinceId}`
+    : `/pages.json?limit=250`
 );
 
     if (!pageRes) {
@@ -354,14 +353,16 @@ console.log("🚪 Starting page loop");
        const handle = String(page.handle || "").toLowerCase();
 sinceId = page.id;
 
-if (!handle.startsWith("automatic-barn-door-")) {
+if (
+  !handle.startsWith("automatic-barn-door-") &&
+  !String(page.title || "").includes("Automatic Barn Door")
+) {
   skipped++;
   continue;
 }
 
 console.log("✅ SAFE MATCH:", handle);
 console.log("🚀 UPDATING PAGE NOW...");
-        console.log("🔍 Processing:", handle);
 
         const existingBody = page.body_html || "";
 

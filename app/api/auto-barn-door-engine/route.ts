@@ -331,9 +331,7 @@ export async function POST() {
 const MAX_UPDATES = 25;
   while (true) {
     const pageRes = await safeShopifyFetch(
-  sinceId > 0
-    ? `/pages.json?limit=250&since_id=${sinceId}`
-    : `/pages.json?limit=250`
+  `/pages.json?limit=250&title=Automatic`
 );
 
     if (!pageRes) {
@@ -352,7 +350,6 @@ console.log("🚪 Starting page loop");
     for (const page of pages) {
       try {
         const handle = String(page.handle || "").toLowerCase();
-console.log("HANDLE:", handle);
         sinceId = page.id;
 
         if (
